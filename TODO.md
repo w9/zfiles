@@ -16,9 +16,9 @@ This file tracks implementation work for zfiles. It is the living task list deri
 
 ## Checklist
 
-- [ ] Initialize Rust project with module layout (`cli`, `transport`, `fs`, `state`, `plugins`, `auth`)
-- [ ] Set up CI pipeline (`cargo fmt`, `clippy`, `test`, `deny check`)
-- [ ] Implement CLI with `clap` — serve directory, `--port`, `--listen`, `--token`
-- [ ] Implement `transport` — bind TCP listener and serve HTTP (cold-start path, no blocking work)
-- [ ] Define `Fs` trait and Linux v1 implementation with `read_dir`
-- [ ] Directory listing REST API (TDD: integration test first, then handler)
+- [x] Initialize Rust project with module layout (`cli`, `transport`, `fs`, `state`, `plugins`, `auth`)
+- [x] Set up CI pipeline (`cargo fmt`, `clippy`, `test`, `deny check`)
+- [x] Implement CLI with `clap` — serve directory, `--port`, `--listen`, `--token`
+- [x] Implement `transport` — bind TCP listener and serve HTTP (cold-start path, no blocking work)
+- [x] Define `Fs` trait and Linux v1 implementation with `read_dir`
+- [x] Directory listing REST API (TDD: integration test first, then handler)
