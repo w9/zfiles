@@ -17,8 +17,11 @@ Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an 
 # Pin the port
 zfiles --port 9000
 
-# LAN sharing with bearer-token auth
-zfiles --listen 0.0.0.0:8080 --token
+# Read-only LAN share with bearer-token auth
+zfiles --listen 0.0.0.0:8080 --token --read-only
+
+# Serve without opening a browser tab
+zfiles --no-open
 ```
 
 ## Development

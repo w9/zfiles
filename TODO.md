@@ -29,11 +29,11 @@ This file tracks implementation work for zfiles. It is the living task list deri
 - [x] tus resumable upload endpoint
 - [x] WebSocket channel for live kernel events
 - [x] Vite + React frontend shell, embedded via `rust-embed`
-- [ ] Browser auto-open on serve (`xdg-open`, async — do not block startup)
-- [ ] Read `.zfiles/config.toml` at startup (defaults when missing)
-- [ ] Enforce LAN auth policy (`--listen 0.0.0.0` requires `--token`)
-- [ ] `--read-only` flag and enforcement on mutating routes
-- [ ] Linux `sendfile` fast path for whole-file and single-range downloads
-- [ ] Plugin supervisor: manifest parsing, LSP JSON-RPC framing, background spawn
-- [ ] Filesystem watch service (`notify`) with debounced WebSocket events
-- [ ] Frontend: directory navigation, downloads, and tus uploads
+- [x] Browser auto-open on serve (`xdg-open`, async — do not block startup)
+- [x] Read `.zfiles/config.toml` at startup (defaults when missing)
+- [x] Enforce LAN auth policy (`--listen 0.0.0.0` requires `--token`)
+- [x] `--read-only` flag and enforcement on mutating routes
+- [x] Linux `sendfile` fast path for whole-file and single-range downloads
+- [x] Plugin supervisor: manifest parsing, LSP JSON-RPC framing, background spawn
+- [x] Filesystem watch service (`notify`) with debounced WebSocket events
+- [x] Frontend: directory navigation, downloads, and tus uploads

@@ -15,12 +15,41 @@ body {
 }
 
 header h1 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.75rem;
 }
 
-header p {
-  margin: 0;
-  color: #9aa0a6;
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.crumb {
+  background: #1d2330;
+  border: 1px solid #2a2f3a;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+.dropzone {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px dashed #3a4254;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.upload-button {
+  background: #3b82f6;
+  color: white;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .error {
@@ -34,11 +63,21 @@ header p {
 }
 
 .listing li {
+  border-bottom: 1px solid #2a2f3a;
+}
+
+.entry {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #2a2f3a;
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
 }
 
 .size {
