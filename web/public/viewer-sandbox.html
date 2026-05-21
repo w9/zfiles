@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>zfiles viewer sandbox</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        background: #111318;
+        color: #e8eaed;
+      }
+      .banner {
+        padding: 0.5rem 0.75rem;
+        background: #1d2330;
+        border-bottom: 1px solid #2a2f3a;
+        font-size: 0.85rem;
+        color: #9aa0a6;
+      }
+      pre {
+        margin: 0.75rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">Sandboxed viewer</div>
+    <pre id="body">Waiting for preview…</pre>
+    <script>
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) {
+          return;
+        }
+        const message = event.data;
+        if (!message || message.type !== "preview") {
+          return;
+        }
+        const banner = document.querySelector(".banner");
+        const body = document.getElementById("body");
+        banner.textContent = `Sandboxed viewer for ${message.path ?? "file"}`;
+        body.textContent = message.body ?? "";
+      });
+    </script>
+  </body>
+</html>

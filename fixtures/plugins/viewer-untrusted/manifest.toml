@@ -1,0 +1,8 @@
+name = "viewer-untrusted"
+version = "0.1.0"
+executable = "bin/viewer-text"
+protocol_version = 1
+capabilities = ["viewer"]
+globs = ["*.txt", "*.md"]
+viewer_module = "/plugin/viewer-untrusted/module.js"
+trusted = false

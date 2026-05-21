@@ -126,3 +126,50 @@ test("viewer ESM module renders preview body", async ({ page }) => {
     viewerServer.kill("SIGTERM");
   }
 });
+
+test("untrusted viewer renders inside sandbox iframe", async ({ page }) => {
+  const viewerDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-untrusted-"));
+  fs.writeFileSync(path.join(viewerDir, "notes.txt"), "hello from sandbox\n");
+
+  const install = spawnSync(
+    binary,
+    [
+      "plugin",
+      "install",
+      path.join(rootDir, "fixtures/plugins/viewer-untrusted"),
+      "--path",
+      viewerDir,
+    ],
+    { encoding: "utf8" },
+  );
+  if (install.status !== 0) {
+    throw new Error(install.stderr || "untrusted viewer install failed");
+  }
+
+  const viewerServer = spawn(
+    binary,
+    ["--port", "9878", "--no-open", viewerDir],
+    { stdio: "pipe" },
+  );
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("untrusted server start timeout")), 15_000);
+    viewerServer.stdout.on("data", (chunk) => {
+      if (chunk.toString().includes("listening")) {
+        clearTimeout(timeout);
+        resolve();
+      }
+    });
+  });
+
+  try {
+    await page.goto("http://127.0.0.1:9878/");
+    await page.waitForTimeout(500);
+    await page.getByRole("link", { name: /notes\.txt/ }).click();
+    const iframe = page.frameLocator('iframe[title="Sandboxed preview"]');
+    await expect(iframe.getByText("Sandboxed viewer for notes.txt")).toBeVisible();
+    await expect(iframe.getByText("hello from sandbox")).toBeVisible();
+  } finally {
+    viewerServer.kill("SIGTERM");
+  }
+});

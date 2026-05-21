@@ -327,3 +327,28 @@ async fn route_plugin_handles_dynamic_path() {
     response.assert_status_ok();
     assert!(response.text().contains("hello from route-stub"));
 }
+
+#[tokio::test]
+async fn untrusted_viewer_reports_trusted_false() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/viewer-untrusted");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    wait_for_plugin(&server, "viewer").await;
+
+    let response = server.get("/api/plugins").await;
+    response.assert_status_ok();
+
+    let plugins: Vec<serde_json::Value> = response.json();
+    let viewer = plugins
+        .iter()
+        .find(|plugin| plugin["name"] == "viewer-untrusted")
+        .expect("viewer-untrusted plugin");
+    assert_eq!(viewer["trusted"], false);
+}

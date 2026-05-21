@@ -37,6 +37,12 @@ pub struct PluginManifest {
     pub globs: Vec<String>,
     #[serde(default)]
     pub viewer_module: Option<String>,
+    #[serde(default = "default_trusted")]
+    pub trusted: bool,
+}
+
+fn default_trusted() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -185,7 +191,9 @@ impl PluginSupervisor {
 
     pub async fn thumbnail(&self, path: &str) -> Option<(String, Vec<u8>)> {
         let handle = self.ready_plugin_for("thumbnailer", path)?;
-        if let Some(cached) = read_thumbnail_cache(&handle.record.root, path) {
+        if let Some(cached) =
+            read_thumbnail_cache(&handle.record.root, &handle.serve_root, path)
+        {
             return Some(cached);
         }
 
@@ -193,7 +201,13 @@ impl PluginSupervisor {
         let call = handle.call_thumbnailer(path);
         match tokio::time::timeout(THUMBNAILER_TIMEOUT, call).await {
             Ok(Ok(result)) => {
-                let _ = write_thumbnail_cache(&handle.record.root, path, &result.0, &result.1);
+                let _ = write_thumbnail_cache(
+                    &handle.record.root,
+                    &handle.serve_root,
+                    path,
+                    &result.0,
+                    &result.1,
+                );
                 Some(result)
             }
             Ok(Err(error)) => {
@@ -238,6 +252,7 @@ impl PluginSupervisor {
                     "capabilities": handle.record.manifest.capabilities,
                     "globs": handle.record.manifest.globs,
                     "viewerModule": handle.record.manifest.viewer_module,
+                    "trusted": handle.record.manifest.trusted,
                 })
             })
             .collect()
@@ -755,15 +770,27 @@ fn thumbnail_cache_paths(plugin_root: &Path, path: &str) -> (PathBuf, PathBuf) {
     (dir.join(format!("{key}.meta")), dir.join(format!("{key}.bin")))
 }
 
-fn read_thumbnail_cache(plugin_root: &Path, path: &str) -> Option<(String, Vec<u8>)> {
+fn read_thumbnail_cache(
+    plugin_root: &Path,
+    serve_root: &Path,
+    path: &str,
+) -> Option<(String, Vec<u8>)> {
     let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path);
-    let content_type = std::fs::read_to_string(meta_path).ok()?;
+    let meta = std::fs::read_to_string(meta_path).ok()?;
+    let mut lines = meta.lines();
+    let content_type = lines.next()?.trim().to_string();
+    let cached_mtime: u64 = lines.next()?.trim().parse().ok()?;
+    let current_mtime = file_mtime_secs(&serve_root.join(path))?;
+    if cached_mtime != current_mtime {
+        return None;
+    }
     let bytes = std::fs::read(bin_path).ok()?;
-    Some((content_type.trim().to_string(), bytes))
+    Some((content_type, bytes))
 }
 
 fn write_thumbnail_cache(
     plugin_root: &Path,
+    serve_root: &Path,
     path: &str,
     content_type: &str,
     bytes: &[u8],
@@ -772,9 +799,22 @@ fn write_thumbnail_cache(
     if let Some(parent) = meta_path.parent() {
         std::fs::create_dir_all(parent).context("create thumbnail cache directory")?;
     }
-    std::fs::write(&meta_path, content_type).context("write thumbnail cache metadata")?;
+    let mtime = file_mtime_secs(&serve_root.join(path)).unwrap_or(0);
+    std::fs::write(&meta_path, format!("{content_type}\n{mtime}"))
+        .context("write thumbnail cache metadata")?;
     std::fs::write(&bin_path, bytes).context("write thumbnail cache bytes")?;
     Ok(())
+}
+
+fn file_mtime_secs(path: &Path) -> Option<u64> {
+    let metadata = std::fs::metadata(path).ok()?;
+    let modified = metadata.modified().ok()?;
+    Some(
+        modified
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()?
+            .as_secs(),
+    )
 }
 
 fn parse_route_response(response: &Value) -> Result<(u16, String, Vec<u8>)> {
@@ -995,5 +1035,36 @@ mod tests {
             merged[0].extra,
             Some(serde_json::json!({"plugin": "echo"}))
         );
+    }
+
+    #[test]
+    fn parses_trusted_manifest_field() {
+        let manifest: PluginManifest = toml::from_str(
+            r#"
+            name = "viewer"
+            version = "0.1.0"
+            executable = "bin/viewer"
+            protocol_version = 1
+            capabilities = ["viewer"]
+            trusted = false
+            "#,
+        )
+        .unwrap();
+        assert!(!manifest.trusted);
+    }
+
+    #[test]
+    fn thumbnail_cache_invalidates_when_meta_mtime_stale() {
+        let dir = tempfile::tempdir().unwrap();
+        let serve = dir.path();
+        let plugin_root = dir.path().join("plugin");
+        std::fs::create_dir_all(&plugin_root).unwrap();
+        let file = serve.join("photo.jpg");
+        std::fs::write(&file, b"v1").unwrap();
+        write_thumbnail_cache(&plugin_root, serve, "photo.jpg", "image/png", b"x").unwrap();
+        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg").is_some());
+        let (meta_path, _) = thumbnail_cache_paths(&plugin_root, "photo.jpg");
+        std::fs::write(&meta_path, "image/png\n0").unwrap();
+        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg").is_none());
     }
 }

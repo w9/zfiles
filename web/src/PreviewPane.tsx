@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type FileStat = {
   path: string;
@@ -12,6 +12,7 @@ type PluginInfo = {
   capabilities: string[];
   globs: string[];
   viewerModule?: string | null;
+  trusted?: boolean;
 };
 
 type PreviewPaneProps = {
@@ -21,6 +22,11 @@ type PreviewPaneProps = {
 
 type ViewerModule = {
   mount?: (container: HTMLElement, context: { path: string; body: string }) => void;
+};
+
+type SandboxPreviewPayload = {
+  path: string;
+  body: string;
 };
 
 function matchesGlob(glob: string, name: string): boolean {
@@ -43,24 +49,86 @@ function viewerFor(plugins: PluginInfo[], path: string): PluginInfo | undefined 
   );
 }
 
+function deliverSandboxPreview(
+  iframe: HTMLIFrameElement,
+  payload: SandboxPreviewPayload,
+  onReady: () => void,
+): () => void {
+  let delivered = false;
+  const send = () => {
+    if (delivered) {
+      return;
+    }
+    delivered = true;
+    iframe.contentWindow?.postMessage(
+      { type: "preview", path: payload.path, body: payload.body },
+      window.location.origin,
+    );
+    onReady();
+  };
+
+  const sandboxLoaded = () =>
+    iframe.contentWindow?.location.pathname.endsWith("/viewer-sandbox.html") ?? false;
+
+  iframe.addEventListener("load", send, { once: true });
+  if (sandboxLoaded()) {
+    send();
+  }
+
+  return () => iframe.removeEventListener("load", send);
+}
+
 export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
   const [stat, setStat] = useState<FileStat | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [esmMounted, setEsmMounted] = useState(false);
+  const [sandboxReady, setSandboxReady] = useState(false);
   const slotRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const pendingSandboxPreviewRef = useRef<SandboxPreviewPayload | null>(null);
+
+  const sandboxCleanupRef = useRef<(() => void) | null>(null);
+
+  const tryDeliverSandboxPreview = useCallback(() => {
+    const iframe = iframeRef.current;
+    const payload = pendingSandboxPreviewRef.current;
+    if (!iframe || !payload) {
+      return;
+    }
+    sandboxCleanupRef.current?.();
+    sandboxCleanupRef.current = deliverSandboxPreview(iframe, payload, () =>
+      setSandboxReady(true),
+    );
+  }, []);
+
+  const assignSandboxIframe = useCallback(
+    (iframe: HTMLIFrameElement | null) => {
+      iframeRef.current = iframe;
+      if (iframe) {
+        tryDeliverSandboxPreview();
+      }
+    },
+    [tryDeliverSandboxPreview],
+  );
 
   useEffect(() => {
     if (!path) {
+      sandboxCleanupRef.current?.();
+      sandboxCleanupRef.current = null;
+      pendingSandboxPreviewRef.current = null;
       setStat(null);
       setPreview(null);
       setError(null);
       setEsmMounted(false);
+      setSandboxReady(false);
       return;
     }
 
+    pendingSandboxPreviewRef.current = null;
     setPreview(null);
     setEsmMounted(false);
+    setSandboxReady(false);
     fetch(`/api/stat?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
@@ -91,13 +159,30 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
   }, [path, plugins]);
 
   useEffect(() => {
-    if (!path || preview == null || !slotRef.current) {
+    if (!path || preview == null || stat == null) {
+      pendingSandboxPreviewRef.current = null;
       setEsmMounted(false);
+      setSandboxReady(false);
       return;
     }
 
     const viewer = viewerFor(plugins, path);
     if (!viewer?.viewerModule) {
+      pendingSandboxPreviewRef.current = null;
+      setEsmMounted(false);
+      setSandboxReady(false);
+      return;
+    }
+
+    if (viewer.trusted === false) {
+      setEsmMounted(false);
+      pendingSandboxPreviewRef.current = { path, body: preview };
+      tryDeliverSandboxPreview();
+      return;
+    }
+
+    pendingSandboxPreviewRef.current = null;
+    if (!slotRef.current) {
       setEsmMounted(false);
       return;
     }
@@ -110,13 +195,14 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
         }
         module.mount?.(slotRef.current, { path, body: preview });
         setEsmMounted(true);
+        setSandboxReady(false);
       })
       .catch(() => setEsmMounted(false));
 
     return () => {
       cancelled = true;
     };
-  }, [path, preview, plugins]);
+  }, [path, preview, plugins, stat, tryDeliverSandboxPreview]);
 
   if (!path) {
     return (
@@ -143,6 +229,7 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
   }
 
   const viewer = viewerFor(plugins, stat.path);
+  const sandboxed = viewer?.trusted === false && viewer.viewerModule != null;
 
   return (
     <aside className="preview-pane" aria-label="Preview pane">
@@ -168,14 +255,28 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
           {viewer?.viewerModule ? (
             <p className="meta viewer-module-hint">
               Viewer module: <code>{viewer.viewerModule}</code>
+              {sandboxed ? " (sandboxed)" : null}
             </p>
           ) : null}
-          <div ref={slotRef} className="viewer-mount" />
-          {!esmMounted && preview != null ? (
+          {sandboxed ? (
+            <iframe
+              ref={assignSandboxIframe}
+              className="viewer-sandbox"
+              title="Sandboxed preview"
+              sandbox="allow-scripts allow-same-origin"
+              src="/viewer-sandbox.html"
+            />
+          ) : (
+            <div ref={slotRef} className="viewer-mount" />
+          )}
+          {!sandboxed && !esmMounted && preview != null ? (
             <pre className="preview-text">{preview}</pre>
           ) : null}
-          {!esmMounted && preview == null ? (
+          {!sandboxed && !esmMounted && preview == null ? (
             <p className="meta">No viewer plugin registered for this file type.</p>
+          ) : null}
+          {sandboxed && !sandboxReady && preview != null ? (
+            <p className="meta">Loading sandboxed preview…</p>
           ) : null}
           <a href={`/api/file?path=${encodeURIComponent(stat.path)}`}>Download</a>
         </div>

@@ -51,3 +51,12 @@ async fn route_stub_plugin_passes_conformance() {
         .await
         .expect("route-stub plugin conformance");
 }
+
+#[tokio::test]
+async fn viewer_untrusted_plugin_passes_conformance() {
+    let plugin = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/viewer-untrusted");
+    zfiles::plugin::conformance::run(&plugin)
+        .await
+        .expect("viewer-untrusted plugin conformance");
+}

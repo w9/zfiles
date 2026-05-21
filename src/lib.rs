@@ -13,6 +13,7 @@ pub mod fs;
 pub mod glob_match;
 pub mod mount;
 pub mod plugin;
+pub mod perf_baseline;
 pub mod plugins;
 pub mod qr;
 pub mod range;

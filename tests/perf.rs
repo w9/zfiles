@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -8,11 +9,17 @@ use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
 use zfiles::fs::LocalFs;
+use zfiles::perf_baseline::PerfBaseline;
 use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
 const ONE_MIB: usize = 1024 * 1024;
+
+fn baseline() -> PerfBaseline {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/perf-baseline.toml");
+    PerfBaseline::load(&path).expect("load perf baseline")
+}
 
 #[tokio::test]
 async fn list_small_fixture_under_sla() {
@@ -38,10 +45,10 @@ async fn list_small_fixture_under_sla() {
     let start = Instant::now();
     let response = server.get("/api/list").await;
     response.assert_status_ok();
-    assert!(
-        start.elapsed() < Duration::from_millis(500),
-        "list took {:?}",
-        start.elapsed()
+    baseline().assert_within_tolerance(
+        "list_small_fixture",
+        start.elapsed(),
+        baseline().list_small_fixture_ms,
     );
 }
 
@@ -75,6 +82,11 @@ async fn download_one_mib_under_sla() {
         start.elapsed() < Duration::from_secs(2),
         "download took {:?}",
         start.elapsed()
+    );
+    baseline().assert_within_tolerance(
+        "download_one_mib",
+        start.elapsed(),
+        baseline().download_one_mib_ms,
     );
 }
 
@@ -117,6 +129,11 @@ async fn upload_one_mib_under_sla() {
         start.elapsed() < Duration::from_secs(3),
         "upload took {:?}",
         start.elapsed()
+    );
+    baseline().assert_within_tolerance(
+        "upload_one_mib",
+        start.elapsed(),
+        baseline().upload_one_mib_ms,
     );
     assert!(dir.path().join("large-upload.bin").is_file());
 }

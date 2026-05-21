@@ -15,5 +15,5 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: perf smoke
+      - name: perf baseline regression
         run: cargo test --test perf -- --nocapture

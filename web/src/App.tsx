@@ -18,6 +18,7 @@ type PluginInfo = {
   capabilities: string[];
   globs: string[];
   viewerModule?: string | null;
+  trusted?: boolean;
 };
 
 type KernelEvent =

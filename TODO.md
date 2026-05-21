@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Thumbnail cache, route plugins, multi-folder daemon, and bulk explorer actions are done. Next: untrusted viewer iframe sandboxing, thumbnail cache invalidation by mtime, and perf regression baselines in nightly CI. Follow with dot-folder relocation config, watcher plugins, and `cargo test` coverage for daemon config start/stop.
+Untrusted viewer sandboxing, thumbnail cache invalidation, and perf regression baselines are done. Next: dot-folder relocation config, watcher plugin dispatch on filesystem events, and integration tests for multi-share daemon config start/stop. Follow with README updates for relocated dot-folders and watcher protocol notes.
 
 ## TODO List
 
@@ -74,10 +74,17 @@ Thumbnail cache, route plugins, multi-folder daemon, and bulk explorer actions a
 - [x] Frontend shift+click range selection in virtual listing
 - [x] E2E smoke: install viewer-text plugin, verify ESM viewer mount renders preview body
 - [x] Update README with daemon, actions POST, and plugin asset routes
-- [ ] Plugin manifest `trusted` field exposed in `/api/plugins`
-- [ ] Untrusted viewer iframe sandbox: embedded shell + postMessage preview bridge
-- [ ] Thumbnail cache invalidation when source file mtime is newer than cache
-- [ ] Perf baseline fixture and regression test with 5% tolerance
-- [ ] Nightly CI runs perf baseline regression suite
-- [ ] Untrusted viewer fixture plugin and integration test
-- [ ] E2E smoke: untrusted viewer renders inside sandbox iframe
+- [x] Untrusted viewer iframe sandbox: embedded shell + postMessage preview bridge
+- [x] Plugin manifest `trusted` field exposed in `/api/plugins`
+- [x] Thumbnail cache invalidation when source file mtime is newer than cache
+- [x] Perf baseline fixture and regression test with 5% tolerance
+- [x] Nightly CI runs perf baseline regression suite
+- [x] Untrusted viewer fixture plugin and integration test
+- [x] E2E smoke: untrusted viewer renders inside sandbox iframe
+- [ ] Config `state.dotfolder_path` to relocate `.zfiles/` outside the serve root
+- [ ] Resolve dotfolder path in StateStore, PluginSupervisor, and daemon pid file
+- [ ] Integration test: relocated dotfolder stores `state.db` outside serve root
+- [ ] Watcher plugin fixture and `watcher/notify` conformance coverage
+- [ ] Kernel dispatches filesystem change events to ready watcher plugins
+- [ ] Integration test: daemon `start --config` / `stop --config` round trip with `daemon.toml`
+- [ ] Update README with dotfolder relocation and watcher capability notes

@@ -1,0 +1,3 @@
+list_small_fixture_ms = 500
+download_one_mib_ms = 2000
+upload_one_mib_ms = 3000
