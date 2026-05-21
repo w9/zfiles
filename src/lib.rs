@@ -15,4 +15,5 @@ pub mod qr;
 pub mod range;
 pub mod state;
 pub mod transport;
+pub mod upload;
 pub mod watch;

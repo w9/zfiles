@@ -62,6 +62,51 @@ header h1 {
   margin-top: 1.5rem;
 }
 
+.virtual-list {
+  margin-top: 1.5rem;
+  height: min(70vh, 720px);
+  overflow: auto;
+  border: 1px solid #2a2f3a;
+  border-radius: 12px;
+}
+
+.virtual-list-inner {
+  position: relative;
+  width: 100%;
+}
+
+.virtual-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-bottom: 1px solid #2a2f3a;
+}
+
+.search {
+  margin-top: 1rem;
+}
+
+.search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  background: #1d2330;
+  color: inherit;
+}
+
+.meta {
+  color: #9aa0a6;
+  margin: 0.25rem 0 0;
+}
+
+.extra {
+  color: #8ab4f8;
+  font-size: 0.85rem;
+}
+
 .listing li {
   border-bottom: 1px solid #2a2f3a;
 }

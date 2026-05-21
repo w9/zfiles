@@ -32,6 +32,22 @@ pub enum Command {
         #[command(subcommand)]
         command: ConfigCommand,
     },
+    /// Upload a file to a remote zfiles server
+    Upload {
+        /// Base URL of the zfiles server (e.g. http://localhost:8080)
+        server: String,
+        /// Local file to upload
+        file: PathBuf,
+        /// Destination path relative to the served directory
+        #[arg(long)]
+        path: Option<String>,
+        /// Bearer token for authenticated servers
+        #[arg(long)]
+        token: Option<String>,
+        /// Resume an in-progress upload when possible
+        #[arg(long)]
+        resume: bool,
+    },
 }
 
 #[derive(Debug, Subcommand)]

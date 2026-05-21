@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+import json
+import os
+import sys
+
+STATE = {"serve_root": os.getcwd()}
+
+
+def read_message():
+    header = b""
+    while not header.endswith(b"\r\n\r\n"):
+        chunk = sys.stdin.buffer.read(1)
+        if not chunk:
+            return None
+        header += chunk
+    length = int(
+        next(line.split(": ", 1)[1] for line in header.decode().split("\r\n") if line.startswith("Content-Length:"))
+    )
+    payload = sys.stdin.buffer.read(length)
+    return json.loads(payload)
+
+
+def write_message(message):
+    payload = json.dumps(message).encode("utf-8")
+    sys.stdout.buffer.write(f"Content-Length: {len(payload)}\r\n\r\n".encode("utf-8"))
+    sys.stdout.buffer.write(payload)
+    sys.stdout.buffer.flush()
+
+
+def walk(base, relative):
+    for name in sorted(os.listdir(base)):
+        full = os.path.join(base, name)
+        rel = os.path.join(relative, name).replace("\\", "/").lstrip("./")
+        if os.path.isdir(full):
+            yield from walk(full, rel)
+        else:
+            yield rel
+
+
+while True:
+    message = read_message()
+    if message is None:
+        break
+    request_id = message.get("id")
+    method = message.get("method")
+
+    if method == "initialize":
+        params = message.get("params", {})
+        STATE["serve_root"] = params.get("rootPath", STATE["serve_root"])
+        write_message({"jsonrpc": "2.0", "id": request_id, "result": {"ok": True}})
+        continue
+
+    if method == "searcher/query":
+        params = message.get("params", {})
+        query = params.get("query", "").lower()
+        path = params.get("path", "")
+        serve_root = STATE["serve_root"]
+        search_root = os.path.join(serve_root, path) if path else serve_root
+        entries = []
+        if os.path.isdir(search_root):
+            for rel in walk(search_root, path):
+                name = os.path.basename(rel)
+                if query in name.lower():
+                    full = os.path.join(serve_root, rel)
+                    entries.append(
+                        {
+                            "name": name,
+                            "path": rel.replace("\\", "/"),
+                            "is_dir": False,
+                            "size": os.path.getsize(full),
+                        }
+                    )
+        write_message({"jsonrpc": "2.0", "id": request_id, "result": {"entries": entries}})
+        continue
+
+    write_message(
+        {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32601, "message": f"unknown method {method}"},
+        }
+    )

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Kernel hardening and first-wave plugin dispatch are done. Next: close gaps between design and implementation (wire sendfile into the download path, pre-compressed embed with content negotiation), mature the frontend into a real explorer (WebSocket enrichment, resumable tus client, virtual-scrolled listing), add headless `upload` CLI, and extend plugins beyond `lister` with one second capability end-to-end (searcher or thumbnailer). Follow with keyboard shortcuts, preview pane slots, `search` CLI, fixture corpus, Playwright E2E, and performance baselines in CI.
+Explorer UX and CLI maturity are the focus: keyboard-driven navigation, a preview pane shell with stat metadata and viewer slot placeholder, headless `search`/`init`, and `plugin remove`. Bootstrap the fixture corpus (small, unicode, deep generators) and wire a listing integration test against it. Next up after this batch: thumbnailer capability, Playwright E2E, performance baselines in CI, and `status`/`daemon` CLI.
 
 ## TODO List
 
@@ -32,10 +32,17 @@ Kernel hardening and first-wave plugin dispatch are done. Next: close gaps betwe
 - [x] Token expiry (`--expire`) with sessions persisted in `state.db`
 - [x] LAN share UX: print QR code for the served URL when binding with `--token`
 - [x] CLI subcommands: `plugin list`, `plugin install`, `config get/set`
-- [ ] Frontend: handle WebSocket `listing_enrichment`, `upload_progress`, and `plugin_ready`; merge lister `extra` into the listing
-- [ ] Resumable tus client: chunked PATCH uploads with HEAD-based resume and progress UI
-- [ ] Wire Linux sendfile fast path into download handler (ReaderStream fallback for multi-range)
-- [ ] Pre-compressed embedded assets: Vite gzip/brotli output and `Accept-Encoding` negotiation in embed handler
-- [ ] Virtual-scrolled file listing (replace plain `<ul>`; add generated large fixture for validation)
-- [ ] CLI `zfiles upload`: headless tus client with `--resume` and bearer token support
-- [ ] Searcher capability end-to-end: kernel dispatch, REST API, fixture plugin, conformance extension, frontend search box
+- [x] Frontend: handle WebSocket `listing_enrichment`, `upload_progress`, and `plugin_ready`; merge lister `extra` into the listing
+- [x] Resumable tus client: chunked PATCH uploads with HEAD-based resume and progress UI
+- [x] Wire Linux sendfile fast path into download handler (ReaderStream fallback for multi-range)
+- [x] Pre-compressed embedded assets: Vite gzip/brotli output and `Accept-Encoding` negotiation in embed handler
+- [x] Virtual-scrolled file listing (replace plain `<ul>`; add generated large fixture for validation)
+- [x] CLI `zfiles upload`: headless tus client with `--resume` and bearer token support
+- [x] Searcher capability end-to-end: kernel dispatch, REST API, fixture plugin, conformance extension, frontend search box
+- [ ] CLI `zfiles search <folder> <query>`: headless filename search via installed searcher plugin
+- [ ] CLI `zfiles init [path]`: create `.zfiles/` with default config without starting the server
+- [ ] CLI `zfiles plugin remove <name>`: uninstall a plugin from `.zfiles/plugins/`
+- [ ] Frontend keyboard shortcuts: j/k selection, Enter open, Backspace up, `/` focus search
+- [ ] Preview pane shell: file selection, `/api/stat` metadata, viewer slot placeholder
+- [ ] Fixture corpus bootstrap: generators for `small/`, `unicode/`, `deep/` + listing integration test
+- [ ] Update README with new CLI commands and API endpoints

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tanstack/react-virtual':
+        specifier: ^3.13.9
+        version: 3.13.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -428,6 +431,15 @@ packages:
     resolution: {integrity: sha512-QVTUovf40zgTqlFVrKA1uXMVvU2QWEFWfAH8Wdc48IxLvrJMQVMBRjuQyUpzZCDkakImib9eVazbWlC6ksWtJw==}
     cpu: [x64]
     os: [win32]
+
+  '@tanstack/react-virtual@3.13.25':
+    resolution: {integrity: sha512-bmNoqMu6gcAW9JGrKVB0Q1tN1i5RONZF8r1fW0bbE4Oyf3DwEGnzzQJ2OW+Ozg1P4s8PyugkHg2ULZoFQN+cqw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/virtual-core@3.15.0':
+    resolution: {integrity: sha512-0AwPGx0I8QxPYjAxShT/+z+ZOe9u8mW5rsXvivCTjRfRmz9a43+3mRyi4wwlyoUqOC56q/jatKa0Bh9M99BEHQ==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -929,6 +941,14 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.60.4':
     optional: true
+
+  '@tanstack/react-virtual@3.13.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+    dependencies:
+      '@tanstack/virtual-core': 3.15.0
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
+
+  '@tanstack/virtual-core@3.15.0': {}
 
   '@types/babel__core@7.20.5':
     dependencies:

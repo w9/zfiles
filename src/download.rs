@@ -17,6 +17,48 @@ pub async fn file_body(path: &Path, start: u64, length: u64) -> std::io::Result<
     )))
 }
 
+/// Prefer the Linux `sendfile(2)` fast path when available.
+pub async fn body_for_range(path: &Path, start: u64, length: u64) -> std::io::Result<Body> {
+    #[cfg(target_os = "linux")]
+    {
+        return sendfile_body(path, start, length).await;
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        file_body(path, start, length).await
+    }
+}
+
+#[cfg(target_os = "linux")]
+async fn sendfile_body(path: &Path, start: u64, length: u64) -> std::io::Result<Body> {
+    use std::os::unix::net::UnixStream as StdUnixStream;
+
+    use tokio::net::UnixStream;
+
+    let (reader, writer) = StdUnixStream::pair()?;
+    reader.set_nonblocking(true)?;
+    writer.set_nonblocking(true)?;
+
+    let path = path.to_path_buf();
+    tokio::task::spawn_blocking(move || {
+        let _ = linux::sendfile_to_writer(&path, start, length, &writer);
+    });
+
+    let reader = UnixStream::from_std(reader)?;
+    Ok(Body::from_stream(ReaderStream::new(reader)))
+}
+
+#[cfg(target_os = "linux")]
+pub fn uses_sendfile_fast_path() -> bool {
+    true
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn uses_sendfile_fast_path() -> bool {
+    false
+}
+
 #[cfg(target_os = "linux")]
 pub mod linux {
     use std::os::unix::net::UnixStream;
@@ -78,12 +120,12 @@ mod tests {
     use tempfile::tempdir;
 
     #[tokio::test]
-    async fn file_body_returns_requested_bytes() {
+    async fn body_for_range_returns_requested_bytes() {
         let dir = tempdir().unwrap();
         let path = dir.path().join("sample.bin");
         std::fs::write(&path, b"hello world").unwrap();
 
-        let body = file_body(&path, 6, 5).await.unwrap();
+        let body = body_for_range(&path, 6, 5).await.unwrap();
         let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
         assert_eq!(&bytes[..], b"world");
     }

@@ -54,7 +54,9 @@ struct PathQuery {
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/api/health", get(health))
+        .route("/api/plugins", get(list_plugins))
         .route("/api/list", get(list_directory))
+        .route("/api/search", get(search_directory))
         .route("/api/stat", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
@@ -148,6 +150,10 @@ async fn health() -> impl IntoResponse {
     Json(serde_json::json!({ "status": "ok" }))
 }
 
+async fn list_plugins(State(state): State<AppState>) -> impl IntoResponse {
+    Json(state.plugins.ready_plugins())
+}
+
 async fn list_directory(
     State(state): State<AppState>,
     Query(query): Query<PathQuery>,
@@ -162,6 +168,25 @@ async fn list_directory(
         .enrich_listing(relative, entries, state.events.clone())
         .await;
     Ok(Json(entries))
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchQuery {
+    path: Option<String>,
+    q: String,
+}
+
+async fn search_directory(
+    State(state): State<AppState>,
+    Query(query): Query<SearchQuery>,
+) -> Result<Json<Vec<crate::fs::FileEntry>>, AppError> {
+    let relative = query.path.as_deref().unwrap_or("");
+    let results = state
+        .plugins
+        .search(relative, &query.q)
+        .await
+        .unwrap_or_default();
+    Ok(Json(results))
 }
 
 async fn stat_path(
@@ -206,7 +231,7 @@ async fn download_file(
             (StatusCode::OK, 0, file_size)
         };
 
-    let body = download::file_body(&absolute, start, content_length).await?;
+    let body = download::body_for_range(&absolute, start, content_length).await?;
 
     let mut response = Response::new(body);
     *response.status_mut() = status;
@@ -383,7 +408,11 @@ async fn handle_ws(mut socket: WebSocket, events: EventBus) {
 }
 
 async fn static_or_index(request: axum::http::Request<Body>) -> impl IntoResponse {
-    embed::serve_static(request.uri().path())
+    let accept_encoding = request
+        .headers()
+        .get(axum::http::header::ACCEPT_ENCODING)
+        .and_then(|value| value.to_str().ok());
+    embed::serve_static(request.uri().path(), accept_encoding)
 }
 
 fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<Option<String>, AppError> {

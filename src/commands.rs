@@ -10,6 +10,13 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
         None => crate::transport::serve(cli.serve).await,
         Some(Command::Plugin { command }) => run_plugin(command).await,
         Some(Command::Config { command }) => run_config(command).await,
+        Some(Command::Upload {
+            server,
+            file,
+            path,
+            token,
+            resume,
+        }) => run_upload(server, file, path, token, resume).await,
     }
 }
 
@@ -70,5 +77,34 @@ async fn run_config(command: ConfigCommand) -> anyhow::Result<()> {
             println!("ok");
         }
     }
+    Ok(())
+}
+
+async fn run_upload(
+    server: String,
+    file: std::path::PathBuf,
+    path: Option<String>,
+    token: Option<String>,
+    resume: bool,
+) -> anyhow::Result<()> {
+    let file = std::fs::canonicalize(&file)
+        .with_context(|| format!("failed to resolve file {}", file.display()))?;
+    let target_path = path.unwrap_or_else(|| {
+        file.file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("upload.bin")
+            .to_string()
+    });
+
+    crate::upload::upload_file(crate::upload::UploadOptions {
+        server: &server,
+        file: &file,
+        target_path: &target_path,
+        token: token.as_deref(),
+        resume,
+    })
+    .await?;
+
+    println!("Uploaded {target_path} to {server}");
     Ok(())
 }

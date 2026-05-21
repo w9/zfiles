@@ -17,6 +17,7 @@ use crate::fs::FileEntry;
 use crate::plugin::framing;
 
 const LISTER_TIMEOUT: Duration = Duration::from_millis(50);
+const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
@@ -50,6 +51,7 @@ struct Inner {
 
 struct PluginHandle {
     record: PluginRecord,
+    serve_root: PathBuf,
     io: AsyncMutex<Option<PluginIo>>,
     ready: AtomicBool,
 }
@@ -130,6 +132,45 @@ impl PluginSupervisor {
         })
     }
 
+    pub async fn search(&self, path: &str, query: &str) -> Option<Vec<FileEntry>> {
+        let handle = self.ready_searcher()?;
+        let plugin_name = handle.record.manifest.name.clone();
+        let call = handle.call_searcher(path, query);
+
+        match tokio::time::timeout(SEARCHER_TIMEOUT, call).await {
+            Ok(Ok(results)) => Some(results),
+            Ok(Err(error)) => {
+                warn!(plugin = %plugin_name, %error, "searcher call failed");
+                None
+            }
+            Err(_) => {
+                warn!(plugin = %plugin_name, "searcher call timed out");
+                None
+            }
+        }
+    }
+
+    pub fn has_searcher(&self) -> bool {
+        self.ready_searcher().is_some()
+    }
+
+    pub fn ready_plugins(&self) -> Vec<serde_json::Value> {
+        let Ok(handles) = self.inner.handles.lock() else {
+            return Vec::new();
+        };
+
+        handles
+            .values()
+            .filter(|handle| handle.ready.load(Ordering::SeqCst))
+            .map(|handle| {
+                serde_json::json!({
+                    "name": handle.record.manifest.name,
+                    "capabilities": handle.record.manifest.capabilities,
+                })
+            })
+            .collect()
+    }
+
     pub async fn enrich_listing(
         &self,
         path: &str,
@@ -174,12 +215,26 @@ impl PluginSupervisor {
     fn register_handle(&self, record: &PluginRecord) {
         let handle = Arc::new(PluginHandle {
             record: record.clone(),
+            serve_root: self.inner.serve_root.clone(),
             io: AsyncMutex::new(None),
             ready: AtomicBool::new(false),
         });
         if let Ok(mut handles) = self.inner.handles.lock() {
             handles.insert(record.manifest.name.clone(), handle);
         }
+    }
+
+    fn ready_searcher(&self) -> Option<Arc<PluginHandle>> {
+        let handles = self.inner.handles.lock().ok()?;
+        handles.values().find(|handle| {
+            handle.ready.load(Ordering::SeqCst)
+                && handle
+                    .record
+                    .manifest
+                    .capabilities
+                    .iter()
+                    .any(|cap| cap == "searcher")
+        }).cloned()
     }
 
     fn ready_lister(&self) -> Option<Arc<PluginHandle>> {
@@ -284,6 +339,7 @@ impl PluginHandle {
                 "capabilities": self.record.manifest.capabilities,
                 "globs": self.record.manifest.globs,
                 "storagePath": self.record.root.join("data").display().to_string(),
+                "rootPath": self.serve_root.display().to_string(),
             }
         });
         framing::write_message(&mut io.stdin, &request).await?;
@@ -292,6 +348,27 @@ impl PluginHandle {
             anyhow::bail!("initialize failed: {response}");
         }
         Ok(())
+    }
+
+    async fn call_searcher(&self, path: &str, query: &str) -> Result<Vec<FileEntry>> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "searcher/query",
+            "params": {
+                "path": path,
+                "query": query,
+            }
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("searcher/query failed: {response}");
+        }
+        parse_searcher_response(&response)
     }
 
     async fn call_lister(&self, path: &str, entries: &[FileEntry]) -> Result<Vec<FileEntry>> {
@@ -314,6 +391,24 @@ impl PluginHandle {
         }
         merge_lister_response(entries, &response)
     }
+}
+
+fn parse_searcher_response(response: &Value) -> Result<Vec<FileEntry>> {
+    let Some(entries) = response
+        .get("result")
+        .and_then(|value| value.get("entries"))
+        .and_then(|value| value.as_array())
+    else {
+        return Ok(Vec::new());
+    };
+
+    let mut parsed = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let parsed_entry: FileEntry = serde_json::from_value(entry.clone())
+            .context("parse searcher entry")?;
+        parsed.push(parsed_entry);
+    }
+    Ok(parsed)
 }
 
 fn merge_lister_response(entries: &[FileEntry], response: &Value) -> Result<Vec<FileEntry>> {

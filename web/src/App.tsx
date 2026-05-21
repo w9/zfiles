@@ -1,58 +1,58 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import VirtualListing, { type ListingEntry } from "./VirtualListing";
+import { uploadFileResumable, type UploadProgress } from "./upload";
 
 type FileEntry = {
   name: string;
   path: string;
   is_dir: boolean;
   size: number;
+  extra?: Record<string, unknown>;
+};
+
+type PluginInfo = {
+  name: string;
+  capabilities: string[];
 };
 
 type KernelEvent =
   | { type: "connected"; version: string }
   | { type: "filesystem_changed"; path: string }
-  | { type: "upload_progress"; id: string; offset: number; length?: number };
+  | { type: "upload_progress"; id: string; offset: number; length?: number }
+  | { type: "plugin_ready"; name: string }
+  | { type: "listing_enrichment"; path: string; entries: FileEntry[] };
 
-function encodeMetadata(filename: string): string {
-  return `filename ${btoa(filename)}`;
+function mergeEntries(current: FileEntry[], incoming: FileEntry[]): FileEntry[] {
+  const byPath = new Map(current.map((entry) => [entry.path, entry]));
+  for (const entry of incoming) {
+    const existing = byPath.get(entry.path);
+    byPath.set(entry.path, existing ? { ...existing, ...entry } : entry);
+  }
+  return Array.from(byPath.values());
 }
 
-async function uploadFile(file: File, targetPath: string): Promise<void> {
-  const create = await fetch("/api/upload", {
-    method: "POST",
-    headers: {
-      "Upload-Length": String(file.size),
-      "Upload-Metadata": encodeMetadata(targetPath),
-    },
-  });
-
-  if (!create.ok) {
-    throw new Error(`upload create failed: HTTP ${create.status}`);
+function extraLabel(extra?: Record<string, unknown>): string | undefined {
+  if (!extra) {
+    return undefined;
   }
-
-  const location = create.headers.get("location");
-  if (!location) {
-    throw new Error("upload create missing location header");
+  if (typeof extra.plugin === "string") {
+    return `[${extra.plugin}]`;
   }
-
-  const patch = await fetch(location, {
-    method: "PATCH",
-    headers: {
-      "Upload-Offset": "0",
-      "Content-Type": "application/offset+octet-stream",
-    },
-    body: file,
-  });
-
-  if (!patch.ok) {
-    throw new Error(`upload patch failed: HTTP ${patch.status}`);
-  }
+  return undefined;
 }
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<FileEntry[]>([]);
+  const [searchResults, setSearchResults] = useState<FileEntry[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [kernelVersion, setKernelVersion] = useState<string | null>(null);
+  const [searcherReady, setSearcherReady] = useState(false);
+  const [readyPlugins, setReadyPlugins] = useState<string[]>([]);
 
   const loadListing = useCallback(async (path: string) => {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
@@ -63,12 +63,26 @@ export default function App() {
     const data: FileEntry[] = await response.json();
     setEntries(data);
     setCurrentPath(path);
+    setSearchResults(null);
     setError(null);
+  }, []);
+
+  const loadPlugins = useCallback(async () => {
+    const response = await fetch("/api/plugins");
+    if (!response.ok) {
+      return;
+    }
+    const plugins: PluginInfo[] = await response.json();
+    setReadyPlugins(plugins.map((plugin) => plugin.name));
+    setSearcherReady(
+      plugins.some((plugin) => plugin.capabilities.includes("searcher")),
+    );
   }, []);
 
   useEffect(() => {
     loadListing("").catch((err: Error) => setError(err.message));
-  }, [loadListing]);
+    void loadPlugins();
+  }, [loadListing, loadPlugins]);
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -76,21 +90,103 @@ export default function App() {
 
     socket.onmessage = (message) => {
       const event = JSON.parse(message.data) as KernelEvent;
-      if (event.type === "filesystem_changed") {
-        loadListing(currentPath).catch((err: Error) => setError(err.message));
+      switch (event.type) {
+        case "connected":
+          setKernelVersion(event.version);
+          break;
+        case "filesystem_changed":
+          loadListing(currentPath).catch((err: Error) => setError(err.message));
+          break;
+        case "upload_progress":
+          setUploadProgress({
+            id: event.id,
+            offset: event.offset,
+            length: event.length,
+          });
+          break;
+        case "plugin_ready":
+          setReadyPlugins((current) =>
+            current.includes(event.name) ? current : [...current, event.name],
+          );
+          void loadPlugins();
+          break;
+        case "listing_enrichment":
+          if (event.path === currentPath) {
+            setEntries((current) => mergeEntries(current, event.entries));
+          }
+          break;
       }
     };
 
     return () => socket.close();
-  }, [currentPath, loadListing]);
+  }, [currentPath, loadListing, loadPlugins]);
 
-  const breadcrumbs = currentPath
-    ? ["", ...currentPath.split("/")]
-    : [""];
+  useEffect(() => {
+    if (!searcherReady || !searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
 
-  const navigateTo = (path: string) => {
-    loadListing(path).catch((err: Error) => setError(err.message));
-  };
+    const handle = window.setTimeout(() => {
+      const params = new URLSearchParams({ q: searchQuery.trim() });
+      if (currentPath) {
+        params.set("path", currentPath);
+      }
+      fetch(`/api/search?${params.toString()}`)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.json() as Promise<FileEntry[]>;
+        })
+        .then((results) => setSearchResults(results))
+        .catch((err: Error) => setError(err.message));
+    }, 200);
+
+    return () => window.clearTimeout(handle);
+  }, [searchQuery, currentPath, searcherReady]);
+
+  const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
+  const visibleEntries = searchResults ?? entries;
+
+  const navigateTo = useCallback(
+    (path: string) => {
+      loadListing(path).catch((err: Error) => setError(err.message));
+    },
+    [loadListing],
+  );
+
+  const listingEntries = useMemo<ListingEntry[]>(() => {
+    const rows: ListingEntry[] = [];
+    if (!searchResults && currentPath) {
+      rows.push({
+        key: "..",
+        name: "..",
+        path: "",
+        isDir: true,
+        onActivate: () => {
+          const parent = currentPath.split("/").slice(0, -1).join("/");
+          navigateTo(parent);
+        },
+      });
+    }
+
+    for (const entry of visibleEntries) {
+      rows.push({
+        key: entry.path,
+        name: entry.name,
+        path: entry.path,
+        isDir: entry.is_dir,
+        size: entry.is_dir ? undefined : entry.size,
+        extraLabel: extraLabel(entry.extra),
+        onActivate: () => navigateTo(entry.path),
+        href: entry.is_dir
+          ? undefined
+          : `/api/file?path=${encodeURIComponent(entry.path)}`,
+      });
+    }
+    return rows;
+  }, [visibleEntries, currentPath, searchResults, navigateTo]);
 
   const onUpload = async (files: FileList | null) => {
     if (!files || files.length === 0 || uploading) {
@@ -99,24 +195,33 @@ export default function App() {
 
     setUploading(true);
     setError(null);
+    setUploadProgress(null);
 
     try {
       for (const file of files) {
         const target = currentPath ? `${currentPath}/${file.name}` : file.name;
-        await uploadFile(file, target);
+        await uploadFileResumable(file, target, setUploadProgress);
       }
       await loadListing(currentPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "upload failed");
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
+
+  const uploadLabel = uploading
+    ? uploadProgress?.length
+      ? `Uploading… ${Math.round((uploadProgress.offset / uploadProgress.length) * 100)}%`
+      : "Uploading…"
+    : "Drop files here to upload";
 
   return (
     <main className="shell">
       <header>
         <h1>zfiles</h1>
+        {kernelVersion ? <p className="meta">kernel v{kernelVersion}</p> : null}
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           {breadcrumbs.map((part, index) => {
             const path = breadcrumbs.slice(1, index + 1).join("/");
@@ -135,6 +240,17 @@ export default function App() {
         </nav>
       </header>
 
+      {searcherReady ? (
+        <section className="search">
+          <input
+            type="search"
+            placeholder="Search filenames…"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </section>
+      ) : null}
+
       <section
         className="dropzone"
         onDragOver={(event) => event.preventDefault()}
@@ -143,7 +259,7 @@ export default function App() {
           void onUpload(event.dataTransfer.files);
         }}
       >
-        <p>{uploading ? "Uploading…" : "Drop files here to upload"}</p>
+        <p>{uploadLabel}</p>
         <label className="upload-button">
           Choose files
           <input
@@ -155,38 +271,13 @@ export default function App() {
         </label>
       </section>
 
+      {readyPlugins.length > 0 ? (
+        <p className="meta">Plugins ready: {readyPlugins.join(", ")}</p>
+      ) : null}
+
       {error && <p className="error">{error}</p>}
 
-      <ul className="listing">
-        {currentPath && (
-          <li>
-            <button type="button" className="entry" onClick={() => {
-              const parent = currentPath.split("/").slice(0, -1).join("/");
-              navigateTo(parent);
-            }}>
-              <span className="name">📁 ..</span>
-            </button>
-          </li>
-        )}
-        {entries.map((entry) => (
-          <li key={entry.path}>
-            {entry.is_dir ? (
-              <button
-                type="button"
-                className="entry"
-                onClick={() => navigateTo(entry.path)}
-              >
-                <span className="name">📁 {entry.name}</span>
-              </button>
-            ) : (
-              <a className="entry" href={`/api/file?path=${encodeURIComponent(entry.path)}`}>
-                <span className="name">📄 {entry.name}</span>
-                <span className="size">{entry.size} B</span>
-              </a>
-            )}
-          </li>
-        ))}
-      </ul>
+      <VirtualListing entries={listingEntries} />
     </main>
   );
 }
