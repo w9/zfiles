@@ -22,3 +22,10 @@ This file tracks implementation work for zfiles. It is the living task list deri
 - [x] Implement `transport` — bind TCP listener and serve HTTP (cold-start path, no blocking work)
 - [x] Define `Fs` trait and Linux v1 implementation with `read_dir`
 - [x] Directory listing REST API (TDD: integration test first, then handler)
+- [x] Write a simple README.md
+- [x] File stat REST API (`/api/stat`)
+- [x] Range-aware file download handler (TDD; `sendfile` on Linux)
+- [x] Lazy `.zfiles/` dot-folder and `state.db` initialization
+- [x] tus resumable upload endpoint
+- [x] WebSocket channel for live kernel events
+- [x] Vite + React frontend shell, embedded via `rust-embed`
