@@ -98,6 +98,7 @@ export default function App() {
   );
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const selectionAnchorRef = useRef(0);
 
   const loadListing = useCallback(async (path: string) => {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
@@ -235,20 +236,27 @@ export default function App() {
     [],
   );
 
-  const runContextAction = useCallback(async (actionId: string, path: string) => {
-    const response = await fetch("/api/actions/run", {
+  const runBulkAction = useCallback(async (actionId: string, paths: string[]) => {
+    const response = await fetch("/api/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path, action_id: actionId }),
+      body: JSON.stringify({ paths, action_id: actionId }),
     });
     if (!response.ok) {
       setError(`Action failed: HTTP ${response.status}`);
       return;
     }
     if (actionId === "copy-path") {
-      await navigator.clipboard.writeText(path);
+      await navigator.clipboard.writeText(paths.join("\n"));
     }
   }, []);
+
+  const runContextAction = useCallback(
+    async (actionId: string, path: string) => {
+      await runBulkAction(actionId, [path]);
+    },
+    [runBulkAction],
+  );
 
   const toggleMultiSelect = useCallback((path: string) => {
     setSelectedPaths((current) => {
@@ -273,7 +281,7 @@ export default function App() {
         name: "..",
         path: "",
         isDir: true,
-        onSelect: () => {
+        onSelect: (_event: React.MouseEvent) => {
           setSelectedIndex(0);
           setSelectedPath(null);
         },
@@ -285,6 +293,7 @@ export default function App() {
     }
 
     for (const entry of visibleEntries) {
+      const currentIndex = rows.length;
       const thumbReady = readyThumbnails.get(entry.path);
       rows.push({
         key: entry.path,
@@ -300,7 +309,27 @@ export default function App() {
           thumbReady
             ? thumbReady
             : undefined,
-        onSelect: () => setSelectedPath(entry.path),
+        onSelect: (event) => {
+          if (event.shiftKey) {
+            const anchor = selectionAnchorRef.current;
+            const start = Math.min(anchor, currentIndex);
+            const end = Math.max(anchor, currentIndex);
+            setSelectedPaths(() => {
+              const next = new Set<string>();
+              for (let i = start; i <= end; i += 1) {
+                const row = rows[i];
+                if (row?.path && row.key !== "..") {
+                  next.add(row.path);
+                }
+              }
+              return next;
+            });
+          } else {
+            selectionAnchorRef.current = currentIndex;
+          }
+          setSelectedIndex(currentIndex);
+          setSelectedPath(entry.path);
+        },
         onActivate: () => {
           if (entry.is_dir) {
             navigateTo(entry.path);
@@ -501,6 +530,12 @@ export default function App() {
               </a>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => void runBulkAction("copy-path", bulkDownloadPaths)}
+          >
+            Copy paths
+          </button>
           <button type="button" onClick={() => setSelectedPaths(new Set())}>
             Clear
           </button>
@@ -508,7 +543,7 @@ export default function App() {
       ) : null}
 
       <p className="meta">
-        Shortcuts: j/k move, Enter open, Backspace up, / search, Space toggle select
+        Shortcuts: j/k move, Enter open, Backspace up, / search, Space toggle, Shift+click range
       </p>
 
       <div className="explorer-layout">

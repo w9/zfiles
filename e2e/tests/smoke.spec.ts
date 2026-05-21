@@ -80,3 +80,49 @@ test("context menu shows action plugin entries", async ({ page }) => {
   await page.getByRole("link", { name: /hello\.txt/ }).click({ button: "right" });
   await expect(page.getByRole("menuitem", { name: "Copy path" })).toBeVisible();
 });
+
+test("viewer ESM module renders preview body", async ({ page }) => {
+  const viewerDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-viewer-"));
+  fs.writeFileSync(path.join(viewerDir, "notes.txt"), "hello from viewer esm\n");
+
+  const install = spawnSync(
+    binary,
+    [
+      "plugin",
+      "install",
+      path.join(rootDir, "fixtures/plugins/viewer-text"),
+      "--path",
+      viewerDir,
+    ],
+    { encoding: "utf8" },
+  );
+  if (install.status !== 0) {
+    throw new Error(install.stderr || "viewer plugin install failed");
+  }
+
+  const viewerServer = spawn(
+    binary,
+    ["--port", "9877", "--no-open", viewerDir],
+    { stdio: "pipe" },
+  );
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("viewer server start timeout")), 15_000);
+    viewerServer.stdout.on("data", (chunk) => {
+      if (chunk.toString().includes("listening")) {
+        clearTimeout(timeout);
+        resolve();
+      }
+    });
+  });
+
+  try {
+    await page.goto("http://127.0.0.1:9877/");
+    await page.waitForTimeout(500);
+    await page.getByRole("link", { name: /notes\.txt/ }).click();
+    await expect(page.getByText("ESM viewer for notes.txt")).toBeVisible();
+    await expect(page.getByText("hello from viewer esm")).toBeVisible();
+  } finally {
+    viewerServer.kill("SIGTERM");
+  }
+});

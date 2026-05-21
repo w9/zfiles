@@ -1,6 +1,6 @@
 ## High-level plan next
 
-ESM viewer mounts, daemon CLI, and throughput baselines are in place. Next: thumbnail disk cache, route-plugin dynamic dispatch, multi-folder daemon config, bulk multi-select actions, and explorer range-select UX. Follow with iframe sandbox for untrusted viewer plugins and perf regression baselines in nightly CI.
+Thumbnail cache, route plugins, multi-folder daemon, and bulk explorer actions are done. Next: untrusted viewer iframe sandboxing, thumbnail cache invalidation by mtime, and perf regression baselines in nightly CI. Follow with dot-folder relocation config, watcher plugins, and `cargo test` coverage for daemon config start/stop.
 
 ## TODO List
 
@@ -67,10 +67,17 @@ ESM viewer mounts, daemon CLI, and throughput baselines are in place. Next: thum
 - [x] Download throughput perf smoke: assert `/api/file` on 1 MiB fixture under SLA
 - [x] Upload throughput perf smoke: assert tus PATCH completion under SLA
 - [x] E2E smoke: install action plugin, verify context menu appears on right-click
-- [ ] Thumbnail on-disk cache: store/read PNG bytes under plugin `data/thumbnails/`
-- [ ] Route plugin end-to-end: fixture plugin, dynamic `/plugin/:name/*` dispatch via `route/handle`
-- [ ] Multi-folder daemon config: `daemon.toml` with `[[share]]`, `zfiles daemon start --config`
-- [ ] Bulk action dispatch: `POST /api/actions` accepts `paths[]`, frontend runs on multi-select
-- [ ] Frontend shift+click range selection in virtual listing
-- [ ] E2E smoke: install viewer-text plugin, verify ESM viewer mount renders preview body
-- [ ] Update README with daemon, actions POST, and plugin asset routes
+- [x] Thumbnail on-disk cache: store/read PNG bytes under plugin `data/thumbnails/`
+- [x] Route plugin end-to-end: fixture plugin, dynamic `/plugin/:name/*` dispatch via `route/handle`
+- [x] Multi-folder daemon config: `daemon.toml` with `[[share]]`, `zfiles daemon start --config`
+- [x] Bulk action dispatch: `POST /api/actions` accepts `paths[]`, frontend runs on multi-select
+- [x] Frontend shift+click range selection in virtual listing
+- [x] E2E smoke: install viewer-text plugin, verify ESM viewer mount renders preview body
+- [x] Update README with daemon, actions POST, and plugin asset routes
+- [ ] Plugin manifest `trusted` field exposed in `/api/plugins`
+- [ ] Untrusted viewer iframe sandbox: embedded shell + postMessage preview bridge
+- [ ] Thumbnail cache invalidation when source file mtime is newer than cache
+- [ ] Perf baseline fixture and regression test with 5% tolerance
+- [ ] Nightly CI runs perf baseline regression suite
+- [ ] Untrusted viewer fixture plugin and integration test
+- [ ] E2E smoke: untrusted viewer renders inside sandbox iframe

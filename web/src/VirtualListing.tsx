@@ -9,7 +9,7 @@ export type ListingEntry = {
   size?: number;
   extraLabel?: string;
   thumbnailUrl?: string;
-  onSelect: () => void;
+  onSelect: (event: React.MouseEvent) => void;
   onActivate: () => void;
   onContextMenu?: (event: React.MouseEvent) => void;
   href?: string;
@@ -93,7 +93,7 @@ export default function VirtualListing({
                   href={entry.href}
                   onClick={(event) => {
                     event.preventDefault();
-                    entry.onSelect();
+                    entry.onSelect(event);
                   }}
                   onDoubleClick={() => {
                     window.location.href = entry.href!;

@@ -42,8 +42,30 @@ zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
 # Plugin management
 zfiles plugin install ./fixtures/plugins/search-filename
 zfiles plugin list
-zfiles plugin remove search-filename
+zfiles plugin remove search-filename --path ~/Downloads
 
+# Background daemon
+zfiles daemon start ~/Downloads --port 8080
+zfiles daemon status ~/Downloads
+zfiles daemon stop ~/Downloads
+
+# Multi-folder daemon config
+zfiles daemon start --config ~/.config/zfiles/daemon.toml
+```
+
+Example `daemon.toml`:
+
+```toml
+[[share]]
+path = "/home/you/Downloads"
+port = 8080
+
+[[share]]
+path = "/home/you/Photos"
+port = 8081
+```
+
+```bash
 # Configuration
 zfiles config get server.read_only --folder ~/Downloads
 zfiles config set server.read_only true --folder ~/Downloads
@@ -73,6 +95,9 @@ cargo build
 | `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |
 | `/api/thumbnail?path=` | GET | Thumbnail image (requires thumbnailer plugin) |
 | `/api/preview?path=` | GET | File preview body (requires viewer plugin) |
+| `/api/actions?path=` | GET | Context-menu actions (requires action plugin) |
+| `/api/actions` | POST | Run action on `path` or `paths[]` |
+| `/plugin/:name/*path` | GET | Plugin static assets or route-plugin handlers |
 | `/api/stat?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |

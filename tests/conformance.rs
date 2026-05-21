@@ -42,3 +42,12 @@ async fn action_copy_plugin_passes_conformance() {
         .await
         .expect("action-copy plugin conformance");
 }
+
+#[tokio::test]
+async fn route_stub_plugin_passes_conformance() {
+    let plugin = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/route-stub");
+    zfiles::plugin::conformance::run(&plugin)
+        .await
+        .expect("route-stub plugin conformance");
+}

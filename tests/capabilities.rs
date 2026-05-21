@@ -259,3 +259,71 @@ async fn action_run_returns_no_content() {
         .await;
     response.assert_status(axum::http::StatusCode::NO_CONTENT);
 }
+
+#[tokio::test]
+async fn bulk_action_run_accepts_paths_array() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), b"a").unwrap();
+    std::fs::write(dir.path().join("b.txt"), b"b").unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/action-copy");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    wait_for_plugin(&server, "action").await;
+
+    let response = server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "paths": ["a.txt", "b.txt"],
+            "action_id": "copy-path",
+        }))
+        .await;
+    response.assert_status(axum::http::StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn thumbnail_uses_on_disk_cache() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("photo.jpg"), b"fake jpeg").unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/thumbnail-stub");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    wait_for_plugin(&server, "thumbnailer").await;
+
+    let first = server.get("/api/thumbnail?path=photo.jpg").await;
+    first.assert_status_ok();
+
+    let cache_dir = dir.path().join(".zfiles/plugins/thumbnail-stub/data/thumbnails");
+    assert!(cache_dir.is_dir());
+    assert!(std::fs::read_dir(&cache_dir).unwrap().count() >= 2);
+
+    let second = server.get("/api/thumbnail?path=photo.jpg").await;
+    second.assert_status_ok();
+}
+
+#[tokio::test]
+async fn route_plugin_handles_dynamic_path() {
+    let dir = tempdir().unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/route-stub");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    wait_for_plugin(&server, "route").await;
+
+    let response = server.get("/plugin/route-stub/api/greeting").await;
+    response.assert_status_ok();
+    assert!(response.text().contains("hello from route-stub"));
+}

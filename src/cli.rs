@@ -75,24 +75,33 @@ pub enum Command {
 pub enum DaemonCommand {
     /// Start serving a directory in the background
     Start {
-        /// Directory to serve
+        /// Directory to serve when `--config` is not set
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// Port to listen on
+        /// Port to listen on when `--config` is not set
         #[arg(long)]
         port: Option<u16>,
+        /// Multi-folder daemon config with `[[share]]` entries
+        #[arg(long)]
+        config: Option<PathBuf>,
     },
     /// Stop the background server for a directory
     Stop {
-        /// Directory whose daemon should be stopped
+        /// Directory whose daemon should be stopped when `--config` is not set
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// Multi-folder daemon config with `[[share]]` entries
+        #[arg(long)]
+        config: Option<PathBuf>,
     },
     /// Report whether a background server is running
     Status {
-        /// Directory whose daemon status should be checked
+        /// Directory whose daemon status should be checked when `--config` is not set
         #[arg(default_value = ".")]
         path: PathBuf,
+        /// Multi-folder daemon config with `[[share]]` entries
+        #[arg(long)]
+        config: Option<PathBuf>,
     },
 }
 

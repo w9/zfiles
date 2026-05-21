@@ -191,7 +191,10 @@ async fn list_actions(
 
 #[derive(Debug, Deserialize)]
 struct RunActionBody {
-    path: String,
+    #[serde(default)]
+    path: Option<String>,
+    #[serde(default)]
+    paths: Vec<String>,
     action_id: String,
 }
 
@@ -199,7 +202,17 @@ async fn run_action(
     State(state): State<AppState>,
     Json(body): Json<RunActionBody>,
 ) -> Result<StatusCode, AppError> {
-    state.plugins.run_action(&body.path, &body.action_id).await?;
+    let mut targets = body.paths;
+    if let Some(path) = body.path {
+        targets.push(path);
+    }
+    if targets.is_empty() {
+        return Err(AppError(anyhow::anyhow!("path or paths is required")));
+    }
+    state
+        .plugins
+        .run_actions(&targets, &body.action_id)
+        .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -207,7 +220,35 @@ async fn plugin_static(
     State(state): State<AppState>,
     AxumPath((name, path)): AxumPath<(String, String)>,
 ) -> Result<Response, AppError> {
-    let absolute = state.plugins.resolve_plugin_asset(&name, &path)?;
+    if let Ok(absolute) = state.plugins.resolve_plugin_asset(&name, &path) {
+        return serve_plugin_file(absolute).await;
+    }
+
+    if state.plugins.has_route(&name) {
+        let route_path = format!("/{path}");
+        let Some((status, content_type, bytes)) = state
+            .plugins
+            .route_handle(&name, "GET", &route_path)
+            .await
+        else {
+            return Err(AppError(anyhow::anyhow!("route unavailable")));
+        };
+        let status_code =
+            StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        let mut response = Response::new(Body::from(bytes));
+        *response.status_mut() = status_code;
+        response.headers_mut().insert(
+            CONTENT_TYPE,
+            HeaderValue::from_str(&content_type)
+                .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
+        );
+        return Ok(response);
+    }
+
+    Err(AppError(anyhow::anyhow!("plugin asset not found")))
+}
+
+async fn serve_plugin_file(absolute: std::path::PathBuf) -> Result<Response, AppError> {
     let content_type = from_path(&absolute)
         .first()
         .map(|mime| mime.to_string())

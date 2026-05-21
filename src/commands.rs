@@ -30,11 +30,34 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
 fn run_daemon(command: crate::cli::DaemonCommand) -> anyhow::Result<()> {
     use crate::cli::DaemonCommand;
     use crate::daemon::{DaemonStartArgs, start, status, stop};
+    use crate::daemon_config::{start_config, status_config, stop_config};
 
     match command {
-        DaemonCommand::Start { path, port } => start(DaemonStartArgs { path, port }),
-        DaemonCommand::Stop { path } => stop(path),
-        DaemonCommand::Status { path } => status(path),
+        DaemonCommand::Start {
+            path,
+            port,
+            config,
+        } => {
+            if let Some(config) = config {
+                start_config(config)
+            } else {
+                start(DaemonStartArgs { path, port })
+            }
+        }
+        DaemonCommand::Stop { path, config } => {
+            if let Some(config) = config {
+                stop_config(config)
+            } else {
+                stop(path)
+            }
+        }
+        DaemonCommand::Status { path, config } => {
+            if let Some(config) = config {
+                status_config(config)
+            } else {
+                status(path)
+            }
+        }
     }
 }
 

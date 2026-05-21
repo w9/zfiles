@@ -21,6 +21,7 @@ const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
 const THUMBNAILER_TIMEOUT: Duration = Duration::from_millis(500);
 const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
 const ACTION_TIMEOUT: Duration = Duration::from_millis(200);
+const ROUTE_TIMEOUT: Duration = Duration::from_millis(500);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
@@ -184,10 +185,17 @@ impl PluginSupervisor {
 
     pub async fn thumbnail(&self, path: &str) -> Option<(String, Vec<u8>)> {
         let handle = self.ready_plugin_for("thumbnailer", path)?;
+        if let Some(cached) = read_thumbnail_cache(&handle.record.root, path) {
+            return Some(cached);
+        }
+
         let plugin_name = handle.record.manifest.name.clone();
         let call = handle.call_thumbnailer(path);
         match tokio::time::timeout(THUMBNAILER_TIMEOUT, call).await {
-            Ok(Ok(result)) => Some(result),
+            Ok(Ok(result)) => {
+                let _ = write_thumbnail_cache(&handle.record.root, path, &result.0, &result.1);
+                Some(result)
+            }
             Ok(Err(error)) => {
                 warn!(plugin = %plugin_name, %error, "thumbnailer call failed");
                 None
@@ -272,6 +280,66 @@ impl PluginSupervisor {
             Err(_) => {
                 warn!(plugin = %plugin_name, "action/run call timed out");
                 anyhow::bail!("action timed out");
+            }
+        }
+    }
+
+    pub async fn run_actions(&self, paths: &[String], action_id: &str) -> Result<()> {
+        for path in paths {
+            self.run_action(path, action_id).await?;
+        }
+        Ok(())
+    }
+
+    pub fn has_route(&self, name: &str) -> bool {
+        self.discover()
+            .ok()
+            .is_some_and(|plugins| {
+                plugins.iter().any(|record| {
+                    record.manifest.name == name
+                        && record
+                            .manifest
+                            .capabilities
+                            .iter()
+                            .any(|cap| cap == "route")
+                })
+            })
+    }
+
+    pub async fn route_handle(
+        &self,
+        plugin_name: &str,
+        method: &str,
+        path: &str,
+    ) -> Option<(u16, String, Vec<u8>)> {
+        let handle = {
+            let handles = self.inner.handles.lock().ok()?;
+            handles
+                .values()
+                .find(|handle| {
+                    handle.ready.load(Ordering::SeqCst)
+                        && handle.record.manifest.name == plugin_name
+                        && handle
+                            .record
+                            .manifest
+                            .capabilities
+                            .iter()
+                            .any(|cap| cap == "route")
+                })
+                .cloned()?
+        };
+
+        let name = handle.record.manifest.name.clone();
+        let call = handle.call_route(method, path);
+        match tokio::time::timeout(ROUTE_TIMEOUT, call).await {
+            Ok(Ok(result)) => Some(result),
+            Ok(Err(error)) => {
+                warn!(plugin = %name, %error, "route/handle call failed");
+                None
+            }
+            Err(_) => {
+                warn!(plugin = %name, "route/handle call timed out");
+                None
             }
         }
     }
@@ -610,6 +678,24 @@ impl PluginHandle {
         parse_action_list_response(&response)
     }
 
+    async fn call_route(&self, method: &str, path: &str) -> Result<(u16, String, Vec<u8>)> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "route/handle",
+            "params": { "method": method, "path": path },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("route/handle failed: {response}");
+        }
+        parse_route_response(&response)
+    }
+
     async fn call_viewer(&self, path: &str) -> Result<(String, String)> {
         let mut guard = self.io.lock().await;
         let io = guard.as_mut().context("plugin io unavailable")?;
@@ -656,6 +742,59 @@ fn encode_query_path(path: &str) -> String {
         }
     }
     encoded
+}
+
+fn thumbnail_cache_paths(plugin_root: &Path, path: &str) -> (PathBuf, PathBuf) {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut hasher = DefaultHasher::new();
+    path.hash(&mut hasher);
+    let key = format!("{:016x}", hasher.finish());
+    let dir = plugin_root.join("data/thumbnails");
+    (dir.join(format!("{key}.meta")), dir.join(format!("{key}.bin")))
+}
+
+fn read_thumbnail_cache(plugin_root: &Path, path: &str) -> Option<(String, Vec<u8>)> {
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path);
+    let content_type = std::fs::read_to_string(meta_path).ok()?;
+    let bytes = std::fs::read(bin_path).ok()?;
+    Some((content_type.trim().to_string(), bytes))
+}
+
+fn write_thumbnail_cache(
+    plugin_root: &Path,
+    path: &str,
+    content_type: &str,
+    bytes: &[u8],
+) -> Result<()> {
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path);
+    if let Some(parent) = meta_path.parent() {
+        std::fs::create_dir_all(parent).context("create thumbnail cache directory")?;
+    }
+    std::fs::write(&meta_path, content_type).context("write thumbnail cache metadata")?;
+    std::fs::write(&bin_path, bytes).context("write thumbnail cache bytes")?;
+    Ok(())
+}
+
+fn parse_route_response(response: &Value) -> Result<(u16, String, Vec<u8>)> {
+    let result = response
+        .get("result")
+        .context("route response missing result")?;
+    let status = result
+        .get("status")
+        .and_then(Value::as_u64)
+        .unwrap_or(200) as u16;
+    let content_type = result
+        .get("contentType")
+        .and_then(Value::as_str)
+        .unwrap_or("application/octet-stream")
+        .to_string();
+    let body = result
+        .get("body")
+        .and_then(Value::as_str)
+        .context("route response missing body")?;
+    Ok((status, content_type, body.as_bytes().to_vec()))
 }
 
 fn parse_action_list_response(response: &Value) -> Result<Vec<ActionItem>> {

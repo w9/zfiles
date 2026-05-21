@@ -4,6 +4,7 @@ pub mod cli;
 pub mod commands;
 pub mod config;
 pub mod daemon;
+pub mod daemon_config;
 pub mod download;
 pub mod duration;
 pub mod embed;

@@ -140,6 +140,20 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         }
     }
 
+    if manifest.capabilities.iter().any(|cap| cap == "route") {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "route/handle",
+            "params": { "method": "GET", "path": "/api/greeting" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let routed = framing::read_message(&mut stdout).await?;
+        if routed.get("error").is_some() {
+            bail!("route/handle failed: {routed}");
+        }
+    }
+
     drop(stdin);
     let status = child.wait().await.context("wait for plugin")?;
     if !status.success() {
