@@ -1,20 +1,8 @@
-# TODO
+## High-level plan next
 
-This file tracks implementation work for zfiles. It is the living task list derived from [DESIGN.md](DESIGN.md): what to build next, in what order, and what is already done.
+Harden the kernel and make plugins real end-to-end: wire capability dispatch (lister, thumbnailer, searcher, viewer) with per-call timeouts and WebSocket enrichment, add plugin lifecycle hardening (restart backoff, storage dirs, conformance tests, fixture echo plugin), and finish transfer/auth polish (socket-level sendfile, upload fsync/rename guarantees, token expiry, QR URL for LAN shares). Grow the CLI beyond serve — `plugin install/list`, `config get/set`, headless `upload`/`search` — and mature the frontend into a proper explorer (virtual-scrolled listing, keyboard shortcuts, preview pane with plugin slot mounts, resumable tus client). Round out quality gates with a fixture corpus, Playwright E2E, performance baselines in CI, and pre-compressed embedded assets with content negotiation.
 
-## How to use this file
-
-- Pick the next unchecked item when starting work.
-- Write tests first (see DESIGN.md §5), then implement.
-- When an item is finished, mark it complete — do not delete it.
-- It is fine to edit, split, or reorder **unfinished** items when plans or priorities change.
-- Add new items as scope becomes clearer; keep the list focused on near-term work rather than dumping the entire roadmap.
-
-**We never remove items when they are done — only mark them as complete.**
-
----
-
-## Checklist
+## TODO List
 
 - [x] Initialize Rust project with module layout (`cli`, `transport`, `fs`, `state`, `plugins`, `auth`)
 - [x] Set up CI pipeline (`cargo fmt`, `clippy`, `test`, `deny check`)
@@ -37,3 +25,10 @@ This file tracks implementation work for zfiles. It is the living task list deri
 - [x] Plugin supervisor: manifest parsing, LSP JSON-RPC framing, background spawn
 - [x] Filesystem watch service (`notify`) with debounced WebSocket events
 - [x] Frontend: directory navigation, downloads, and tus uploads
+- [ ] Plugin capability registry and dispatch (`lister` first; per-call timeout + WebSocket enrichment)
+- [ ] Plugin lifecycle hardening: exponential-backoff restart, stderr logs, private `data/` storage
+- [ ] Fixture echo plugin and `zfiles plugin test` conformance harness
+- [ ] Atomic upload completion: fsync spool before rename; warn if dot-folder crosses a mount point
+- [ ] Token expiry (`--expire`) with sessions persisted in `state.db`
+- [ ] LAN share UX: print QR code for the served URL when binding with `--token`
+- [ ] CLI subcommands: `plugin list`, `plugin install`, `config get/set`
