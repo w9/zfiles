@@ -15,6 +15,9 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         toml::from_str(&contents).context("parse plugin manifest")?;
 
     let executable = plugin_root.join(&manifest.executable);
+    if manifest.capabilities.iter().any(|cap| cap == "viewer") {
+        std::fs::write(plugin_root.join("notes.txt"), b"hello")?;
+    }
     let mut child = Command::new(&executable)
         .current_dir(plugin_root)
         .stdin(Stdio::piped())
@@ -34,6 +37,7 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
             "protocolVersion": manifest.protocol_version,
             "capabilities": manifest.capabilities,
             "globs": manifest.globs,
+            "rootPath": plugin_root.display().to_string(),
         }
     });
 
@@ -79,6 +83,34 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         let searched = framing::read_message(&mut stdout).await?;
         if searched.get("error").is_some() {
             bail!("searcher/query failed: {searched}");
+        }
+    }
+
+    if manifest.capabilities.iter().any(|cap| cap == "thumbnailer") {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "thumbnailer/generate",
+            "params": { "path": "photo.jpg" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let thumb = framing::read_message(&mut stdout).await?;
+        if thumb.get("error").is_some() {
+            bail!("thumbnailer/generate failed: {thumb}");
+        }
+    }
+
+    if manifest.capabilities.iter().any(|cap| cap == "viewer") {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "viewer/preview",
+            "params": { "path": "notes.txt" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let preview = framing::read_message(&mut stdout).await?;
+        if preview.get("error").is_some() {
+            bail!("viewer/preview failed: {preview}");
         }
     }
 

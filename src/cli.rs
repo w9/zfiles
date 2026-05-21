@@ -59,6 +59,11 @@ pub enum Command {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// Print folder and plugin status
+    Status {
+        #[command(flatten)]
+        args: crate::status_cmd::StatusArgs,
+    },
 }
 
 #[derive(Debug, Subcommand)]

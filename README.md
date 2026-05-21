@@ -33,6 +33,9 @@ zfiles init ~/Downloads
 # Search filenames via installed searcher plugin
 zfiles search ~/notes "meeting"
 
+# Show folder status
+zfiles status ~/Downloads
+
 # Upload to a remote server
 zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
 
@@ -68,6 +71,8 @@ cargo build
 | `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
 | `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |
+| `/api/thumbnail?path=` | GET | Thumbnail image (requires thumbnailer plugin) |
+| `/api/preview?path=` | GET | File preview body (requires viewer plugin) |
 | `/api/stat?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |

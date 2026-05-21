@@ -162,6 +162,7 @@ header h1 {
 .entry {
   width: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
@@ -171,6 +172,28 @@ header h1 {
   text-decoration: none;
   cursor: pointer;
   text-align: left;
+}
+
+.entry .name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.thumb {
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.preview-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #1d2330;
+  border-radius: 8px;
+  padding: 0.75rem;
+  max-height: 240px;
+  overflow: auto;
 }
 
 .size {

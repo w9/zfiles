@@ -1,6 +1,6 @@
 ## High-level plan next
 
-With explorer UX and CLI basics in place, extend plugins again (thumbnailer + text viewer end-to-end), add `zfiles status`, harden path edge cases with unicode fixture tests, and stand up quality gates: a Playwright smoke suite and a list-latency perf smoke test in CI.
+Ship explorer power-user features and async plugin delivery: multi-select with bulk actions, thumbnail WebSocket prefetch, action-plugin context menus, viewer module metadata, deep-fixture coverage, and a scheduled nightly perf workflow. Follow with ESM viewer mounts, `daemon` CLI, and download/upload throughput baselines.
 
 ## TODO List
 
@@ -46,10 +46,17 @@ With explorer UX and CLI basics in place, extend plugins again (thumbnailer + te
 - [x] Preview pane shell: file selection, `/api/stat` metadata, viewer slot placeholder
 - [x] Fixture corpus bootstrap: generators for `small/`, `unicode/`, `deep/` + listing integration test
 - [x] Update README with new CLI commands and API endpoints
-- [ ] Thumbnailer capability end-to-end: `/api/thumbnail`, fixture plugin, glob dispatch, conformance, frontend thumbnail tiles
-- [ ] Viewer capability end-to-end: text viewer fixture, `/api/preview`, preview pane text rendering
-- [ ] CLI `zfiles status [path]`: print folder summary (plugins, config flags, dot-folder state)
-- [ ] Unicode fixture integration test: list paths with NFC/NFD/emoji filenames
-- [ ] Playwright E2E smoke: start server, load explorer, verify listing renders
-- [ ] Performance smoke test: assert `/api/list` on small fixture completes under SLA threshold
-- [ ] CI: run Playwright smoke and perf smoke jobs
+- [x] Thumbnailer capability end-to-end: `/api/thumbnail`, fixture plugin, glob dispatch, conformance, frontend thumbnail tiles
+- [x] Viewer capability end-to-end: text viewer fixture, `/api/preview`, preview pane text rendering
+- [x] CLI `zfiles status [path]`: print folder summary (plugins, config flags, dot-folder state)
+- [x] Unicode fixture integration test: list paths with NFC/NFD/emoji filenames
+- [x] Playwright E2E smoke: start server, load explorer, verify listing renders
+- [x] Performance smoke test: assert `/api/list` on small fixture completes under SLA threshold
+- [x] CI: run Playwright smoke and perf smoke jobs
+- [ ] Frontend multi-select: Space toggle, selection bar, bulk download links
+- [ ] Thumbnail WebSocket prefetch: `thumbnail_ready` events after listing, frontend lazy tile reveal
+- [ ] Action plugin end-to-end: fixture plugin, `/api/actions`, right-click context menu
+- [ ] Deep fixture integration test: list nested directory via API
+- [ ] Viewer module metadata in `/api/plugins` and preview pane slot hint
+- [ ] Scheduled nightly CI workflow running perf smoke tests
+- [ ] Extend Playwright smoke: verify file preview pane on selection

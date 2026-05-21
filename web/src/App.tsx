@@ -15,6 +15,7 @@ type FileEntry = {
 type PluginInfo = {
   name: string;
   capabilities: string[];
+  globs: string[];
 };
 
 type KernelEvent =
@@ -43,6 +44,30 @@ function extraLabel(extra?: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
+function matchesGlob(glob: string, name: string): boolean {
+  if (glob === "*") {
+    return true;
+  }
+  if (glob.startsWith("*.")) {
+    const ext = glob.slice(2);
+    return name.endsWith(`.${ext}`) || name === ext;
+  }
+  return glob === name;
+}
+
+function thumbnailUrlFor(plugins: PluginInfo[], path: string): string | undefined {
+  if (!plugins.some((plugin) => plugin.capabilities.includes("thumbnailer"))) {
+    return undefined;
+  }
+  const name = path.split("/").pop() ?? path;
+  const matches = plugins.some(
+    (plugin) =>
+      plugin.capabilities.includes("thumbnailer") &&
+      plugin.globs.some((glob) => matchesGlob(glob, name)),
+  );
+  return matches ? `/api/thumbnail?path=${encodeURIComponent(path)}` : undefined;
+}
+
 export default function App() {
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<FileEntry[]>([]);
@@ -53,7 +78,9 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [searcherReady, setSearcherReady] = useState(false);
+  const [thumbnailerReady, setThumbnailerReady] = useState(false);
   const [readyPlugins, setReadyPlugins] = useState<string[]>([]);
+  const [pluginDetails, setPluginDetails] = useState<PluginInfo[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -80,9 +107,13 @@ export default function App() {
       return;
     }
     const plugins: PluginInfo[] = await response.json();
+    setPluginDetails(plugins);
     setReadyPlugins(plugins.map((plugin) => plugin.name));
     setSearcherReady(
       plugins.some((plugin) => plugin.capabilities.includes("searcher")),
+    );
+    setThumbnailerReady(
+      plugins.some((plugin) => plugin.capabilities.includes("thumbnailer")),
     );
   }, []);
 
@@ -194,6 +225,9 @@ export default function App() {
         isDir: entry.is_dir,
         size: entry.is_dir ? undefined : entry.size,
         extraLabel: extraLabel(entry.extra),
+        thumbnailUrl: thumbnailerReady
+          ? thumbnailUrlFor(pluginDetails, entry.path)
+          : undefined,
         onSelect: () => setSelectedPath(entry.path),
         onActivate: () => {
           if (entry.is_dir) {
@@ -208,7 +242,7 @@ export default function App() {
       });
     }
     return rows;
-  }, [visibleEntries, currentPath, searchResults, navigateTo]);
+  }, [visibleEntries, currentPath, searchResults, navigateTo, thumbnailerReady, pluginDetails]);
 
   useEffect(() => {
     const selected = listingEntries[selectedIndex];
@@ -364,7 +398,7 @@ export default function App() {
 
       <div className="explorer-layout">
         <VirtualListing entries={listingEntries} selectedIndex={selectedIndex} />
-        <PreviewPane path={selectedPath} />
+        <PreviewPane path={selectedPath} plugins={pluginDetails} />
       </div>
     </main>
   );

@@ -7,21 +7,51 @@ type FileStat = {
   modified?: string;
 };
 
-type PreviewPaneProps = {
-  path: string | null;
+type PluginInfo = {
+  name: string;
+  capabilities: string[];
+  globs: string[];
 };
 
-export default function PreviewPane({ path }: PreviewPaneProps) {
+type PreviewPaneProps = {
+  path: string | null;
+  plugins: PluginInfo[];
+};
+
+function matchesGlob(glob: string, name: string): boolean {
+  if (glob === "*") {
+    return true;
+  }
+  if (glob.startsWith("*.")) {
+    const ext = glob.slice(2);
+    return name.endsWith(`.${ext}`) || name === ext;
+  }
+  return glob === name;
+}
+
+function hasViewer(plugins: PluginInfo[], path: string): boolean {
+  const name = path.split("/").pop() ?? path;
+  return plugins.some(
+    (plugin) =>
+      plugin.capabilities.includes("viewer") &&
+      plugin.globs.some((glob) => matchesGlob(glob, name)),
+  );
+}
+
+export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
   const [stat, setStat] = useState<FileStat | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!path) {
       setStat(null);
+      setPreview(null);
       setError(null);
       return;
     }
 
+    setPreview(null);
     fetch(`/api/stat?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
@@ -37,7 +67,19 @@ export default function PreviewPane({ path }: PreviewPaneProps) {
         setStat(null);
         setError(err.message);
       });
-  }, [path]);
+
+    if (hasViewer(plugins, path)) {
+      fetch(`/api/preview?path=${encodeURIComponent(path)}`)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.text();
+        })
+        .then((body) => setPreview(body))
+        .catch(() => setPreview(null));
+    }
+  }, [path, plugins]);
 
   if (!path) {
     return (
@@ -84,7 +126,11 @@ export default function PreviewPane({ path }: PreviewPaneProps) {
       </dl>
       {!stat.is_dir ? (
         <div className="viewer-slot" data-viewer-slot="preview">
-          <p className="meta">No viewer plugin registered for this file type.</p>
+          {preview != null ? (
+            <pre className="preview-text">{preview}</pre>
+          ) : (
+            <p className="meta">No viewer plugin registered for this file type.</p>
+          )}
           <a href={`/api/file?path=${encodeURIComponent(stat.path)}`}>Download</a>
         </div>
       ) : null}

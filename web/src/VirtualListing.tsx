@@ -8,6 +8,7 @@ export type ListingEntry = {
   isDir: boolean;
   size?: number;
   extraLabel?: string;
+  thumbnailUrl?: string;
   onSelect: () => void;
   onActivate: () => void;
   href?: string;
@@ -44,6 +45,16 @@ export default function VirtualListing({ entries, selectedIndex }: VirtualListin
           const selected = item.index === selectedIndex;
           const content = (
             <>
+              {entry.thumbnailUrl ? (
+                <img
+                  className="thumb"
+                  src={entry.thumbnailUrl}
+                  alt=""
+                  loading="lazy"
+                  width={28}
+                  height={28}
+                />
+              ) : null}
               <span className="name">
                 {entry.isDir ? "📁" : "📄"} {entry.name}
                 {entry.extraLabel ? (

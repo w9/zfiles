@@ -42,6 +42,19 @@ jobs:
       - name: cargo test
         run: cargo test
 
+      - name: perf smoke
+        run: cargo test --test perf
+
+      - name: build zfiles binary
+        run: cargo build
+
+      - name: e2e smoke
+        run: |
+          cd e2e
+          pnpm install
+          pnpm exec playwright install chromium --with-deps
+          pnpm test
+
       - name: cargo deny
         run: |
           cargo install cargo-deny --locked

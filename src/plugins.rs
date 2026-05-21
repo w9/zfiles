@@ -18,6 +18,8 @@ use crate::plugin::framing;
 
 const LISTER_TIMEOUT: Duration = Duration::from_millis(50);
 const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
+const THUMBNAILER_TIMEOUT: Duration = Duration::from_millis(500);
+const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
@@ -167,6 +169,44 @@ impl PluginSupervisor {
         self.ready_searcher().is_some()
     }
 
+    pub fn has_thumbnailer(&self) -> bool {
+        self.ready_plugin_for("thumbnailer", "").is_some()
+    }
+
+    pub async fn thumbnail(&self, path: &str) -> Option<(String, Vec<u8>)> {
+        let handle = self.ready_plugin_for("thumbnailer", path)?;
+        let plugin_name = handle.record.manifest.name.clone();
+        let call = handle.call_thumbnailer(path);
+        match tokio::time::timeout(THUMBNAILER_TIMEOUT, call).await {
+            Ok(Ok(result)) => Some(result),
+            Ok(Err(error)) => {
+                warn!(plugin = %plugin_name, %error, "thumbnailer call failed");
+                None
+            }
+            Err(_) => {
+                warn!(plugin = %plugin_name, "thumbnailer call timed out");
+                None
+            }
+        }
+    }
+
+    pub async fn preview(&self, path: &str) -> Option<(String, String)> {
+        let handle = self.ready_plugin_for("viewer", path)?;
+        let plugin_name = handle.record.manifest.name.clone();
+        let call = handle.call_viewer(path);
+        match tokio::time::timeout(VIEWER_TIMEOUT, call).await {
+            Ok(Ok(result)) => Some(result),
+            Ok(Err(error)) => {
+                warn!(plugin = %plugin_name, %error, "viewer call failed");
+                None
+            }
+            Err(_) => {
+                warn!(plugin = %plugin_name, "viewer call timed out");
+                None
+            }
+        }
+    }
+
     pub fn ready_plugins(&self) -> Vec<serde_json::Value> {
         let Ok(handles) = self.inner.handles.lock() else {
             return Vec::new();
@@ -179,6 +219,7 @@ impl PluginSupervisor {
                 serde_json::json!({
                     "name": handle.record.manifest.name,
                     "capabilities": handle.record.manifest.capabilities,
+                    "globs": handle.record.manifest.globs,
                 })
             })
             .collect()
@@ -260,6 +301,21 @@ impl PluginSupervisor {
                     .capabilities
                     .iter()
                     .any(|cap| cap == "lister")
+        }).cloned()
+    }
+
+    fn ready_plugin_for(&self, capability: &str, path: &str) -> Option<Arc<PluginHandle>> {
+        let handles = self.inner.handles.lock().ok()?;
+        handles.values().find(|handle| {
+            handle.ready.load(Ordering::SeqCst)
+                && handle
+                    .record
+                    .manifest
+                    .capabilities
+                    .iter()
+                    .any(|cap| cap == capability)
+                && (path.is_empty()
+                    || crate::glob_match::matches_any(&handle.record.manifest.globs, path))
         }).cloned()
     }
 
@@ -404,6 +460,79 @@ impl PluginHandle {
         }
         merge_lister_response(entries, &response)
     }
+
+    async fn call_thumbnailer(&self, path: &str) -> Result<(String, Vec<u8>)> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "thumbnailer/generate",
+            "params": { "path": path },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("thumbnailer/generate failed: {response}");
+        }
+        parse_thumbnail_response(&response)
+    }
+
+    async fn call_viewer(&self, path: &str) -> Result<(String, String)> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "viewer/preview",
+            "params": { "path": path },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("viewer/preview failed: {response}");
+        }
+        parse_viewer_response(&response)
+    }
+}
+
+fn parse_thumbnail_response(response: &Value) -> Result<(String, Vec<u8>)> {
+    let result = response
+        .get("result")
+        .context("thumbnailer response missing result")?;
+    let content_type = result
+        .get("contentType")
+        .and_then(Value::as_str)
+        .unwrap_or("image/png")
+        .to_string();
+    let data = result
+        .get("data")
+        .and_then(Value::as_str)
+        .context("thumbnailer response missing data")?;
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .context("decode thumbnail data")?;
+    Ok((content_type, bytes))
+}
+
+fn parse_viewer_response(response: &Value) -> Result<(String, String)> {
+    let result = response
+        .get("result")
+        .context("viewer response missing result")?;
+    let content_type = result
+        .get("contentType")
+        .and_then(Value::as_str)
+        .unwrap_or("text/plain")
+        .to_string();
+    let body = result
+        .get("body")
+        .and_then(Value::as_str)
+        .context("viewer response missing body")?
+        .to_string();
+    Ok((content_type, body))
 }
 
 fn parse_searcher_response(response: &Value) -> Result<Vec<FileEntry>> {

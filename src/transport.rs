@@ -57,6 +57,8 @@ pub fn router(state: AppState) -> Router {
         .route("/api/plugins", get(list_plugins))
         .route("/api/list", get(list_directory))
         .route("/api/search", get(search_directory))
+        .route("/api/thumbnail", get(thumbnail_file))
+        .route("/api/preview", get(preview_file))
         .route("/api/stat", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
@@ -187,6 +189,50 @@ async fn search_directory(
         .await
         .unwrap_or_default();
     Ok(Json(results))
+}
+
+async fn thumbnail_file(
+    State(state): State<AppState>,
+    Query(query): Query<PathQuery>,
+) -> Result<Response, AppError> {
+    let relative = query
+        .path
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
+
+    let Some((content_type, bytes)) = state.plugins.thumbnail(relative).await else {
+        return Err(AppError(anyhow::anyhow!("thumbnail unavailable")));
+    };
+
+    let mut response = Response::new(Body::from(bytes));
+    response.headers_mut().insert(
+        CONTENT_TYPE,
+        HeaderValue::from_str(&content_type)
+            .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
+    );
+    Ok(response)
+}
+
+async fn preview_file(
+    State(state): State<AppState>,
+    Query(query): Query<PathQuery>,
+) -> Result<Response, AppError> {
+    let relative = query
+        .path
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
+
+    let Some((content_type, body)) = state.plugins.preview(relative).await else {
+        return Err(AppError(anyhow::anyhow!("preview unavailable")));
+    };
+
+    let mut response = Response::new(Body::from(body));
+    response.headers_mut().insert(
+        CONTENT_TYPE,
+        HeaderValue::from_str(&content_type)
+            .unwrap_or_else(|_| HeaderValue::from_static("text/plain")),
+    );
+    Ok(response)
 }
 
 async fn stat_path(
@@ -465,6 +511,8 @@ impl IntoResponse for AppError {
             || message.contains("failed to resolve path")
             || message.contains("failed to read directory")
             || message.contains("failed to stat path")
+            || message.contains("thumbnail unavailable")
+            || message.contains("preview unavailable")
         {
             StatusCode::NOT_FOUND
         } else if message.contains("cannot download a directory") {
