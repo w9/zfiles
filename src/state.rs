@@ -39,6 +39,7 @@ impl StateStore {
         std::fs::create_dir_all(&dot).with_context(|| format!("create {}", dot.display()))?;
         std::fs::create_dir_all(dot.join("uploads")).context("create uploads directory")?;
         std::fs::create_dir_all(dot.join("logs")).context("create logs directory")?;
+        std::fs::create_dir_all(dot.join("plugins")).context("create plugins directory")?;
         Ok(dot)
     }
 
@@ -62,6 +63,10 @@ impl StateStore {
                     size INTEGER,
                     offset INTEGER NOT NULL DEFAULT 0,
                     created_at INTEGER NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token TEXT PRIMARY KEY,
+                    expires_at INTEGER NOT NULL
                 );
                 ",
             )?;
@@ -167,6 +172,17 @@ impl StateStore {
                 .with_context(|| format!("create parent directory {}", parent.display()))?;
         }
 
+        crate::mount::warn_if_cross_mount("upload finalize", &spool, target.parent().unwrap_or(&target));
+
+        {
+            let file = std::fs::OpenOptions::new()
+                .append(true)
+                .open(&spool)
+                .with_context(|| format!("open upload spool {}", spool.display()))?;
+            file.sync_all()
+                .with_context(|| format!("fsync upload spool {}", spool.display()))?;
+        }
+
         std::fs::rename(&spool, &target).with_context(|| {
             format!("move upload {} into {}", spool.display(), target.display())
         })?;
@@ -181,6 +197,31 @@ impl StateStore {
 
     pub fn upload_spool_path(&self, id: &str) -> PathBuf {
         self.dotfolder().join("uploads").join(id)
+    }
+
+    pub fn create_session(&self, token: &str, expires_at: i64) -> Result<()> {
+        self.with_db(|conn| {
+            conn.execute(
+                "INSERT OR REPLACE INTO sessions (token, expires_at) VALUES (?1, ?2)",
+                params![token, expires_at],
+            )?;
+            Ok(())
+        })
+    }
+
+    pub fn session_valid(&self, token: &str) -> Result<bool> {
+        self.with_db(|conn| {
+            let mut stmt = conn.prepare("SELECT expires_at FROM sessions WHERE token = ?1")?;
+            let mut rows = stmt.query(params![token])?;
+            if let Some(row) = rows.next()? {
+                let expires_at: i64 = row.get(0)?;
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |duration| duration.as_secs() as i64);
+                return Ok(expires_at > now);
+            }
+            Ok(true)
+        })
     }
 }
 
@@ -218,5 +259,22 @@ mod tests {
         let target = store.finalize_upload(&record.id, &fs).unwrap();
         assert_eq!(std::fs::read(target).unwrap(), b"hello");
         assert!(store.get_upload(&record.id).unwrap().is_none());
+    }
+
+    #[test]
+    fn session_expiry_is_enforced() {
+        let dir = tempdir().unwrap();
+        let store = StateStore::new(dir.path().to_path_buf());
+        let expired = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_secs() as i64)
+            - 60;
+
+        store.create_session("expired-token", expired).unwrap();
+        assert!(!store.session_valid("expired-token").unwrap());
+
+        let future = expired + 7200;
+        store.create_session("valid-token", future).unwrap();
+        assert!(store.session_valid("valid-token").unwrap());
     }
 }

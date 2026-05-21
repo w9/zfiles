@@ -13,6 +13,8 @@ pub struct FileEntry {
     pub size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<SystemTime>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -115,6 +117,7 @@ impl Fs for LocalFs {
                 is_dir: file_type.is_dir(),
                 size: metadata.len(),
                 modified: metadata.modified().ok(),
+                extra: None,
             });
         }
 

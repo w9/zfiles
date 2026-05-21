@@ -1,13 +1,17 @@
 pub mod auth;
 pub mod browser;
 pub mod cli;
+pub mod commands;
 pub mod config;
 pub mod download;
+pub mod duration;
 pub mod embed;
 pub mod events;
 pub mod fs;
+pub mod mount;
 pub mod plugin;
 pub mod plugins;
+pub mod qr;
 pub mod range;
 pub mod state;
 pub mod transport;

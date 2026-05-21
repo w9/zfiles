@@ -10,5 +10,5 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let cli = zfiles::cli::Cli::parse();
-    zfiles::transport::serve(cli).await
+    zfiles::commands::run(cli).await
 }

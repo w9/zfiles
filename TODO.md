@@ -25,10 +25,10 @@ Harden the kernel and make plugins real end-to-end: wire capability dispatch (li
 - [x] Plugin supervisor: manifest parsing, LSP JSON-RPC framing, background spawn
 - [x] Filesystem watch service (`notify`) with debounced WebSocket events
 - [x] Frontend: directory navigation, downloads, and tus uploads
-- [ ] Plugin capability registry and dispatch (`lister` first; per-call timeout + WebSocket enrichment)
-- [ ] Plugin lifecycle hardening: exponential-backoff restart, stderr logs, private `data/` storage
-- [ ] Fixture echo plugin and `zfiles plugin test` conformance harness
-- [ ] Atomic upload completion: fsync spool before rename; warn if dot-folder crosses a mount point
-- [ ] Token expiry (`--expire`) with sessions persisted in `state.db`
-- [ ] LAN share UX: print QR code for the served URL when binding with `--token`
-- [ ] CLI subcommands: `plugin list`, `plugin install`, `config get/set`
+- [x] Plugin capability registry and dispatch (`lister` first; per-call timeout + WebSocket enrichment)
+- [x] Plugin lifecycle hardening: exponential-backoff restart, stderr logs, private `data/` storage
+- [x] Fixture echo plugin and `zfiles plugin test` conformance harness
+- [x] Atomic upload completion: fsync spool before rename; warn if dot-folder crosses a mount point
+- [x] Token expiry (`--expire`) with sessions persisted in `state.db`
+- [x] LAN share UX: print QR code for the served URL when binding with `--token`
+- [x] CLI subcommands: `plugin list`, `plugin install`, `config get/set`

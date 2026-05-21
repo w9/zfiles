@@ -1,0 +1,74 @@
+use anyhow::Context;
+
+use crate::cli::{Cli, Command, ConfigCommand, PluginCommand};
+use crate::config::Config;
+use crate::plugin::conformance;
+use crate::plugins::PluginSupervisor;
+
+pub async fn run(cli: Cli) -> anyhow::Result<()> {
+    match cli.command {
+        None => crate::transport::serve(cli.serve).await,
+        Some(Command::Plugin { command }) => run_plugin(command).await,
+        Some(Command::Config { command }) => run_config(command).await,
+    }
+}
+
+async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
+    match command {
+        PluginCommand::List { path } => {
+            let root = std::fs::canonicalize(&path)
+                .with_context(|| format!("failed to resolve path {}", path.display()))?;
+            let plugins = PluginSupervisor::new(root).list()?;
+            if plugins.is_empty() {
+                println!("No plugins discovered.");
+                return Ok(());
+            }
+            for plugin in plugins {
+                println!(
+                    "{} {} ({})",
+                    plugin.manifest.name, plugin.manifest.version, plugin.root.display()
+                );
+            }
+        }
+        PluginCommand::Install { path, source } => {
+            let root = std::fs::canonicalize(&path)
+                .with_context(|| format!("failed to resolve path {}", path.display()))?;
+            let record = PluginSupervisor::new(root).install(&source)?;
+            println!(
+                "Installed plugin {} to {}",
+                record.manifest.name,
+                record.root.display()
+            );
+        }
+        PluginCommand::Test { plugin } => {
+            let plugin = std::fs::canonicalize(&plugin)
+                .with_context(|| format!("resolve plugin path {}", plugin.display()))?;
+            conformance::run(&plugin).await?;
+            println!("Plugin conformance passed.");
+        }
+    }
+    Ok(())
+}
+
+async fn run_config(command: ConfigCommand) -> anyhow::Result<()> {
+    match command {
+        ConfigCommand::Get { folder, key } => {
+            let root = std::fs::canonicalize(&folder)
+                .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
+            let config = Config::load(&root)?;
+            let value = config
+                .get(&key)?
+                .ok_or_else(|| anyhow::anyhow!("config key {key} is unset"))?;
+            println!("{value}");
+        }
+        ConfigCommand::Set { folder, key, value } => {
+            let root = std::fs::canonicalize(&folder)
+                .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
+            let mut config = Config::load(&root)?;
+            config.set(&key, &value)?;
+            config.save_to(&Config::dotfolder_config(&root))?;
+            println!("ok");
+        }
+    }
+    Ok(())
+}

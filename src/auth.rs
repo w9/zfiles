@@ -10,6 +10,7 @@ use crate::transport::AppState;
 pub struct AuthConfig {
     pub required: bool,
     pub token: Option<String>,
+    pub expires_at: Option<i64>,
 }
 
 impl AuthConfig {
@@ -17,13 +18,15 @@ impl AuthConfig {
         Self {
             required: false,
             token: None,
+            expires_at: None,
         }
     }
 
-    pub fn with_token(token: String) -> Self {
+    pub fn with_token(token: String, expires_at: Option<i64>) -> Self {
         Self {
             required: true,
             token: Some(token),
+            expires_at,
         }
     }
 }
@@ -78,11 +81,28 @@ pub async fn middleware(
         .and_then(|value| value.strip_prefix("Bearer "))
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
-    if constant_time_eq(provided.as_bytes(), expected.as_bytes()) {
-        Ok(next.run(request).await)
-    } else {
-        Err(StatusCode::UNAUTHORIZED)
+    if !constant_time_eq(provided.as_bytes(), expected.as_bytes()) {
+        return Err(StatusCode::UNAUTHORIZED);
     }
+
+    if let Some(expires_at) = auth.expires_at {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_secs() as i64);
+        if now >= expires_at {
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+    }
+
+    if !state
+        .state
+        .session_valid(provided)
+        .unwrap_or(false)
+    {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    Ok(next.run(request).await)
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {

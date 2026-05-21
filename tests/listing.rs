@@ -15,12 +15,14 @@ fn test_server(root: &std::path::Path) -> TestServer {
 }
 
 fn test_server_with_options(root: &std::path::Path, read_only: bool) -> TestServer {
+    let plugins = Arc::new(zfiles::plugins::PluginSupervisor::new(root.to_path_buf()));
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.to_path_buf())),
         auth: AuthConfig::disabled(),
         read_only,
         state: Arc::new(StateStore::new(root.to_path_buf())),
         events: EventBus::new(),
+        plugins,
     };
     TestServer::new(router(state)).expect("test server")
 }

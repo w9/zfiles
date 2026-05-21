@@ -18,13 +18,16 @@ use tracing::info;
 
 use crate::auth::{self, AuthConfig};
 use crate::browser;
-use crate::cli::Cli;
+use crate::cli::ServeArgs;
 use crate::config::Config;
 use crate::download;
+use crate::duration;
 use crate::embed;
 use crate::events::{EventBus, KernelEvent};
 use crate::fs::{FileStat, Fs, LocalFs};
+use crate::mount;
 use crate::plugins::PluginSupervisor;
+use crate::qr;
 use crate::range;
 use crate::state::StateStore;
 use crate::watch;
@@ -40,6 +43,7 @@ pub struct AppState {
     pub read_only: bool,
     pub state: Arc<StateStore>,
     pub events: EventBus,
+    pub plugins: Arc<PluginSupervisor>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,38 +73,63 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn serve(cli: Cli) -> anyhow::Result<()> {
-    cli.validate()?;
-    let root = cli.root_path()?;
+pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
+    serve.validate()?;
+    let root = serve.root_path()?;
     let config = Config::load(&root)?;
-    let listener = TcpListener::bind(cli.listen_addr()?)
+    let listener = TcpListener::bind(serve.listen_addr()?)
         .await
         .context("failed to bind TCP listener")?;
     let bound = listener.local_addr()?;
 
-    let auth = if cli.token {
+    let state_store = Arc::new(StateStore::new(root.clone()));
+    let expires_at = if let Some(expire) = &serve.expire {
+        let duration = duration::parse_duration(expire)?;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_secs() as i64);
+        Some(now + duration.as_secs() as i64)
+    } else {
+        None
+    };
+
+    let auth = if serve.token {
         let token = auth::generate_token();
+        if let Some(expires_at) = expires_at {
+            state_store.create_session(&token, expires_at)?;
+        }
         println!("Auth token: {token}");
-        AuthConfig::with_token(token)
+        AuthConfig::with_token(token, expires_at)
     } else {
         AuthConfig::disabled()
     };
 
     let events = EventBus::new();
+    let plugins = Arc::new(PluginSupervisor::new(root.clone()));
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.clone())),
         auth,
-        read_only: cli.read_only(&config),
-        state: Arc::new(StateStore::new(root.clone())),
+        read_only: serve.read_only(&config),
+        state: state_store,
         events: events.clone(),
+        plugins: plugins.clone(),
     };
 
-    if cli.should_open_browser(&config) {
+    if serve.should_open_browser(&config) {
         browser::open_async(format!("http://{bound}"));
     }
 
+    if serve.token && serve.is_public_bind()? {
+        let url = format!("http://{bound}");
+        if let Err(error) = qr::print_url(&url) {
+            tracing::warn!(%error, "failed to render QR code");
+        }
+    }
+
+    mount::warn_if_cross_mount("dot-folder", &root, &root.join(".zfiles"));
+
     watch::start(root.clone(), events.clone())?;
-    Arc::new(PluginSupervisor::default()).start_background(root.clone(), events);
+    plugins.start_background(events);
 
     info!(root = %root.display(), addr = %bound, "zfiles listening");
     println!("zfiles listening on http://{bound}");
@@ -124,7 +153,14 @@ async fn list_directory(
     Query(query): Query<PathQuery>,
 ) -> Result<Json<Vec<crate::fs::FileEntry>>, AppError> {
     let relative = query.path.as_deref().unwrap_or("");
-    let entries = state.fs.read_dir(std::path::Path::new(relative)).await?;
+    let entries = state
+        .fs
+        .read_dir(std::path::Path::new(relative))
+        .await?;
+    let entries = state
+        .plugins
+        .enrich_listing(relative, entries, state.events.clone())
+        .await;
     Ok(Json(entries))
 }
 

@@ -14,6 +14,10 @@ pub enum KernelEvent {
     },
     FilesystemChanged { path: String },
     PluginReady { name: String },
+    ListingEnrichment {
+        path: String,
+        entries: Vec<crate::fs::FileEntry>,
+    },
 }
 
 #[derive(Clone)]
