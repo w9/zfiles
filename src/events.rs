@@ -12,6 +12,8 @@ pub enum KernelEvent {
         offset: u64,
         length: Option<u64>,
     },
+    FilesystemChanged { path: String },
+    PluginReady { name: String },
 }
 
 #[derive(Clone)]

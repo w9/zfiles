@@ -11,9 +11,14 @@ use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
 fn test_server(root: &std::path::Path) -> TestServer {
+    test_server_with_options(root, false)
+}
+
+fn test_server_with_options(root: &std::path::Path, read_only: bool) -> TestServer {
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.to_path_buf())),
         auth: AuthConfig::disabled(),
+        read_only,
         state: Arc::new(StateStore::new(root.to_path_buf())),
         events: EventBus::new(),
     };
@@ -142,6 +147,21 @@ async fn tus_upload_completes_file() {
 
     let contents = fs::read_to_string(dir.path().join("uploaded.txt")).unwrap();
     assert_eq!(contents, "hello");
+}
+
+#[tokio::test]
+async fn read_only_blocks_uploads() {
+    let dir = tempdir().unwrap();
+    let server = test_server_with_options(dir.path(), true);
+
+    let encoded = base64::engine::general_purpose::STANDARD.encode("blocked.txt");
+    let create = server
+        .post("/api/upload")
+        .add_header("Upload-Length", "1")
+        .add_header("Upload-Metadata", &format!("filename {encoded}"))
+        .await;
+
+    create.assert_status(axum::http::StatusCode::FORBIDDEN);
 }
 
 #[tokio::test]

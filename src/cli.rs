@@ -1,8 +1,10 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Parser;
+
+use crate::config::Config;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -25,6 +27,14 @@ pub struct Cli {
     /// Require bearer-token authentication
     #[arg(long)]
     pub token: bool,
+
+    /// Disallow uploads and other mutating operations
+    #[arg(long)]
+    pub read_only: bool,
+
+    /// Do not open a browser tab on startup
+    #[arg(long)]
+    pub no_open: bool,
 }
 
 impl Cli {
@@ -43,6 +53,22 @@ impl Cli {
         }
 
         Ok(SocketAddr::from(([127, 0, 0, 1], 0)))
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        let addr = self.listen_addr()?;
+        if addr.ip().is_unspecified() && !self.token {
+            bail!("binding to all interfaces requires --token");
+        }
+        Ok(())
+    }
+
+    pub fn read_only(&self, config: &Config) -> bool {
+        self.read_only || config.read_only()
+    }
+
+    pub fn should_open_browser(&self, config: &Config) -> bool {
+        !self.no_open && config.open_browser()
     }
 }
 
@@ -86,5 +112,23 @@ mod tests {
     fn default_path_is_current_directory() {
         let cli = Cli::parse_from(["zfiles"]);
         assert_eq!(cli.path, PathBuf::from("."));
+    }
+
+    #[test]
+    fn public_bind_requires_token() {
+        let cli = Cli::parse_from(["zfiles", "--listen", "0.0.0.0:8080"]);
+        assert!(cli.validate().is_err());
+    }
+
+    #[test]
+    fn public_bind_allows_token() {
+        let cli = Cli::parse_from(["zfiles", "--listen", "0.0.0.0:8080", "--token"]);
+        assert!(cli.validate().is_ok());
+    }
+
+    #[test]
+    fn localhost_bind_without_token_is_allowed() {
+        let cli = Cli::parse_from(["zfiles", "--listen", "127.0.0.1:8080"]);
+        assert!(cli.validate().is_ok());
     }
 }

@@ -1,6 +1,6 @@
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::{Request, StatusCode};
+use axum::http::{Method, Request, StatusCode};
 use axum::middleware::Next;
 use axum::response::Response;
 
@@ -36,6 +36,25 @@ pub fn generate_token() -> String {
         .map_or(0, |duration| duration.as_nanos());
 
     format!("zfiles-{nanos:x}")
+}
+
+pub async fn read_only_middleware(
+    State(state): State<AppState>,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    if !state.read_only {
+        return Ok(next.run(request).await);
+    }
+
+    if matches!(
+        request.method(),
+        &Method::POST | &Method::PATCH | &Method::PUT | &Method::DELETE
+    ) {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    Ok(next.run(request).await)
 }
 
 pub async fn middleware(

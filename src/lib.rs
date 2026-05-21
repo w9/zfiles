@@ -1,9 +1,14 @@
 pub mod auth;
+pub mod browser;
 pub mod cli;
+pub mod config;
+pub mod download;
 pub mod embed;
 pub mod events;
 pub mod fs;
+pub mod plugin;
 pub mod plugins;
 pub mod range;
 pub mod state;
 pub mod transport;
+pub mod watch;

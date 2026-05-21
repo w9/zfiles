@@ -13,19 +13,21 @@ use axum::{Router, body::Bytes};
 use futures_util::StreamExt;
 use mime_guess::from_path;
 use serde::Deserialize;
-use tokio::fs::File;
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::net::TcpListener;
-use tokio_util::io::ReaderStream;
 use tracing::info;
 
 use crate::auth::{self, AuthConfig};
+use crate::browser;
 use crate::cli::Cli;
+use crate::config::Config;
+use crate::download;
 use crate::embed;
 use crate::events::{EventBus, KernelEvent};
 use crate::fs::{FileStat, Fs, LocalFs};
+use crate::plugins::PluginSupervisor;
 use crate::range;
 use crate::state::StateStore;
+use crate::watch;
 
 const HDR_UPLOAD_LENGTH: HeaderName = HeaderName::from_static("upload-length");
 const HDR_UPLOAD_METADATA: HeaderName = HeaderName::from_static("upload-metadata");
@@ -35,6 +37,7 @@ const HDR_UPLOAD_OFFSET: HeaderName = HeaderName::from_static("upload-offset");
 pub struct AppState {
     pub fs: Arc<LocalFs>,
     pub auth: AuthConfig,
+    pub read_only: bool,
     pub state: Arc<StateStore>,
     pub events: EventBus,
 }
@@ -56,6 +59,10 @@ pub fn router(state: AppState) -> Router {
         .fallback(static_or_index)
         .layer(middleware::from_fn_with_state(
             state.clone(),
+            auth::read_only_middleware,
+        ))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
             auth::middleware,
         ))
         .layer(tower_http::trace::TraceLayer::new_for_http())
@@ -63,7 +70,9 @@ pub fn router(state: AppState) -> Router {
 }
 
 pub async fn serve(cli: Cli) -> anyhow::Result<()> {
+    cli.validate()?;
     let root = cli.root_path()?;
+    let config = Config::load(&root)?;
     let listener = TcpListener::bind(cli.listen_addr()?)
         .await
         .context("failed to bind TCP listener")?;
@@ -77,12 +86,21 @@ pub async fn serve(cli: Cli) -> anyhow::Result<()> {
         AuthConfig::disabled()
     };
 
+    let events = EventBus::new();
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.clone())),
         auth,
+        read_only: cli.read_only(&config),
         state: Arc::new(StateStore::new(root.clone())),
-        events: EventBus::new(),
+        events: events.clone(),
     };
+
+    if cli.should_open_browser(&config) {
+        browser::open_async(format!("http://{bound}"));
+    }
+
+    watch::start(root.clone(), events.clone())?;
+    Arc::new(PluginSupervisor::default()).start_background(root.clone(), events);
 
     info!(root = %root.display(), addr = %bound, "zfiles listening");
     println!("zfiles listening on http://{bound}");
@@ -152,10 +170,7 @@ async fn download_file(
             (StatusCode::OK, 0, file_size)
         };
 
-    let mut file = File::open(&absolute).await?;
-    file.seek(std::io::SeekFrom::Start(start)).await?;
-    let reader = file.take(content_length);
-    let body = Body::from_stream(ReaderStream::new(reader));
+    let body = download::file_body(&absolute, start, content_length).await?;
 
     let mut response = Response::new(body);
     *response.status_mut() = status;
