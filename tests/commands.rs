@@ -40,3 +40,15 @@ fn plugin_list_discovers_installed_plugin() {
     let plugins = supervisor.list().unwrap();
     assert!(plugins.iter().any(|plugin| plugin.manifest.name == "echo"));
 }
+
+#[test]
+fn plugin_remove_deletes_installed_plugin() {
+    let dir = tempdir().unwrap();
+    let root = dir.path().canonicalize().unwrap();
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/plugins/echo");
+    let supervisor = PluginSupervisor::new(root.clone());
+    supervisor.install(&source).unwrap();
+
+    supervisor.remove("echo").unwrap();
+    assert!(!root.join(".zfiles/plugins/echo").exists());
+}

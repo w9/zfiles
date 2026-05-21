@@ -17,6 +17,8 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
             token,
             resume,
         }) => run_upload(server, file, path, token, resume).await,
+        Some(Command::Search { args }) => crate::search::run(args).await,
+        Some(Command::Init { path }) => run_init(path).await,
     }
 }
 
@@ -53,6 +55,12 @@ async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
             conformance::run(&plugin).await?;
             println!("Plugin conformance passed.");
         }
+        PluginCommand::Remove { path, name } => {
+            let root = std::fs::canonicalize(&path)
+                .with_context(|| format!("failed to resolve path {}", path.display()))?;
+            PluginSupervisor::new(root).remove(&name)?;
+            println!("Removed plugin {name}");
+        }
     }
     Ok(())
 }
@@ -77,6 +85,14 @@ async fn run_config(command: ConfigCommand) -> anyhow::Result<()> {
             println!("ok");
         }
     }
+    Ok(())
+}
+
+async fn run_init(path: std::path::PathBuf) -> anyhow::Result<()> {
+    let root = std::fs::canonicalize(&path)
+        .with_context(|| format!("failed to resolve path {}", path.display()))?;
+    let config_path = Config::init_folder(&root)?;
+    println!("Initialized {}", config_path.display());
     Ok(())
 }
 

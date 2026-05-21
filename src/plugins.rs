@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::process::Command;
@@ -111,6 +111,19 @@ impl PluginSupervisor {
             manifest,
             root: dest,
         })
+    }
+
+    pub fn remove(&self, name: &str) -> Result<()> {
+        let dest = self
+            .inner
+            .serve_root
+            .join(".zfiles/plugins")
+            .join(name);
+        if !dest.is_dir() {
+            bail!("plugin {name} is not installed");
+        }
+        std::fs::remove_dir_all(&dest)
+            .with_context(|| format!("remove plugin {}", dest.display()))
     }
 
     pub fn start_background(self: Arc<Self>, events: EventBus) -> tokio::task::JoinHandle<()> {

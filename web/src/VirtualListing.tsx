@@ -1,5 +1,5 @@
+import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef } from "react";
 
 export type ListingEntry = {
   key: string;
@@ -8,15 +8,17 @@ export type ListingEntry = {
   isDir: boolean;
   size?: number;
   extraLabel?: string;
+  onSelect: () => void;
   onActivate: () => void;
   href?: string;
 };
 
 type VirtualListingProps = {
   entries: ListingEntry[];
+  selectedIndex: number;
 };
 
-export default function VirtualListing({ entries }: VirtualListingProps) {
+export default function VirtualListing({ entries, selectedIndex }: VirtualListingProps) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
     count: entries.length,
@@ -24,6 +26,12 @@ export default function VirtualListing({ entries }: VirtualListingProps) {
     estimateSize: () => 44,
     overscan: 12,
   });
+
+  useEffect(() => {
+    if (selectedIndex >= 0 && selectedIndex < entries.length) {
+      virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
+    }
+  }, [selectedIndex, entries.length, virtualizer]);
 
   return (
     <div ref={parentRef} className="virtual-list" aria-label="Directory listing">
@@ -33,6 +41,7 @@ export default function VirtualListing({ entries }: VirtualListingProps) {
       >
         {virtualizer.getVirtualItems().map((item) => {
           const entry = entries[item.index];
+          const selected = item.index === selectedIndex;
           const content = (
             <>
               <span className="name">
@@ -50,15 +59,30 @@ export default function VirtualListing({ entries }: VirtualListingProps) {
           return (
             <div
               key={entry.key}
-              className="virtual-row"
+              className={`virtual-row${selected ? " selected" : ""}`}
               style={{ transform: `translateY(${item.start}px)` }}
             >
               {entry.href ? (
-                <a className="entry" href={entry.href}>
+                <a
+                  className="entry"
+                  href={entry.href}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    entry.onSelect();
+                  }}
+                  onDoubleClick={() => {
+                    window.location.href = entry.href!;
+                  }}
+                >
                   {content}
                 </a>
               ) : (
-                <button type="button" className="entry" onClick={entry.onActivate}>
+                <button
+                  type="button"
+                  className="entry"
+                  onClick={entry.onSelect}
+                  onDoubleClick={entry.onActivate}
+                >
                   {content}
                 </button>
               )}

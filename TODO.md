@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Explorer UX and CLI maturity are the focus: keyboard-driven navigation, a preview pane shell with stat metadata and viewer slot placeholder, headless `search`/`init`, and `plugin remove`. Bootstrap the fixture corpus (small, unicode, deep generators) and wire a listing integration test against it. Next up after this batch: thumbnailer capability, Playwright E2E, performance baselines in CI, and `status`/`daemon` CLI.
+With explorer UX and CLI basics in place, extend plugins again (thumbnailer + text viewer end-to-end), add `zfiles status`, harden path edge cases with unicode fixture tests, and stand up quality gates: a Playwright smoke suite and a list-latency perf smoke test in CI.
 
 ## TODO List
 
@@ -39,10 +39,17 @@ Explorer UX and CLI maturity are the focus: keyboard-driven navigation, a previe
 - [x] Virtual-scrolled file listing (replace plain `<ul>`; add generated large fixture for validation)
 - [x] CLI `zfiles upload`: headless tus client with `--resume` and bearer token support
 - [x] Searcher capability end-to-end: kernel dispatch, REST API, fixture plugin, conformance extension, frontend search box
-- [ ] CLI `zfiles search <folder> <query>`: headless filename search via installed searcher plugin
-- [ ] CLI `zfiles init [path]`: create `.zfiles/` with default config without starting the server
-- [ ] CLI `zfiles plugin remove <name>`: uninstall a plugin from `.zfiles/plugins/`
-- [ ] Frontend keyboard shortcuts: j/k selection, Enter open, Backspace up, `/` focus search
-- [ ] Preview pane shell: file selection, `/api/stat` metadata, viewer slot placeholder
-- [ ] Fixture corpus bootstrap: generators for `small/`, `unicode/`, `deep/` + listing integration test
-- [ ] Update README with new CLI commands and API endpoints
+- [x] CLI `zfiles search <folder> <query>`: headless filename search via installed searcher plugin
+- [x] CLI `zfiles init [path]`: create `.zfiles/` with default config without starting the server
+- [x] CLI `zfiles plugin remove <name>`: uninstall a plugin from `.zfiles/plugins/`
+- [x] Frontend keyboard shortcuts: j/k selection, Enter open, Backspace up, `/` focus search
+- [x] Preview pane shell: file selection, `/api/stat` metadata, viewer slot placeholder
+- [x] Fixture corpus bootstrap: generators for `small/`, `unicode/`, `deep/` + listing integration test
+- [x] Update README with new CLI commands and API endpoints
+- [ ] Thumbnailer capability end-to-end: `/api/thumbnail`, fixture plugin, glob dispatch, conformance, frontend thumbnail tiles
+- [ ] Viewer capability end-to-end: text viewer fixture, `/api/preview`, preview pane text rendering
+- [ ] CLI `zfiles status [path]`: print folder summary (plugins, config flags, dot-folder state)
+- [ ] Unicode fixture integration test: list paths with NFC/NFD/emoji filenames
+- [ ] Playwright E2E smoke: start server, load explorer, verify listing renders
+- [ ] Performance smoke test: assert `/api/list` on small fixture completes under SLA threshold
+- [ ] CI: run Playwright smoke and perf smoke jobs

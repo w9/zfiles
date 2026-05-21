@@ -71,6 +71,16 @@ impl Config {
     pub fn open_browser(&self) -> bool {
         self.server.open_browser.unwrap_or(true)
     }
+
+    pub fn init_folder(root: &Path) -> Result<PathBuf> {
+        let config_path = Self::dotfolder_config(root);
+        if !config_path.is_file() {
+            Self::default().save_to(&config_path)?;
+        }
+        std::fs::create_dir_all(root.join(".zfiles/plugins"))
+            .context("create plugins directory")?;
+        Ok(config_path)
+    }
 }
 
 fn parse_bool(value: &str) -> Result<bool> {
@@ -108,6 +118,16 @@ mod tests {
         let config = Config::load(dir.path()).unwrap();
         assert!(config.read_only());
         assert!(!config.open_browser());
+    }
+
+    #[test]
+    fn init_folder_creates_defaults() {
+        let dir = tempdir().unwrap();
+        let config_path = Config::init_folder(dir.path()).unwrap();
+        assert!(config_path.is_file());
+        assert!(dir.path().join(".zfiles/plugins").is_dir());
+        let config = Config::load(dir.path()).unwrap();
+        assert!(!config.read_only());
     }
 
     #[test]

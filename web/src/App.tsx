@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
 import { uploadFileResumable, type UploadProgress } from "./upload";
 
@@ -53,6 +54,9 @@ export default function App() {
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [searcherReady, setSearcherReady] = useState(false);
   const [readyPlugins, setReadyPlugins] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadListing = useCallback(async (path: string) => {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
@@ -64,6 +68,9 @@ export default function App() {
     setEntries(data);
     setCurrentPath(path);
     setSearchResults(null);
+    setSearchQuery("");
+    setSelectedIndex(0);
+    setSelectedPath(null);
     setError(null);
   }, []);
 
@@ -139,15 +146,16 @@ export default function App() {
           }
           return response.json() as Promise<FileEntry[]>;
         })
-        .then((results) => setSearchResults(results))
+        .then((results) => {
+          setSearchResults(results);
+          setSelectedIndex(0);
+          setSelectedPath(results[0]?.path ?? null);
+        })
         .catch((err: Error) => setError(err.message));
     }, 200);
 
     return () => window.clearTimeout(handle);
   }, [searchQuery, currentPath, searcherReady]);
-
-  const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
-  const visibleEntries = searchResults ?? entries;
 
   const navigateTo = useCallback(
     (path: string) => {
@@ -155,6 +163,9 @@ export default function App() {
     },
     [loadListing],
   );
+
+  const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
+  const visibleEntries = searchResults ?? entries;
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
     const rows: ListingEntry[] = [];
@@ -164,6 +175,10 @@ export default function App() {
         name: "..",
         path: "",
         isDir: true,
+        onSelect: () => {
+          setSelectedIndex(0);
+          setSelectedPath(null);
+        },
         onActivate: () => {
           const parent = currentPath.split("/").slice(0, -1).join("/");
           navigateTo(parent);
@@ -179,7 +194,14 @@ export default function App() {
         isDir: entry.is_dir,
         size: entry.is_dir ? undefined : entry.size,
         extraLabel: extraLabel(entry.extra),
-        onActivate: () => navigateTo(entry.path),
+        onSelect: () => setSelectedPath(entry.path),
+        onActivate: () => {
+          if (entry.is_dir) {
+            navigateTo(entry.path);
+          } else {
+            setSelectedPath(entry.path);
+          }
+        },
         href: entry.is_dir
           ? undefined
           : `/api/file?path=${encodeURIComponent(entry.path)}`,
@@ -187,6 +209,66 @@ export default function App() {
     }
     return rows;
   }, [visibleEntries, currentPath, searchResults, navigateTo]);
+
+  useEffect(() => {
+    const selected = listingEntries[selectedIndex];
+    if (selected && !selected.isDir) {
+      setSelectedPath(selected.path);
+    }
+  }, [selectedIndex, listingEntries]);
+
+  const activateSelected = useCallback(() => {
+    const selected = listingEntries[selectedIndex];
+    if (selected) {
+      selected.onActivate();
+    }
+  }, [listingEntries, selectedIndex]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const typing =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (event.key === "/" && !typing && searcherReady) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (typing) {
+        return;
+      }
+
+      if (event.key === "j") {
+        event.preventDefault();
+        setSelectedIndex((index) => Math.min(index + 1, listingEntries.length - 1));
+      } else if (event.key === "k") {
+        event.preventDefault();
+        setSelectedIndex((index) => Math.max(index - 1, 0));
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        activateSelected();
+      } else if (event.key === "Backspace") {
+        event.preventDefault();
+        if (currentPath) {
+          const parent = currentPath.split("/").slice(0, -1).join("/");
+          navigateTo(parent);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    activateSelected,
+    currentPath,
+    listingEntries.length,
+    navigateTo,
+    searcherReady,
+  ]);
 
   const onUpload = async (files: FileList | null) => {
     if (!files || files.length === 0 || uploading) {
@@ -243,8 +325,9 @@ export default function App() {
       {searcherReady ? (
         <section className="search">
           <input
+            ref={searchInputRef}
             type="search"
-            placeholder="Search filenames…"
+            placeholder="Search filenames… (press /)"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
@@ -277,7 +360,12 @@ export default function App() {
 
       {error && <p className="error">{error}</p>}
 
-      <VirtualListing entries={listingEntries} />
+      <p className="meta">Shortcuts: j/k move, Enter open, Backspace up, / search</p>
+
+      <div className="explorer-layout">
+        <VirtualListing entries={listingEntries} selectedIndex={selectedIndex} />
+        <PreviewPane path={selectedPath} />
+      </div>
     </main>
   );
 }

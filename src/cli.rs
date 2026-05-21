@@ -48,6 +48,17 @@ pub enum Command {
         #[arg(long)]
         resume: bool,
     },
+    /// Search filenames under a folder using an installed searcher plugin
+    Search {
+        #[command(flatten)]
+        args: crate::search::SearchArgs,
+    },
+    /// Create `.zfiles/` with default configuration
+    Init {
+        /// Directory to initialize
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -70,6 +81,14 @@ pub enum PluginCommand {
     Test {
         /// Plugin directory containing `manifest.toml`
         plugin: PathBuf,
+    },
+    /// Remove an installed plugin
+    Remove {
+        /// Directory whose `.zfiles/plugins` directory should be modified
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Plugin name to remove
+        name: String,
     },
 }
 

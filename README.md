@@ -24,11 +24,36 @@ zfiles --listen 0.0.0.0:8080 --token --read-only
 zfiles --no-open
 ```
 
+## CLI
+
+```bash
+# Initialize .zfiles/ with defaults (no server)
+zfiles init ~/Downloads
+
+# Search filenames via installed searcher plugin
+zfiles search ~/notes "meeting"
+
+# Upload to a remote server
+zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
+
+# Plugin management
+zfiles plugin install ./fixtures/plugins/search-filename
+zfiles plugin list
+zfiles plugin remove search-filename
+
+# Configuration
+zfiles config get server.read_only --folder ~/Downloads
+zfiles config set server.read_only true --folder ~/Downloads
+```
+
 ## Development
 
 ```bash
 # Run tests
 cargo test
+
+# Generate test fixtures (small, unicode, deep)
+./scripts/generate-fixtures.sh ./fixtures
 
 # Build the embedded frontend (required before release builds)
 cd web && pnpm install && pnpm build && cd ..
@@ -40,7 +65,9 @@ cargo build
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Health check |
+| `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
+| `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |
 | `/api/stat?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |
