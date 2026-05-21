@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -15,6 +15,21 @@ let serveDir = "";
 test.beforeAll(async () => {
   serveDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-"));
   fs.writeFileSync(path.join(serveDir, "hello.txt"), "hello from e2e\n");
+
+  const install = spawnSync(
+    binary,
+    [
+      "plugin",
+      "install",
+      path.join(rootDir, "fixtures/plugins/action-copy"),
+      "--path",
+      serveDir,
+    ],
+    { encoding: "utf8" },
+  );
+  if (install.status !== 0) {
+    throw new Error(install.stderr || "plugin install failed");
+  }
 
   server = spawn(
     binary,
@@ -57,4 +72,11 @@ test("preview pane shows selected file metadata", async ({ page }) => {
   await expect(preview.getByRole("heading", { name: "hello.txt" })).toBeVisible();
   await expect(preview.locator(".preview-meta dt", { hasText: "Size" })).toBeVisible();
   await expect(preview.locator(".preview-meta dd", { hasText: "15 B" })).toBeVisible();
+});
+
+test("context menu shows action plugin entries", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForTimeout(500);
+  await page.getByRole("link", { name: /hello\.txt/ }).click({ button: "right" });
+  await expect(page.getByRole("menuitem", { name: "Copy path" })).toBeVisible();
 });

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -255,6 +255,50 @@ impl PluginSupervisor {
                 }
             });
         }
+    }
+
+    pub async fn run_action(&self, path: &str, action_id: &str) -> Result<()> {
+        let Some(handle) = self.ready_plugin_for("action", path) else {
+            anyhow::bail!("action unavailable");
+        };
+        let plugin_name = handle.record.manifest.name.clone();
+        let call = handle.call_action_run(path, action_id);
+        match tokio::time::timeout(ACTION_TIMEOUT, call).await {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(error)) => {
+                warn!(plugin = %plugin_name, %error, "action/run call failed");
+                Err(error)
+            }
+            Err(_) => {
+                warn!(plugin = %plugin_name, "action/run call timed out");
+                anyhow::bail!("action timed out");
+            }
+        }
+    }
+
+    pub fn resolve_plugin_asset(&self, name: &str, relative: &str) -> Result<PathBuf> {
+        let root = self
+            .discover()?
+            .into_iter()
+            .find(|record| record.manifest.name == name)
+            .map(|record| record.root)
+            .with_context(|| format!("plugin {name} not found"))?;
+
+        let root = std::fs::canonicalize(&root)
+            .with_context(|| format!("resolve plugin root {}", root.display()))?;
+        let relative = normalize_plugin_path(relative)?;
+        let candidate = root.join(&relative);
+        let canonical = std::fs::canonicalize(&candidate)
+            .with_context(|| format!("plugin asset {} not found", candidate.display()))?;
+
+        if !canonical.starts_with(&root) {
+            anyhow::bail!("path escapes plugin directory");
+        }
+        if !canonical.is_file() {
+            anyhow::bail!("plugin asset is not a file");
+        }
+
+        Ok(canonical)
     }
 
     pub async fn actions(&self, path: &str) -> Vec<ActionItem> {
@@ -530,6 +574,24 @@ impl PluginHandle {
         parse_thumbnail_response(&response)
     }
 
+    async fn call_action_run(&self, path: &str, action_id: &str) -> Result<()> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "action/run",
+            "params": { "path": path, "actionId": action_id },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("action/run failed: {response}");
+        }
+        Ok(())
+    }
+
     async fn call_action_list(&self, path: &str) -> Result<Vec<ActionItem>> {
         let mut guard = self.io.lock().await;
         let io = guard.as_mut().context("plugin io unavailable")?;
@@ -565,6 +627,22 @@ impl PluginHandle {
         }
         parse_viewer_response(&response)
     }
+}
+
+fn normalize_plugin_path(path: &str) -> Result<PathBuf> {
+    let path = Path::new(path.trim_start_matches('/'));
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Normal(part) => normalized.push(part),
+            Component::CurDir => {}
+            Component::ParentDir => anyhow::bail!("path escapes plugin directory"),
+            Component::RootDir | Component::Prefix(_) => {
+                anyhow::bail!("absolute plugin paths are not allowed")
+            }
+        }
+    }
+    Ok(normalized)
 }
 
 fn encode_query_path(path: &str) -> String {

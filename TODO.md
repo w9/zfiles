@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Cycle 4 explorer features are done. Next: plugin static asset routes and ESM viewer slot mounts, `action/run` dispatch, a minimal `daemon` CLI for background serving, and download/upload throughput perf baselines in CI. Follow with multi-folder daemon config, thumbnail disk cache, and route-plugin reverse proxy.
+ESM viewer mounts, daemon CLI, and throughput baselines are in place. Next: thumbnail disk cache, route-plugin dynamic dispatch, multi-folder daemon config, bulk multi-select actions, and explorer range-select UX. Follow with iframe sandbox for untrusted viewer plugins and perf regression baselines in nightly CI.
 
 ## TODO List
 
@@ -60,10 +60,17 @@ Cycle 4 explorer features are done. Next: plugin static asset routes and ESM vie
 - [x] Viewer module metadata in `/api/plugins` and preview pane slot hint
 - [x] Scheduled nightly CI workflow running perf smoke tests
 - [x] Extend Playwright smoke: verify file preview pane on selection
-- [ ] Plugin static asset route: `GET /plugin/:name/*path` with traversal-safe file serving
-- [ ] Viewer ESM slot mount: fixture `module.js`, dynamic import in preview pane
-- [ ] Action run dispatch: `POST /api/actions/run`, frontend invokes on context-menu select
-- [ ] CLI `zfiles daemon start|stop|status`: background serve with `.zfiles/daemon.pid`
-- [ ] Download throughput perf smoke: assert `/api/file` on 1 MiB fixture under SLA
-- [ ] Upload throughput perf smoke: assert tus PATCH completion under SLA
-- [ ] E2E smoke: install action plugin, verify context menu appears on right-click
+- [x] Plugin static asset route: `GET /plugin/:name/*path` with traversal-safe file serving
+- [x] Viewer ESM slot mount: fixture `module.js`, dynamic import in preview pane
+- [x] Action run dispatch: `POST /api/actions/run`, frontend invokes on context-menu select
+- [x] CLI `zfiles daemon start|stop|status`: background serve with `.zfiles/daemon.pid`
+- [x] Download throughput perf smoke: assert `/api/file` on 1 MiB fixture under SLA
+- [x] Upload throughput perf smoke: assert tus PATCH completion under SLA
+- [x] E2E smoke: install action plugin, verify context menu appears on right-click
+- [ ] Thumbnail on-disk cache: store/read PNG bytes under plugin `data/thumbnails/`
+- [ ] Route plugin end-to-end: fixture plugin, dynamic `/plugin/:name/*` dispatch via `route/handle`
+- [ ] Multi-folder daemon config: `daemon.toml` with `[[share]]`, `zfiles daemon start --config`
+- [ ] Bulk action dispatch: `POST /api/actions` accepts `paths[]`, frontend runs on multi-select
+- [ ] Frontend shift+click range selection in virtual listing
+- [ ] E2E smoke: install viewer-text plugin, verify ESM viewer mount renders preview body
+- [ ] Update README with daemon, actions POST, and plugin asset routes

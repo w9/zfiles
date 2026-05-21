@@ -118,6 +118,10 @@ body {
   color: #8ab4f8;
 }
 
+.viewer-mount:empty {
+  display: none;
+}
+
 header h1 {
   margin: 0 0 0.75rem;
 }

@@ -126,6 +126,18 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         if actions.get("error").is_some() {
             bail!("action/list failed: {actions}");
         }
+
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "action/run",
+            "params": { "path": "notes.txt", "actionId": "copy-path" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let ran = framing::read_message(&mut stdout).await?;
+        if ran.get("error").is_some() {
+            bail!("action/run failed: {ran}");
+        }
     }
 
     drop(stdin);

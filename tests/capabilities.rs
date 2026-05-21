@@ -218,3 +218,44 @@ async fn viewer_module_exposed_in_plugins_api() {
         "/plugin/viewer-text/module.js"
     );
 }
+
+#[tokio::test]
+async fn plugin_static_serves_viewer_module() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/viewer-text");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    let response = server.get("/plugin/viewer-text/module.js").await;
+    response.assert_status_ok();
+    assert!(response.text().contains("export function mount"));
+}
+
+#[tokio::test]
+async fn action_run_returns_no_content() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/action-copy");
+    PluginSupervisor::new(dir.path().to_path_buf())
+        .install(&source)
+        .unwrap();
+
+    let server = test_server_with_plugins(dir.path());
+    wait_for_plugin(&server, "action").await;
+
+    let response = server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "path": "notes.txt",
+            "action_id": "copy-path",
+        }))
+        .await;
+    response.assert_status(axum::http::StatusCode::NO_CONTENT);
+}

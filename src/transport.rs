@@ -59,7 +59,8 @@ pub fn router(state: AppState) -> Router {
         .route("/api/search", get(search_directory))
         .route("/api/thumbnail", get(thumbnail_file))
         .route("/api/preview", get(preview_file))
-        .route("/api/actions", get(list_actions))
+        .route("/api/actions", get(list_actions).post(run_action))
+        .route("/plugin/{name}/{*path}", get(plugin_static))
         .route("/api/stat", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
@@ -186,6 +187,39 @@ async fn list_actions(
         .ok_or_else(|| anyhow::anyhow!("path is required"))?;
     let actions = state.plugins.actions(relative).await;
     Ok(Json(actions))
+}
+
+#[derive(Debug, Deserialize)]
+struct RunActionBody {
+    path: String,
+    action_id: String,
+}
+
+async fn run_action(
+    State(state): State<AppState>,
+    Json(body): Json<RunActionBody>,
+) -> Result<StatusCode, AppError> {
+    state.plugins.run_action(&body.path, &body.action_id).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn plugin_static(
+    State(state): State<AppState>,
+    AxumPath((name, path)): AxumPath<(String, String)>,
+) -> Result<Response, AppError> {
+    let absolute = state.plugins.resolve_plugin_asset(&name, &path)?;
+    let content_type = from_path(&absolute)
+        .first()
+        .map(|mime| mime.to_string())
+        .unwrap_or_else(|| "application/octet-stream".into());
+    let bytes = tokio::fs::read(&absolute).await?;
+    let mut response = Response::new(Body::from(bytes));
+    response.headers_mut().insert(
+        CONTENT_TYPE,
+        HeaderValue::from_str(&content_type)
+            .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
+    );
+    Ok(response)
 }
 
 #[derive(Debug, Deserialize)]
@@ -529,6 +563,8 @@ impl IntoResponse for AppError {
             || message.contains("failed to stat path")
             || message.contains("thumbnail unavailable")
             || message.contains("preview unavailable")
+            || message.contains("action unavailable")
+            || message.contains("plugin asset")
         {
             StatusCode::NOT_FOUND
         } else if message.contains("cannot download a directory") {

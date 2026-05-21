@@ -23,6 +23,18 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
             crate::status_cmd::run(args)?;
             Ok(())
         }
+        Some(Command::Daemon { command }) => run_daemon(command),
+    }
+}
+
+fn run_daemon(command: crate::cli::DaemonCommand) -> anyhow::Result<()> {
+    use crate::cli::DaemonCommand;
+    use crate::daemon::{DaemonStartArgs, start, status, stop};
+
+    match command {
+        DaemonCommand::Start { path, port } => start(DaemonStartArgs { path, port }),
+        DaemonCommand::Stop { path } => stop(path),
+        DaemonCommand::Status { path } => status(path),
     }
 }
 

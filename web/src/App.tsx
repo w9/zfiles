@@ -235,9 +235,18 @@ export default function App() {
     [],
   );
 
-  const runContextAction = useCallback((actionId: string, path: string) => {
+  const runContextAction = useCallback(async (actionId: string, path: string) => {
+    const response = await fetch("/api/actions/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path, action_id: actionId }),
+    });
+    if (!response.ok) {
+      setError(`Action failed: HTTP ${response.status}`);
+      return;
+    }
     if (actionId === "copy-path") {
-      void navigator.clipboard.writeText(path);
+      await navigator.clipboard.writeText(path);
     }
   }, []);
 

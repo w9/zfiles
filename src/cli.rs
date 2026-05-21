@@ -64,6 +64,36 @@ pub enum Command {
         #[command(flatten)]
         args: crate::status_cmd::StatusArgs,
     },
+    /// Manage a background server process
+    Daemon {
+        #[command(subcommand)]
+        command: DaemonCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum DaemonCommand {
+    /// Start serving a directory in the background
+    Start {
+        /// Directory to serve
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Port to listen on
+        #[arg(long)]
+        port: Option<u16>,
+    },
+    /// Stop the background server for a directory
+    Stop {
+        /// Directory whose daemon should be stopped
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
+    /// Report whether a background server is running
+    Status {
+        /// Directory whose daemon status should be checked
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -76,11 +106,11 @@ pub enum PluginCommand {
     },
     /// Install a plugin directory into `.zfiles/plugins/`
     Install {
-        /// Directory whose `.zfiles/plugins` directory should receive the plugin
-        #[arg(default_value = ".")]
-        path: PathBuf,
         /// Plugin source directory containing `manifest.toml`
         source: PathBuf,
+        /// Directory whose `.zfiles/plugins` directory should receive the plugin
+        #[arg(long, default_value = ".")]
+        path: PathBuf,
     },
     /// Run the plugin conformance suite
     Test {
@@ -89,11 +119,11 @@ pub enum PluginCommand {
     },
     /// Remove an installed plugin
     Remove {
-        /// Directory whose `.zfiles/plugins` directory should be modified
-        #[arg(default_value = ".")]
-        path: PathBuf,
         /// Plugin name to remove
         name: String,
+        /// Directory whose `.zfiles/plugins` directory should be modified
+        #[arg(long, default_value = ".")]
+        path: PathBuf,
     },
 }
 
