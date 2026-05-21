@@ -2,15 +2,15 @@
 
 ## 1. Overview
 
-zfiles turns any folder into a fast file explorer in your browser, instantly. Run `zfiles` in a directory and a browser tab opens with your files, ready to use — no indexing pause, no spinner, no configuration. It scales from a handful of files to directories with millions.
+zfiles is a local file server with a browser-based explorer. Run `zfiles` in a directory; the UI opens with no indexing step, no startup delay, and no configuration. It scales from small folders to directories with millions of entries.
 
-Drag a file into the browser to upload it. If your network drops mid-upload, zfiles picks up where it left off when you reconnect. Downloads behave the same way: cancel and resume with any HTTP client, including `curl --continue-at`.
+Files can be uploaded by dragging them into the browser. Uploads and downloads are resumable — if the connection drops, they continue from where they stopped. Any HTTP client that supports range requests works, including `curl --continue-at`.
 
-Want to share a folder with a phone or another machine on your network? `zfiles --listen 0.0.0.0:8080 --token` prints a URL and a QR code. They open it, they're in. Done.
+To expose a folder on the local network, run `zfiles --listen 0.0.0.0:8080 --token`. The server prints a URL and a QR code for other devices.
 
-The UI is built for power users: keyboard shortcuts, multi-select, virtual-scrolled listings, an extensible preview pane. Need a feature zfiles doesn't have — image thumbnails, EXIF metadata, DICOM viewing, full-text search? Install a plugin, or write one in whatever language you prefer. Plugins snap into the core experience.
+The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scrolled listings, and an extensible preview pane. Format-specific features — thumbnails, EXIF metadata, DICOM viewing, full-text search — live in plugins that can be written in any language.
 
-zfiles is a single static binary. Drop it on a Linux machine, run it, you're done. No daemons, no databases, no configuration files unless you want them.
+Everything ships as a single static binary. No daemon, database, or config file is required to run.
 
 ## 2. Technical objectives
 
