@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
 import { uploadFileResumable, type UploadProgress } from "./upload";
@@ -16,6 +17,7 @@ type PluginInfo = {
   name: string;
   capabilities: string[];
   globs: string[];
+  viewerModule?: string | null;
 };
 
 type KernelEvent =
@@ -23,7 +25,15 @@ type KernelEvent =
   | { type: "filesystem_changed"; path: string }
   | { type: "upload_progress"; id: string; offset: number; length?: number }
   | { type: "plugin_ready"; name: string }
-  | { type: "listing_enrichment"; path: string; entries: FileEntry[] };
+  | { type: "listing_enrichment"; path: string; entries: FileEntry[] }
+  | { type: "thumbnail_ready"; path: string; url: string };
+
+type ContextMenuState = {
+  x: number;
+  y: number;
+  path: string;
+  actions: ContextMenuAction[];
+};
 
 function mergeEntries(current: FileEntry[], incoming: FileEntry[]): FileEntry[] {
   const byPath = new Map(current.map((entry) => [entry.path, entry]));
@@ -55,17 +65,16 @@ function matchesGlob(glob: string, name: string): boolean {
   return glob === name;
 }
 
-function thumbnailUrlFor(plugins: PluginInfo[], path: string): string | undefined {
+function thumbnailEligible(plugins: PluginInfo[], path: string): boolean {
   if (!plugins.some((plugin) => plugin.capabilities.includes("thumbnailer"))) {
-    return undefined;
+    return false;
   }
   const name = path.split("/").pop() ?? path;
-  const matches = plugins.some(
+  return plugins.some(
     (plugin) =>
       plugin.capabilities.includes("thumbnailer") &&
       plugin.globs.some((glob) => matchesGlob(glob, name)),
   );
-  return matches ? `/api/thumbnail?path=${encodeURIComponent(path)}` : undefined;
 }
 
 export default function App() {
@@ -83,6 +92,11 @@ export default function App() {
   const [pluginDetails, setPluginDetails] = useState<PluginInfo[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
+  const [readyThumbnails, setReadyThumbnails] = useState<Map<string, string>>(
+    () => new Map(),
+  );
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadListing = useCallback(async (path: string) => {
@@ -98,6 +112,8 @@ export default function App() {
     setSearchQuery("");
     setSelectedIndex(0);
     setSelectedPath(null);
+    setSelectedPaths(new Set());
+    setReadyThumbnails(new Map());
     setError(null);
   }, []);
 
@@ -153,6 +169,13 @@ export default function App() {
             setEntries((current) => mergeEntries(current, event.entries));
           }
           break;
+        case "thumbnail_ready":
+          setReadyThumbnails((current) => {
+            const next = new Map(current);
+            next.set(event.path, event.url);
+            return next;
+          });
+          break;
       }
     };
 
@@ -181,6 +204,7 @@ export default function App() {
           setSearchResults(results);
           setSelectedIndex(0);
           setSelectedPath(results[0]?.path ?? null);
+          setSelectedPaths(new Set());
         })
         .catch((err: Error) => setError(err.message));
     }, 200);
@@ -194,6 +218,40 @@ export default function App() {
     },
     [loadListing],
   );
+
+  const openContextMenu = useCallback(
+    async (event: React.MouseEvent, path: string) => {
+      event.preventDefault();
+      const response = await fetch(`/api/actions?path=${encodeURIComponent(path)}`);
+      if (!response.ok) {
+        return;
+      }
+      const actions = (await response.json()) as ContextMenuAction[];
+      if (actions.length === 0) {
+        return;
+      }
+      setContextMenu({ x: event.clientX, y: event.clientY, path, actions });
+    },
+    [],
+  );
+
+  const runContextAction = useCallback((actionId: string, path: string) => {
+    if (actionId === "copy-path") {
+      void navigator.clipboard.writeText(path);
+    }
+  }, []);
+
+  const toggleMultiSelect = useCallback((path: string) => {
+    setSelectedPaths((current) => {
+      const next = new Set(current);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }, []);
 
   const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
   const visibleEntries = searchResults ?? entries;
@@ -218,6 +276,7 @@ export default function App() {
     }
 
     for (const entry of visibleEntries) {
+      const thumbReady = readyThumbnails.get(entry.path);
       rows.push({
         key: entry.path,
         name: entry.name,
@@ -225,9 +284,13 @@ export default function App() {
         isDir: entry.is_dir,
         size: entry.is_dir ? undefined : entry.size,
         extraLabel: extraLabel(entry.extra),
-        thumbnailUrl: thumbnailerReady
-          ? thumbnailUrlFor(pluginDetails, entry.path)
-          : undefined,
+        thumbnailUrl:
+          !entry.is_dir &&
+          thumbnailerReady &&
+          thumbnailEligible(pluginDetails, entry.path) &&
+          thumbReady
+            ? thumbReady
+            : undefined,
         onSelect: () => setSelectedPath(entry.path),
         onActivate: () => {
           if (entry.is_dir) {
@@ -236,13 +299,23 @@ export default function App() {
             setSelectedPath(entry.path);
           }
         },
+        onContextMenu: (event) => void openContextMenu(event, entry.path),
         href: entry.is_dir
           ? undefined
           : `/api/file?path=${encodeURIComponent(entry.path)}`,
       });
     }
     return rows;
-  }, [visibleEntries, currentPath, searchResults, navigateTo, thumbnailerReady, pluginDetails]);
+  }, [
+    visibleEntries,
+    currentPath,
+    searchResults,
+    navigateTo,
+    thumbnailerReady,
+    pluginDetails,
+    readyThumbnails,
+    openContextMenu,
+  ]);
 
   useEffect(() => {
     const selected = listingEntries[selectedIndex];
@@ -291,6 +364,12 @@ export default function App() {
           const parent = currentPath.split("/").slice(0, -1).join("/");
           navigateTo(parent);
         }
+      } else if (event.key === " ") {
+        event.preventDefault();
+        const selected = listingEntries[selectedIndex];
+        if (selected?.path && selected.key !== "..") {
+          toggleMultiSelect(selected.path);
+        }
       }
     };
 
@@ -299,9 +378,12 @@ export default function App() {
   }, [
     activateSelected,
     currentPath,
+    listingEntries,
     listingEntries.length,
     navigateTo,
     searcherReady,
+    selectedIndex,
+    toggleMultiSelect,
   ]);
 
   const onUpload = async (files: FileList | null) => {
@@ -332,6 +414,8 @@ export default function App() {
       ? `Uploading… ${Math.round((uploadProgress.offset / uploadProgress.length) * 100)}%`
       : "Uploading…"
     : "Drop files here to upload";
+
+  const bulkDownloadPaths = Array.from(selectedPaths);
 
   return (
     <main className="shell">
@@ -394,12 +478,48 @@ export default function App() {
 
       {error && <p className="error">{error}</p>}
 
-      <p className="meta">Shortcuts: j/k move, Enter open, Backspace up, / search</p>
+      {bulkDownloadPaths.length > 0 ? (
+        <section className="selection-bar" aria-label="Multi-selection actions">
+          <span>{bulkDownloadPaths.length} selected</span>
+          <div className="selection-links">
+            {bulkDownloadPaths.map((path) => (
+              <a
+                key={path}
+                href={`/api/file?path=${encodeURIComponent(path)}`}
+                download
+              >
+                Download {path.split("/").pop()}
+              </a>
+            ))}
+          </div>
+          <button type="button" onClick={() => setSelectedPaths(new Set())}>
+            Clear
+          </button>
+        </section>
+      ) : null}
+
+      <p className="meta">
+        Shortcuts: j/k move, Enter open, Backspace up, / search, Space toggle select
+      </p>
 
       <div className="explorer-layout">
-        <VirtualListing entries={listingEntries} selectedIndex={selectedIndex} />
+        <VirtualListing
+          entries={listingEntries}
+          selectedIndex={selectedIndex}
+          multiSelectedPaths={selectedPaths}
+        />
         <PreviewPane path={selectedPath} plugins={pluginDetails} />
       </div>
+
+      {contextMenu ? (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          actions={contextMenu.actions}
+          onSelect={(actionId) => runContextAction(actionId, contextMenu.path)}
+          onClose={() => setContextMenu(null)}
+        />
+      ) : null}
     </main>
   );
 }

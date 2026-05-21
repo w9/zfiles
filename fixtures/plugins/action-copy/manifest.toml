@@ -1,0 +1,6 @@
+name = "action-copy"
+version = "0.1.0"
+executable = "bin/action-copy"
+protocol_version = 1
+capabilities = ["action"]
+globs = ["*"]

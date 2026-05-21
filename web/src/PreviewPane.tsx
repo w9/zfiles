@@ -11,6 +11,7 @@ type PluginInfo = {
   name: string;
   capabilities: string[];
   globs: string[];
+  viewerModule?: string | null;
 };
 
 type PreviewPaneProps = {
@@ -29,9 +30,9 @@ function matchesGlob(glob: string, name: string): boolean {
   return glob === name;
 }
 
-function hasViewer(plugins: PluginInfo[], path: string): boolean {
+function viewerFor(plugins: PluginInfo[], path: string): PluginInfo | undefined {
   const name = path.split("/").pop() ?? path;
-  return plugins.some(
+  return plugins.find(
     (plugin) =>
       plugin.capabilities.includes("viewer") &&
       plugin.globs.some((glob) => matchesGlob(glob, name)),
@@ -68,7 +69,7 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
         setError(err.message);
       });
 
-    if (hasViewer(plugins, path)) {
+    if (viewerFor(plugins, path)) {
       fetch(`/api/preview?path=${encodeURIComponent(path)}`)
         .then(async (response) => {
           if (!response.ok) {
@@ -105,6 +106,8 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
     );
   }
 
+  const viewer = viewerFor(plugins, stat.path);
+
   return (
     <aside className="preview-pane" aria-label="Preview pane">
       <h2>{stat.path.split("/").pop()}</h2>
@@ -126,6 +129,11 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
       </dl>
       {!stat.is_dir ? (
         <div className="viewer-slot" data-viewer-slot="preview">
+          {viewer?.viewerModule ? (
+            <p className="meta viewer-module-hint">
+              Viewer module: <code>{viewer.viewerModule}</code>
+            </p>
+          ) : null}
           {preview != null ? (
             <pre className="preview-text">{preview}</pre>
           ) : (

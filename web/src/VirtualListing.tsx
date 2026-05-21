@@ -11,15 +11,21 @@ export type ListingEntry = {
   thumbnailUrl?: string;
   onSelect: () => void;
   onActivate: () => void;
+  onContextMenu?: (event: React.MouseEvent) => void;
   href?: string;
 };
 
 type VirtualListingProps = {
   entries: ListingEntry[];
   selectedIndex: number;
+  multiSelectedPaths?: Set<string>;
 };
 
-export default function VirtualListing({ entries, selectedIndex }: VirtualListingProps) {
+export default function VirtualListing({
+  entries,
+  selectedIndex,
+  multiSelectedPaths,
+}: VirtualListingProps) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
     count: entries.length,
@@ -43,6 +49,14 @@ export default function VirtualListing({ entries, selectedIndex }: VirtualListin
         {virtualizer.getVirtualItems().map((item) => {
           const entry = entries[item.index];
           const selected = item.index === selectedIndex;
+          const multiSelected = multiSelectedPaths?.has(entry.path) ?? false;
+          const rowClass = [
+            "virtual-row",
+            selected ? "selected" : "",
+            multiSelected ? "multi-selected" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
           const content = (
             <>
               {entry.thumbnailUrl ? (
@@ -70,7 +84,7 @@ export default function VirtualListing({ entries, selectedIndex }: VirtualListin
           return (
             <div
               key={entry.key}
-              className={`virtual-row${selected ? " selected" : ""}`}
+              className={rowClass}
               style={{ transform: `translateY(${item.start}px)` }}
             >
               {entry.href ? (
@@ -84,6 +98,7 @@ export default function VirtualListing({ entries, selectedIndex }: VirtualListin
                   onDoubleClick={() => {
                     window.location.href = entry.href!;
                   }}
+                  onContextMenu={entry.onContextMenu}
                 >
                   {content}
                 </a>
@@ -93,6 +108,7 @@ export default function VirtualListing({ entries, selectedIndex }: VirtualListin
                   className="entry"
                   onClick={entry.onSelect}
                   onDoubleClick={entry.onActivate}
+                  onContextMenu={entry.onContextMenu}
                 >
                   {content}
                 </button>

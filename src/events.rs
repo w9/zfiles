@@ -18,6 +18,10 @@ pub enum KernelEvent {
         path: String,
         entries: Vec<crate::fs::FileEntry>,
     },
+    ThumbnailReady {
+        path: String,
+        url: String,
+    },
 }
 
 #[derive(Clone)]

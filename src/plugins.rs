@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::process::Command;
 use tokio::sync::Mutex as AsyncMutex;
@@ -20,6 +20,7 @@ const LISTER_TIMEOUT: Duration = Duration::from_millis(50);
 const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
 const THUMBNAILER_TIMEOUT: Duration = Duration::from_millis(500);
 const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
+const ACTION_TIMEOUT: Duration = Duration::from_millis(200);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
@@ -33,6 +34,14 @@ pub struct PluginManifest {
     pub capabilities: Vec<String>,
     #[serde(default)]
     pub globs: Vec<String>,
+    #[serde(default)]
+    pub viewer_module: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ActionItem {
+    pub id: String,
+    pub label: String,
 }
 
 #[derive(Debug, Clone)]
@@ -220,9 +229,51 @@ impl PluginSupervisor {
                     "name": handle.record.manifest.name,
                     "capabilities": handle.record.manifest.capabilities,
                     "globs": handle.record.manifest.globs,
+                    "viewerModule": handle.record.manifest.viewer_module,
                 })
             })
             .collect()
+    }
+
+    pub fn prefetch_thumbnails(&self, entries: &[FileEntry], events: EventBus) {
+        for entry in entries {
+            if entry.is_dir {
+                continue;
+            }
+            if self.ready_plugin_for("thumbnailer", &entry.path).is_none() {
+                continue;
+            }
+            let path = entry.path.clone();
+            let supervisor = self.clone();
+            let events = events.clone();
+            tokio::spawn(async move {
+                if supervisor.thumbnail(&path).await.is_some() {
+                    events.publish(KernelEvent::ThumbnailReady {
+                        path: path.clone(),
+                        url: format!("/api/thumbnail?path={}", encode_query_path(&path)),
+                    });
+                }
+            });
+        }
+    }
+
+    pub async fn actions(&self, path: &str) -> Vec<ActionItem> {
+        let Some(handle) = self.ready_plugin_for("action", path) else {
+            return Vec::new();
+        };
+        let plugin_name = handle.record.manifest.name.clone();
+        let call = handle.call_action_list(path);
+        match tokio::time::timeout(ACTION_TIMEOUT, call).await {
+            Ok(Ok(actions)) => actions,
+            Ok(Err(error)) => {
+                warn!(plugin = %plugin_name, %error, "action/list call failed");
+                Vec::new()
+            }
+            Err(_) => {
+                warn!(plugin = %plugin_name, "action/list call timed out");
+                Vec::new()
+            }
+        }
     }
 
     pub async fn enrich_listing(
@@ -479,6 +530,24 @@ impl PluginHandle {
         parse_thumbnail_response(&response)
     }
 
+    async fn call_action_list(&self, path: &str) -> Result<Vec<ActionItem>> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "action/list",
+            "params": { "path": path },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("action/list failed: {response}");
+        }
+        parse_action_list_response(&response)
+    }
+
     async fn call_viewer(&self, path: &str) -> Result<(String, String)> {
         let mut guard = self.io.lock().await;
         let io = guard.as_mut().context("plugin io unavailable")?;
@@ -496,6 +565,36 @@ impl PluginHandle {
         }
         parse_viewer_response(&response)
     }
+}
+
+fn encode_query_path(path: &str) -> String {
+    let mut encoded = String::with_capacity(path.len());
+    for byte in path.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'/' => {
+                encoded.push(byte as char);
+            }
+            _ => encoded.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    encoded
+}
+
+fn parse_action_list_response(response: &Value) -> Result<Vec<ActionItem>> {
+    let Some(actions) = response
+        .get("result")
+        .and_then(|value| value.get("actions"))
+        .and_then(|value| value.as_array())
+    else {
+        return Ok(Vec::new());
+    };
+
+    let mut parsed = Vec::with_capacity(actions.len());
+    for action in actions {
+        let item: ActionItem = serde_json::from_value(action.clone()).context("parse action")?;
+        parsed.push(item);
+    }
+    Ok(parsed)
 }
 
 fn parse_thumbnail_response(response: &Value) -> Result<(String, Vec<u8>)> {

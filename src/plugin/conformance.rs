@@ -114,6 +114,20 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         }
     }
 
+    if manifest.capabilities.iter().any(|cap| cap == "action") {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "action/list",
+            "params": { "path": "notes.txt" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let actions = framing::read_message(&mut stdout).await?;
+        if actions.get("error").is_some() {
+            bail!("action/list failed: {actions}");
+        }
+    }
+
     drop(stdin);
     let status = child.wait().await.context("wait for plugin")?;
     if !status.success() {

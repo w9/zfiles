@@ -59,6 +59,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/search", get(search_directory))
         .route("/api/thumbnail", get(thumbnail_file))
         .route("/api/preview", get(preview_file))
+        .route("/api/actions", get(list_actions))
         .route("/api/stat", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
@@ -169,7 +170,22 @@ async fn list_directory(
         .plugins
         .enrich_listing(relative, entries, state.events.clone())
         .await;
+    state
+        .plugins
+        .prefetch_thumbnails(&entries, state.events.clone());
     Ok(Json(entries))
+}
+
+async fn list_actions(
+    State(state): State<AppState>,
+    Query(query): Query<PathQuery>,
+) -> Result<Json<Vec<crate::plugins::ActionItem>>, AppError> {
+    let relative = query
+        .path
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
+    let actions = state.plugins.actions(relative).await;
+    Ok(Json(actions))
 }
 
 #[derive(Debug, Deserialize)]

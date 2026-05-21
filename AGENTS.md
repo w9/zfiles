@@ -21,7 +21,7 @@ When the user says **"Go!"**, complete one full development cycle:
 4. **Implement** — Work through the new unfinished items. For each item:
    - Write tests first (see DESIGN.md §5), then implement the minimum to pass.
    - Mark the item complete when finished — **never remove completed items**.
-   - Commit whenever appropriate; follow the user's git instructions.
+   - Commit whenever appropriate; Update .gitignore when appropriate; follow the user's git instructions.
 5. **Verify** — Before the cycle is complete, run the full test suite (`cargo test`) and fix any failures. **All tests must pass** — do not leave the cycle with a failing or skipped suite.
 
 Do not skip steps or reorder them. Planning and TODO updates come first; implementation follows the commit.

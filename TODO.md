@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Ship explorer power-user features and async plugin delivery: multi-select with bulk actions, thumbnail WebSocket prefetch, action-plugin context menus, viewer module metadata, deep-fixture coverage, and a scheduled nightly perf workflow. Follow with ESM viewer mounts, `daemon` CLI, and download/upload throughput baselines.
+Cycle 4 explorer features are done. Next: plugin static asset routes and ESM viewer slot mounts, `action/run` dispatch, a minimal `daemon` CLI for background serving, and download/upload throughput perf baselines in CI. Follow with multi-folder daemon config, thumbnail disk cache, and route-plugin reverse proxy.
 
 ## TODO List
 
@@ -53,10 +53,17 @@ Ship explorer power-user features and async plugin delivery: multi-select with b
 - [x] Playwright E2E smoke: start server, load explorer, verify listing renders
 - [x] Performance smoke test: assert `/api/list` on small fixture completes under SLA threshold
 - [x] CI: run Playwright smoke and perf smoke jobs
-- [ ] Frontend multi-select: Space toggle, selection bar, bulk download links
-- [ ] Thumbnail WebSocket prefetch: `thumbnail_ready` events after listing, frontend lazy tile reveal
-- [ ] Action plugin end-to-end: fixture plugin, `/api/actions`, right-click context menu
-- [ ] Deep fixture integration test: list nested directory via API
-- [ ] Viewer module metadata in `/api/plugins` and preview pane slot hint
-- [ ] Scheduled nightly CI workflow running perf smoke tests
-- [ ] Extend Playwright smoke: verify file preview pane on selection
+- [x] Frontend multi-select: Space toggle, selection bar, bulk download links
+- [x] Thumbnail WebSocket prefetch: `thumbnail_ready` events after listing, frontend lazy tile reveal
+- [x] Action plugin end-to-end: fixture plugin, `/api/actions`, right-click context menu
+- [x] Deep fixture integration test: list nested directory via API
+- [x] Viewer module metadata in `/api/plugins` and preview pane slot hint
+- [x] Scheduled nightly CI workflow running perf smoke tests
+- [x] Extend Playwright smoke: verify file preview pane on selection
+- [ ] Plugin static asset route: `GET /plugin/:name/*path` with traversal-safe file serving
+- [ ] Viewer ESM slot mount: fixture `module.js`, dynamic import in preview pane
+- [ ] Action run dispatch: `POST /api/actions/run`, frontend invokes on context-menu select
+- [ ] CLI `zfiles daemon start|stop|status`: background serve with `.zfiles/daemon.pid`
+- [ ] Download throughput perf smoke: assert `/api/file` on 1 MiB fixture under SLA
+- [ ] Upload throughput perf smoke: assert tus PATCH completion under SLA
+- [ ] E2E smoke: install action plugin, verify context menu appears on right-click

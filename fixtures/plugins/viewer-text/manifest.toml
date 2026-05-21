@@ -4,3 +4,4 @@ executable = "bin/viewer-text"
 protocol_version = 1
 capabilities = ["viewer"]
 globs = ["*.txt", "*.md"]
+viewer_module = "/plugin/viewer-text/module.js"

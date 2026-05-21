@@ -33,3 +33,12 @@ async fn viewer_text_plugin_passes_conformance() {
         .await
         .expect("viewer-text plugin conformance");
 }
+
+#[tokio::test]
+async fn action_copy_plugin_passes_conformance() {
+    let plugin = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/plugins/action-copy");
+    zfiles::plugin::conformance::run(&plugin)
+        .await
+        .expect("action-copy plugin conformance");
+}

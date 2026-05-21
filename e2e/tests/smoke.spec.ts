@@ -49,3 +49,12 @@ test("explorer lists served files", async ({ page }) => {
   await expect(page.getByText("hello.txt")).toBeVisible();
   await expect(page.getByRole("heading", { name: "zfiles" })).toBeVisible();
 });
+
+test("preview pane shows selected file metadata", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /hello\.txt/ }).click();
+  const preview = page.getByRole("complementary", { name: "Preview pane" });
+  await expect(preview.getByRole("heading", { name: "hello.txt" })).toBeVisible();
+  await expect(preview.locator(".preview-meta dt", { hasText: "Size" })).toBeVisible();
+  await expect(preview.locator(".preview-meta dd", { hasText: "15 B" })).toBeVisible();
+});
