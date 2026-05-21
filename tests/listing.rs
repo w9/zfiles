@@ -2,15 +2,20 @@ use std::fs;
 use std::sync::Arc;
 
 use axum_test::TestServer;
+use base64::Engine;
 use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
-use zfiles::fs::{FileEntry, LocalFs};
+use zfiles::events::EventBus;
+use zfiles::fs::{FileEntry, FileStat, LocalFs};
+use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
 fn test_server(root: &std::path::Path) -> TestServer {
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.to_path_buf())),
         auth: AuthConfig::disabled(),
+        state: Arc::new(StateStore::new(root.to_path_buf())),
+        events: EventBus::new(),
     };
     TestServer::new(router(state)).expect("test server")
 }
@@ -61,4 +66,91 @@ async fn list_subdirectory() {
     let entries: Vec<FileEntry> = response.json();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].name, "inner.txt");
+}
+
+#[tokio::test]
+async fn stat_returns_metadata() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+
+    let server = test_server(dir.path());
+    let response = server.get("/api/stat?path=notes.txt").await;
+    response.assert_status_ok();
+
+    let stat: FileStat = response.json();
+    assert_eq!(stat.path, "notes.txt");
+    assert!(!stat.is_dir);
+    assert_eq!(stat.size, 5);
+}
+
+#[tokio::test]
+async fn download_full_file() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello world").unwrap();
+
+    let server = test_server(dir.path());
+    let response = server.get("/api/file?path=notes.txt").await;
+    response.assert_status_ok();
+    assert_eq!(response.text(), "hello world");
+}
+
+#[tokio::test]
+async fn download_partial_file() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello world").unwrap();
+
+    let server = test_server(dir.path());
+    let response = server
+        .get("/api/file?path=notes.txt")
+        .add_header("Range", "bytes=6-10")
+        .await;
+    response.assert_status(axum::http::StatusCode::PARTIAL_CONTENT);
+    assert_eq!(response.text(), "world");
+}
+
+#[tokio::test]
+async fn tus_upload_completes_file() {
+    let dir = tempdir().unwrap();
+    let server = test_server(dir.path());
+
+    let encoded = base64::engine::general_purpose::STANDARD.encode("uploaded.txt");
+    let create = server
+        .post("/api/upload")
+        .add_header("Upload-Length", "5")
+        .add_header("Upload-Metadata", &format!("filename {encoded}"))
+        .await;
+    create.assert_status(axum::http::StatusCode::CREATED);
+
+    let location = create
+        .headers()
+        .get("location")
+        .expect("location header")
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    let patch = server
+        .patch(&location)
+        .add_header("Upload-Offset", "0")
+        .bytes(b"hello".to_vec().into())
+        .await;
+    patch.assert_status(axum::http::StatusCode::NO_CONTENT);
+
+    let list = server.get("/api/list").await;
+    let entries: Vec<FileEntry> = list.json();
+    assert!(entries.iter().any(|entry| entry.name == "uploaded.txt"));
+
+    let contents = fs::read_to_string(dir.path().join("uploaded.txt")).unwrap();
+    assert_eq!(contents, "hello");
+}
+
+#[tokio::test]
+async fn index_fallback_is_served() {
+    let dir = tempdir().unwrap();
+    let server = test_server(dir.path());
+
+    let response = server.get("/").await;
+    response.assert_status_ok();
+    let body = response.text();
+    assert!(body.contains("zfiles") || body.contains("placeholder"));
 }

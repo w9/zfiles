@@ -1,6 +1,9 @@
 pub mod auth;
 pub mod cli;
+pub mod embed;
+pub mod events;
 pub mod fs;
 pub mod plugins;
+pub mod range;
 pub mod state;
 pub mod transport;

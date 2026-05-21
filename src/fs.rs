@@ -15,9 +15,19 @@ pub struct FileEntry {
     pub modified: Option<SystemTime>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FileStat {
+    pub path: String,
+    pub is_dir: bool,
+    pub size: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modified: Option<SystemTime>,
+}
+
 #[async_trait]
 pub trait Fs: Send + Sync {
     async fn read_dir(&self, path: &Path) -> Result<Vec<FileEntry>>;
+    async fn stat(&self, path: &Path) -> Result<FileStat>;
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +42,29 @@ impl LocalFs {
 
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    pub fn resolve_write(&self, path: &Path) -> Result<PathBuf> {
+        if path.as_os_str().is_empty() {
+            anyhow::bail!("path is required");
+        }
+
+        let relative = normalize_relative(path)?;
+        let mut accum = PathBuf::new();
+
+        for component in relative.components() {
+            accum.push(component);
+            let probe = self.root.join(&accum);
+            if probe.exists() {
+                let canonical = std::fs::canonicalize(&probe)
+                    .with_context(|| format!("failed to resolve path {}", probe.display()))?;
+                if !canonical.starts_with(&self.root) {
+                    anyhow::bail!("path escapes served directory");
+                }
+            }
+        }
+
+        Ok(self.root.join(relative))
     }
 
     pub fn resolve(&self, path: &Path) -> Result<PathBuf> {
@@ -51,6 +84,13 @@ impl LocalFs {
 
         Ok(canonical)
     }
+
+    fn relative_path(&self, absolute: &Path) -> Result<String> {
+        absolute
+            .strip_prefix(&self.root)
+            .with_context(|| "path outside served root")
+            .map(|path| path.to_string_lossy().replace('\\', "/"))
+    }
 }
 
 #[async_trait]
@@ -67,13 +107,11 @@ impl Fs for LocalFs {
             let metadata = entry.metadata().await?;
             let name = entry.file_name().to_string_lossy().into_owned();
             let entry_path = entry.path();
-            let relative = entry_path
-                .strip_prefix(&self.root)
-                .with_context(|| "entry path outside served root")?;
+            let relative = self.relative_path(&entry_path)?;
 
             entries.push(FileEntry {
                 name,
-                path: relative.to_string_lossy().replace('\\', "/"),
+                path: relative,
                 is_dir: file_type.is_dir(),
                 size: metadata.len(),
                 modified: metadata.modified().ok(),
@@ -82,6 +120,20 @@ impl Fs for LocalFs {
 
         entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
         Ok(entries)
+    }
+
+    async fn stat(&self, path: &Path) -> Result<FileStat> {
+        let absolute = self.resolve(path)?;
+        let metadata = tokio::fs::metadata(&absolute)
+            .await
+            .with_context(|| format!("failed to stat path {}", absolute.display()))?;
+
+        Ok(FileStat {
+            path: self.relative_path(&absolute)?,
+            is_dir: metadata.is_dir(),
+            size: metadata.len(),
+            modified: metadata.modified().ok(),
+        })
     }
 }
 
@@ -149,5 +201,18 @@ mod tests {
                 .iter()
                 .any(|entry| entry.name == "beta" && entry.is_dir)
         );
+    }
+
+    #[tokio::test]
+    async fn stat_returns_metadata() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("alpha.txt"), b"hello").unwrap();
+
+        let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+        let stat = fs.stat(Path::new("alpha.txt")).await.unwrap();
+
+        assert_eq!(stat.path, "alpha.txt");
+        assert!(!stat.is_dir);
+        assert_eq!(stat.size, 5);
     }
 }
