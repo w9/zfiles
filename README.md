@@ -11,7 +11,7 @@ cargo build --release
 ./target/release/zfiles ~/Downloads
 ```
 
-Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port.
+Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port. The explorer header shows a live **Connected** / **Offline** status pill driven by the WebSocket channel (with `/api/health` polling when disconnected).
 
 ```bash
 # Pin the port

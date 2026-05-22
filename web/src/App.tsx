@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
+import BackendStatus from "./BackendStatus";
 import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
 import { uploadFileResumable, type UploadProgress } from "./upload";
+import { useBackendStatus, type KernelEvent } from "./useBackendStatus";
 
 type FileEntry = {
   name: string;
@@ -20,14 +22,6 @@ type PluginInfo = {
   viewerModule?: string | null;
   trusted?: boolean;
 };
-
-type KernelEvent =
-  | { type: "connected"; version: string }
-  | { type: "filesystem_changed"; path: string }
-  | { type: "upload_progress"; id: string; offset: number; length?: number }
-  | { type: "plugin_ready"; name: string }
-  | { type: "listing_enrichment"; path: string; entries: FileEntry[] }
-  | { type: "thumbnail_ready"; path: string; url: string };
 
 type ContextMenuState = {
   x: number;
@@ -100,6 +94,8 @@ export default function App() {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const selectionAnchorRef = useRef(0);
+  const currentPathRef = useRef(currentPath);
+  currentPathRef.current = currentPath;
 
   const loadListing = useCallback(async (path: string) => {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
@@ -140,18 +136,16 @@ export default function App() {
     void loadPlugins();
   }, [loadListing, loadPlugins]);
 
-  useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const socket = new WebSocket(`${protocol}//${window.location.host}/api/ws`);
-
-    socket.onmessage = (message) => {
-      const event = JSON.parse(message.data) as KernelEvent;
+  const handleKernelEvent = useCallback(
+    (event: KernelEvent) => {
       switch (event.type) {
         case "connected":
           setKernelVersion(event.version);
           break;
         case "filesystem_changed":
-          loadListing(currentPath).catch((err: Error) => setError(err.message));
+          loadListing(currentPathRef.current).catch((err: Error) =>
+            setError(err.message),
+          );
           break;
         case "upload_progress":
           setUploadProgress({
@@ -167,8 +161,10 @@ export default function App() {
           void loadPlugins();
           break;
         case "listing_enrichment":
-          if (event.path === currentPath) {
-            setEntries((current) => mergeEntries(current, event.entries));
+          if (event.path === currentPathRef.current) {
+            setEntries((current) =>
+              mergeEntries(current, event.entries as FileEntry[]),
+            );
           }
           break;
         case "thumbnail_ready":
@@ -179,10 +175,11 @@ export default function App() {
           });
           break;
       }
-    };
+    },
+    [loadListing, loadPlugins],
+  );
 
-    return () => socket.close();
-  }, [currentPath, loadListing, loadPlugins]);
+  const backendStatus = useBackendStatus(handleKernelEvent);
 
   useEffect(() => {
     if (!searcherReady || !searchQuery.trim()) {
@@ -459,8 +456,10 @@ export default function App() {
   return (
     <main className="shell">
       <header>
-        <h1>zfiles</h1>
-        {kernelVersion ? <p className="meta">kernel v{kernelVersion}</p> : null}
+        <div className="header-top">
+          <h1>zfiles</h1>
+          <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
+        </div>
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           {breadcrumbs.map((part, index) => {
             const path = breadcrumbs.slice(1, index + 1).join("/");

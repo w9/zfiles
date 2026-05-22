@@ -131,7 +131,61 @@ body {
 }
 
 header h1 {
-  margin: 0 0 0.75rem;
+  margin: 0;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.backend-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #2a2f3a;
+  background: #1d2330;
+  font-size: 0.85rem;
+  color: #9aa0a6;
+}
+
+.backend-status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #9aa0a6;
+}
+
+.backend-status[data-status="connected"] {
+  color: #81c995;
+  border-color: #2d4a38;
+}
+
+.backend-status[data-status="connected"] .backend-status-dot {
+  background: #81c995;
+}
+
+.backend-status[data-status="connecting"] {
+  color: #fdd663;
+  border-color: #4a4328;
+}
+
+.backend-status[data-status="connecting"] .backend-status-dot {
+  background: #fdd663;
+}
+
+.backend-status[data-status="offline"] {
+  color: #f28b82;
+  border-color: #4a2d2d;
+}
+
+.backend-status[data-status="offline"] .backend-status-dot {
+  background: #f28b82;
 }
 
 .breadcrumbs {

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dot-folder relocation, watcher plugin dispatch, and multi-share daemon integration tests are done. Next: explorer header backend status (WebSocket + health polling) so users can see when the server is alive. Follow with reconnect UX polish, README updates, and optional offline E2E coverage.
+Backend connection status in the explorer header is done. Next: fix LAN share QR code rendering (inverted dark/light modules), add unit and integration tests, and harden terminal output for public `--token` binds. Follow with auth URL formatting in the QR payload and README LAN share notes.
 
 ## TODO List
 
@@ -88,10 +88,17 @@ Dot-folder relocation, watcher plugin dispatch, and multi-share daemon integrati
 - [x] Kernel dispatches filesystem change events to ready watcher plugins
 - [x] Integration test: daemon `start --config` / `stop --config` round trip with `daemon.toml`
 - [x] Update README with dotfolder relocation and watcher capability notes
-- [ ] Frontend backend status indicator in explorer header (connected / connecting / offline)
-- [ ] WebSocket lifecycle tracking with `/api/health` fallback polling and reconnect
-- [ ] Header CSS for backend status pill and state colors
-- [ ] E2E smoke: header shows Connected when server is running
-- [ ] E2E smoke: header shows Offline after backend stops
-- [ ] Extract `useBackendStatus` hook from App WebSocket wiring
-- [ ] Update README noting live backend connection status in the explorer
+- [x] Frontend backend status indicator in explorer header (connected / connecting / offline)
+- [x] WebSocket lifecycle tracking with `/api/health` fallback polling and reconnect
+- [x] Header CSS for backend status pill and state colors
+- [x] E2E smoke: header shows Connected when server is running
+- [x] E2E smoke: header shows Offline after backend stops
+- [x] Extract `useBackendStatus` hook from App WebSocket wiring
+- [x] Update README noting live backend connection status in the explorer
+- [ ] Fix QR code dark/light module colors in `qr::render_url`
+- [ ] Unit tests: rendered QR contains finder-pattern block characters
+- [ ] Unit tests: inverted-color regression guard (dark module count threshold)
+- [ ] Integration test: `--listen 0.0.0.0 --token` startup prints scannable QR to stdout
+- [ ] Refactor `print_url` to use testable `render_url` helper
+- [ ] Include auth token in printed share URL when `--token` is set
+- [ ] Update README LAN share section with QR code terminal output note
