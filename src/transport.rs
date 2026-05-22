@@ -20,6 +20,7 @@ use crate::auth::{self, AuthConfig};
 use crate::browser;
 use crate::cli::ServeArgs;
 use crate::config::Config;
+use crate::dotfolder;
 use crate::download;
 use crate::duration;
 use crate::embed;
@@ -83,12 +84,13 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     serve.validate()?;
     let root = serve.root_path()?;
     let config = Config::load(&root)?;
+    let dotfolder = dotfolder::resolve(&root, &config);
     let listener = TcpListener::bind(serve.listen_addr()?)
         .await
         .context("failed to bind TCP listener")?;
     let bound = listener.local_addr()?;
 
-    let state_store = Arc::new(StateStore::new(root.clone()));
+    let state_store = Arc::new(StateStore::with_dotfolder(root.clone(), dotfolder.clone()));
     let expires_at = if let Some(expire) = &serve.expire {
         let duration = duration::parse_duration(expire)?;
         let now = std::time::SystemTime::now()
@@ -111,7 +113,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     };
 
     let events = EventBus::new();
-    let plugins = Arc::new(PluginSupervisor::new(root.clone()));
+    let plugins = Arc::new(PluginSupervisor::with_dotfolder(root.clone(), dotfolder.clone()));
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.clone())),
         auth,
@@ -132,9 +134,10 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         }
     }
 
-    mount::warn_if_cross_mount("dot-folder", &root, &root.join(".zfiles"));
+    mount::warn_if_cross_mount("dot-folder", &root, &dotfolder);
 
     watch::start(root.clone(), events.clone())?;
+    plugins.clone().start_watcher_dispatch(events.clone());
     plugins.start_background(events);
 
     info!(root = %root.display(), addr = %bound, "zfiles listening");

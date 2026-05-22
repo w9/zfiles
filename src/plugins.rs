@@ -22,6 +22,7 @@ const THUMBNAILER_TIMEOUT: Duration = Duration::from_millis(500);
 const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
 const ACTION_TIMEOUT: Duration = Duration::from_millis(200);
 const ROUTE_TIMEOUT: Duration = Duration::from_millis(500);
+const WATCHER_TIMEOUT: Duration = Duration::from_millis(50);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
@@ -64,6 +65,7 @@ pub struct PluginSupervisor {
 
 struct Inner {
     serve_root: PathBuf,
+    dotfolder: PathBuf,
     handles: Mutex<HashMap<String, Arc<PluginHandle>>>,
 }
 
@@ -82,9 +84,14 @@ struct PluginIo {
 
 impl PluginSupervisor {
     pub fn new(serve_root: PathBuf) -> Self {
+        Self::with_dotfolder(serve_root.clone(), crate::dotfolder::resolve_for_root(&serve_root))
+    }
+
+    pub fn with_dotfolder(serve_root: PathBuf, dotfolder: PathBuf) -> Self {
         Self {
             inner: Arc::new(Inner {
                 serve_root,
+                dotfolder,
                 handles: Mutex::new(HashMap::new()),
             }),
         }
@@ -94,7 +101,7 @@ impl PluginSupervisor {
         let mut discovered = Vec::new();
         let mut seen = HashMap::new();
 
-        let folder_plugins = self.inner.serve_root.join(".zfiles/plugins");
+        let folder_plugins = self.inner.dotfolder.join("plugins");
         discover_in(&folder_plugins, &mut discovered, &mut seen)?;
 
         if let Some(home) = home_plugins_dir() {
@@ -115,11 +122,7 @@ impl PluginSupervisor {
         let manifest: PluginManifest =
             toml::from_str(&contents).context("parse plugin manifest")?;
 
-        let dest = self
-            .inner
-            .serve_root
-            .join(".zfiles/plugins")
-            .join(&manifest.name);
+        let dest = self.inner.dotfolder.join("plugins").join(&manifest.name);
         if dest.exists() {
             std::fs::remove_dir_all(&dest).with_context(|| format!("replace {}", dest.display()))?;
         }
@@ -132,11 +135,7 @@ impl PluginSupervisor {
     }
 
     pub fn remove(&self, name: &str) -> Result<()> {
-        let dest = self
-            .inner
-            .serve_root
-            .join(".zfiles/plugins")
-            .join(name);
+        let dest = self.inner.dotfolder.join("plugins").join(name);
         if !dest.is_dir() {
             bail!("plugin {name} is not installed");
         }
@@ -161,6 +160,57 @@ impl PluginSupervisor {
                 Err(error) => warn!(%error, "plugin discovery failed"),
             }
         })
+    }
+
+    pub fn start_watcher_dispatch(self: Arc<Self>, events: EventBus) -> tokio::task::JoinHandle<()> {
+        tokio::spawn(async move {
+            let mut rx = events.subscribe();
+            loop {
+                match rx.recv().await {
+                    Ok(KernelEvent::FilesystemChanged { path }) => {
+                        self.notify_watchers(&path).await;
+                    }
+                    Ok(_) => {}
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                }
+            }
+        })
+    }
+
+    async fn notify_watchers(&self, path: &str) {
+        let handles = {
+            let Ok(handles) = self.inner.handles.lock() else {
+                return;
+            };
+            handles
+                .values()
+                .filter(|handle| {
+                    handle.ready.load(Ordering::SeqCst)
+                        && handle
+                            .record
+                            .manifest
+                            .capabilities
+                            .iter()
+                            .any(|capability| capability == "watcher")
+                })
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+
+        for handle in handles {
+            let plugin_name = handle.record.manifest.name.clone();
+            let call = handle.call_watcher(path);
+            match tokio::time::timeout(WATCHER_TIMEOUT, call).await {
+                Ok(Ok(())) => {}
+                Ok(Err(error)) => {
+                    warn!(plugin = %plugin_name, %error, "watcher notify failed");
+                }
+                Err(_) => {
+                    warn!(plugin = %plugin_name, "watcher notify timed out");
+                }
+            }
+        }
     }
 
     pub async fn search(&self, path: &str, query: &str) -> Option<Vec<FileEntry>> {
@@ -727,6 +777,24 @@ impl PluginHandle {
             anyhow::bail!("viewer/preview failed: {response}");
         }
         parse_viewer_response(&response)
+    }
+
+    async fn call_watcher(&self, path: &str) -> Result<()> {
+        let mut guard = self.io.lock().await;
+        let io = guard.as_mut().context("plugin io unavailable")?;
+        let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "watcher/notify",
+            "params": { "path": path, "kind": "changed" },
+        });
+        framing::write_message(&mut io.stdin, &request).await?;
+        let response = framing::read_message(&mut io.stdout).await?;
+        if response.get("error").is_some() {
+            anyhow::bail!("watcher/notify failed: {response}");
+        }
+        Ok(())
     }
 }
 

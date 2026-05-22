@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub struct StateStore {
     serve_root: PathBuf,
+    dotfolder: PathBuf,
     db: Mutex<Option<Connection>>,
 }
 
@@ -20,8 +21,14 @@ pub struct UploadRecord {
 
 impl StateStore {
     pub fn new(serve_root: PathBuf) -> Self {
+        let dotfolder = crate::dotfolder::resolve_for_root(&serve_root);
+        Self::with_dotfolder(serve_root, dotfolder)
+    }
+
+    pub fn with_dotfolder(serve_root: PathBuf, dotfolder: PathBuf) -> Self {
         Self {
             serve_root,
+            dotfolder,
             db: Mutex::new(None),
         }
     }
@@ -31,7 +38,7 @@ impl StateStore {
     }
 
     pub fn dotfolder(&self) -> PathBuf {
-        self.serve_root.join(".zfiles")
+        self.dotfolder.clone()
     }
 
     pub fn ensure_dotfolder(&self) -> Result<PathBuf> {

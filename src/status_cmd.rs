@@ -4,6 +4,7 @@ use anyhow::Context;
 use clap::Parser;
 
 use crate::config::Config;
+use crate::dotfolder;
 use crate::plugins::PluginSupervisor;
 
 #[derive(Debug, Parser)]
@@ -18,10 +19,15 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to resolve path {}", args.path.display()))?;
     let config = Config::load(&root)?;
     let plugins = PluginSupervisor::new(root.clone()).list()?;
-    let dotfolder = root.join(".zfiles");
+    let dotfolder = dotfolder::resolve(&root, &config);
 
     println!("root: {}", root.display());
-    println!("dot-folder: {}", if dotfolder.is_dir() { "present" } else { "missing" });
+    println!("dot-folder: {}", dotfolder.display());
+    if dotfolder.is_dir() {
+        println!("dot-folder-status: present");
+    } else {
+        println!("dot-folder-status: missing");
+    }
     println!("read_only: {}", config.read_only());
     println!("open_browser: {}", config.open_browser());
     println!("plugins: {}", plugins.len());

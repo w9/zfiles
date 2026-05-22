@@ -7,6 +7,7 @@ pub mod daemon;
 pub mod daemon_config;
 pub mod download;
 pub mod duration;
+pub mod dotfolder;
 pub mod embed;
 pub mod events;
 pub mod fs;

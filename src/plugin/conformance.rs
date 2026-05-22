@@ -154,6 +154,20 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         }
     }
 
+    if manifest.capabilities.iter().any(|cap| cap == "watcher") {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 9,
+            "method": "watcher/notify",
+            "params": { "path": "notes.txt", "kind": "changed" },
+        });
+        framing::write_message(&mut stdin, &request).await?;
+        let notified = framing::read_message(&mut stdout).await?;
+        if notified.get("error").is_some() {
+            bail!("watcher/notify failed: {notified}");
+        }
+    }
+
     drop(stdin);
     let status = child.wait().await.context("wait for plugin")?;
     if !status.success() {

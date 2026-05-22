@@ -3,10 +3,19 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
+use crate::dotfolder;
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
 pub struct Config {
     #[serde(default)]
     pub server: ServerConfig,
+    #[serde(default)]
+    pub state: StateConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
+pub struct StateConfig {
+    pub dotfolder_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
@@ -21,7 +30,20 @@ impl Config {
     }
 
     pub fn load(root: &Path) -> Result<Self> {
-        Self::load_from(&Self::dotfolder_config(root))
+        let bootstrap_path = Self::dotfolder_config(root);
+        if bootstrap_path.is_file() {
+            let bootstrap = Self::load_from(&bootstrap_path)?;
+            let dot = dotfolder::resolve(root, &bootstrap);
+            let resolved_path = dot.join("config.toml");
+            if resolved_path == bootstrap_path {
+                return Ok(bootstrap);
+            }
+            if resolved_path.is_file() {
+                return Self::load_from(&resolved_path);
+            }
+            return Ok(bootstrap);
+        }
+        Self::load_from(&dotfolder::resolve(root, &Self::default()).join("config.toml"))
     }
 
     pub fn load_from(path: &Path) -> Result<Self> {
@@ -47,6 +69,11 @@ impl Config {
         match key {
             "server.read_only" => Ok(Some(self.read_only().to_string())),
             "server.open_browser" => Ok(Some(self.open_browser().to_string())),
+            "state.dotfolder_path" => Ok(self
+                .state
+                .dotfolder_path
+                .as_ref()
+                .map(|path| path.display().to_string())),
             _ => bail!("unknown config key {key}"),
         }
     }
@@ -58,6 +85,9 @@ impl Config {
             }
             "server.open_browser" => {
                 self.server.open_browser = Some(parse_bool(value)?);
+            }
+            "state.dotfolder_path" => {
+                self.state.dotfolder_path = Some(PathBuf::from(value));
             }
             _ => bail!("unknown config key {key}"),
         }
@@ -75,9 +105,16 @@ impl Config {
     pub fn init_folder(root: &Path) -> Result<PathBuf> {
         let config_path = Self::dotfolder_config(root);
         if !config_path.is_file() {
+            std::fs::create_dir_all(
+                config_path
+                    .parent()
+                    .context("config path must have a parent")?,
+            )?;
             Self::default().save_to(&config_path)?;
         }
-        std::fs::create_dir_all(root.join(".zfiles/plugins"))
+        let config = Self::load(root)?;
+        let dotfolder = dotfolder::resolve(root, &config);
+        std::fs::create_dir_all(dotfolder.join("plugins"))
             .context("create plugins directory")?;
         Ok(config_path)
     }

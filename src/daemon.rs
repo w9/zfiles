@@ -9,8 +9,10 @@ pub struct DaemonStartArgs {
     pub port: Option<u16>,
 }
 
+use crate::dotfolder;
+
 pub fn pid_file(root: &Path) -> PathBuf {
-    root.join(".zfiles/daemon.pid")
+    dotfolder::resolve_for_root(root).join("daemon.pid")
 }
 
 pub fn start(args: DaemonStartArgs) -> Result<()> {
@@ -25,7 +27,7 @@ pub fn start(args: DaemonStartArgs) -> Result<()> {
         let _ = std::fs::remove_file(&pid_path);
     }
 
-    std::fs::create_dir_all(root.join(".zfiles"))?;
+    std::fs::create_dir_all(dotfolder::resolve_for_root(&root))?;
 
     let exe = std::env::current_exe().context("resolve current executable")?;
     let mut cmd = Command::new(&exe);

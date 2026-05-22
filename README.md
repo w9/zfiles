@@ -69,7 +69,16 @@ port = 8081
 # Configuration
 zfiles config get server.read_only --folder ~/Downloads
 zfiles config set server.read_only true --folder ~/Downloads
+
+# Relocate .zfiles/ outside the served tree (bootstrap config stays in-place)
+zfiles config set state.dotfolder_path /var/lib/zfiles/downloads --folder ~/Downloads
 ```
+
+Relocated dot-folders store `state.db`, uploads, plugins, and daemon pid files under the configured path while a bootstrap `~/Downloads/.zfiles/config.toml` can point at the external location.
+
+## Plugin capabilities
+
+Installed plugins can expose `lister`, `searcher`, `thumbnailer`, `viewer`, `action`, `route`, and `watcher` capabilities. Watcher plugins receive `watcher/notify` RPC calls when files change under the served directory (debounced, fire-and-forget).
 
 ## Development
 

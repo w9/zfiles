@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Untrusted viewer sandboxing, thumbnail cache invalidation, and perf regression baselines are done. Next: dot-folder relocation config, watcher plugin dispatch on filesystem events, and integration tests for multi-share daemon config start/stop. Follow with README updates for relocated dot-folders and watcher protocol notes.
+Dot-folder relocation, watcher plugin dispatch, and multi-share daemon integration tests are done. Next: explorer header backend status (WebSocket + health polling) so users can see when the server is alive. Follow with reconnect UX polish, README updates, and optional offline E2E coverage.
 
 ## TODO List
 
@@ -81,10 +81,17 @@ Untrusted viewer sandboxing, thumbnail cache invalidation, and perf regression b
 - [x] Nightly CI runs perf baseline regression suite
 - [x] Untrusted viewer fixture plugin and integration test
 - [x] E2E smoke: untrusted viewer renders inside sandbox iframe
-- [ ] Config `state.dotfolder_path` to relocate `.zfiles/` outside the serve root
-- [ ] Resolve dotfolder path in StateStore, PluginSupervisor, and daemon pid file
-- [ ] Integration test: relocated dotfolder stores `state.db` outside serve root
-- [ ] Watcher plugin fixture and `watcher/notify` conformance coverage
-- [ ] Kernel dispatches filesystem change events to ready watcher plugins
-- [ ] Integration test: daemon `start --config` / `stop --config` round trip with `daemon.toml`
-- [ ] Update README with dotfolder relocation and watcher capability notes
+- [x] Config `state.dotfolder_path` to relocate `.zfiles/` outside the serve root
+- [x] Resolve dotfolder path in StateStore, PluginSupervisor, and daemon pid file
+- [x] Integration test: relocated dotfolder stores `state.db` outside serve root
+- [x] Watcher plugin fixture and `watcher/notify` conformance coverage
+- [x] Kernel dispatches filesystem change events to ready watcher plugins
+- [x] Integration test: daemon `start --config` / `stop --config` round trip with `daemon.toml`
+- [x] Update README with dotfolder relocation and watcher capability notes
+- [ ] Frontend backend status indicator in explorer header (connected / connecting / offline)
+- [ ] WebSocket lifecycle tracking with `/api/health` fallback polling and reconnect
+- [ ] Header CSS for backend status pill and state colors
+- [ ] E2E smoke: header shows Connected when server is running
+- [ ] E2E smoke: header shows Offline after backend stops
+- [ ] Extract `useBackendStatus` hook from App WebSocket wiring
+- [ ] Update README noting live backend connection status in the explorer
