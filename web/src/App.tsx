@@ -3,10 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "./api";
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import BackendStatus from "./BackendStatus";
+import ThemeToggle from "./ThemeToggle";
 import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
 import { uploadFileResumable, type UploadProgress } from "./upload";
 import { useBackendStatus, type KernelEvent } from "./useBackendStatus";
+import { useTheme } from "./useTheme";
 
 type FileEntry = {
   name: string;
@@ -181,6 +183,7 @@ export default function App() {
   );
 
   const backendStatus = useBackendStatus(handleKernelEvent);
+  const { mode: themeMode, resolved: resolvedTheme, setMode: setThemeMode } = useTheme();
 
   useEffect(() => {
     if (!searcherReady || !searchQuery.trim()) {
@@ -459,7 +462,10 @@ export default function App() {
       <header>
         <div className="header-top">
           <h1>zfiles</h1>
-          <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
+          <div className="header-controls">
+            <ThemeToggle mode={themeMode} onChange={setThemeMode} />
+            <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
+          </div>
         </div>
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           {breadcrumbs.map((part, index) => {
@@ -553,7 +559,7 @@ export default function App() {
           selectedIndex={selectedIndex}
           multiSelectedPaths={selectedPaths}
         />
-        <PreviewPane path={selectedPath} plugins={pluginDetails} />
+        <PreviewPane path={selectedPath} plugins={pluginDetails} theme={resolvedTheme} />
       </div>
 
       {contextMenu ? (

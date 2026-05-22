@@ -71,6 +71,23 @@ test("header shows connected backend status", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText(/kernel v/i);
 });
 
+test("theme toggle switches color theme", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("radio", { name: "Light" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme-mode", "light");
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("theme preference persists across reload", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+});
+
 test("header shows offline backend status after server stops", async ({ page }) => {
   const offlineDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-offline-"));
   fs.writeFileSync(path.join(offlineDir, "offline.txt"), "offline fixture\n");

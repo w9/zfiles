@@ -1,6 +1,6 @@
 ## High-level plan next
 
-LAN share QR fixes and tokenized share URLs are done. Next: light/dark/auto color themes with CSS variables, persisted preference, and sandbox viewer sync. Follow with reachable LAN host in share URLs and mobile onboarding docs.
+Themes and scope-gate agent rules are done. Next: print the explorer URL before auto-opening the browser, include auth token in that URL when `--token` is set, then reachable LAN host in share URLs/QR.
 
 ## TODO List
 
@@ -102,10 +102,16 @@ LAN share QR fixes and tokenized share URLs are done. Next: light/dark/auto colo
 - [x] Refactor `print_url` to use testable `render_url` helper
 - [x] Include auth token in printed share URL when `--token` is set
 - [x] Update README LAN share section with QR code terminal output note
-- [ ] CSS theme tokens for light and dark palettes via custom properties
-- [ ] `useTheme` hook: light / dark / auto with localStorage persistence
-- [ ] Header theme toggle control (light, dark, auto)
-- [ ] Inline boot script in `index.html` to avoid theme flash on load
-- [ ] Sync untrusted viewer sandbox iframe colors with active theme
-- [ ] E2E smoke: theme toggle switches `data-theme` and persists across reload
-- [ ] Unit tests for `resolvedTheme` auto/system resolution logic
+- [x] CSS theme tokens for light and dark palettes via custom properties
+- [x] `useTheme` hook: light / dark / auto with localStorage persistence
+- [x] Header theme toggle control (light, dark, auto)
+- [x] Inline boot script in `index.html` to avoid theme flash on load
+- [x] Sync untrusted viewer sandbox iframe colors with active theme
+- [x] E2E smoke: theme toggle switches `data-theme` and persists across reload
+- [x] Unit tests for `resolvedTheme` auto/system resolution logic
+- [ ] Print explorer URL to terminal immediately before spawning browser auto-open
+- [ ] `browser::open_url` helper builds URL with token query when auth is enabled
+- [ ] Unit tests for browser URL construction (plain and tokenized)
+- [ ] Integration test: startup stdout contains `Opening browser:` before `listening`
+- [ ] Integration test: `--no-open` does not print `Opening browser:`
+- [ ] Update README quick start to mention pre-open URL line

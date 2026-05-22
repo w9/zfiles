@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { apiFetch } from "./api";
+import type { ResolvedTheme } from "./theme";
 
 type FileStat = {
   path: string;
@@ -20,6 +21,7 @@ type PluginInfo = {
 type PreviewPaneProps = {
   path: string | null;
   plugins: PluginInfo[];
+  theme: ResolvedTheme;
 };
 
 type ViewerModule = {
@@ -80,7 +82,14 @@ function deliverSandboxPreview(
   return () => iframe.removeEventListener("load", send);
 }
 
-export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
+function deliverSandboxTheme(iframe: HTMLIFrameElement, theme: ResolvedTheme): void {
+  iframe.contentWindow?.postMessage(
+    { type: "theme", theme },
+    window.location.origin,
+  );
+}
+
+export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) {
   const [stat, setStat] = useState<FileStat | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -108,11 +117,19 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
     (iframe: HTMLIFrameElement | null) => {
       iframeRef.current = iframe;
       if (iframe) {
+        deliverSandboxTheme(iframe, theme);
         tryDeliverSandboxPreview();
       }
     },
-    [tryDeliverSandboxPreview],
+    [tryDeliverSandboxPreview, theme],
   );
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe) {
+      deliverSandboxTheme(iframe, theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!path) {

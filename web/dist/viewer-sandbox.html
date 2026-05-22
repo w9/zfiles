@@ -4,19 +4,39 @@
     <meta charset="UTF-8" />
     <title>zfiles viewer sandbox</title>
     <style>
+      :root {
+        color-scheme: dark;
+        --bg: #111318;
+        --text: #e8eaed;
+        --text-muted: #9aa0a6;
+        --surface: #1d2330;
+        --border: #2a2f3a;
+      }
+
+      [data-theme="light"] {
+        color-scheme: light;
+        --bg: #f8f9fb;
+        --text: #202124;
+        --text-muted: #5f6368;
+        --surface: #ffffff;
+        --border: #dadce0;
+      }
+
       body {
         margin: 0;
         font-family: Inter, system-ui, sans-serif;
-        background: #111318;
-        color: #e8eaed;
+        background: var(--bg);
+        color: var(--text);
       }
+
       .banner {
         padding: 0.5rem 0.75rem;
-        background: #1d2330;
-        border-bottom: 1px solid #2a2f3a;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
         font-size: 0.85rem;
-        color: #9aa0a6;
+        color: var(--text-muted);
       }
+
       pre {
         margin: 0.75rem;
         white-space: pre-wrap;
@@ -28,12 +48,25 @@
     <div class="banner">Sandboxed viewer</div>
     <pre id="body">Waiting for preview…</pre>
     <script>
+      function applyTheme(theme) {
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+        }
+      }
+
       window.addEventListener("message", (event) => {
         if (event.origin !== window.location.origin) {
           return;
         }
         const message = event.data;
-        if (!message || message.type !== "preview") {
+        if (!message || typeof message !== "object") {
+          return;
+        }
+        if (message.type === "theme") {
+          applyTheme(message.theme);
+          return;
+        }
+        if (message.type !== "preview") {
           return;
         }
         const banner = document.querySelector(".banner");

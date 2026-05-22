@@ -26,6 +26,18 @@ When the user says **"Go!"**, complete one full development cycle:
 
 Do not skip steps or reorder them. Planning and TODO updates come first; implementation follows the commit.
 
+## Scope gate (before implementing)
+
+**Do not implement** new behavior, features, or structural changes unless at least one of these applies:
+
+1. **Design-aligned** — The work aligns explicitly with something described in [DESIGN.md](DESIGN.md) (architecture, invariants, goals, or documented behavior).
+2. **Fix** — The work fixes a bug, regression, broken test, or clear defect in existing behavior.
+3. **Trivial** — The change is trivially simple (e.g. typo, one-line config, requested doc edit with no behavioral impact).
+
+If **none** of the three apply, **stop and ask the user first**. Present a **multiple-choice question** (via the question UI when available) that summarizes the proposed work and offers concrete options — for example: proceed as proposed, narrow scope, defer to TODO, or cancel. **Do not write implementation code** until the user chooses an option that authorizes the work.
+
+Questions, reviews, planning, and read-only investigation are always allowed without this gate.
+
 ## Key references
 
 | File | Purpose |

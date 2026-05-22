@@ -11,7 +11,7 @@ cargo build --release
 ./target/release/zfiles ~/Downloads
 ```
 
-Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port. The explorer header shows a live **Connected** / **Offline** status pill driven by the WebSocket channel (with `/api/health` polling when disconnected).
+Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port. The explorer header shows a live **Connected** / **Offline** status pill and a **Light / Dark / Auto** theme control (preference is saved in the browser).
 
 LAN shares (`--listen 0.0.0.0 --token`) print a **Share URL** (with embedded token) and a terminal QR code other devices can scan to open the explorer.
 
