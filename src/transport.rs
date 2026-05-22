@@ -101,13 +101,19 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         None
     };
 
-    let auth = if serve.token {
+    let share_token = if serve.token {
         let token = auth::generate_token();
         if let Some(expires_at) = expires_at {
             state_store.create_session(&token, expires_at)?;
         }
         println!("Auth token: {token}");
-        AuthConfig::with_token(token, expires_at)
+        Some(token)
+    } else {
+        None
+    };
+
+    let auth = if let Some(token) = share_token.as_deref() {
+        AuthConfig::with_token(token.to_string(), expires_at)
     } else {
         AuthConfig::disabled()
     };
@@ -128,7 +134,8 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     }
 
     if serve.token && serve.is_public_bind()? {
-        let url = format!("http://{bound}");
+        let url = qr::share_url(&bound.to_string(), share_token.as_deref());
+        println!("Share URL: {url}");
         if let Err(error) = qr::print_url(&url) {
             tracing::warn!(%error, "failed to render QR code");
         }

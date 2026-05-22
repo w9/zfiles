@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Backend connection status in the explorer header is done. Next: fix LAN share QR code rendering (inverted dark/light modules), add unit and integration tests, and harden terminal output for public `--token` binds. Follow with auth URL formatting in the QR payload and README LAN share notes.
+LAN share QR fixes and tokenized share URLs are done. Next: light/dark/auto color themes with CSS variables, persisted preference, and sandbox viewer sync. Follow with reachable LAN host in share URLs and mobile onboarding docs.
 
 ## TODO List
 
@@ -95,10 +95,17 @@ Backend connection status in the explorer header is done. Next: fix LAN share QR
 - [x] E2E smoke: header shows Offline after backend stops
 - [x] Extract `useBackendStatus` hook from App WebSocket wiring
 - [x] Update README noting live backend connection status in the explorer
-- [ ] Fix QR code dark/light module colors in `qr::render_url`
-- [ ] Unit tests: rendered QR contains finder-pattern block characters
-- [ ] Unit tests: inverted-color regression guard (dark module count threshold)
-- [ ] Integration test: `--listen 0.0.0.0 --token` startup prints scannable QR to stdout
-- [ ] Refactor `print_url` to use testable `render_url` helper
-- [ ] Include auth token in printed share URL when `--token` is set
-- [ ] Update README LAN share section with QR code terminal output note
+- [x] Fix QR code dark/light module colors in `qr::render_url`
+- [x] Unit tests: rendered QR contains finder-pattern block characters
+- [x] Unit tests: inverted-color regression guard (dark module count threshold)
+- [x] Integration test: `--listen 0.0.0.0 --token` startup prints scannable QR to stdout
+- [x] Refactor `print_url` to use testable `render_url` helper
+- [x] Include auth token in printed share URL when `--token` is set
+- [x] Update README LAN share section with QR code terminal output note
+- [ ] CSS theme tokens for light and dark palettes via custom properties
+- [ ] `useTheme` hook: light / dark / auto with localStorage persistence
+- [ ] Header theme toggle control (light, dark, auto)
+- [ ] Inline boot script in `index.html` to avoid theme flash on load
+- [ ] Sync untrusted viewer sandbox iframe colors with active theme
+- [ ] E2E smoke: theme toggle switches `data-theme` and persists across reload
+- [ ] Unit tests for `resolvedTheme` auto/system resolution logic

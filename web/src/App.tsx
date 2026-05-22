@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { apiFetch } from "./api";
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import BackendStatus from "./BackendStatus";
 import PreviewPane from "./PreviewPane";
@@ -99,7 +100,7 @@ export default function App() {
 
   const loadListing = useCallback(async (path: string) => {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
-    const response = await fetch(`/api/list${query}`);
+    const response = await apiFetch(`/api/list${query}`);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -116,7 +117,7 @@ export default function App() {
   }, []);
 
   const loadPlugins = useCallback(async () => {
-    const response = await fetch("/api/plugins");
+    const response = await apiFetch("/api/plugins");
     if (!response.ok) {
       return;
     }
@@ -192,7 +193,7 @@ export default function App() {
       if (currentPath) {
         params.set("path", currentPath);
       }
-      fetch(`/api/search?${params.toString()}`)
+      apiFetch(`/api/search?${params.toString()}`)
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -221,7 +222,7 @@ export default function App() {
   const openContextMenu = useCallback(
     async (event: React.MouseEvent, path: string) => {
       event.preventDefault();
-      const response = await fetch(`/api/actions?path=${encodeURIComponent(path)}`);
+      const response = await apiFetch(`/api/actions?path=${encodeURIComponent(path)}`);
       if (!response.ok) {
         return;
       }
@@ -235,7 +236,7 @@ export default function App() {
   );
 
   const runBulkAction = useCallback(async (actionId: string, paths: string[]) => {
-    const response = await fetch("/api/actions", {
+    const response = await apiFetch("/api/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paths, action_id: actionId }),

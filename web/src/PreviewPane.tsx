@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { apiFetch } from "./api";
+
 type FileStat = {
   path: string;
   is_dir: boolean;
@@ -129,7 +131,7 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
     setPreview(null);
     setEsmMounted(false);
     setSandboxReady(false);
-    fetch(`/api/stat?path=${encodeURIComponent(path)}`)
+    apiFetch(`/api/stat?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -146,7 +148,7 @@ export default function PreviewPane({ path, plugins }: PreviewPaneProps) {
       });
 
     if (viewerFor(plugins, path)) {
-      fetch(`/api/preview?path=${encodeURIComponent(path)}`)
+      apiFetch(`/api/preview?path=${encodeURIComponent(path)}`)
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);

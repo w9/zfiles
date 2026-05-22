@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 const CHUNK_SIZE = 256 * 1024;
 
 export type UploadProgress = {
@@ -11,7 +13,7 @@ function encodeMetadata(filename: string): string {
 }
 
 async function headOffset(location: string): Promise<number> {
-  const response = await fetch(location, { method: "HEAD" });
+  const response = await apiFetch(location, { method: "HEAD" });
   if (!response.ok) {
     throw new Error(`upload head failed: HTTP ${response.status}`);
   }
@@ -23,7 +25,7 @@ export async function uploadFileResumable(
   targetPath: string,
   onProgress?: (progress: UploadProgress) => void,
 ): Promise<void> {
-  const create = await fetch("/api/upload", {
+  const create = await apiFetch("/api/upload", {
     method: "POST",
     headers: {
       "Upload-Length": String(file.size),
@@ -45,7 +47,7 @@ export async function uploadFileResumable(
 
   while (offset < file.size) {
     const chunk = file.slice(offset, offset + CHUNK_SIZE);
-    const patch = await fetch(location, {
+    const patch = await apiFetch(location, {
       method: "PATCH",
       headers: {
         "Upload-Offset": String(offset),

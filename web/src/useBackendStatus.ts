@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { apiFetch, websocketUrl } from "./api";
+
 export type BackendStatus = "connecting" | "connected" | "offline";
 
 export type KernelEvent =
@@ -48,7 +50,7 @@ export function useBackendStatus(onKernelEvent: (event: KernelEvent) => void): B
             return;
           }
           try {
-            const response = await fetch("/api/health");
+            const response = await apiFetch("/api/health");
             if (response.ok) {
               reconnect();
             } else {
@@ -69,8 +71,7 @@ export function useBackendStatus(onKernelEvent: (event: KernelEvent) => void): B
       clearPoll();
       setStatus((current) => (current === "connected" ? current : "connecting"));
 
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const nextSocket = new WebSocket(`${protocol}//${window.location.host}/api/ws`);
+      const nextSocket = new WebSocket(websocketUrl("/api/ws"));
       socket = nextSocket;
 
       nextSocket.onmessage = (message) => {

@@ -79,6 +79,13 @@ pub async fn middleware(
         .get(axum::http::header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
+        .map(str::to_string)
+        .or_else(|| {
+            request
+                .uri()
+                .query()
+                .and_then(token_from_query)
+        })
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
     if !constant_time_eq(provided.as_bytes(), expected.as_bytes()) {
@@ -94,15 +101,18 @@ pub async fn middleware(
         }
     }
 
-    if !state
-        .state
-        .session_valid(provided)
-        .unwrap_or(false)
-    {
+    if !state.state.session_valid(&provided).unwrap_or(false) {
         return Err(StatusCode::UNAUTHORIZED);
     }
 
     Ok(next.run(request).await)
+}
+
+fn token_from_query(query: &str) -> Option<String> {
+    query.split('&').find_map(|pair| {
+        let (key, value) = pair.split_once('=')?;
+        (key == "token").then(|| value.to_string())
+    })
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
@@ -125,5 +135,14 @@ mod tests {
         assert!(constant_time_eq(b"abc", b"abc"));
         assert!(!constant_time_eq(b"abc", b"abd"));
         assert!(!constant_time_eq(b"abc", b"ab"));
+    }
+
+    #[test]
+    fn token_from_query_parses_token_param() {
+        assert_eq!(
+            token_from_query("token=zfiles-abc&other=1"),
+            Some("zfiles-abc".into())
+        );
+        assert_eq!(token_from_query("other=1"), None);
     }
 }

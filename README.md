@@ -13,11 +13,16 @@ cargo build --release
 
 Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port. The explorer header shows a live **Connected** / **Offline** status pill driven by the WebSocket channel (with `/api/health` polling when disconnected).
 
+LAN shares (`--listen 0.0.0.0 --token`) print a **Share URL** (with embedded token) and a terminal QR code other devices can scan to open the explorer.
+
 ```bash
 # Pin the port
 zfiles --port 9000
 
-# Read-only LAN share with bearer-token auth
+# Bind all interfaces with auto-generated token; prints share URL and QR code
+zfiles --listen 0.0.0.0:8080 --token
+
+# Read-only LAN share
 zfiles --listen 0.0.0.0:8080 --token --read-only
 
 # Serve without opening a browser tab
