@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Themes and scope-gate agent rules are done. Next: print the explorer URL before auto-opening the browser, include auth token in that URL when `--token` is set, then reachable LAN host in share URLs/QR.
+Browser URL printing is done. Next: fix `--token` auth so embedded UI assets load without credentials while API routes stay protected, skip session DB checks when tokens do not expire, then reachable LAN host in share URLs/QR.
 
 ## TODO List
 
@@ -109,9 +109,16 @@ Themes and scope-gate agent rules are done. Next: print the explorer URL before 
 - [x] Sync untrusted viewer sandbox iframe colors with active theme
 - [x] E2E smoke: theme toggle switches `data-theme` and persists across reload
 - [x] Unit tests for `resolvedTheme` auto/system resolution logic
-- [ ] Print explorer URL to terminal immediately before spawning browser auto-open
-- [ ] `browser::open_url` helper builds URL with token query when auth is enabled
-- [ ] Unit tests for browser URL construction (plain and tokenized)
-- [ ] Integration test: startup stdout contains `Opening browser:` before `listening`
-- [ ] Integration test: `--no-open` does not print `Opening browser:`
-- [ ] Update README quick start to mention pre-open URL line
+- [x] Print explorer URL to terminal immediately before spawning browser auto-open
+- [x] `browser::open_url` helper builds URL with token query when auth is enabled
+- [x] Unit tests for browser URL construction (plain and tokenized)
+- [x] Integration test: startup stdout contains `Opening browser:` before `listening`
+- [x] Integration test: `--no-open` does not print `Opening browser:`
+- [x] Update README quick start to mention pre-open URL line
+- [ ] `auth::is_public_path` exempts embedded `/assets/*`, favicon, and viewer sandbox from bearer auth
+- [ ] Unit tests for public-path classification
+- [ ] Integration test: tokenized server serves `/assets/*` without credentials
+- [ ] Integration test: tokenized server rejects `/api/list` without credentials
+- [ ] Skip `session_valid` when `--token` is used without `--expire`
+- [ ] Integration test: non-expiring token accepts Bearer auth on `/api/list`
+- [ ] E2E smoke: `--token` explorer loads listing (not blank UI)
