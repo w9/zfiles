@@ -1,8 +1,16 @@
 ## High-level plan next
 
-Plugin action metadata and disabled-action tooltips are the focus: manifest `category`/`default_keybinding`, catalog propagation, and `whenFailureMessage` on toolbar hover. Then unify the last hand-written Radix wrapper (`dropdown-menu`) with the registry import style.
+Ship the **image-thumbnailer** plugin per [DESIGN_image_extension.md](DESIGN_image_extension.md): Rust binary with WebP thumbnail tiers, content-addressed cache + SQLite index, EXIF lister enrichment, watcher invalidation, ESM image viewer, and kernel `tier` support on `/api/thumbnail`. Defer grid view mode, slideshow UI, plugin i18n bundle loading, and RAW/HEIC to a follow-up cycle.
 
 ## TODO List
+
+- [ ] Kernel: pass `tier` through `thumbnailer/generate` and `/api/thumbnail?tier=`; prefetch grid tier
+- [ ] Rust `image-thumbnailer` plugin: JSON-RPC loop, WebP grid/preview pipeline, SHA-256 cache, SQLite index
+- [ ] Plugin: EXIF orientation, megapixel cap, watcher index invalidation, lister EXIF in `extra`
+- [ ] Plugin manifest, `viewer.js` image viewer, and manifest actions (regenerate, copy-path context)
+- [ ] Frontend: PreviewPane mounts image viewer without text preview; listing uses grid-tier thumbnails
+- [ ] Integration tests with real image fixture; conformance passes; rebuild `web/dist`
+- [ ] Run full `cargo test`, web unit tests, and E2E smoke
 
 - [x] i18n layer with English and Simplified Chinese catalogs + locale persistence
 - [x] Migrate header controls (theme, backend status, language) to shadcn + i18n
@@ -53,10 +61,3 @@ Plugin action metadata and disabled-action tooltips are the focus: manifest `cat
 - [x] Expose plugin manifest actions in menubar categories when contexts match
 - [x] Document shadcn component update workflow in README (CLI add + reconcile)
 - [x] Optional: evaluate `@tanstack/react-table` for sortable listing columns (deferred; documented in README)
-- [ ] Add `whenFailureMessage` i18n keys and show disabled-action reason in toolbar tooltips
-- [ ] Extend plugin manifest `[[actions]]` with optional `category` and `default_keybinding`
-- [ ] Merge manifest category/keybinding into `/api/actions/catalog` JSON
-- [ ] Frontend: register plugin actions with manifest category and default keybinding
-- [ ] E2E smoke: disabled toolbar button tooltip explains why action is unavailable
-- [ ] Migrate `dropdown-menu.tsx` to registry `radix-ui` import style (match menubar/kbd)
-- [ ] Unit tests: catalog action category/keybinding fields propagate to registry
