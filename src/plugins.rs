@@ -9,16 +9,16 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::process::Command;
-use tokio::sync::Mutex as AsyncMutex;
+use tokio::sync::{Mutex as AsyncMutex, mpsc, oneshot};
 use tracing::{info, warn};
 
 use crate::events::{EventBus, KernelEvent};
 use crate::fs::FileEntry;
 use crate::plugin::framing;
 
-const LISTER_TIMEOUT: Duration = Duration::from_millis(500);
 const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
-const THUMBNAILER_TIMEOUT: Duration = Duration::from_secs(10);
+const THUMBNAILER_TIMEOUT: Duration = Duration::from_secs(30);
+const THUMBNAIL_PREFETCH_WAIT: Duration = Duration::from_secs(120);
 const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
 const ACTION_TIMEOUT: Duration = Duration::from_millis(200);
 const ROUTE_TIMEOUT: Duration = Duration::from_millis(500);
@@ -101,10 +101,17 @@ struct Inner {
     handles: Mutex<HashMap<String, Arc<PluginHandle>>>,
 }
 
+struct ThumbnailJob {
+    path: String,
+    tier: String,
+    response: oneshot::Sender<Option<(String, Vec<u8>)>>,
+}
+
 struct PluginHandle {
     record: PluginRecord,
     serve_root: PathBuf,
     io: AsyncMutex<Option<PluginIo>>,
+    thumbnail_jobs: AsyncMutex<Option<mpsc::Sender<ThumbnailJob>>>,
     ready: AtomicBool,
 }
 
@@ -275,6 +282,15 @@ impl PluginSupervisor {
     }
 
     pub async fn thumbnail(&self, path: &str, tier: &str) -> Option<(String, Vec<u8>)> {
+        self.thumbnail_with_wait(path, tier, THUMBNAILER_TIMEOUT).await
+    }
+
+    async fn thumbnail_with_wait(
+        &self,
+        path: &str,
+        tier: &str,
+        wait: Duration,
+    ) -> Option<(String, Vec<u8>)> {
         let handle = self.ready_plugin_for("thumbnailer", path)?;
         if let Some(cached) =
             read_thumbnail_cache(&handle.record.root, &handle.serve_root, path, tier)
@@ -283,27 +299,38 @@ impl PluginSupervisor {
         }
 
         let plugin_name = handle.record.manifest.name.clone();
-        let call = handle.call_thumbnailer(path, tier);
-        match tokio::time::timeout(THUMBNAILER_TIMEOUT, call).await {
-            Ok(Ok(result)) => {
-                let _ = write_thumbnail_cache(
-                    &handle.record.root,
-                    &handle.serve_root,
-                    path,
-                    tier,
-                    &result.0,
-                    &result.1,
-                );
-                Some(result)
-            }
-            Ok(Err(error)) => {
-                warn!(plugin = %plugin_name, %error, "thumbnailer call failed");
-                None
-            }
+
+        let jobs = handle.thumbnail_jobs.lock().await.clone()?;
+        let (response_tx, response_rx) = oneshot::channel();
+        jobs.send(ThumbnailJob {
+            path: path.to_string(),
+            tier: tier.to_string(),
+            response: response_tx,
+        })
+        .await
+        .ok()?;
+
+        let result = match tokio::time::timeout(wait, response_rx).await {
+            Ok(Ok(result)) => result,
+            Ok(Err(_)) => None,
             Err(_) => {
-                warn!(plugin = %plugin_name, "thumbnailer call timed out");
+                warn!(plugin = %plugin_name, path, "thumbnail client wait timed out");
                 None
             }
+        };
+
+        if let Some(result) = result {
+            let _ = write_thumbnail_cache(
+                &handle.record.root,
+                &handle.serve_root,
+                path,
+                tier,
+                &result.0,
+                &result.1,
+            );
+            Some(result)
+        } else {
+            None
         }
     }
 
@@ -345,18 +372,26 @@ impl PluginSupervisor {
     }
 
     pub fn prefetch_thumbnails(&self, entries: &[FileEntry], events: EventBus) {
-        for entry in entries {
-            if entry.is_dir {
-                continue;
-            }
-            if self.ready_plugin_for("thumbnailer", &entry.path).is_none() {
-                continue;
-            }
-            let path = entry.path.clone();
-            let supervisor = self.clone();
-            let events = events.clone();
-            tokio::spawn(async move {
-                if supervisor.thumbnail(&path, "grid").await.is_some() {
+        let entries: Vec<FileEntry> = entries.to_vec();
+        let supervisor = self.clone();
+        tokio::spawn(async move {
+            for entry in entries {
+                if entry.is_dir {
+                    continue;
+                }
+                if supervisor
+                    .ready_plugin_for("thumbnailer", &entry.path)
+                    .is_none()
+                {
+                    continue;
+                }
+                let path = entry.path.clone();
+                let events = events.clone();
+                if supervisor
+                    .thumbnail_with_wait(&path, "grid", THUMBNAIL_PREFETCH_WAIT)
+                    .await
+                    .is_some()
+                {
                     events.publish(KernelEvent::ThumbnailReady {
                         path: path.clone(),
                         url: format!(
@@ -365,8 +400,8 @@ impl PluginSupervisor {
                         ),
                     });
                 }
-            });
-        }
+            }
+        });
     }
 
     pub async fn run_action(&self, path: &str, action_id: &str) -> Result<()> {
@@ -536,39 +571,31 @@ impl PluginSupervisor {
         entries: Vec<FileEntry>,
         events: EventBus,
     ) -> Vec<FileEntry> {
-        let Some(handle) = self.ready_lister() else {
+        let Some(_handle) = self.ready_lister() else {
             return entries;
         };
 
-        let plugin_name = handle.record.manifest.name.clone();
-        let call = handle.call_lister(path, &entries);
-
-        match tokio::time::timeout(LISTER_TIMEOUT, call).await {
-            Ok(Ok(updated)) => updated,
-            Ok(Err(error)) => {
-                warn!(plugin = %plugin_name, %error, "lister call failed");
-                entries
-            }
-            Err(_) => {
-                let supervisor = self.clone();
-                let path = path.to_string();
-                let entries_for_task = entries.clone();
-                tokio::spawn(async move {
-                    if let Some(handle) = supervisor.ready_lister() {
-                        match handle.call_lister(&path, &entries_for_task).await {
-                            Ok(updated) => events.publish(KernelEvent::ListingEnrichment {
-                                path,
-                                entries: updated,
-                            }),
-                            Err(error) => {
-                                warn!(plugin = %handle.record.manifest.name, %error, "async lister failed")
-                            }
-                        }
+        let supervisor = self.clone();
+        let path_for_task = path.to_string();
+        let entries_for_task = entries.clone();
+        tokio::spawn(async move {
+            // Let thumbnail prefetch jobs enqueue before lister reads every image for EXIF.
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            if let Some(handle) = supervisor.ready_lister() {
+                match handle.call_lister(&path_for_task, &entries_for_task).await {
+                    Ok(updated) => {
+                        events.publish(KernelEvent::ListingEnrichment {
+                            path: path_for_task,
+                            entries: updated,
+                        });
                     }
-                });
-                entries
+                    Err(error) => {
+                        warn!(plugin = %handle.record.manifest.name, %error, "async lister failed");
+                    }
+                }
             }
-        }
+        });
+        entries
     }
 
     fn register_handle(&self, record: &PluginRecord) {
@@ -576,6 +603,7 @@ impl PluginSupervisor {
             record: record.clone(),
             serve_root: self.inner.serve_root.clone(),
             io: AsyncMutex::new(None),
+            thumbnail_jobs: AsyncMutex::new(None),
             ready: AtomicBool::new(false),
         });
         if let Ok(mut handles) = self.inner.handles.lock() {
@@ -610,10 +638,8 @@ impl PluginSupervisor {
     }
 
     fn ready_plugin_for(&self, capability: &str, path: &str) -> Option<Arc<PluginHandle>> {
-        let plugins = self.discover().ok()?;
         let handles = self.inner.handles.lock().ok()?;
-        for record in plugins {
-            let handle = handles.get(&record.manifest.name)?;
+        for handle in handles.values() {
             if handle.ready.load(Ordering::SeqCst)
                 && handle
                     .record
@@ -687,6 +713,20 @@ impl PluginSupervisor {
                 handle.ready.store(false, Ordering::SeqCst);
                 return Err(error);
             }
+            if handle
+                .record
+                .manifest
+                .capabilities
+                .iter()
+                .any(|cap| cap == "thumbnailer")
+            {
+                let (tx, rx) = mpsc::channel(512);
+                *handle.thumbnail_jobs.lock().await = Some(tx);
+                let worker_handle = handle.clone();
+                tokio::spawn(async move {
+                    run_thumbnail_worker(worker_handle, rx).await;
+                });
+            }
             handle.ready.store(true, Ordering::SeqCst);
             events.publish(KernelEvent::PluginReady {
                 name: record.manifest.name.clone(),
@@ -697,6 +737,7 @@ impl PluginSupervisor {
         if let Some(handle) = &handle {
             handle.ready.store(false, Ordering::SeqCst);
             *handle.io.lock().await = None;
+            *handle.thumbnail_jobs.lock().await = None;
         }
 
         if !status.success() {
@@ -706,6 +747,21 @@ impl PluginSupervisor {
         Ok(())
     }
 }
+
+async fn run_thumbnail_worker(handle: Arc<PluginHandle>, mut rx: mpsc::Receiver<ThumbnailJob>) {
+    while let Some(job) = rx.recv().await {
+        let plugin_name = handle.record.manifest.name.clone();
+        let result = match handle.call_thumbnailer(&job.path, &job.tier).await {
+            Ok(result) => Some(result),
+            Err(error) => {
+                warn!(plugin = %plugin_name, %error, "thumbnailer call failed");
+                None
+            }
+        };
+        let _ = job.response.send(result);
+    }
+}
+
 impl PluginHandle {
     async fn initialize(&self) -> Result<()> {
         let mut guard = self.io.lock().await;
