@@ -31,6 +31,11 @@ export function mount(container, context) {
     return;
   }
 
+  const existing = container.querySelector(`[data-viewer-path="${path}"]`);
+  if (existing) {
+    return;
+  }
+
   const wrapper = document.createElement("div");
   wrapper.className = "image-viewer flex min-h-[240px] flex-col gap-2";
 
@@ -53,6 +58,15 @@ export function mount(container, context) {
   const status = document.createElement("p");
   status.className = "text-xs text-muted-foreground";
   status.textContent = label("plugin.image-thumbnailer.viewer.loadingPreview", "Loading preview…");
+
+  let statusPhase = 0;
+  const setStatusPhase = (phase, text) => {
+    if (phase <= statusPhase) {
+      return;
+    }
+    statusPhase = phase;
+    status.textContent = text;
+  };
 
   const controls = document.createElement("div");
   controls.className = "flex flex-wrap gap-2 text-sm";
@@ -141,29 +155,41 @@ export function mount(container, context) {
   fullLink.target = "_blank";
   fullLink.rel = "noopener noreferrer";
 
-  img.addEventListener("load", () => {
-    status.textContent = label("plugin.image-thumbnailer.viewer.previewLoaded", "Preview loaded");
+  wrapper.dataset.viewerPath = path;
+
+  const onPreviewLoad = () => {
+    setStatusPhase(
+      1,
+      label("plugin.image-thumbnailer.viewer.previewLoaded", "Preview loaded"),
+    );
     const full = new Image();
     full.onload = () => {
       img.src = full.src;
-      status.textContent = label(
-        "plugin.image-thumbnailer.viewer.fullResolution",
-        "Full resolution",
+      setStatusPhase(
+        2,
+        label("plugin.image-thumbnailer.viewer.fullResolution", "Full resolution"),
       );
     };
     full.onerror = () => {
-      status.textContent = label(
-        "plugin.image-thumbnailer.viewer.previewOnly",
-        "Preview only (full file unavailable)",
+      setStatusPhase(
+        2,
+        label(
+          "plugin.image-thumbnailer.viewer.previewOnly",
+          "Preview only (full file unavailable)",
+        ),
       );
     };
     full.src = `/api/file?path=${encodePath(path)}`;
-  });
+  };
+  img.addEventListener("load", onPreviewLoad, { once: true });
 
   img.addEventListener("error", () => {
-    status.textContent = label(
-      "plugin.image-thumbnailer.viewer.thumbnailUnavailable",
-      "Thumbnail unavailable",
+    setStatusPhase(
+      2,
+      label(
+        "plugin.image-thumbnailer.viewer.thumbnailUnavailable",
+        "Thumbnail unavailable",
+      ),
     );
     img.remove();
   });

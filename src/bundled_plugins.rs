@@ -42,6 +42,7 @@ pub fn materialize_image_thumbnailer() -> Result<PathBuf> {
         .join(&parsed.version);
 
     if is_materialized(&dest) {
+        write_bundled_assets(&dest, AssetWriteMode::StaticOnly)?;
         return Ok(dest);
     }
 
@@ -49,7 +50,21 @@ pub fn materialize_image_thumbnailer() -> Result<PathBuf> {
         std::fs::remove_dir_all(&dest).with_context(|| format!("replace {}", dest.display()))?;
     }
     std::fs::create_dir_all(&dest)?;
+    write_bundled_assets(&dest, AssetWriteMode::All)?;
 
+    if !is_materialized(&dest) {
+        anyhow::bail!("failed to materialize bundled image-thumbnailer");
+    }
+
+    Ok(dest)
+}
+
+enum AssetWriteMode {
+    All,
+    StaticOnly,
+}
+
+fn write_bundled_assets(dest: &Path, mode: AssetWriteMode) -> Result<()> {
     for path in BundledAssets::iter() {
         if !path.starts_with(PLUGIN_PREFIX) {
             continue;
@@ -57,6 +72,9 @@ pub fn materialize_image_thumbnailer() -> Result<PathBuf> {
         let relative = path
             .strip_prefix(PLUGIN_PREFIX)
             .context("strip bundled plugin prefix")?;
+        if matches!(mode, AssetWriteMode::StaticOnly) && relative == "bin/image-thumbnailer" {
+            continue;
+        }
         let asset = BundledAssets::get(path.as_ref()).with_context(|| format!("read {path}"))?;
         let out = dest.join(relative);
         if let Some(parent) = out.parent() {
@@ -67,12 +85,7 @@ pub fn materialize_image_thumbnailer() -> Result<PathBuf> {
             set_executable(&out)?;
         }
     }
-
-    if !is_materialized(&dest) {
-        anyhow::bail!("failed to materialize bundled image-thumbnailer");
-    }
-
-    Ok(dest)
+    Ok(())
 }
 
 fn is_materialized(dest: &Path) -> bool {
@@ -146,6 +159,23 @@ mod tests {
         assert_eq!(first, second);
         assert!(first.join("viewer.js").is_file());
         assert!(first.join("bin/image-thumbnailer").is_file());
+
+        set_test_cache_base(None);
+    }
+
+    #[test]
+    fn materialize_refreshes_stale_viewer_assets() {
+        let dir = tempdir().unwrap();
+        set_test_cache_base(Some(dir.path().join("cache")));
+
+        let root = materialize_image_thumbnailer().expect("materialize");
+        let viewer_path = root.join("viewer.js");
+        std::fs::write(&viewer_path, "// stale viewer").expect("write stale viewer");
+
+        materialize_image_thumbnailer().expect("refresh materialize");
+        let refreshed = std::fs::read_to_string(&viewer_path).expect("read refreshed viewer");
+        assert!(refreshed.contains("setStatusPhase"));
+        assert!(!refreshed.starts_with("// stale viewer"));
 
         set_test_cache_base(None);
     }

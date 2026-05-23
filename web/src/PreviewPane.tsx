@@ -132,6 +132,7 @@ export default function PreviewPane({
   const pendingSandboxPreviewRef = useRef<SandboxPreviewPayload | null>(null);
 
   const sandboxCleanupRef = useRef<(() => void) | null>(null);
+  const viewerMountKeyRef = useRef<string | null>(null);
   const onDispatchRef = useRef(onDispatch);
   const onRegisterBridgeRef = useRef(onRegisterBridge);
   onDispatchRef.current = onDispatch;
@@ -185,10 +186,13 @@ export default function PreviewPane({
       return;
     }
 
-    pendingSandboxPreviewRef.current = null;
+    setStat(null);
     setPreview(null);
     setEsmMounted(false);
     setSandboxReady(false);
+    pendingSandboxPreviewRef.current = null;
+    viewerMountKeyRef.current = null;
+
     apiFetch(`/api/metadata?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
@@ -204,22 +208,28 @@ export default function PreviewPane({
         setStat(null);
         setError(err.message);
       });
-
-    if (viewerFor(plugins, path)) {
-      apiFetch(`/api/preview?path=${encodeURIComponent(path)}`)
-        .then(async (response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          return response.text();
-        })
-        .then((body) => setPreview(body))
-        .catch(() => setPreview(null));
-    }
-  }, [path, plugins]);
+  }, [path]);
 
   useEffect(() => {
-    if (!path || stat == null) {
+    if (!path || !viewerModule) {
+      return;
+    }
+
+    apiFetch(`/api/preview?path=${encodeURIComponent(path)}`)
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.text();
+      })
+      .then((body) => setPreview(body))
+      .catch(() => setPreview(null));
+  }, [path, viewerModule]);
+
+  const statReady = stat != null && stat.path === path;
+
+  useEffect(() => {
+    if (!path || !statReady) {
       pendingSandboxPreviewRef.current = null;
       setEsmMounted(false);
       setSandboxReady(false);
@@ -246,7 +256,12 @@ export default function PreviewPane({
 
     pendingSandboxPreviewRef.current = null;
     if (!slotRef.current) {
-      setEsmMounted(false);
+      return;
+    }
+
+    const mountKey = `${path}:${viewerModule}`;
+    if (viewerMountKeyRef.current === mountKey) {
+      setEsmMounted(true);
       return;
     }
 
@@ -256,12 +271,16 @@ export default function PreviewPane({
         if (cancelled || !slotRef.current) {
           return;
         }
+        if (viewerMountKeyRef.current === mountKey) {
+          return;
+        }
         module.mount?.(slotRef.current, {
           path,
           body: "",
           dispatch: (actionId) => onDispatchRef.current?.(actionId),
           registerBridge: (bridge) => onRegisterBridgeRef.current?.(bridge),
         });
+        viewerMountKeyRef.current = mountKey;
         setEsmMounted(true);
         setSandboxReady(false);
       })
@@ -269,8 +288,10 @@ export default function PreviewPane({
 
     return () => {
       cancelled = true;
+      clearViewerBridge();
+      viewerMountKeyRef.current = null;
     };
-  }, [path, stat, viewerModule, viewerTrusted, tryDeliverSandboxPreview]);
+  }, [path, statReady, viewerModule, viewerTrusted, tryDeliverSandboxPreview]);
 
   useEffect(() => {
     if (viewerTrusted !== false || !path || preview == null) {
