@@ -38,7 +38,6 @@ async fn sendfile_body(path: &Path, start: u64, length: u64) -> std::io::Result<
 
     let (reader, writer) = StdUnixStream::pair()?;
     reader.set_nonblocking(true)?;
-    writer.set_nonblocking(true)?;
 
     let path = path.to_path_buf();
     tokio::task::spawn_blocking(move || {
