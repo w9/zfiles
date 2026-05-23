@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Complete image extension follow-ups: explorer grid view, plugin locale bundles via kernel API, slideshow overlay, frontend image-viewer actions with keybindings, and RAW/HEIC sibling thumbnailer plugins. Then polish viewer ESM bridge (`dispatch` + zoom/fullscreen) and expand E2E coverage.
+Fix table listing column overflow so cell text stays within column bounds; then continue explorer polish (deletion, human-readable sizes) and viewer work from design.
 
 ## TODO List
 
@@ -11,10 +11,13 @@ Complete image extension follow-ups: explorer grid view, plugin locale bundles v
 - [x] Frontend: PreviewPane mounts image viewer without text preview; listing uses grid-tier thumbnails
 - [x] Integration tests with real image fixture; conformance passes; rebuild `web/dist`
 - [x] Run full `cargo test`, web unit tests, and E2E smoke
-- [ ] Kernel + frontend: load plugin `locales/` bundles and resolve manifest action labels
-- [ ] Explorer grid view mode with thumbnail tiles and table/grid toggle
-- [ ] Image viewer bridge + manifest keyboard actions (next/prev, zoom, fullscreen, slideshow)
-- [ ] Slideshow full-screen overlay action for images in directory or selection
-- [ ] `thumbnailer-raw` sibling plugin (RAW globs, rawloader decode, WebP cache)
-- [ ] `thumbnailer-heic` sibling plugin (HEIC globs, libheif decode, WebP cache)
-- [ ] Tests, E2E smoke for grid toggle and slideshow; rebuild `web/dist`
+- [x] Kernel + frontend: load plugin `locales/` bundles and resolve manifest action labels
+- [x] Explorer grid view mode with thumbnail tiles and table/grid toggle
+- [x] Image viewer bridge + manifest keyboard actions (next/prev, zoom, fullscreen, slideshow)
+- [x] Slideshow full-screen overlay action for images in directory or selection
+- [x] `thumbnailer-raw` sibling plugin (RAW globs, rawloader decode, WebP cache)
+- [x] `thumbnailer-heic` sibling plugin (HEIC globs, libheif decode, WebP cache)
+- [x] Tests, E2E smoke for grid toggle and slideshow; rebuild `web/dist`
+- [ ] Table listing: clip/truncate cell text so columns do not bleed into neighbors
+- [ ] Align header row column widths with body; verify long names, dates, and extra labels
+- [ ] Rebuild `web/dist` after listing layout fix
