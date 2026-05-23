@@ -27,6 +27,10 @@ zfiles --listen 0.0.0.0:8080 --token --read-only
 
 # Serve without opening a browser tab
 zfiles --no-open
+
+# Verbose logging (-v debug, -vv trace; RUST_LOG overrides when set)
+zfiles -v ~/Downloads
+zfiles -vv --port 9000
 ```
 
 ## CLI
@@ -107,6 +111,10 @@ pnpm test && pnpm build
 ```
 
 After CLI updates, reconcile wrappers under `web/src/components/ui/` with any zfiles-specific styling (for example `CommandDialog` uses `p-0` content padding, confirm dialogs hide the close button). Rebuild `web/dist` before `cargo build` so embedded assets stay in sync.
+
+### File icons
+
+Listing file and folder icons come from [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) (MIT). `pnpm build` runs `scripts/generate-file-icons.mts`, which calls the `material-icon-theme` npm package to emit association metadata and copy referenced SVGs into `web/public/file-icons/` for embedding in the static binary. Image thumbnails from plugins still take precedence over type icons when available.
 
 Sortable listing columns are intentionally deferred: the virtual-scrolled table would need `@tanstack/react-table` integrated with `@tanstack/react-virtual` in a follow-up pass.
 

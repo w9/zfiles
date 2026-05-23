@@ -17,6 +17,7 @@ pub mod fs;
 pub mod glob_match;
 pub mod keybindings;
 pub mod locale;
+pub mod logging;
 pub mod mount;
 pub mod plugin;
 pub mod perf_baseline;

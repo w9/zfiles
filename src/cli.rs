@@ -9,10 +9,13 @@ use crate::config::Config;
 #[derive(Debug, Parser)]
 #[command(
     name = "zfiles",
-    about = "Local file server with browser-based explorer",
-    args_conflicts_with_subcommands = true
+    about = "Local file server with browser-based explorer"
 )]
 pub struct Cli {
+    /// Increase logging verbosity (`-v` debug, `-vv` trace). Ignored when `RUST_LOG` is set.
+    #[arg(short, long, action = clap::ArgAction::Count, global = true)]
+    pub verbose: u8,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 
@@ -290,5 +293,23 @@ mod tests {
     fn reject_unsupported_lang_flag() {
         let cli = Cli::parse_from(["zfiles", "--lang", "fr"]);
         assert!(cli.serve.locale().is_err());
+    }
+
+    #[test]
+    fn parse_verbose_count() {
+        let cli = Cli::parse_from(["zfiles", "-v"]);
+        assert_eq!(cli.verbose, 1);
+
+        let cli = Cli::parse_from(["zfiles", "-vv"]);
+        assert_eq!(cli.verbose, 2);
+
+        let cli = Cli::parse_from(["zfiles", "--verbose", "--verbose"]);
+        assert_eq!(cli.verbose, 2);
+    }
+
+    #[test]
+    fn verbose_flag_works_on_subcommands() {
+        let cli = Cli::parse_from(["zfiles", "-v", "plugin", "list"]);
+        assert_eq!(cli.verbose, 1);
     }
 }

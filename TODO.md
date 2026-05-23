@@ -44,9 +44,9 @@ Add CLI verbose logging (`-v`/`-vv`) so developers can inspect DEBUG/TRACE outpu
 - [x] Wire generate script into `pnpm` build/dev/test; rebuild `web/dist`
 - [x] Document Material Icon Theme MIT attribution in README
 - [x] Run full `cargo test` and web unit tests
-- [ ] Global `-v` / `--verbose` and `-vv` flags on root CLI (count action)
-- [ ] `logging` module: map verbose count to `zfiles`/`tower_http` filter levels; `RUST_LOG` wins when set
-- [ ] Wire tracing init in `main` after CLI parse using verbose count
-- [ ] Unit tests: clap parses `-v`/`-vv`; filter helper returns info/debug/trace
-- [ ] Document verbose flags in README CLI section
-- [ ] Run full `cargo test`
+- [x] Global `-v` / `--verbose` and `-vv` flags on root CLI (count action)
+- [x] `logging` module: map verbose count to `zfiles`/`tower_http` filter levels; `RUST_LOG` wins when set
+- [x] Wire tracing init in `main` after CLI parse using verbose count
+- [x] Unit tests: clap parses `-v`/`-vv`; filter helper returns info/debug/trace
+- [x] Document verbose flags in README CLI section
+- [x] Run full `cargo test`
