@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Replace listing emoji with Material Icon Theme SVGs (build-time manifest + embedded assets), keep thumbnail precedence for images, and polish explorer icon rendering in table and grid views.
+Add CLI verbose logging (`-v`/`-vv`) so developers can inspect DEBUG/TRACE output without hand-setting `RUST_LOG`, then resume explorer UX polish (icon sizing, optional icon-pack settings).
 
 ## TODO List
 
@@ -37,10 +37,16 @@ Replace listing emoji with Material Icon Theme SVGs (build-time manifest + embed
 - [x] Unit tests for `listingIconPrefix` (thumbnail, file, directory)
 - [x] Rebuild `web/dist` after listing icon change
 - [x] Run full `cargo test` and web unit tests
-- [ ] Add `material-icon-theme` dev dep and build script to emit manifest + copy referenced SVGs to `public/file-icons/`
-- [ ] `fileIcons` resolver: extension, filename, and folder associations with light-theme overrides
-- [ ] `FileIcon` component; wire table and grid listings (thumbnails still take precedence)
-- [ ] Unit tests for icon resolution; remove emoji `listingIconPrefix` usage
-- [ ] Wire generate script into `pnpm` build/dev/test; rebuild `web/dist`
-- [ ] Document Material Icon Theme MIT attribution in README
-- [ ] Run full `cargo test` and web unit tests
+- [x] Add `material-icon-theme` dev dep and build script to emit manifest + copy referenced SVGs to `public/file-icons/`
+- [x] `fileIcons` resolver: extension, filename, and folder associations with light-theme overrides
+- [x] `FileIcon` component; wire table and grid listings (thumbnails still take precedence)
+- [x] Unit tests for icon resolution; remove emoji `listingIconPrefix` usage
+- [x] Wire generate script into `pnpm` build/dev/test; rebuild `web/dist`
+- [x] Document Material Icon Theme MIT attribution in README
+- [x] Run full `cargo test` and web unit tests
+- [ ] Global `-v` / `--verbose` and `-vv` flags on root CLI (count action)
+- [ ] `logging` module: map verbose count to `zfiles`/`tower_http` filter levels; `RUST_LOG` wins when set
+- [ ] Wire tracing init in `main` after CLI parse using verbose count
+- [ ] Unit tests: clap parses `-v`/`-vv`; filter helper returns info/debug/trace
+- [ ] Document verbose flags in README CLI section
+- [ ] Run full `cargo test`
