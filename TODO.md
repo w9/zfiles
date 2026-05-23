@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Browser URL printing is done. Next: fix `--token` auth so embedded UI assets load without credentials while API routes stay protected, skip session DB checks when tokens do not expire, then reachable LAN host in share URLs/QR.
+Tokenized UI auth is fixed. Next: generate cryptographically strong share tokens (UUID v4, no prefix), update tests and docs, then reachable LAN host in share URLs/QR.
 
 ## TODO List
 
@@ -115,10 +115,16 @@ Browser URL printing is done. Next: fix `--token` auth so embedded UI assets loa
 - [x] Integration test: startup stdout contains `Opening browser:` before `listening`
 - [x] Integration test: `--no-open` does not print `Opening browser:`
 - [x] Update README quick start to mention pre-open URL line
-- [ ] `auth::is_public_path` exempts embedded `/assets/*`, favicon, and viewer sandbox from bearer auth
-- [ ] Unit tests for public-path classification
-- [ ] Integration test: tokenized server serves `/assets/*` without credentials
-- [ ] Integration test: tokenized server rejects `/api/list` without credentials
-- [ ] Skip `session_valid` when `--token` is used without `--expire`
-- [ ] Integration test: non-expiring token accepts Bearer auth on `/api/list`
-- [ ] E2E smoke: `--token` explorer loads listing (not blank UI)
+- [x] `auth::is_public_path` exempts embedded `/assets/*`, favicon, and viewer sandbox from bearer auth
+- [x] Unit tests for public-path classification
+- [x] Integration test: tokenized server serves `/assets/*` without credentials
+- [x] Integration test: tokenized server rejects `/api/list` without credentials
+- [x] Skip `session_valid` when `--token` is used without `--expire`
+- [x] Integration test: non-expiring token accepts Bearer auth on `/api/list`
+- [x] E2E smoke: `--token` explorer loads listing (not blank UI)
+- [ ] `generate_token` uses UUID v4 (128-bit random, no `zfiles-` prefix)
+- [ ] Unit tests: token length, hex charset, and no prefix
+- [ ] Unit test: successive generated tokens differ
+- [ ] Update integration/E2E tests that assert `zfiles-` token shape
+- [ ] Update QR/share URL unit tests to use unprefixed sample tokens
+- [ ] Integration test: `--token` startup prints 32-char hex auth token
