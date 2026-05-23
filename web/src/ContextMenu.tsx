@@ -1,4 +1,9 @@
-import { useEffect, useRef } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type ContextMenuAction = {
   id: string;
@@ -9,60 +14,41 @@ type ContextMenuProps = {
   x: number;
   y: number;
   actions: ContextMenuAction[];
+  ariaLabel: string;
   onSelect: (actionId: string) => void;
   onClose: () => void;
 };
 
-export default function ContextMenu({
+export default function ExplorerContextMenu({
   x,
   y,
   actions,
+  ariaLabel,
   onSelect,
   onClose,
 }: ContextMenuProps) {
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [onClose]);
-
   return (
-    <div
-      ref={menuRef}
-      className="context-menu"
-      style={{ top: y, left: x }}
-      role="menu"
-      aria-label="File actions"
-    >
-      {actions.map((action) => (
-        <button
-          key={action.id}
-          type="button"
-          className="context-menu-item"
-          role="menuitem"
-          onClick={() => {
-            onSelect(action.id);
-            onClose();
-          }}
-        >
-          {action.label}
-        </button>
-      ))}
-    </div>
+    <DropdownMenu open onOpenChange={(open) => !open && onClose()}>
+      <DropdownMenuTrigger asChild>
+        <span
+          className="fixed block h-px w-px"
+          style={{ top: y, left: x }}
+          aria-hidden="true"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" aria-label={ariaLabel}>
+        {actions.map((action) => (
+          <DropdownMenuItem
+            key={action.id}
+            onSelect={() => {
+              onSelect(action.id);
+              onClose();
+            }}
+          >
+            {action.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Info } from "lucide-react";
+
 import { apiFetch } from "./api";
+import { useTranslation } from "@/i18n";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import type { ResolvedTheme } from "./theme";
 
 type FileStat = {
@@ -18,14 +28,28 @@ type PluginInfo = {
   trusted?: boolean;
 };
 
+import { clearViewerBridge } from "./viewerBridge";
+import type { ViewerBridge } from "./viewerBridge";
+
 type PreviewPaneProps = {
   path: string | null;
   plugins: PluginInfo[];
   theme: ResolvedTheme;
+  onFocusPreview?: () => void;
+  onDispatch?: (actionId: string) => void;
+  onRegisterBridge?: (bridge: ViewerBridge) => void;
 };
 
 type ViewerModule = {
-  mount?: (container: HTMLElement, context: { path: string; body: string }) => void;
+  mount?: (
+    container: HTMLElement,
+    context: {
+      path: string;
+      body: string;
+      dispatch?: (actionId: string) => void;
+      registerBridge?: (bridge: ViewerBridge) => void;
+    },
+  ) => void;
 };
 
 type SandboxPreviewPayload = {
@@ -89,7 +113,15 @@ function deliverSandboxTheme(iframe: HTMLIFrameElement, theme: ResolvedTheme): v
   );
 }
 
-export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) {
+export default function PreviewPane({
+  path,
+  plugins,
+  theme,
+  onFocusPreview,
+  onDispatch,
+  onRegisterBridge,
+}: PreviewPaneProps) {
+  const { t } = useTranslation();
   const [stat, setStat] = useState<FileStat | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +132,14 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
   const pendingSandboxPreviewRef = useRef<SandboxPreviewPayload | null>(null);
 
   const sandboxCleanupRef = useRef<(() => void) | null>(null);
+  const onDispatchRef = useRef(onDispatch);
+  const onRegisterBridgeRef = useRef(onRegisterBridge);
+  onDispatchRef.current = onDispatch;
+  onRegisterBridgeRef.current = onRegisterBridge;
+
+  const activeViewer = path ? viewerFor(plugins, path) : undefined;
+  const viewerModule = activeViewer?.viewerModule ?? null;
+  const viewerTrusted = activeViewer?.trusted ?? true;
 
   const tryDeliverSandboxPreview = useCallback(() => {
     const iframe = iframeRef.current;
@@ -141,6 +181,7 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
       setError(null);
       setEsmMounted(false);
       setSandboxReady(false);
+      clearViewerBridge();
       return;
     }
 
@@ -148,7 +189,7 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
     setPreview(null);
     setEsmMounted(false);
     setSandboxReady(false);
-    apiFetch(`/api/stat?path=${encodeURIComponent(path)}`)
+    apiFetch(`/api/metadata?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -178,24 +219,27 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
   }, [path, plugins]);
 
   useEffect(() => {
-    if (!path || preview == null || stat == null) {
+    if (!path || stat == null) {
       pendingSandboxPreviewRef.current = null;
       setEsmMounted(false);
       setSandboxReady(false);
+      clearViewerBridge();
       return;
     }
 
-    const viewer = viewerFor(plugins, path);
-    if (!viewer?.viewerModule) {
+    if (!viewerModule) {
       pendingSandboxPreviewRef.current = null;
       setEsmMounted(false);
       setSandboxReady(false);
+      clearViewerBridge();
       return;
     }
 
-    if (viewer.trusted === false) {
+    const previewBody = preview ?? "";
+
+    if (viewerTrusted === false) {
       setEsmMounted(false);
-      pendingSandboxPreviewRef.current = { path, body: preview };
+      pendingSandboxPreviewRef.current = { path, body: previewBody };
       tryDeliverSandboxPreview();
       return;
     }
@@ -207,12 +251,17 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
     }
 
     let cancelled = false;
-    import(/* @vite-ignore */ viewer.viewerModule)
+    import(/* @vite-ignore */ viewerModule)
       .then((module: ViewerModule) => {
         if (cancelled || !slotRef.current) {
           return;
         }
-        module.mount?.(slotRef.current, { path, body: preview });
+        module.mount?.(slotRef.current, {
+          path,
+          body: "",
+          dispatch: (actionId) => onDispatchRef.current?.(actionId),
+          registerBridge: (bridge) => onRegisterBridgeRef.current?.(bridge),
+        });
         setEsmMounted(true);
         setSandboxReady(false);
       })
@@ -221,28 +270,38 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
     return () => {
       cancelled = true;
     };
-  }, [path, preview, plugins, stat, tryDeliverSandboxPreview]);
+  }, [path, stat, viewerModule, viewerTrusted, tryDeliverSandboxPreview]);
+
+  useEffect(() => {
+    if (viewerTrusted !== false || !path || preview == null) {
+      return;
+    }
+    pendingSandboxPreviewRef.current = { path, body: preview };
+    tryDeliverSandboxPreview();
+  }, [path, preview, viewerTrusted, tryDeliverSandboxPreview]);
+
+  const shellClass = "relative min-h-[320px] rounded-xl border bg-card p-4";
 
   if (!path) {
     return (
-      <aside className="preview-pane" aria-label="Preview pane">
-        <p className="meta">Select a file to preview metadata.</p>
+      <aside className={shellClass} aria-label={t("preview.label")}>
+        <p className="text-sm text-muted-foreground">{t("preview.selectFile")}</p>
       </aside>
     );
   }
 
   if (error) {
     return (
-      <aside className="preview-pane" aria-label="Preview pane">
-        <p className="error">{error}</p>
+      <aside className={shellClass} aria-label={t("preview.label")}>
+        <p className="text-sm text-destructive">{error}</p>
       </aside>
     );
   }
 
   if (!stat) {
     return (
-      <aside className="preview-pane" aria-label="Preview pane">
-        <p className="meta">Loading…</p>
+      <aside className={shellClass} aria-label={t("preview.label")}>
+        <p className="text-sm text-muted-foreground">{t("preview.loading")}</p>
       </aside>
     );
   }
@@ -251,54 +310,88 @@ export default function PreviewPane({ path, plugins, theme }: PreviewPaneProps) 
   const sandboxed = viewer?.trusted === false && viewer.viewerModule != null;
 
   return (
-    <aside className="preview-pane" aria-label="Preview pane">
-      <h2>{stat.path.split("/").pop()}</h2>
-      <dl className="preview-meta">
-        <div>
-          <dt>Path</dt>
-          <dd>{stat.path}</dd>
+    <aside
+      className={shellClass}
+      aria-label={t("preview.label")}
+      onMouseDown={() => onFocusPreview?.()}
+    >
+      <h2 className="mb-3 text-lg font-semibold">{stat.path.split("/").pop()}</h2>
+      <dl className="mb-4 grid gap-2 text-sm">
+        <div className="grid grid-cols-[5rem_1fr] gap-2">
+          <dt className="text-muted-foreground">{t("preview.path")}</dt>
+          <dd className="break-all">{stat.path}</dd>
         </div>
-        <div>
-          <dt>Type</dt>
-          <dd>{stat.is_dir ? "Directory" : "File"}</dd>
+        <div className="grid grid-cols-[5rem_1fr] gap-2">
+          <dt className="text-muted-foreground">{t("preview.type")}</dt>
+          <dd>
+            {stat.is_dir ? t("preview.type.directory") : t("preview.type.file")}
+          </dd>
         </div>
         {!stat.is_dir ? (
-          <div>
-            <dt>Size</dt>
-            <dd>{stat.size} B</dd>
+          <div className="grid grid-cols-[5rem_1fr] gap-2">
+            <dt className="text-muted-foreground">{t("preview.size")}</dt>
+            <dd>{t("preview.bytes", { size: String(stat.size) })}</dd>
           </div>
         ) : null}
       </dl>
       {!stat.is_dir ? (
-        <div className="viewer-slot" data-viewer-slot="preview">
+        <div className="space-y-3" data-viewer-slot="preview">
           {viewer?.viewerModule ? (
-            <p className="meta viewer-module-hint">
-              Viewer module: <code>{viewer.viewerModule}</code>
-              {sandboxed ? " (sandboxed)" : null}
-            </p>
-          ) : null}
-          {sandboxed ? (
-            <iframe
-              ref={assignSandboxIframe}
-              className="viewer-sandbox"
-              title="Sandboxed preview"
-              sandbox="allow-scripts allow-same-origin"
-              src="/viewer-sandbox.html"
-            />
+            <>
+              {sandboxed ? (
+                <iframe
+                  ref={assignSandboxIframe}
+                  className="h-64 w-full rounded-md border bg-background"
+                  title={t("preview.sandboxTitle")}
+                  sandbox="allow-scripts allow-same-origin"
+                  src="/viewer-sandbox.html"
+                />
+              ) : (
+                <div ref={slotRef} className="rounded-md border bg-background p-2" />
+              )}
+              {!sandboxed && !esmMounted && preview != null && preview.length > 0 ? (
+                <pre className="overflow-auto rounded-md border bg-muted/40 p-3 text-sm">
+                  {preview}
+                </pre>
+              ) : null}
+              {!sandboxed && !esmMounted ? (
+                <p className="text-sm text-muted-foreground">{t("preview.loading")}</p>
+              ) : null}
+              {sandboxed && !sandboxReady && preview != null ? (
+                <p className="text-sm text-muted-foreground">{t("preview.loadingSandbox")}</p>
+              ) : null}
+            </>
           ) : (
-            <div ref={slotRef} className="viewer-mount" />
+            <p className="text-sm text-muted-foreground">{t("preview.noViewer")}</p>
           )}
-          {!sandboxed && !esmMounted && preview != null ? (
-            <pre className="preview-text">{preview}</pre>
-          ) : null}
-          {!sandboxed && !esmMounted && preview == null ? (
-            <p className="meta">No viewer plugin registered for this file type.</p>
-          ) : null}
-          {sandboxed && !sandboxReady && preview != null ? (
-            <p className="meta">Loading sandboxed preview…</p>
-          ) : null}
-          <a href={`/api/file?path=${encodeURIComponent(stat.path)}`}>Download</a>
+          <Button variant="link" className="h-auto p-0" asChild>
+            <a href={`/api/file?path=${encodeURIComponent(stat.path)}`}>
+              {t("preview.download")}
+            </a>
+          </Button>
         </div>
+      ) : null}
+      {viewer?.viewerModule ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="absolute bottom-3 right-3 inline-flex h-6 w-6 items-center justify-center rounded-full border bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={t("preview.viewerInfo")}
+            >
+              <Info className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" align="end" className="max-w-xs space-y-1 text-left">
+            <p className="font-medium">{t("preview.viewerModule")}</p>
+            <code className="block break-all font-mono text-[11px] leading-snug opacity-90">
+              {viewer.viewerModule}
+            </code>
+            {sandboxed ? (
+              <p className="text-[11px] opacity-90">{t("preview.sandboxed")}</p>
+            ) : null}
+          </TooltipContent>
+        </Tooltip>
       ) : null}
     </aside>
   );

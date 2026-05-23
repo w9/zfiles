@@ -5,7 +5,7 @@ import { apiFetch, websocketUrl } from "./api";
 export type BackendStatus = "connecting" | "connected" | "offline";
 
 export type KernelEvent =
-  | { type: "connected"; version: string }
+  | { type: "connected"; version: string; read_only?: boolean }
   | { type: "filesystem_changed"; path: string }
   | { type: "upload_progress"; id: string; offset: number; length?: number }
   | { type: "plugin_ready"; name: string }
