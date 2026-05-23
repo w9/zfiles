@@ -34,7 +34,7 @@ async fn health_returns_ok() {
 
     let response = server.get("/api/health").await;
     response.assert_status_ok();
-    response.assert_json(&serde_json::json!({ "status": "ok" }));
+    response.assert_json(&serde_json::json!({ "status": "ok", "read_only": false }));
 }
 
 #[tokio::test]
@@ -56,6 +56,22 @@ async fn list_directory_returns_entries() {
             .iter()
             .any(|entry| entry.name == "photos" && entry.is_dir)
     );
+}
+
+#[tokio::test]
+async fn macos_pictures_folder_lists_if_present() {
+    let pictures = std::path::Path::new("/Users/xunzhu/Pictures");
+    if !pictures.is_dir() {
+        return;
+    }
+
+    let server = test_server(&pictures.canonicalize().unwrap());
+
+    let response = server.get("/api/list").await;
+    response.assert_status_ok();
+
+    let entries: Vec<FileEntry> = response.json();
+    assert!(!entries.is_empty());
 }
 
 #[tokio::test]
@@ -81,7 +97,7 @@ async fn stat_returns_metadata() {
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let server = test_server(dir.path());
-    let response = server.get("/api/stat?path=notes.txt").await;
+    let response = server.get("/api/metadata?path=notes.txt").await;
     response.assert_status_ok();
 
     let stat: FileStat = response.json();
@@ -164,6 +180,42 @@ async fn read_only_blocks_uploads() {
         .await;
 
     create.assert_status(axum::http::StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn delete_action_removes_files() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    fs::write(dir.path().join("other.txt"), b"world").unwrap();
+
+    let server = test_server(dir.path());
+    let response = server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "paths": ["notes.txt", "other.txt"],
+            "action_id": "file.delete",
+        }))
+        .await;
+    response.assert_status(axum::http::StatusCode::NO_CONTENT);
+    assert!(!dir.path().join("notes.txt").exists());
+    assert!(!dir.path().join("other.txt").exists());
+}
+
+#[tokio::test]
+async fn read_only_blocks_delete() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+
+    let server = test_server_with_options(dir.path(), true);
+    let response = server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "paths": ["notes.txt"],
+            "action_id": "file.delete",
+        }))
+        .await;
+    response.assert_status(axum::http::StatusCode::FORBIDDEN);
+    assert!(dir.path().join("notes.txt").exists());
 }
 
 #[tokio::test]

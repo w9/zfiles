@@ -87,6 +87,35 @@ impl LocalFs {
         Ok(canonical)
     }
 
+    pub async fn delete_path(&self, path: &Path) -> Result<()> {
+        if path.as_os_str().is_empty() {
+            bail!("path is required");
+        }
+
+        let relative = normalize_relative(path)?;
+        let relative_str = relative.to_string_lossy();
+        if relative_str == ".zfiles" || relative_str.starts_with(".zfiles/") {
+            bail!("cannot delete server metadata");
+        }
+
+        let absolute = self.resolve(path)?;
+        let metadata = tokio::fs::metadata(&absolute)
+            .await
+            .with_context(|| format!("failed to stat path {}", absolute.display()))?;
+
+        if metadata.is_dir() {
+            tokio::fs::remove_dir_all(&absolute)
+                .await
+                .with_context(|| format!("failed to delete directory {}", absolute.display()))?;
+        } else {
+            tokio::fs::remove_file(&absolute)
+                .await
+                .with_context(|| format!("failed to delete file {}", absolute.display()))?;
+        }
+
+        Ok(())
+    }
+
     fn relative_path(&self, absolute: &Path) -> Result<String> {
         absolute
             .strip_prefix(&self.root)
@@ -105,11 +134,29 @@ impl Fs for LocalFs {
             .with_context(|| format!("failed to read directory {}", dir.display()))?;
 
         while let Some(entry) = read_dir.next_entry().await? {
-            let file_type = entry.file_type().await?;
-            let metadata = entry.metadata().await?;
             let name = entry.file_name().to_string_lossy().into_owned();
+            let file_type = match entry.file_type().await {
+                Ok(file_type) => file_type,
+                Err(error) => {
+                    tracing::debug!(entry = %name, %error, "skipping unreadable directory entry");
+                    continue;
+                }
+            };
+            let metadata = match entry.metadata().await {
+                Ok(metadata) => metadata,
+                Err(error) => {
+                    tracing::debug!(entry = %name, %error, "skipping unreadable directory entry");
+                    continue;
+                }
+            };
             let entry_path = entry.path();
-            let relative = self.relative_path(&entry_path)?;
+            let relative = match self.relative_path(&entry_path) {
+                Ok(relative) => relative,
+                Err(error) => {
+                    tracing::debug!(entry = %name, %error, "skipping directory entry outside served root");
+                    continue;
+                }
+            };
 
             entries.push(FileEntry {
                 name,
@@ -207,6 +254,27 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn read_dir_tolerates_macos_photos_library_entries() {
+        let pictures = std::path::Path::new("/Users/xunzhu/Pictures");
+        if !pictures.is_dir() {
+            return;
+        }
+
+        let fs = LocalFs::new(pictures.canonicalize().unwrap());
+        let entries = fs
+            .read_dir(Path::new(""))
+            .await
+            .expect("list macOS Pictures folder");
+
+        assert!(!entries.is_empty());
+        assert!(
+            !entries
+                .iter()
+                .any(|entry| entry.name == "Photos Library.photoslibrary")
+        );
+    }
+
+    #[tokio::test]
     async fn stat_returns_metadata() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("alpha.txt"), b"hello").unwrap();
@@ -217,5 +285,26 @@ mod tests {
         assert_eq!(stat.path, "alpha.txt");
         assert!(!stat.is_dir);
         assert_eq!(stat.size, 5);
+    }
+
+    #[tokio::test]
+    async fn delete_path_removes_file() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("alpha.txt"), b"hello").unwrap();
+
+        let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+        fs.delete_path(Path::new("alpha.txt")).await.unwrap();
+
+        assert!(!dir.path().join("alpha.txt").exists());
+    }
+
+    #[tokio::test]
+    async fn delete_path_rejects_dotfolder() {
+        let dir = tempdir().unwrap();
+        fs::create_dir(dir.path().join(".zfiles")).unwrap();
+
+        let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+        let err = fs.delete_path(Path::new(".zfiles")).await.unwrap_err();
+        assert!(err.to_string().contains("metadata"));
     }
 }
