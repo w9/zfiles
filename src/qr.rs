@@ -4,13 +4,6 @@ use qrcode::render::unicode::Dense1x2;
 
 pub const MIN_DARK_MODULES: usize = 50;
 
-pub fn share_url(host: &str, token: Option<&str>) -> String {
-    match token {
-        Some(token) => format!("http://{host}/?token={token}"),
-        None => format!("http://{host}/"),
-    }
-}
-
 pub fn render_url(url: &str) -> Result<String> {
     let code = QrCode::new(url.as_bytes())?;
     Ok(code
@@ -35,7 +28,7 @@ mod tests {
 
     #[test]
     fn render_url_contains_qr_modules() {
-        let image = render_url("http://192.168.0.5:8080/?token=zfiles-deadbeef").unwrap();
+        let image = render_url("http://192.168.0.5:8080/?token=a1b2c3d4e5f6789012345678abcdef01").unwrap();
         assert!(
             dark_module_count(&image) >= MIN_DARK_MODULES,
             "expected scannable QR modules, got:\n{image}"
@@ -65,12 +58,4 @@ mod tests {
         );
     }
 
-    #[test]
-    fn share_url_includes_token_query() {
-        assert_eq!(
-            share_url("192.168.0.5:8080", Some("zfiles-abc")),
-            "http://192.168.0.5:8080/?token=zfiles-abc"
-        );
-        assert_eq!(share_url("127.0.0.1:9000", None), "http://127.0.0.1:9000/");
-    }
 }

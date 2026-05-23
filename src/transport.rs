@@ -17,6 +17,7 @@ use tokio::net::TcpListener;
 use tracing::info;
 
 use crate::auth::{self, AuthConfig};
+use crate::banner;
 use crate::browser;
 use crate::cli::ServeArgs;
 use crate::config::Config;
@@ -52,17 +53,26 @@ struct PathQuery {
     path: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ThumbnailQuery {
+    path: Option<String>,
+    tier: Option<String>,
+}
+
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/api/health", get(health))
         .route("/api/plugins", get(list_plugins))
+        .route("/api/plugins/i18n", get(list_plugin_i18n))
         .route("/api/list", get(list_directory))
         .route("/api/search", get(search_directory))
         .route("/api/thumbnail", get(thumbnail_file))
         .route("/api/preview", get(preview_file))
         .route("/api/actions", get(list_actions).post(run_action))
+        .route("/api/actions/catalog", get(list_action_catalog))
+        .route("/api/keybindings", get(list_keybindings))
         .route("/plugin/{name}/{*path}", get(plugin_static))
-        .route("/api/stat", get(stat_path))
+        .route("/api/metadata", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
         .route("/api/upload/{id}", head(head_upload).patch(patch_upload))
@@ -84,7 +94,9 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     serve.validate()?;
     let root = serve.root_path()?;
     let config = Config::load(&root)?;
-    let dotfolder = dotfolder::resolve(&root, &config);
+    let layout = dotfolder::plan_serve_layout(&root, &config, serve.read_only);
+    let dotfolder = layout.dotfolder.clone();
+    let read_only = layout.read_only;
     let listener = TcpListener::bind(serve.listen_addr()?)
         .await
         .context("failed to bind TCP listener")?;
@@ -106,7 +118,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         if let Some(expires_at) = expires_at {
             state_store.create_session(&token, expires_at)?;
         }
-        println!("Auth token: {token}");
         Some(token)
     } else {
         None
@@ -123,20 +134,35 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.clone())),
         auth,
-        read_only: serve.read_only(&config),
+        read_only,
         state: state_store,
         events: events.clone(),
         plugins: plugins.clone(),
     };
 
-    if serve.should_open_browser(&config) {
-        browser::open_async(format!("http://{bound}"));
+    let open_browser = serve.should_open_browser(&config);
+    let ui_lang = serve.locale()?;
+    let explorer_url = browser::open_url(&bound, share_token.as_deref(), ui_lang);
+    let public_share = serve.token && serve.is_public_bind()?;
+
+    banner::serve_banner(
+        &root,
+        &explorer_url,
+        share_token.as_deref(),
+        open_browser,
+        read_only,
+        layout.auto_read_only,
+        layout.dotfolder_relocated.then_some(dotfolder.as_path()),
+        public_share,
+    )
+    .print();
+
+    if open_browser {
+        browser::open_async(explorer_url.clone());
     }
 
-    if serve.token && serve.is_public_bind()? {
-        let url = qr::share_url(&bound.to_string(), share_token.as_deref());
-        println!("Share URL: {url}");
-        if let Err(error) = qr::print_url(&url) {
+    if public_share {
+        if let Err(error) = qr::print_url(&explorer_url) {
             tracing::warn!(%error, "failed to render QR code");
         }
     }
@@ -148,7 +174,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     plugins.start_background(events);
 
     info!(root = %root.display(), addr = %bound, "zfiles listening");
-    println!("zfiles listening on http://{bound}");
 
     axum::serve(listener, router(state))
         .with_graceful_shutdown(shutdown_signal())
@@ -160,12 +185,26 @@ async fn shutdown_signal() {
     let _ = tokio::signal::ctrl_c().await;
 }
 
-async fn health() -> impl IntoResponse {
-    Json(serde_json::json!({ "status": "ok" }))
+async fn health(State(state): State<AppState>) -> impl IntoResponse {
+    Json(serde_json::json!({
+        "status": "ok",
+        "read_only": state.read_only,
+    }))
 }
 
 async fn list_plugins(State(state): State<AppState>) -> impl IntoResponse {
     Json(state.plugins.ready_plugins())
+}
+
+async fn list_plugin_i18n(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    Ok(Json(
+        state
+            .plugins
+            .plugin_i18n_catalog()
+            .unwrap_or_else(|_| serde_json::json!({})),
+    ))
 }
 
 async fn list_directory(
@@ -184,6 +223,33 @@ async fn list_directory(
     state
         .plugins
         .prefetch_thumbnails(&entries, state.events.clone());
+    // #region agent log
+    {
+        use std::io::Write;
+        let line = serde_json::json!({
+            "sessionId": "a6473c",
+            "location": "transport.rs:list_directory",
+            "message": "list_directory served",
+            "data": {
+                "path": relative,
+                "entryCount": entries.len(),
+            },
+            "hypothesisId": "H4",
+            "timestamp": std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis())
+                .unwrap_or(0),
+            "runId": "initial",
+        });
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("/home/xunzhu.linux/Projects/zfiles/.cursor/debug-a6473c.log")
+        {
+            let _ = writeln!(file, "{line}");
+        }
+    }
+    // #endregion
     Ok(Json(entries))
 }
 
@@ -199,6 +265,14 @@ async fn list_actions(
     Ok(Json(actions))
 }
 
+async fn list_action_catalog(State(state): State<AppState>) -> Json<Vec<crate::plugins::ActionItem>> {
+    Json(state.plugins.action_catalog())
+}
+
+async fn list_keybindings() -> Json<crate::keybindings::KeybindingsFile> {
+    Json(crate::keybindings::load_user_keybindings())
+}
+
 #[derive(Debug, Deserialize)]
 struct RunActionBody {
     #[serde(default)]
@@ -207,6 +281,8 @@ struct RunActionBody {
     paths: Vec<String>,
     action_id: String,
 }
+
+const KERNEL_ACTION_DELETE: &str = "file.delete";
 
 async fn run_action(
     State(state): State<AppState>,
@@ -219,11 +295,27 @@ async fn run_action(
     if targets.is_empty() {
         return Err(AppError(anyhow::anyhow!("path or paths is required")));
     }
+    if body.action_id == KERNEL_ACTION_DELETE {
+        for path in targets {
+            state.fs.delete_path(std::path::Path::new(&path)).await?;
+            state.events.publish(KernelEvent::FilesystemChanged {
+                path: parent_listing_path(&path),
+            });
+        }
+        return Ok(StatusCode::NO_CONTENT);
+    }
     state
         .plugins
         .run_actions(&targets, &body.action_id)
         .await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+fn parent_listing_path(relative: &str) -> String {
+    relative
+        .rsplit_once('/')
+        .map(|(parent, _)| parent.to_string())
+        .unwrap_or_default()
 }
 
 async fn plugin_static(
@@ -294,14 +386,15 @@ async fn search_directory(
 
 async fn thumbnail_file(
     State(state): State<AppState>,
-    Query(query): Query<PathQuery>,
+    Query(query): Query<ThumbnailQuery>,
 ) -> Result<Response, AppError> {
     let relative = query
         .path
         .as_deref()
         .ok_or_else(|| anyhow::anyhow!("path is required"))?;
+    let tier = query.tier.as_deref().unwrap_or("grid");
 
-    let Some((content_type, bytes)) = state.plugins.thumbnail(relative).await else {
+    let Some((content_type, bytes)) = state.plugins.thumbnail(relative, tier).await else {
         return Err(AppError(anyhow::anyhow!("thumbnail unavailable")));
     };
 
@@ -504,12 +597,13 @@ async fn patch_upload(
 }
 
 async fn ws_upgrade(State(state): State<AppState>, ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_ws(socket, state.events))
+    ws.on_upgrade(move |socket| handle_ws(socket, state.events, state.read_only))
 }
 
-async fn handle_ws(mut socket: WebSocket, events: EventBus) {
+async fn handle_ws(mut socket: WebSocket, events: EventBus, read_only: bool) {
     let connected = KernelEvent::Connected {
         version: env!("CARGO_PKG_VERSION").into(),
+        read_only,
     };
     if socket
         .send(Message::Text(

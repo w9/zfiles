@@ -18,8 +18,9 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
     let root = std::fs::canonicalize(&args.path)
         .with_context(|| format!("failed to resolve path {}", args.path.display()))?;
     let config = Config::load(&root)?;
-    let plugins = PluginSupervisor::new(root.clone()).list()?;
-    let dotfolder = dotfolder::resolve(&root, &config);
+    let layout = dotfolder::plan_serve_layout(&root, &config, false);
+    let dotfolder = layout.dotfolder.clone();
+    let plugins = PluginSupervisor::with_dotfolder(root.clone(), dotfolder.clone()).list()?;
 
     println!("root: {}", root.display());
     println!("dot-folder: {}", dotfolder.display());
@@ -28,7 +29,10 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
     } else {
         println!("dot-folder-status: missing");
     }
-    println!("read_only: {}", config.read_only());
+    if layout.dotfolder_relocated {
+        println!("dot-folder-relocated: true");
+    }
+    println!("read_only: {}", layout.read_only);
     println!("open_browser: {}", config.open_browser());
     println!("plugins: {}", plugins.len());
     for plugin in plugins {

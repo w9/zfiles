@@ -1,5 +1,8 @@
 pub mod auth;
+pub mod banner;
 pub mod browser;
+#[cfg(feature = "bundled-plugins")]
+pub mod bundled_plugins;
 pub mod cli;
 pub mod commands;
 pub mod config;
@@ -12,6 +15,8 @@ pub mod embed;
 pub mod events;
 pub mod fs;
 pub mod glob_match;
+pub mod keybindings;
+pub mod locale;
 pub mod mount;
 pub mod plugin;
 pub mod perf_baseline;
@@ -24,3 +29,4 @@ pub mod status_cmd;
 pub mod transport;
 pub mod upload;
 pub mod watch;
+pub mod writable;

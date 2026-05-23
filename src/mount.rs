@@ -17,6 +17,10 @@ pub fn same_filesystem(_left: &Path, _right: &Path) -> Result<bool> {
 }
 
 pub fn warn_if_cross_mount(label: &str, left: &Path, right: &Path) {
+    if !left.exists() || !right.exists() {
+        return;
+    }
+
     match same_filesystem(left, right) {
         Ok(true) => {}
         Ok(false) => eprintln!(

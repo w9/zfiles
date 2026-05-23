@@ -16,15 +16,56 @@ use crate::events::{EventBus, KernelEvent};
 use crate::fs::FileEntry;
 use crate::plugin::framing;
 
-const LISTER_TIMEOUT: Duration = Duration::from_millis(50);
+const LISTER_TIMEOUT: Duration = Duration::from_millis(500);
 const SEARCHER_TIMEOUT: Duration = Duration::from_millis(500);
-const THUMBNAILER_TIMEOUT: Duration = Duration::from_millis(500);
+const THUMBNAILER_TIMEOUT: Duration = Duration::from_secs(10);
 const VIEWER_TIMEOUT: Duration = Duration::from_millis(500);
 const ACTION_TIMEOUT: Duration = Duration::from_millis(200);
 const ROUTE_TIMEOUT: Duration = Duration::from_millis(500);
 const WATCHER_TIMEOUT: Duration = Duration::from_millis(50);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
+
+// #region agent log
+fn agent_debug_log(location: &str, message: &str, data: serde_json::Value, hypothesis_id: &str) {
+    use std::io::Write;
+    let line = serde_json::json!({
+        "sessionId": "a6473c",
+        "location": location,
+        "message": message,
+        "data": data,
+        "hypothesisId": hypothesis_id,
+        "timestamp": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0),
+        "runId": "initial",
+    });
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("/home/xunzhu.linux/Projects/zfiles/.cursor/debug-a6473c.log")
+    {
+        let _ = writeln!(file, "{line}");
+    }
+}
+// #endregion
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+pub struct ManifestAction {
+    pub id: String,
+    pub label: String,
+    #[serde(default)]
+    pub when: Option<String>,
+    #[serde(default)]
+    pub contexts: Vec<String>,
+    #[serde(default)]
+    pub destructive: bool,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub default_keybinding: Option<String>,
+}
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct PluginManifest {
@@ -40,6 +81,8 @@ pub struct PluginManifest {
     pub viewer_module: Option<String>,
     #[serde(default = "default_trusted")]
     pub trusted: bool,
+    #[serde(default)]
+    pub actions: Vec<ManifestAction>,
 }
 
 fn default_trusted() -> bool {
@@ -50,6 +93,20 @@ fn default_trusted() -> bool {
 pub struct ActionItem {
     pub id: String,
     pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub when: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contexts: Vec<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub destructive: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_keybinding: Option<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub source: String,
 }
 
 #[derive(Debug, Clone)]
@@ -107,6 +164,9 @@ impl PluginSupervisor {
         if let Some(home) = home_plugins_dir() {
             discover_in(&home, &mut discovered, &mut seen)?;
         }
+
+        #[cfg(feature = "bundled-plugins")]
+        crate::bundled_plugins::discover_bundled(&mut discovered, &mut seen)?;
 
         Ok(discovered)
     }
@@ -239,22 +299,23 @@ impl PluginSupervisor {
         self.ready_plugin_for("thumbnailer", "").is_some()
     }
 
-    pub async fn thumbnail(&self, path: &str) -> Option<(String, Vec<u8>)> {
+    pub async fn thumbnail(&self, path: &str, tier: &str) -> Option<(String, Vec<u8>)> {
         let handle = self.ready_plugin_for("thumbnailer", path)?;
         if let Some(cached) =
-            read_thumbnail_cache(&handle.record.root, &handle.serve_root, path)
+            read_thumbnail_cache(&handle.record.root, &handle.serve_root, path, tier)
         {
             return Some(cached);
         }
 
         let plugin_name = handle.record.manifest.name.clone();
-        let call = handle.call_thumbnailer(path);
+        let call = handle.call_thumbnailer(path, tier);
         match tokio::time::timeout(THUMBNAILER_TIMEOUT, call).await {
             Ok(Ok(result)) => {
                 let _ = write_thumbnail_cache(
                     &handle.record.root,
                     &handle.serve_root,
                     path,
+                    tier,
                     &result.0,
                     &result.1,
                 );
@@ -309,25 +370,48 @@ impl PluginSupervisor {
     }
 
     pub fn prefetch_thumbnails(&self, entries: &[FileEntry], events: EventBus) {
+        let mut skipped_not_ready = 0usize;
+        let mut spawned = 0usize;
+        let mut file_entries = 0usize;
         for entry in entries {
             if entry.is_dir {
                 continue;
             }
+            file_entries += 1;
             if self.ready_plugin_for("thumbnailer", &entry.path).is_none() {
+                skipped_not_ready += 1;
                 continue;
             }
+            spawned += 1;
             let path = entry.path.clone();
             let supervisor = self.clone();
             let events = events.clone();
             tokio::spawn(async move {
-                if supervisor.thumbnail(&path).await.is_some() {
+                if supervisor.thumbnail(&path, "grid").await.is_some() {
                     events.publish(KernelEvent::ThumbnailReady {
                         path: path.clone(),
-                        url: format!("/api/thumbnail?path={}", encode_query_path(&path)),
+                        url: format!(
+                            "/api/thumbnail?path={}&tier=grid",
+                            encode_query_path(&path)
+                        ),
                     });
                 }
             });
         }
+        // #region agent log
+        agent_debug_log(
+            "plugins.rs:prefetch_thumbnails",
+            "prefetch_thumbnails completed scan",
+            serde_json::json!({
+                "totalEntries": entries.len(),
+                "fileEntries": file_entries,
+                "skippedNotReady": skipped_not_ready,
+                "spawned": spawned,
+                "thumbnailerReady": self.ready_plugin_for("thumbnailer", "").is_some(),
+            }),
+            "H1",
+        );
+        // #endregion
     }
 
     pub async fn run_action(&self, path: &str, action_id: &str) -> Result<()> {
@@ -439,8 +523,9 @@ impl PluginSupervisor {
             return Vec::new();
         };
         let plugin_name = handle.record.manifest.name.clone();
+        let manifest_items = manifest_action_items(&handle.record.manifest, &plugin_name);
         let call = handle.call_action_list(path);
-        match tokio::time::timeout(ACTION_TIMEOUT, call).await {
+        let rpc_items = match tokio::time::timeout(ACTION_TIMEOUT, call).await {
             Ok(Ok(actions)) => actions,
             Ok(Err(error)) => {
                 warn!(plugin = %plugin_name, %error, "action/list call failed");
@@ -450,7 +535,44 @@ impl PluginSupervisor {
                 warn!(plugin = %plugin_name, "action/list call timed out");
                 Vec::new()
             }
+        };
+        merge_action_items(manifest_items, rpc_items)
+    }
+
+    pub fn action_catalog(&self) -> Vec<ActionItem> {
+        let Ok(plugins) = self.discover() else {
+            return Vec::new();
+        };
+        plugins
+            .into_iter()
+            .filter(|record| record.manifest.capabilities.iter().any(|cap| cap == "action"))
+            .flat_map(|record| manifest_action_items(&record.manifest, &record.manifest.name))
+            .collect()
+    }
+
+    pub fn plugin_i18n_catalog(&self) -> Result<Value> {
+        let mut catalog = serde_json::Map::new();
+        for plugin in self.discover()? {
+            let locales_dir = plugin.root.join("locales");
+            if !locales_dir.is_dir() {
+                continue;
+            }
+            let mut plugin_locales = serde_json::Map::new();
+            for locale in ["en", "zh-CN"] {
+                let path = locales_dir.join(format!("{locale}.json"));
+                let Ok(contents) = std::fs::read_to_string(&path) else {
+                    continue;
+                };
+                let Ok(messages) = serde_json::from_str::<Value>(&contents) else {
+                    continue;
+                };
+                plugin_locales.insert(locale.to_string(), messages);
+            }
+            if !plugin_locales.is_empty() {
+                catalog.insert(plugin.manifest.name, Value::Object(plugin_locales));
+            }
         }
+        Ok(Value::Object(catalog))
     }
 
     pub async fn enrich_listing(
@@ -533,9 +655,11 @@ impl PluginSupervisor {
     }
 
     fn ready_plugin_for(&self, capability: &str, path: &str) -> Option<Arc<PluginHandle>> {
+        let plugins = self.discover().ok()?;
         let handles = self.inner.handles.lock().ok()?;
-        handles.values().find(|handle| {
-            handle.ready.load(Ordering::SeqCst)
+        for record in plugins {
+            let handle = handles.get(&record.manifest.name)?;
+            if handle.ready.load(Ordering::SeqCst)
                 && handle
                     .record
                     .manifest
@@ -544,7 +668,11 @@ impl PluginSupervisor {
                     .any(|cap| cap == capability)
                 && (path.is_empty()
                     || crate::glob_match::matches_any(&handle.record.manifest.globs, path))
-        }).cloned()
+            {
+                return Some(handle.clone());
+            }
+        }
+        None
     }
 
     async fn run_plugin_loop(self: Arc<Self>, record: PluginRecord, events: EventBus) {
@@ -605,6 +733,21 @@ impl PluginSupervisor {
                 return Err(error);
             }
             handle.ready.store(true, Ordering::SeqCst);
+            // #region agent log
+            if record
+                .manifest
+                .capabilities
+                .iter()
+                .any(|cap| cap == "thumbnailer")
+            {
+                agent_debug_log(
+                    "plugins.rs:run_plugin_once",
+                    "thumbnailer plugin became ready",
+                    serde_json::json!({ "pluginName": record.manifest.name }),
+                    "H1",
+                );
+            }
+            // #endregion
             events.publish(KernelEvent::PluginReady {
                 name: record.manifest.name.clone(),
             });
@@ -689,7 +832,7 @@ impl PluginHandle {
         merge_lister_response(entries, &response)
     }
 
-    async fn call_thumbnailer(&self, path: &str) -> Result<(String, Vec<u8>)> {
+    async fn call_thumbnailer(&self, path: &str, tier: &str) -> Result<(String, Vec<u8>)> {
         let mut guard = self.io.lock().await;
         let io = guard.as_mut().context("plugin io unavailable")?;
         let request_id = io.next_id.fetch_add(1, Ordering::SeqCst);
@@ -697,7 +840,7 @@ impl PluginHandle {
             "jsonrpc": "2.0",
             "id": request_id,
             "method": "thumbnailer/generate",
-            "params": { "path": path },
+            "params": { "path": path, "tier": tier },
         });
         framing::write_message(&mut io.stdin, &request).await?;
         let response = framing::read_message(&mut io.stdout).await?;
@@ -827,12 +970,13 @@ fn encode_query_path(path: &str) -> String {
     encoded
 }
 
-fn thumbnail_cache_paths(plugin_root: &Path, path: &str) -> (PathBuf, PathBuf) {
+fn thumbnail_cache_paths(plugin_root: &Path, path: &str, tier: &str) -> (PathBuf, PathBuf) {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     path.hash(&mut hasher);
+    tier.hash(&mut hasher);
     let key = format!("{:016x}", hasher.finish());
     let dir = plugin_root.join("data/thumbnails");
     (dir.join(format!("{key}.meta")), dir.join(format!("{key}.bin")))
@@ -842,8 +986,9 @@ fn read_thumbnail_cache(
     plugin_root: &Path,
     serve_root: &Path,
     path: &str,
+    tier: &str,
 ) -> Option<(String, Vec<u8>)> {
-    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path);
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path, tier);
     let meta = std::fs::read_to_string(meta_path).ok()?;
     let mut lines = meta.lines();
     let content_type = lines.next()?.trim().to_string();
@@ -860,10 +1005,11 @@ fn write_thumbnail_cache(
     plugin_root: &Path,
     serve_root: &Path,
     path: &str,
+    tier: &str,
     content_type: &str,
     bytes: &[u8],
 ) -> Result<()> {
-    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path);
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path, tier);
     if let Some(parent) = meta_path.parent() {
         std::fs::create_dir_all(parent).context("create thumbnail cache directory")?;
     }
@@ -905,6 +1051,42 @@ fn parse_route_response(response: &Value) -> Result<(u16, String, Vec<u8>)> {
     Ok((status, content_type, body.as_bytes().to_vec()))
 }
 
+fn manifest_action_items(manifest: &PluginManifest, plugin_name: &str) -> Vec<ActionItem> {
+    manifest
+        .actions
+        .iter()
+        .map(|action| ActionItem {
+            id: action.id.clone(),
+            label: action.label.clone(),
+            plugin: Some(plugin_name.to_string()),
+            when: action.when.clone(),
+            contexts: action.contexts.clone(),
+            destructive: action.destructive,
+            category: action.category.clone(),
+            default_keybinding: action.default_keybinding.clone(),
+            source: "manifest".into(),
+        })
+        .collect()
+}
+
+pub fn merge_action_items(
+    manifest_items: Vec<ActionItem>,
+    rpc_items: Vec<ActionItem>,
+) -> Vec<ActionItem> {
+    let mut merged = manifest_items;
+    let mut seen: std::collections::HashSet<String> =
+        merged.iter().map(|item| item.id.clone()).collect();
+    for mut item in rpc_items {
+        if seen.insert(item.id.clone()) {
+            if item.source.is_empty() {
+                item.source = "runtime".into();
+            }
+            merged.push(item);
+        }
+    }
+    merged
+}
+
 fn parse_action_list_response(response: &Value) -> Result<Vec<ActionItem>> {
     let Some(actions) = response
         .get("result")
@@ -916,7 +1098,10 @@ fn parse_action_list_response(response: &Value) -> Result<Vec<ActionItem>> {
 
     let mut parsed = Vec::with_capacity(actions.len());
     for action in actions {
-        let item: ActionItem = serde_json::from_value(action.clone()).context("parse action")?;
+        let mut item: ActionItem = serde_json::from_value(action.clone()).context("parse action")?;
+        if item.source.is_empty() {
+            item.source = "runtime".into();
+        }
         parsed.push(item);
     }
     Ok(parsed)
@@ -1122,6 +1307,113 @@ mod tests {
     }
 
     #[test]
+    fn parses_manifest_actions() {
+        let manifest: PluginManifest = toml::from_str(
+            r#"
+            name = "demo"
+            version = "0.1.0"
+            executable = "bin/demo"
+            protocol_version = 1
+            capabilities = ["action"]
+
+            [[actions]]
+            id = "copy-path"
+            label = "Copy path"
+            contexts = ["file-list"]
+            category = "actions.selection.category"
+            default_keybinding = "Mod+Shift+C"
+            "#,
+        )
+        .unwrap();
+        assert_eq!(manifest.actions.len(), 1);
+        assert_eq!(manifest.actions[0].id, "copy-path");
+        assert_eq!(
+            manifest.actions[0].category.as_deref(),
+            Some("actions.selection.category")
+        );
+        assert_eq!(
+            manifest.actions[0].default_keybinding.as_deref(),
+            Some("Mod+Shift+C")
+        );
+    }
+
+    #[test]
+    fn manifest_action_items_include_category_and_keybinding() {
+        let manifest = PluginManifest {
+            name: "demo".into(),
+            version: "0.1.0".into(),
+            executable: "bin/demo".into(),
+            protocol_version: 1,
+            capabilities: vec!["action".into()],
+            globs: Vec::new(),
+            viewer_module: None,
+            trusted: true,
+            actions: vec![ManifestAction {
+                id: "copy-path".into(),
+                label: "Copy path".into(),
+                when: None,
+                contexts: vec!["file-list".into()],
+                destructive: false,
+                category: Some("actions.selection.category".into()),
+                default_keybinding: Some("Mod+Shift+C".into()),
+            }],
+        };
+        let items = manifest_action_items(&manifest, "demo");
+        assert_eq!(items[0].category.as_deref(), Some("actions.selection.category"));
+        assert_eq!(items[0].default_keybinding.as_deref(), Some("Mod+Shift+C"));
+    }
+
+    #[test]
+    fn parses_manifest_actions_legacy() {
+        let manifest: PluginManifest = toml::from_str(
+            r#"
+            name = "demo"
+            version = "0.1.0"
+            executable = "bin/demo"
+            protocol_version = 1
+            capabilities = ["action"]
+
+            [[actions]]
+            id = "copy-path"
+            label = "Copy path"
+            contexts = ["file-list"]
+            "#,
+        )
+        .unwrap();
+        assert_eq!(manifest.actions.len(), 1);
+        assert_eq!(manifest.actions[0].id, "copy-path");
+    }
+
+    #[test]
+    fn merge_action_items_prefers_manifest_over_runtime_duplicates() {
+        let manifest = vec![ActionItem {
+            id: "copy-path".into(),
+            label: "Copy path".into(),
+            plugin: Some("action-copy".into()),
+            when: None,
+            contexts: vec!["file-list".into()],
+            destructive: false,
+            category: None,
+            default_keybinding: None,
+            source: "manifest".into(),
+        }];
+        let runtime = vec![ActionItem {
+            id: "copy-path".into(),
+            label: "Copy path (runtime)".into(),
+            plugin: None,
+            when: None,
+            contexts: Vec::new(),
+            destructive: false,
+            category: None,
+            default_keybinding: None,
+            source: "runtime".into(),
+        }];
+        let merged = merge_action_items(manifest, runtime);
+        assert_eq!(merged.len(), 1);
+        assert_eq!(merged[0].source, "manifest");
+    }
+
+    #[test]
     fn thumbnail_cache_invalidates_when_meta_mtime_stale() {
         let dir = tempfile::tempdir().unwrap();
         let serve = dir.path();
@@ -1129,10 +1421,10 @@ mod tests {
         std::fs::create_dir_all(&plugin_root).unwrap();
         let file = serve.join("photo.jpg");
         std::fs::write(&file, b"v1").unwrap();
-        write_thumbnail_cache(&plugin_root, serve, "photo.jpg", "image/png", b"x").unwrap();
-        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg").is_some());
-        let (meta_path, _) = thumbnail_cache_paths(&plugin_root, "photo.jpg");
+        write_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid", "image/png", b"x").unwrap();
+        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid").is_some());
+        let (meta_path, _) = thumbnail_cache_paths(&plugin_root, "photo.jpg", "grid");
         std::fs::write(&meta_path, "image/png\n0").unwrap();
-        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg").is_none());
+        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid").is_none());
     }
 }

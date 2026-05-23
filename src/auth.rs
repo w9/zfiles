@@ -32,13 +32,13 @@ impl AuthConfig {
 }
 
 pub fn generate_token() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
+    uuid::Uuid::new_v4().simple().to_string()
+}
 
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_nanos());
-
-    format!("zfiles-{nanos:x}")
+pub fn is_public_path(path: &str) -> bool {
+    path.starts_with("/assets/")
+        || path == "/favicon.ico"
+        || path == "/viewer-sandbox.html"
 }
 
 pub async fn read_only_middleware(
@@ -67,6 +67,10 @@ pub async fn middleware(
 ) -> Result<Response, StatusCode> {
     let auth = &state.auth;
     if !auth.required {
+        return Ok(next.run(request).await);
+    }
+
+    if is_public_path(request.uri().path()) {
         return Ok(next.run(request).await);
     }
 
@@ -99,10 +103,10 @@ pub async fn middleware(
         if now >= expires_at {
             return Err(StatusCode::UNAUTHORIZED);
         }
-    }
 
-    if !state.state.session_valid(&provided).unwrap_or(false) {
-        return Err(StatusCode::UNAUTHORIZED);
+        if !state.state.session_valid(&provided).unwrap_or(false) {
+            return Err(StatusCode::UNAUTHORIZED);
+        }
     }
 
     Ok(next.run(request).await)
@@ -140,9 +144,35 @@ mod tests {
     #[test]
     fn token_from_query_parses_token_param() {
         assert_eq!(
-            token_from_query("token=zfiles-abc&other=1"),
-            Some("zfiles-abc".into())
+            token_from_query("token=abc123&other=1"),
+            Some("abc123".into())
         );
         assert_eq!(token_from_query("other=1"), None);
+    }
+
+    #[test]
+    fn generate_token_is_unprefixed_uuid_v4_hex() {
+        let token = generate_token();
+        assert!(!token.contains('-'));
+        assert!(!token.starts_with("zfiles-"));
+        assert_eq!(token.len(), 32);
+        assert!(
+            token
+                .chars()
+                .all(|ch| ch.is_ascii_hexdigit() && !ch.is_uppercase())
+        );
+    }
+
+    #[test]
+    fn generate_token_produces_distinct_values() {
+        let first = generate_token();
+        let second = generate_token();
+        assert_ne!(first, second);
+    }
+
+    #[test]
+    fn is_public_path_matches_embedded_assets() {
+        assert!(is_public_path("/assets/index.js"));
+        assert!(!is_public_path("/api/list"));
     }
 }

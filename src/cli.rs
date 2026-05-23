@@ -187,6 +187,10 @@ pub struct ServeArgs {
     /// Do not open a browser tab on startup
     #[arg(long)]
     pub no_open: bool,
+
+    /// Explorer UI language (`en` or `zh-CN`)
+    #[arg(long, value_name = "LOCALE")]
+    pub lang: Option<String>,
 }
 
 impl Cli {
@@ -232,6 +236,13 @@ impl ServeArgs {
     pub fn is_public_bind(&self) -> Result<bool> {
         Ok(!self.listen_addr()?.ip().is_loopback())
     }
+
+    pub fn locale(&self) -> Result<Option<&'static str>> {
+        match &self.lang {
+            Some(value) => Ok(Some(crate::locale::parse_locale(value)?)),
+            None => Ok(None),
+        }
+    }
 }
 
 fn parse_listen(listen: &str) -> Result<SocketAddr> {
@@ -267,5 +278,17 @@ mod tests {
     fn default_is_serve_mode() {
         let cli = Cli::parse_from(["zfiles"]);
         assert!(cli.is_serve());
+    }
+
+    #[test]
+    fn parse_lang_flag() {
+        let cli = Cli::parse_from(["zfiles", "--lang", "zh-CN"]);
+        assert_eq!(cli.serve.locale().unwrap(), Some("zh-CN"));
+    }
+
+    #[test]
+    fn reject_unsupported_lang_flag() {
+        let cli = Cli::parse_from(["zfiles", "--lang", "fr"]);
+        assert!(cli.serve.locale().is_err());
     }
 }

@@ -6,6 +6,7 @@ use tokio::sync::broadcast;
 pub enum KernelEvent {
     Connected {
         version: String,
+        read_only: bool,
     },
     UploadProgress {
         id: String,
