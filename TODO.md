@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Bundle the official `image-thumbnailer` plugin into the zfiles binary (embed + cache extract) so JPEG/PNG preview works without manual install; then continue explorer polish from design.
+Polish explorer listing UX: thumbnails replace file-type icons where available, tighten table layout after the Extra column removal, and keep bundled-plugin preview polish stable.
 
 ## TODO List
 
@@ -27,8 +27,13 @@ Bundle the official `image-thumbnailer` plugin into the zfiles binary (embed + c
 - [x] Unit tests for layout planning (writable root vs read-only root with XDG fallback)
 - [x] Integration test: read-only serve root lists successfully and `/api/health` reports `read_only: true`
 - [x] Document automatic read-only + relocated state in README
-- [ ] `build.rs`: stage `image-thumbnailer` (manifest, viewer.js, locales, binary) into `bundled/`
-- [ ] `bundled_plugins` module: rust-embed, extract to `~/.cache/zfiles/bundled/`, discover after folder/home plugins
-- [ ] Wire bundled discovery into `PluginSupervisor::discover` behind default `bundled-plugins` feature
-- [ ] Tests: materialize idempotency + integration test discovers bundled viewer without manual install
-- [ ] Document bundled plugin build order and cache location in README
+- [x] `build.rs`: stage `image-thumbnailer` (manifest, viewer.js, locales, binary) into `bundled/`
+- [x] `bundled_plugins` module: rust-embed, extract to `~/.cache/zfiles/bundled/`, discover after folder/home plugins
+- [x] Wire bundled discovery into `PluginSupervisor::discover` behind default `bundled-plugins` feature
+- [x] Tests: materialize idempotency + integration test discovers bundled viewer without manual install
+- [x] Document bundled plugin build order and cache location in README
+- [ ] `listingIconPrefix`: omit file/folder emoji when a thumbnail URL is present
+- [ ] VirtualListing name cell: show thumbnail only (no emoji); fix 4-column grid template
+- [ ] Unit tests for `listingIconPrefix` (thumbnail, file, directory)
+- [ ] Rebuild `web/dist` after listing icon change
+- [ ] Run full `cargo test` and web unit tests
