@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Polish explorer listing UX: thumbnails replace file-type icons where available, tighten table layout after the Extra column removal, and keep bundled-plugin preview polish stable.
+Replace listing emoji with Material Icon Theme SVGs (build-time manifest + embedded assets), keep thumbnail precedence for images, and polish explorer icon rendering in table and grid views.
 
 ## TODO List
 
@@ -37,3 +37,10 @@ Polish explorer listing UX: thumbnails replace file-type icons where available, 
 - [x] Unit tests for `listingIconPrefix` (thumbnail, file, directory)
 - [x] Rebuild `web/dist` after listing icon change
 - [x] Run full `cargo test` and web unit tests
+- [ ] Add `material-icon-theme` dev dep and build script to emit manifest + copy referenced SVGs to `public/file-icons/`
+- [ ] `fileIcons` resolver: extension, filename, and folder associations with light-theme overrides
+- [ ] `FileIcon` component; wire table and grid listings (thumbnails still take precedence)
+- [ ] Unit tests for icon resolution; remove emoji `listingIconPrefix` usage
+- [ ] Wire generate script into `pnpm` build/dev/test; rebuild `web/dist`
+- [ ] Document Material Icon Theme MIT attribution in README
+- [ ] Run full `cargo test` and web unit tests
