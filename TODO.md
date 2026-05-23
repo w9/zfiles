@@ -1,135 +1,9 @@
 ## High-level plan next
 
-Action system surfaces are complete. This cycle adopts official shadcn/ui components from the registry: Breadcrumb, Menubar, Kbd, Badge, and Table/Data Table patterns for the explorer listing—replacing custom menu, shortcut, breadcrumb, and status markup.
+Shell primitives (Breadcrumb, Menubar, Kbd, Badge, Table) are in place. This cycle completes registry alignment for Command, Dialog, Context Menu, and Tooltip; wires plugin manifest actions into the menubar; adds toolbar shortcut hints and listing-header E2E coverage; documents the shadcn update workflow. Sortable columns stay deferred — virtual scroll + `@tanstack/react-table` needs a dedicated pass.
 
 ## TODO List
 
-- [x] Initialize Rust project with module layout (`cli`, `transport`, `fs`, `state`, `plugins`, `auth`)
-- [x] Set up CI pipeline (`cargo fmt`, `clippy`, `test`, `deny check`)
-- [x] Implement CLI with `clap` — serve directory, `--port`, `--listen`, `--token`
-- [x] Implement `transport` — bind TCP listener and serve HTTP (cold-start path, no blocking work)
-- [x] Define `Fs` trait and Linux v1 implementation with `read_dir`
-- [x] Directory listing REST API (TDD: integration test first, then handler)
-- [x] Write a simple README.md
-- [x] File stat REST API (`/api/stat`)
-- [x] Range-aware file download handler (TDD; `sendfile` on Linux)
-- [x] Lazy `.zfiles/` dot-folder and `state.db` initialization
-- [x] tus resumable upload endpoint
-- [x] WebSocket channel for live kernel events
-- [x] Vite + React frontend shell, embedded via `rust-embed`
-- [x] Browser auto-open on serve (`xdg-open`, async — do not block startup)
-- [x] Read `.zfiles/config.toml` at startup (defaults when missing)
-- [x] Enforce LAN auth policy (`--listen 0.0.0.0` requires `--token`)
-- [x] `--read-only` flag and enforcement on mutating routes
-- [x] Linux `sendfile` fast path for whole-file and single-range downloads
-- [x] Plugin supervisor: manifest parsing, LSP JSON-RPC framing, background spawn
-- [x] Filesystem watch service (`notify`) with debounced WebSocket events
-- [x] Frontend: directory navigation, downloads, and tus uploads
-- [x] Plugin capability registry and dispatch (`lister` first; per-call timeout + WebSocket enrichment)
-- [x] Plugin lifecycle hardening: exponential-backoff restart, stderr logs, private `data/` storage
-- [x] Fixture echo plugin and `zfiles plugin test` conformance harness
-- [x] Atomic upload completion: fsync spool before rename; warn if dot-folder crosses a mount point
-- [x] Token expiry (`--expire`) with sessions persisted in `state.db`
-- [x] LAN share UX: print QR code for the served URL when binding with `--token`
-- [x] CLI subcommands: `plugin list`, `plugin install`, `config get/set`
-- [x] Frontend: handle WebSocket `listing_enrichment`, `upload_progress`, and `plugin_ready`; merge lister `extra` into the listing
-- [x] Resumable tus client: chunked PATCH uploads with HEAD-based resume and progress UI
-- [x] Wire Linux sendfile fast path into download handler (ReaderStream fallback for multi-range)
-- [x] Pre-compressed embedded assets: Vite gzip/brotli output and `Accept-Encoding` negotiation in embed handler
-- [x] Virtual-scrolled file listing (replace plain `<ul>`; add generated large fixture for validation)
-- [x] CLI `zfiles upload`: headless tus client with `--resume` and bearer token support
-- [x] Searcher capability end-to-end: kernel dispatch, REST API, fixture plugin, conformance extension, frontend search box
-- [x] CLI `zfiles search <folder> <query>`: headless filename search via installed searcher plugin
-- [x] CLI `zfiles init [path]`: create `.zfiles/` with default config without starting the server
-- [x] CLI `zfiles plugin remove <name>`: uninstall a plugin from `.zfiles/plugins/`
-- [x] Frontend keyboard shortcuts: j/k selection, Enter open, Backspace up, `/` focus search
-- [x] Preview pane shell: file selection, `/api/stat` metadata, viewer slot placeholder
-- [x] Fixture corpus bootstrap: generators for `small/`, `unicode/`, `deep/` + listing integration test
-- [x] Update README with new CLI commands and API endpoints
-- [x] Thumbnailer capability end-to-end: `/api/thumbnail`, fixture plugin, glob dispatch, conformance, frontend thumbnail tiles
-- [x] Viewer capability end-to-end: text viewer fixture, `/api/preview`, preview pane text rendering
-- [x] CLI `zfiles status [path]`: print folder summary (plugins, config flags, dot-folder state)
-- [x] Unicode fixture integration test: list paths with NFC/NFD/emoji filenames
-- [x] Playwright E2E smoke: start server, load explorer, verify listing renders
-- [x] Performance smoke test: assert `/api/list` on small fixture completes under SLA threshold
-- [x] CI: run Playwright smoke and perf smoke jobs
-- [x] Frontend multi-select: Space toggle, selection bar, bulk download links
-- [x] Thumbnail WebSocket prefetch: `thumbnail_ready` events after listing, frontend lazy tile reveal
-- [x] Action plugin end-to-end: fixture plugin, `/api/actions`, right-click context menu
-- [x] Deep fixture integration test: list nested directory via API
-- [x] Viewer module metadata in `/api/plugins` and preview pane slot hint
-- [x] Scheduled nightly CI workflow running perf smoke tests
-- [x] Extend Playwright smoke: verify file preview pane on selection
-- [x] Plugin static asset route: `GET /plugin/:name/*path` with traversal-safe file serving
-- [x] Viewer ESM slot mount: fixture `module.js`, dynamic import in preview pane
-- [x] Action run dispatch: `POST /api/actions/run`, frontend invokes on context-menu select
-- [x] CLI `zfiles daemon start|stop|status`: background serve with `.zfiles/daemon.pid`
-- [x] Download throughput perf smoke: assert `/api/file` on 1 MiB fixture under SLA
-- [x] Upload throughput perf smoke: assert tus PATCH completion under SLA
-- [x] E2E smoke: install action plugin, verify context menu appears on right-click
-- [x] Thumbnail on-disk cache: store/read PNG bytes under plugin `data/thumbnails/`
-- [x] Route plugin end-to-end: fixture plugin, dynamic `/plugin/:name/*` dispatch via `route/handle`
-- [x] Multi-folder daemon config: `daemon.toml` with `[[share]]`, `zfiles daemon start --config`
-- [x] Bulk action dispatch: `POST /api/actions` accepts `paths[]`, frontend runs on multi-select
-- [x] Frontend shift+click range selection in virtual listing
-- [x] E2E smoke: install viewer-text plugin, verify ESM viewer mount renders preview body
-- [x] Update README with daemon, actions POST, and plugin asset routes
-- [x] Untrusted viewer iframe sandbox: embedded shell + postMessage preview bridge
-- [x] Plugin manifest `trusted` field exposed in `/api/plugins`
-- [x] Thumbnail cache invalidation when source file mtime is newer than cache
-- [x] Perf baseline fixture and regression test with 5% tolerance
-- [x] Nightly CI runs perf baseline regression suite
-- [x] Untrusted viewer fixture plugin and integration test
-- [x] E2E smoke: untrusted viewer renders inside sandbox iframe
-- [x] Config `state.dotfolder_path` to relocate `.zfiles/` outside the serve root
-- [x] Resolve dotfolder path in StateStore, PluginSupervisor, and daemon pid file
-- [x] Integration test: relocated dotfolder stores `state.db` outside serve root
-- [x] Watcher plugin fixture and `watcher/notify` conformance coverage
-- [x] Kernel dispatches filesystem change events to ready watcher plugins
-- [x] Integration test: daemon `start --config` / `stop --config` round trip with `daemon.toml`
-- [x] Update README with dotfolder relocation and watcher capability notes
-- [x] Frontend backend status indicator in explorer header (connected / connecting / offline)
-- [x] WebSocket lifecycle tracking with `/api/health` fallback polling and reconnect
-- [x] Header CSS for backend status pill and state colors
-- [x] E2E smoke: header shows Connected when server is running
-- [x] E2E smoke: header shows Offline after backend stops
-- [x] Extract `useBackendStatus` hook from App WebSocket wiring
-- [x] Update README noting live backend connection status in the explorer
-- [x] Fix QR code dark/light module colors in `qr::render_url`
-- [x] Unit tests: rendered QR contains finder-pattern block characters
-- [x] Unit tests: inverted-color regression guard (dark module count threshold)
-- [x] Integration test: `--listen 0.0.0.0 --token` startup prints scannable QR to stdout
-- [x] Refactor `print_url` to use testable `render_url` helper
-- [x] Include auth token in printed share URL when `--token` is set
-- [x] Update README LAN share section with QR code terminal output note
-- [x] CSS theme tokens for light and dark palettes via custom properties
-- [x] `useTheme` hook: light / dark / auto with localStorage persistence
-- [x] Header theme toggle control (light, dark, auto)
-- [x] Inline boot script in `index.html` to avoid theme flash on load
-- [x] Sync untrusted viewer sandbox iframe colors with active theme
-- [x] E2E smoke: theme toggle switches `data-theme` and persists across reload
-- [x] Unit tests for `resolvedTheme` auto/system resolution logic
-- [x] Print explorer URL to terminal immediately before spawning browser auto-open
-- [x] `browser::open_url` helper builds URL with token query when auth is enabled
-- [x] Unit tests for browser URL construction (plain and tokenized)
-- [x] Integration test: startup stdout contains `Opening browser:` before `listening`
-- [x] Integration test: `--no-open` does not print `Opening browser:`
-- [x] Update README quick start to mention pre-open URL line
-- [x] `auth::is_public_path` exempts embedded `/assets/*`, favicon, and viewer sandbox from bearer auth
-- [x] Unit tests for public-path classification
-- [x] Integration test: tokenized server serves `/assets/*` without credentials
-- [x] Integration test: tokenized server rejects `/api/list` without credentials
-- [x] Skip `session_valid` when `--token` is used without `--expire`
-- [x] Integration test: non-expiring token accepts Bearer auth on `/api/list`
-- [x] E2E smoke: `--token` explorer loads listing (not blank UI)
-- [x] `generate_token` uses UUID v4 (128-bit random, no `zfiles-` prefix)
-- [x] Unit tests: token length, hex charset, and no prefix
-- [x] Unit test: successive generated tokens differ
-- [x] Update integration/E2E tests that assert `zfiles-` token shape
-- [x] Update QR/share URL unit tests to use unprefixed sample tokens
-- [x] Integration test: `--token` startup prints 32-char hex auth token
-- [x] Tailwind CSS v4 + Vite plugin; global `index.css` with shadcn design tokens
-- [x] shadcn/ui baseline: `cn()`, Button, Input, ToggleGroup, DropdownMenu
 - [x] i18n layer with English and Simplified Chinese catalogs + locale persistence
 - [x] Migrate header controls (theme, backend status, language) to shadcn + i18n
 - [x] Migrate App shell and listing/preview/context menu to Tailwind + i18n
@@ -165,10 +39,17 @@ Action system surfaces are complete. This cycle adopts official shadcn/ui compon
 - [x] Merge user keybindings over defaults in keyboard dispatch
 - [x] Unit tests: arg resolution, keybinding merge, invoke confirm skip via args
 - [x] Integration + E2E: manifest actions listed; menu/toolbar smoke
-- [ ] Add shadcn components via CLI: kbd, badge, breadcrumb, menubar, table
-- [ ] Replace `KeybindingHint` with `Kbd` / `KbdGroup` in palette and menus
-- [ ] Migrate action `MenuBar` to shadcn `Menubar` with shortcuts
-- [ ] Migrate App path navigation to shadcn `Breadcrumb`
-- [ ] Migrate `BackendStatus` pill to shadcn `Badge` variants
-- [ ] Refactor `VirtualListing` to shadcn `Table` + column header row (data-table pattern)
-- [ ] Unit tests for keybinding chord → `Kbd` parts; update E2E for menubar roles
+- [x] Add shadcn components via CLI: kbd, badge, breadcrumb, menubar, table
+- [x] Replace `KeybindingHint` with `Kbd` / `KbdGroup` in palette and menus
+- [x] Migrate action `MenuBar` to shadcn `Menubar` with shortcuts
+- [x] Migrate App path navigation to shadcn `Breadcrumb`
+- [x] Migrate `BackendStatus` pill to shadcn `Badge` variants
+- [x] Refactor `VirtualListing` to shadcn `Table` + column header row (data-table pattern)
+- [x] Unit tests for keybinding chord → `Kbd` parts; update E2E for menubar roles
+- [ ] Re-add shadcn `command` and `dialog` via CLI; diff and reconcile with existing wrappers
+- [ ] Migrate `ContextMenu` to shadcn `Context Menu` component
+- [ ] Add keyboard shortcut tooltips on toolbar buttons using `Kbd` + `Tooltip`
+- [ ] E2E smoke: listing column headers (Name / Size) visible in explorer
+- [ ] Expose plugin manifest actions in menubar categories when contexts match
+- [ ] Document shadcn component update workflow in README (CLI add + reconcile)
+- [ ] Optional: evaluate `@tanstack/react-table` for sortable listing columns
