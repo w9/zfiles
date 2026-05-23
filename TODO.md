@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Make zfiles work on read-only served folders: detect non-writable roots at startup, auto-enable read-only mode, and relocate `.zfiles` state to a writable XDG config path. Then continue explorer polish and viewer work from design.
+Bundle the official `image-thumbnailer` plugin into the zfiles binary (embed + cache extract) so JPEG/PNG preview works without manual install; then continue explorer polish from design.
 
 ## TODO List
 
@@ -21,9 +21,14 @@ Make zfiles work on read-only served folders: detect non-writable roots at start
 - [x] Table listing: clip/truncate cell text so columns do not bleed into neighbors
 - [x] Align header row column widths with body; verify long names, dates, and extra labels
 - [x] Rebuild `web/dist` after listing layout fix
-- [ ] Writable probe helper and XDG fallback path for relocated dot-folders
-- [ ] `plan_serve_layout`: auto read-only when serve root is not writable; pick effective dot-folder
-- [ ] Wire layout into `transport::serve`, startup banner, and mount warning when dot-folder is missing
-- [ ] Unit tests for layout planning (writable root vs read-only root with XDG fallback)
-- [ ] Integration test: read-only serve root lists successfully and `/api/health` reports `read_only: true`
-- [ ] Document automatic read-only + relocated state in README
+- [x] Writable probe helper and XDG fallback path for relocated dot-folders
+- [x] `plan_serve_layout`: auto read-only when serve root is not writable; pick effective dot-folder
+- [x] Wire layout into `transport::serve`, startup banner, and mount warning when dot-folder is missing
+- [x] Unit tests for layout planning (writable root vs read-only root with XDG fallback)
+- [x] Integration test: read-only serve root lists successfully and `/api/health` reports `read_only: true`
+- [x] Document automatic read-only + relocated state in README
+- [ ] `build.rs`: stage `image-thumbnailer` (manifest, viewer.js, locales, binary) into `bundled/`
+- [ ] `bundled_plugins` module: rust-embed, extract to `~/.cache/zfiles/bundled/`, discover after folder/home plugins
+- [ ] Wire bundled discovery into `PluginSupervisor::discover` behind default `bundled-plugins` feature
+- [ ] Tests: materialize idempotency + integration test discovers bundled viewer without manual install
+- [ ] Document bundled plugin build order and cache location in README
