@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix table listing column overflow so cell text stays within column bounds; then continue explorer polish (deletion, human-readable sizes) and viewer work from design.
+Make zfiles work on read-only served folders: detect non-writable roots at startup, auto-enable read-only mode, and relocate `.zfiles` state to a writable XDG config path. Then continue explorer polish and viewer work from design.
 
 ## TODO List
 
@@ -18,6 +18,12 @@ Fix table listing column overflow so cell text stays within column bounds; then 
 - [x] `thumbnailer-raw` sibling plugin (RAW globs, rawloader decode, WebP cache)
 - [x] `thumbnailer-heic` sibling plugin (HEIC globs, libheif decode, WebP cache)
 - [x] Tests, E2E smoke for grid toggle and slideshow; rebuild `web/dist`
-- [ ] Table listing: clip/truncate cell text so columns do not bleed into neighbors
-- [ ] Align header row column widths with body; verify long names, dates, and extra labels
-- [ ] Rebuild `web/dist` after listing layout fix
+- [x] Table listing: clip/truncate cell text so columns do not bleed into neighbors
+- [x] Align header row column widths with body; verify long names, dates, and extra labels
+- [x] Rebuild `web/dist` after listing layout fix
+- [ ] Writable probe helper and XDG fallback path for relocated dot-folders
+- [ ] `plan_serve_layout`: auto read-only when serve root is not writable; pick effective dot-folder
+- [ ] Wire layout into `transport::serve`, startup banner, and mount warning when dot-folder is missing
+- [ ] Unit tests for layout planning (writable root vs read-only root with XDG fallback)
+- [ ] Integration test: read-only serve root lists successfully and `/api/health` reports `read_only: true`
+- [ ] Document automatic read-only + relocated state in README
