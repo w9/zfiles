@@ -24,7 +24,8 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         let line = line.expect("stdout line");
         output.push_str(&line);
         output.push('\n');
-        if line.contains("listening") || start.elapsed() > Duration::from_secs(10) {
+        let dark_modules = zfiles::qr::dark_module_count(&output);
+        if dark_modules >= zfiles::qr::MIN_DARK_MODULES || start.elapsed() > Duration::from_secs(10) {
             break;
         }
     }
@@ -38,7 +39,15 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         "expected scannable QR in startup output, found {dark_modules} dark modules:\n{output}"
     );
     assert!(
-        output.contains("token=zfiles-"),
-        "expected share URL with token in startup output:\n{output}"
+        output.contains("Share on your network:")
+            && output
+                .lines()
+                .map(box_line_content)
+                .any(|line| line.contains("http://") && line.contains("token=")),
+        "expected share URL with hex token in startup banner:\n{output}"
     );
+}
+
+fn box_line_content(raw: &str) -> &str {
+    raw.trim().trim_start_matches('│').trim_end_matches('│').trim()
 }

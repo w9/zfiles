@@ -4,3 +4,10 @@ executable = "bin/action-copy"
 protocol_version = 1
 capabilities = ["action"]
 globs = ["*"]
+
+[[actions]]
+id = "copy-path"
+label = "Copy path"
+contexts = ["file-list", "menubar"]
+category = "actions.selection.category"
+default_keybinding = "Mod+Shift+C"
