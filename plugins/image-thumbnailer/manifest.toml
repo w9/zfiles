@@ -1,0 +1,102 @@
+name = "image-thumbnailer"
+version = "0.1.0"
+executable = "bin/image-thumbnailer"
+protocol_version = 1
+capabilities = ["thumbnailer", "viewer", "lister", "action", "watcher"]
+globs = [
+  "*.jpg",
+  "*.jpeg",
+  "*.png",
+  "*.webp",
+  "*.gif",
+  "*.avif",
+  "*.tiff",
+  "*.tif",
+  "*.bmp",
+  "*.ico",
+]
+viewer_module = "/plugin/image-thumbnailer/viewer.js"
+
+[[actions]]
+id = "plugin.image-thumbnailer.regenerate-thumbnails"
+label = "plugin.image-thumbnailer.actions.regenerate.name"
+contexts = ["context-menu", "file-list"]
+category = "plugin.image-thumbnailer.category"
+
+[[actions]]
+id = "plugin.image-thumbnailer.slideshow"
+label = "plugin.image-thumbnailer.actions.slideshow.name"
+contexts = ["context-menu", "file-list", "preview"]
+category = "plugin.image-thumbnailer.category"
+
+[[actions]]
+id = "plugin.image-thumbnailer.next-image"
+label = "plugin.image-thumbnailer.actions.nextImage.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "ArrowRight"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.prev-image"
+label = "plugin.image-thumbnailer.actions.prevImage.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "ArrowLeft"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.zoom-in"
+label = "plugin.image-thumbnailer.actions.zoomIn.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "="
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.zoom-out"
+label = "plugin.image-thumbnailer.actions.zoomOut.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "-"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.fit-screen"
+label = "plugin.image-thumbnailer.actions.fitScreen.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "0"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.actual-size"
+label = "plugin.image-thumbnailer.actions.actualSize.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "1"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.toggle-fullscreen"
+label = "plugin.image-thumbnailer.actions.toggleFullscreen.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "F"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.rotate-cw"
+label = "plugin.image-thumbnailer.actions.rotateCw.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "R"
+when = "preview.is-image == true && focus.pane == 'preview'"
+
+[[actions]]
+id = "plugin.image-thumbnailer.toggle-exif-overlay"
+label = "plugin.image-thumbnailer.actions.toggleExif.name"
+contexts = ["preview"]
+category = "plugin.image-thumbnailer.category"
+default_keybinding = "I"
+when = "preview.is-image == true && focus.pane == 'preview'"
