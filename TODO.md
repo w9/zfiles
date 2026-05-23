@@ -32,8 +32,8 @@ Polish explorer listing UX: thumbnails replace file-type icons where available, 
 - [x] Wire bundled discovery into `PluginSupervisor::discover` behind default `bundled-plugins` feature
 - [x] Tests: materialize idempotency + integration test discovers bundled viewer without manual install
 - [x] Document bundled plugin build order and cache location in README
-- [ ] `listingIconPrefix`: omit file/folder emoji when a thumbnail URL is present
-- [ ] VirtualListing name cell: show thumbnail only (no emoji); fix 4-column grid template
-- [ ] Unit tests for `listingIconPrefix` (thumbnail, file, directory)
-- [ ] Rebuild `web/dist` after listing icon change
-- [ ] Run full `cargo test` and web unit tests
+- [x] `listingIconPrefix`: omit file/folder emoji when a thumbnail URL is present
+- [x] VirtualListing name cell: show thumbnail only (no emoji); fix 4-column grid template
+- [x] Unit tests for `listingIconPrefix` (thumbnail, file, directory)
+- [x] Rebuild `web/dist` after listing icon change
+- [x] Run full `cargo test` and web unit tests

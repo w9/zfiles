@@ -11,9 +11,9 @@ cargo build --release
 ./target/release/zfiles ~/Downloads
 ```
 
-Open the printed URL in your browser. By default zfiles binds `127.0.0.1` on an ephemeral port. The explorer header shows a live **Connected** / **Offline** status pill and a **Light / Dark / Auto** theme control (preference is saved in the browser).
+Open the printed startup banner in your browser. The explorer uses **Tailwind CSS** and **shadcn/ui** components, with **English** and **简体中文** language support in the header. By default zfiles binds `127.0.0.1` on an ephemeral port and launches your desktop browser. The header shows a live **Connected** / **Offline** status pill and a **Light / Dark / Auto** theme control (preference is saved in the browser).
 
-LAN shares (`--listen 0.0.0.0 --token`) print a **Share URL** (with embedded token) and a terminal QR code other devices can scan to open the explorer.
+LAN shares (`--listen 0.0.0.0 --token`) include a network share URL in the banner and print a terminal QR code other devices can scan to open the explorer.
 
 ```bash
 # Pin the port
@@ -79,11 +79,42 @@ zfiles config set server.read_only true --folder ~/Downloads
 zfiles config set state.dotfolder_path /var/lib/zfiles/downloads --folder ~/Downloads
 ```
 
+# Read-only or non-writable folders
+
+If the served directory cannot be written (read-only mount, permission-restricted folder, etc.), zfiles automatically:
+
+- enables **read-only mode** (uploads and deletes are disabled), and
+- stores kernel state under **`~/.config/zfiles/dotfolders/<id>/`** instead of `<folder>/.zfiles/`.
+
+The startup banner shows when this happens (`Mode: read-only …` and `State: …`). You can still pass `--read-only` explicitly or relocate state manually:
+
+```bash
+zfiles config set state.dotfolder_path /var/lib/zfiles/downloads --folder ~/Downloads
+```
+
 Relocated dot-folders store `state.db`, uploads, plugins, and daemon pid files under the configured path while a bootstrap `~/Downloads/.zfiles/config.toml` can point at the external location.
+
+## Frontend (shadcn/ui)
+
+The explorer UI lives in `web/` and uses [shadcn/ui](https://ui.shadcn.com/docs/components) components configured via `web/components.json`.
+
+To add or refresh a registry component:
+
+```bash
+cd web
+pnpm dlx shadcn@latest add <component> --overwrite
+pnpm test && pnpm build
+```
+
+After CLI updates, reconcile wrappers under `web/src/components/ui/` with any zfiles-specific styling (for example `CommandDialog` uses `p-0` content padding, confirm dialogs hide the close button). Rebuild `web/dist` before `cargo build` so embedded assets stay in sync.
+
+Sortable listing columns are intentionally deferred: the virtual-scrolled table would need `@tanstack/react-table` integrated with `@tanstack/react-virtual` in a follow-up pass.
 
 ## Plugin capabilities
 
 Installed plugins can expose `lister`, `searcher`, `thumbnailer`, `viewer`, `action`, `route`, and `watcher` capabilities. Watcher plugins receive `watcher/notify` RPC calls when files change under the served directory (debounced, fire-and-forget).
+
+The release binary **bundles `image-thumbnailer`** by default (JPEG/PNG/WebP thumbnails, image preview, EXIF lister columns). On first run it is extracted to `~/.cache/zfiles/bundled/image-thumbnailer/<version>/`. Folder-scoped or user-scoped installs override the bundled copy. Disable bundling with `cargo build --no-default-features`.
 
 ## Development
 
@@ -96,23 +127,28 @@ cargo test
 
 # Build the embedded frontend (required before release builds)
 cd web && pnpm install && pnpm build && cd ..
+
+# Build with bundled image plugin (default; build.rs compiles image-thumbnailer first)
 cargo build
+
+# Build kernel only, without bundled plugins
+cargo build --no-default-features
 ```
 
 ## API (kernel)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/health` | GET | Health check |
+| `/api/health` | GET | Health check (`read_only` flag) |
 | `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
 | `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |
 | `/api/thumbnail?path=` | GET | Thumbnail image (requires thumbnailer plugin) |
 | `/api/preview?path=` | GET | File preview body (requires viewer plugin) |
 | `/api/actions?path=` | GET | Context-menu actions (requires action plugin) |
-| `/api/actions` | POST | Run action on `path` or `paths[]` |
+| `/api/actions` | POST | Run action on `path` or `paths[]` (includes kernel `file.delete`) |
 | `/plugin/:name/*path` | GET | Plugin static assets or route-plugin handlers |
-| `/api/stat?path=` | GET | File or directory metadata |
+| `/api/metadata?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |
 | `/api/upload/:id` | PATCH, HEAD | Resume / query tus upload |
