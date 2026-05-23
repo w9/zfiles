@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Locale via URL/CLI is done. This cycle completes deferred action-system work: menu bar and toolbar surfaces, user `keybindings.toml` with API merge, arg prompting and destructive confirm in dispatch, and kernel manifest `[[actions]]` registration merged with plugin RPC lists.
+Action system surfaces are complete. This cycle adopts official shadcn/ui components from the registry: Breadcrumb, Menubar, Kbd, Badge, and Table/Data Table patterns for the explorer listing—replacing custom menu, shortcut, breadcrumb, and status markup.
 
 ## TODO List
 
@@ -154,14 +154,21 @@ Locale via URL/CLI is done. This cycle completes deferred action-system work: me
 - [x] Wire `--lang` through transport banner and browser auto-open URL
 - [x] Rust unit tests: CLI `--lang` parsing and share URL with token + lang
 - [x] E2E smoke: `?lang=zh-CN` renders Simplified Chinese header strings
-- [ ] Kernel: `[[actions]]` in plugin manifest; merge with RPC `action/list`
-- [ ] `GET /api/actions/catalog` and `GET /api/keybindings` endpoints
-- [ ] Rust `keybindings.toml` loader (`~/.config/zfiles/keybindings.toml`) with tests
-- [ ] Frontend arg schema resolution and palette arg prompting step
-- [ ] Destructive action confirm modal; `selection.clear` marked destructive
-- [ ] `invokeAction` pipeline: when → confirm → args → handler
-- [ ] Menu bar surface: category menus dispatching registry actions
-- [ ] Toolbar surface: icon buttons for default action ids with `when` grey-out
-- [ ] Merge user keybindings over defaults in keyboard dispatch
-- [ ] Unit tests: arg resolution, keybinding merge, invoke confirm skip via args
-- [ ] Integration + E2E: manifest actions listed; menu/toolbar smoke
+- [x] Kernel: `[[actions]]` in plugin manifest; merge with RPC `action/list`
+- [x] `GET /api/actions/catalog` and `GET /api/keybindings` endpoints
+- [x] Rust `keybindings.toml` loader (`~/.config/zfiles/keybindings.toml`) with tests
+- [x] Frontend arg schema resolution and palette arg prompting step
+- [x] Destructive action confirm modal; `selection.clear` marked destructive
+- [x] `invokeAction` pipeline: when → confirm → args → handler
+- [x] Menu bar surface: category menus dispatching registry actions
+- [x] Toolbar surface: icon buttons for default action ids with `when` grey-out
+- [x] Merge user keybindings over defaults in keyboard dispatch
+- [x] Unit tests: arg resolution, keybinding merge, invoke confirm skip via args
+- [x] Integration + E2E: manifest actions listed; menu/toolbar smoke
+- [ ] Add shadcn components via CLI: kbd, badge, breadcrumb, menubar, table
+- [ ] Replace `KeybindingHint` with `Kbd` / `KbdGroup` in palette and menus
+- [ ] Migrate action `MenuBar` to shadcn `Menubar` with shortcuts
+- [ ] Migrate App path navigation to shadcn `Breadcrumb`
+- [ ] Migrate `BackendStatus` pill to shadcn `Badge` variants
+- [ ] Refactor `VirtualListing` to shadcn `Table` + column header row (data-table pattern)
+- [ ] Unit tests for keybinding chord → `Kbd` parts; update E2E for menubar roles
