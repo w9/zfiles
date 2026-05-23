@@ -3,3 +3,5 @@
 /web/node_modules
 /e2e/node_modules
 /e2e/test-results
+/.cursor
+/.zfiles
