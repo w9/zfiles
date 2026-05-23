@@ -67,14 +67,14 @@ fn test_server_with_plugins(root: &std::path::Path) -> TestServer {
     plugins.clone().start_watcher_dispatch(events.clone());
     plugins.clone().start_background(events.clone());
 
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(root.to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::with_dotfolder(root.to_path_buf(), dotfolder)),
+    let state = AppState::new(
+        Arc::new(LocalFs::new(root.to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::with_dotfolder(root.to_path_buf(), dotfolder)),
         events,
         plugins,
-    };
+    );
     TestServer::new(router(state)).expect("test server")
 }
 

@@ -11,14 +11,14 @@ use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
 fn test_server(root: &std::path::Path) -> TestServer {
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(root.to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(root.to_path_buf())),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::new(root.to_path_buf())),
-    };
+    let state = AppState::new(
+        Arc::new(LocalFs::new(root.to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(root.to_path_buf())),
+        EventBus::new(),
+        Arc::new(PluginSupervisor::new(root.to_path_buf())),
+    );
     TestServer::new(router(state)).expect("test server")
 }
 

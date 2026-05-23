@@ -29,14 +29,14 @@ fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Optio
             .create_session(token, expires_at)
             .expect("session row");
     }
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(root.to_path_buf())),
-        auth: AuthConfig::with_token(token.to_string(), expires_at),
-        read_only: false,
-        state: state_store,
-        events: EventBus::new(),
+    let state = AppState::new(
+        Arc::new(LocalFs::new(root.to_path_buf())),
+        AuthConfig::with_token(token.to_string(), expires_at),
+        false,
+        state_store,
+        EventBus::new(),
         plugins,
-    };
+    );
     TestServer::new(router(state)).expect("test server")
 }
 

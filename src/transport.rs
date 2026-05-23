@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::extract::FromRequestParts;
 use axum::extract::{Path as AxumPath, Query, State};
 use axum::http::header::{ACCEPT_RANGES, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, LOCATION};
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
@@ -46,6 +47,30 @@ pub struct AppState {
     pub state: Arc<StateStore>,
     pub events: EventBus,
     pub plugins: Arc<PluginSupervisor>,
+    #[cfg(feature = "dev-frontend")]
+    pub vite_dev: Option<Arc<crate::vite_proxy::ViteDevProxy>>,
+}
+
+impl AppState {
+    pub fn new(
+        fs: Arc<LocalFs>,
+        auth: AuthConfig,
+        read_only: bool,
+        state: Arc<StateStore>,
+        events: EventBus,
+        plugins: Arc<PluginSupervisor>,
+    ) -> Self {
+        Self {
+            fs,
+            auth,
+            read_only,
+            state,
+            events,
+            plugins,
+            #[cfg(feature = "dev-frontend")]
+            vite_dev: None,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -131,6 +156,14 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
 
     let events = EventBus::new();
     let plugins = Arc::new(PluginSupervisor::with_dotfolder(root.clone(), dotfolder.clone()));
+    #[cfg(feature = "dev-frontend")]
+    let vite_dev = if serve.vite_dev_enabled() {
+        Some(Arc::new(
+            crate::vite_proxy::ViteDevProxy::new(serve.vite_dev_url())?,
+        ))
+    } else {
+        None
+    };
     let state = AppState {
         fs: Arc::new(LocalFs::new(root.clone())),
         auth,
@@ -138,6 +171,8 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         state: state_store,
         events: events.clone(),
         plugins: plugins.clone(),
+        #[cfg(feature = "dev-frontend")]
+        vite_dev,
     };
 
     let open_browser = serve.should_open_browser(&config);
@@ -154,6 +189,10 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         layout.auto_read_only,
         layout.dotfolder_relocated.then_some(dotfolder.as_path()),
         public_share,
+        #[cfg(feature = "dev-frontend")]
+        serve.vite_dev_enabled().then(|| serve.vite_dev_url()),
+        #[cfg(not(feature = "dev-frontend"))]
+        None,
     )
     .print();
 
@@ -621,7 +660,32 @@ async fn handle_ws(mut socket: WebSocket, events: EventBus, read_only: bool) {
     }
 }
 
-async fn static_or_index(request: axum::http::Request<Body>) -> impl IntoResponse {
+async fn static_or_index(
+    State(state): State<AppState>,
+    request: axum::http::Request<Body>,
+) -> Response {
+    #[cfg(feature = "dev-frontend")]
+    if let Some(proxy) = &state.vite_dev {
+        let (mut parts, body) = request.into_parts();
+        if crate::vite_proxy::is_websocket_upgrade(&parts.headers) {
+            match WebSocketUpgrade::from_request_parts(&mut parts, &state).await {
+                Ok(ws) => {
+                    let uri = parts.uri.clone();
+                    let headers = parts.headers.clone();
+                    let proxy = Arc::clone(proxy);
+                    return ws
+                        .on_upgrade(move |socket| async move {
+                            proxy.forward_websocket(socket, uri, headers).await;
+                        })
+                        .into_response();
+                }
+                Err(rejection) => return rejection.into_response(),
+            }
+        }
+        let request = axum::http::Request::from_parts(parts, body);
+        return proxy.forward_http(request).await;
+    }
+
     let accept_encoding = request
         .headers()
         .get(axum::http::header::ACCEPT_ENCODING)

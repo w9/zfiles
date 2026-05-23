@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Add CLI verbose logging (`-v`/`-vv`) so developers can inspect DEBUG/TRACE output without hand-setting `RUST_LOG`, then resume explorer UX polish (icon sizing, optional icon-pack settings).
+Ship first-class HMR dev workflow: `dev-frontend` Cargo feature proxies UI to Vite while zfiles serves `/api` and plugins on the normal URL. Then resume explorer UX polish (icon sizing, optional icon-pack settings).
 
 ## TODO List
 
@@ -49,4 +49,9 @@ Add CLI verbose logging (`-v`/`-vv`) so developers can inspect DEBUG/TRACE outpu
 - [x] Wire tracing init in `main` after CLI parse using verbose count
 - [x] Unit tests: clap parses `-v`/`-vv`; filter helper returns info/debug/trace
 - [x] Document verbose flags in README CLI section
+- [x] Run full `cargo test`
+- [x] `dev-frontend` Cargo feature + `--dev-frontend` / `--vite-url` CLI flags on serve
+- [x] `vite_proxy` module: HTTP + WebSocket forward to Vite; wire transport fallback
+- [x] Vite `server.hmr` config for proxied dev; startup banner hint when dev-frontend is on
+- [x] Unit tests for proxy URL building and CLI parsing; document workflow in README
 - [x] Run full `cargo test`

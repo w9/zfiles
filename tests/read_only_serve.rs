@@ -14,20 +14,20 @@ use zfiles::transport::{AppState, router};
 
 fn test_server_for_layout(root: &std::path::Path, config: &Config, cli_read_only: bool) -> TestServer {
     let layout = dotfolder::plan_serve_layout(root, config, cli_read_only);
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(root.to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: layout.read_only,
-        state: Arc::new(StateStore::with_dotfolder(
+    let state = AppState::new(
+        Arc::new(LocalFs::new(root.to_path_buf())),
+        AuthConfig::disabled(),
+        layout.read_only,
+        Arc::new(StateStore::with_dotfolder(
             root.to_path_buf(),
             layout.dotfolder.clone(),
         )),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::with_dotfolder(
+        EventBus::new(),
+        Arc::new(PluginSupervisor::with_dotfolder(
             root.to_path_buf(),
             layout.dotfolder,
         )),
-    };
+    );
     TestServer::new(router(state)).expect("test server")
 }
 

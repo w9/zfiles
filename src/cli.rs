@@ -194,6 +194,16 @@ pub struct ServeArgs {
     /// Explorer UI language (`en` or `zh-CN`)
     #[arg(long, value_name = "LOCALE")]
     pub lang: Option<String>,
+
+    /// Proxy UI assets to a Vite dev server for hot module replacement
+    #[cfg(feature = "dev-frontend")]
+    #[arg(long)]
+    pub dev_frontend: bool,
+
+    /// Vite dev server URL (used with `--dev-frontend`)
+    #[cfg(feature = "dev-frontend")]
+    #[arg(long, default_value = "http://127.0.0.1:5173", requires = "dev_frontend")]
+    pub vite_url: String,
 }
 
 impl Cli {
@@ -245,6 +255,16 @@ impl ServeArgs {
             Some(value) => Ok(Some(crate::locale::parse_locale(value)?)),
             None => Ok(None),
         }
+    }
+
+    #[cfg(feature = "dev-frontend")]
+    pub fn vite_dev_enabled(&self) -> bool {
+        self.dev_frontend
+    }
+
+    #[cfg(feature = "dev-frontend")]
+    pub fn vite_dev_url(&self) -> &str {
+        &self.vite_url
     }
 }
 
@@ -311,5 +331,20 @@ mod tests {
     fn verbose_flag_works_on_subcommands() {
         let cli = Cli::parse_from(["zfiles", "-v", "plugin", "list"]);
         assert_eq!(cli.verbose, 1);
+    }
+
+    #[cfg(feature = "dev-frontend")]
+    #[test]
+    fn parse_dev_frontend_flags() {
+        let cli = Cli::parse_from([
+            "zfiles",
+            "--dev-frontend",
+            "--vite-url",
+            "http://127.0.0.1:5173",
+            "--port",
+            "9000",
+        ]);
+        assert!(cli.serve.vite_dev_enabled());
+        assert_eq!(cli.serve.vite_dev_url(), "http://127.0.0.1:5173");
     }
 }

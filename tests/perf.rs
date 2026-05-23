@@ -32,14 +32,14 @@ async fn list_small_fixture_under_sla() {
         .expect("run generate-fixtures.sh");
     assert!(status.success());
 
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(dir.path().join("small"))),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(dir.path().join("small"))),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::new(dir.path().join("small"))),
-    };
+    let state = AppState::new(
+        Arc::new(LocalFs::new(dir.path().join("small"))),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(dir.path().join("small"))),
+        EventBus::new(),
+        Arc::new(PluginSupervisor::new(dir.path().join("small"))),
+    );
     let server = TestServer::new(router(state)).expect("test server");
 
     let start = Instant::now();
@@ -57,14 +57,14 @@ async fn download_one_mib_under_sla() {
     let dir = tempdir().unwrap();
     std::fs::write(dir.path().join("large.bin"), vec![0u8; ONE_MIB]).unwrap();
 
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(dir.path().to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(dir.path().to_path_buf())),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
-    };
+    let state = AppState::new(
+        Arc::new(LocalFs::new(dir.path().to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(dir.path().to_path_buf())),
+        EventBus::new(),
+        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
+    );
     let server = TestServer::new(router(state)).expect("test server");
 
     let start = Instant::now();
@@ -93,14 +93,14 @@ async fn download_one_mib_under_sla() {
 #[tokio::test]
 async fn upload_one_mib_under_sla() {
     let dir = tempdir().unwrap();
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(dir.path().to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(dir.path().to_path_buf())),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
-    };
+    let state = AppState::new(
+        Arc::new(LocalFs::new(dir.path().to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(dir.path().to_path_buf())),
+        EventBus::new(),
+        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
+    );
     let server = TestServer::new(router(state)).expect("test server");
 
     let payload = vec![7u8; ONE_MIB];

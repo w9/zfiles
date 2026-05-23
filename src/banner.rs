@@ -10,6 +10,7 @@ pub struct ServeBanner {
     pub auto_read_only: bool,
     pub state_dir: Option<String>,
     pub public_share: bool,
+    pub vite_dev: Option<String>,
 }
 
 impl ServeBanner {
@@ -46,6 +47,10 @@ impl ServeBanner {
 
         if let Some(state_dir) = &self.state_dir {
             lines.push(format!("State: {state_dir}"));
+        }
+
+        if let Some(vite_dev) = &self.vite_dev {
+            lines.push(format!("Frontend: Vite dev proxy ({vite_dev})"));
         }
 
         lines.push(String::new());
@@ -110,6 +115,7 @@ pub fn serve_banner(
     auto_read_only: bool,
     state_dir: Option<&Path>,
     public_share: bool,
+    vite_dev: Option<&str>,
 ) -> ServeBanner {
     ServeBanner {
         root: root.display().to_string(),
@@ -120,6 +126,7 @@ pub fn serve_banner(
         auto_read_only,
         state_dir: state_dir.map(|path| path.display().to_string()),
         public_share,
+        vite_dev: vite_dev.map(str::to_string),
     }
 }
 
@@ -149,6 +156,7 @@ mod tests {
             false,
             None,
             false,
+            None,
         );
         let rendered = banner.render();
         assert!(rendered.contains("Open in your browser:"));
@@ -170,6 +178,7 @@ mod tests {
             false,
             None,
             false,
+            None,
         );
         let rendered = banner.render();
         assert!(rendered.contains("Open the URL above in your browser."));
@@ -187,8 +196,26 @@ mod tests {
             false,
             None,
             true,
+            None,
         );
         let rendered = banner.render();
         assert!(rendered.contains("Share on your network:"));
+    }
+
+    #[test]
+    fn dev_frontend_banner_lists_vite_proxy() {
+        let banner = serve_banner(
+            Path::new("/tmp/share"),
+            "http://127.0.0.1:9000/",
+            None,
+            false,
+            false,
+            false,
+            None,
+            false,
+            Some("http://127.0.0.1:5173"),
+        );
+        let rendered = banner.render();
+        assert!(rendered.contains("Frontend: Vite dev proxy (http://127.0.0.1:5173)"));
     }
 }

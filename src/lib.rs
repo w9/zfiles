@@ -31,3 +31,5 @@ pub mod transport;
 pub mod upload;
 pub mod watch;
 pub mod writable;
+#[cfg(feature = "dev-frontend")]
+pub mod vite_proxy;

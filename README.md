@@ -143,6 +143,22 @@ cargo build
 cargo build --no-default-features
 ```
 
+### Frontend HMR (dev-frontend)
+
+For interactive UI work without rebuilding `web/dist` or recompiling embedded assets, run Vite and zfiles with the dev proxy:
+
+```bash
+# Terminal 1 — Vite dev server (port 5173)
+cd web && pnpm install && pnpm dev
+
+# Terminal 2 — zfiles proxies UI to Vite; API and plugins stay on zfiles
+cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
+```
+
+Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*`, WebSocket events, and `/plugin/*` are served by zfiles as in production.
+
+Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
+
 ## API (kernel)
 
 | Endpoint | Method | Description |

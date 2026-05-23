@@ -16,14 +16,14 @@ fn test_server_with_bundled_plugins(root: &std::path::Path) -> TestServer {
     let events = EventBus::new();
     plugins.clone().start_background(events.clone());
 
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(root.to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(root.to_path_buf())),
+    let state = AppState::new(
+        Arc::new(LocalFs::new(root.to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(root.to_path_buf())),
         events,
         plugins,
-    };
+    );
     TestServer::new(router(state)).expect("test server")
 }
 

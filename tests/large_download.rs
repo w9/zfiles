@@ -16,14 +16,14 @@ async fn download_large_file_returns_full_body() {
     let size = 3_500_000usize;
     fs::write(dir.path().join("big.jpg"), vec![7u8; size]).unwrap();
 
-    let state = AppState {
-        fs: Arc::new(LocalFs::new(dir.path().to_path_buf())),
-        auth: AuthConfig::disabled(),
-        read_only: false,
-        state: Arc::new(StateStore::new(dir.path().to_path_buf())),
-        events: EventBus::new(),
-        plugins: Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
-    };
+    let state = AppState::new(
+        Arc::new(LocalFs::new(dir.path().to_path_buf())),
+        AuthConfig::disabled(),
+        false,
+        Arc::new(StateStore::new(dir.path().to_path_buf())),
+        EventBus::new(),
+        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
+    );
     let server = TestServer::new(router(state)).expect("test server");
 
     let response = server.get("/api/file?path=big.jpg").await;
