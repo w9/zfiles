@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { formatSize, listingIconPrefix } from "./listing-format";
+import { formatSize } from "./listing-format";
 
 test("formatSize uses bytes below one kibibyte", () => {
   assert.equal(formatSize(512, false), "512 B");
@@ -18,14 +18,4 @@ test("formatSize uses human-readable binary units", () => {
 test("formatSize omits size for directories", () => {
   assert.equal(formatSize(undefined, true), "—");
   assert.equal(formatSize(100, true), "—");
-});
-
-test("listingIconPrefix omits emoji when thumbnail is shown", () => {
-  assert.equal(listingIconPrefix(false, "/api/thumbnail?path=photo.jpg"), "");
-  assert.equal(listingIconPrefix(true, "/api/thumbnail?path=photo.jpg"), "");
-});
-
-test("listingIconPrefix shows folder or file emoji without thumbnail", () => {
-  assert.equal(listingIconPrefix(true), "📁 ");
-  assert.equal(listingIconPrefix(false), "📄 ");
 });

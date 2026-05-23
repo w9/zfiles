@@ -712,6 +712,8 @@ export default function App() {
             selectedIndex={selectedIndex}
             multiSelectedPaths={selectedPaths}
             ariaLabel={t("listing.label")}
+            iconTheme={resolvedTheme}
+            listingAtRoot={!currentPath}
           />
         ) : (
           <VirtualListing
@@ -719,6 +721,8 @@ export default function App() {
             selectedIndex={selectedIndex}
             multiSelectedPaths={selectedPaths}
             ariaLabel={t("listing.label")}
+            iconTheme={resolvedTheme}
+            listingAtRoot={!currentPath}
             columnLabels={{
               name: t("listing.column.name"),
               type: t("listing.column.type"),

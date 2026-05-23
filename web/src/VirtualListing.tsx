@@ -16,8 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FileIcon } from "@/FileIcon";
 import { createListingColumns } from "@/listing-columns";
-import { listingIconPrefix } from "@/listing-format";
+import type { FileIconTheme } from "@/fileIcons";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,8 @@ type VirtualListingProps = {
   multiSelectedPaths?: Set<string>;
   ariaLabel: string;
   columnLabels: ListingColumnLabels;
+  iconTheme?: FileIconTheme;
+  listingAtRoot?: boolean;
   className?: string;
 };
 
@@ -44,6 +47,8 @@ export default function VirtualListing({
   multiSelectedPaths,
   ariaLabel,
   columnLabels,
+  iconTheme = "dark",
+  listingAtRoot = false,
   className,
 }: VirtualListingProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -131,20 +136,14 @@ export default function VirtualListing({
                     const isName = columnIndex === 0;
                     const content = isName ? (
                       <>
-                        {entry.thumbnailUrl ? (
-                          <img
-                            className="h-7 w-7 shrink-0 rounded object-cover"
-                            src={entry.thumbnailUrl}
-                            alt=""
-                            loading="lazy"
-                            width={28}
-                            height={28}
-                          />
-                        ) : null}
-                        <span className="min-w-0 truncate">
-                          {listingIconPrefix(entry.isDir, entry.thumbnailUrl)}
-                          {entry.name}
-                        </span>
+                        <FileIcon
+                          name={entry.name}
+                          isDir={entry.isDir}
+                          thumbnailUrl={entry.thumbnailUrl}
+                          theme={iconTheme}
+                          atListingRoot={listingAtRoot}
+                        />
+                        <span className="min-w-0 truncate">{entry.name}</span>
                       </>
                     ) : (
                       flexRender(cell.column.columnDef.cell, cell.getContext())

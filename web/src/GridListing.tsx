@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
+import { FileIcon } from "@/FileIcon";
+import type { FileIconTheme } from "@/fileIcons";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +11,8 @@ type GridListingProps = {
   selectedIndex: number;
   multiSelectedPaths?: Set<string>;
   ariaLabel: string;
+  iconTheme?: FileIconTheme;
+  listingAtRoot?: boolean;
   className?: string;
 };
 
@@ -20,6 +24,8 @@ export default function GridListing({
   selectedIndex,
   multiSelectedPaths,
   ariaLabel,
+  iconTheme = "dark",
+  listingAtRoot = false,
   className,
 }: GridListingProps) {
   const rowCount = Math.ceil(entries.length / GRID_COLUMNS);
@@ -78,16 +84,15 @@ export default function GridListing({
                       onContextMenu={entry.onContextMenu}
                     >
                       <div className="flex flex-1 items-center justify-center bg-muted/30 p-2">
-                        {entry.thumbnailUrl ? (
-                          <img
-                            src={entry.thumbnailUrl}
-                            alt=""
-                            className="max-h-24 max-w-full rounded object-contain"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <span className="text-3xl">{entry.isDir ? "📁" : "📄"}</span>
-                        )}
+                        <FileIcon
+                          name={entry.name}
+                          isDir={entry.isDir}
+                          thumbnailUrl={entry.thumbnailUrl}
+                          theme={iconTheme}
+                          atListingRoot={listingAtRoot}
+                          size="lg"
+                          className={entry.thumbnailUrl ? "max-h-24 max-w-full object-contain" : undefined}
+                        />
                       </div>
                       <div className="truncate border-t px-2 py-1.5 text-sm">
                         {entry.name}

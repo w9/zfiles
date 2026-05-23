@@ -29,13 +29,6 @@ export function formatModified(value: unknown, locale: string): string {
   }).format(new Date(ms));
 }
 
-export function listingIconPrefix(isDir: boolean, thumbnailUrl?: string): string {
-  if (thumbnailUrl) {
-    return "";
-  }
-  return isDir ? "📁 " : "📄 ";
-}
-
 export function formatSize(bytes: number | undefined, isDir: boolean): string {
   if (isDir || bytes == null) {
     return "—";
