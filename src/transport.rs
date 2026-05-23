@@ -223,33 +223,6 @@ async fn list_directory(
     state
         .plugins
         .prefetch_thumbnails(&entries, state.events.clone());
-    // #region agent log
-    {
-        use std::io::Write;
-        let line = serde_json::json!({
-            "sessionId": "a6473c",
-            "location": "transport.rs:list_directory",
-            "message": "list_directory served",
-            "data": {
-                "path": relative,
-                "entryCount": entries.len(),
-            },
-            "hypothesisId": "H4",
-            "timestamp": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_millis())
-                .unwrap_or(0),
-            "runId": "initial",
-        });
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open("/home/xunzhu.linux/Projects/zfiles/.cursor/debug-a6473c.log")
-        {
-            let _ = writeln!(file, "{line}");
-        }
-    }
-    // #endregion
     Ok(Json(entries))
 }
 

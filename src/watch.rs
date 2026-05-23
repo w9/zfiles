@@ -61,9 +61,10 @@ pub fn start(root: PathBuf, events: EventBus) -> Result<()> {
                     if let Some(path) = pending.take()
                         && let Ok(relative) = path.strip_prefix(&root)
                     {
-                        events.publish(KernelEvent::FilesystemChanged {
-                            path: relative.to_string_lossy().replace('\\', "/"),
-                        });
+                        let relative = relative.to_string_lossy().replace('\\', "/");
+                        if !is_ignored_watch_path(&relative) {
+                            events.publish(KernelEvent::FilesystemChanged { path: relative });
+                        }
                     }
                 }
             }
@@ -82,6 +83,17 @@ fn should_emit(event: &notify::Event) -> bool {
     )
 }
 
+fn is_ignored_watch_path(relative: &str) -> bool {
+    relative == ".cursor"
+        || relative.starts_with(".cursor/")
+        || relative == ".zfiles"
+        || relative.starts_with(".zfiles/")
+        || relative == "target"
+        || relative.starts_with("target/")
+        || relative.contains("/node_modules/")
+        || relative.starts_with("node_modules/")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,5 +108,14 @@ mod tests {
             attrs: notify::event::EventAttributes::default(),
         };
         assert!(should_emit(&event));
+    }
+
+    #[test]
+    fn ignores_dotfolder_and_cursor_paths() {
+        assert!(is_ignored_watch_path(".cursor/debug.log"));
+        assert!(is_ignored_watch_path(".zfiles/state.db"));
+        assert!(is_ignored_watch_path("target/debug/deps/foo"));
+        assert!(is_ignored_watch_path("web/node_modules/.vite/deps/foo"));
+        assert!(!is_ignored_watch_path("README.md"));
     }
 }

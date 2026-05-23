@@ -30,6 +30,10 @@ import {
   toggleListingViewMode,
   type ListingViewMode,
 } from "./listingView";
+import {
+  selectedRowIndexForPath,
+  shouldRefreshListing,
+} from "./listingRefresh";
 import { setViewerBridge, clearViewerBridge, type ViewerBridge } from "./viewerBridge";
 
 type FileEntry = {
@@ -90,7 +94,6 @@ export default function App() {
   const [readOnly, setReadOnly] = useState(false);
   const [searcherReady, setSearcherReady] = useState(false);
   const [thumbnailerReady, setThumbnailerReady] = useState(false);
-  const [readyPlugins, setReadyPlugins] = useState<string[]>([]);
   const [pluginDetails, setPluginDetails] = useState<PluginInfo[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -121,7 +124,8 @@ export default function App() {
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
 
-  const loadListing = useCallback(async (path: string) => {
+  const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }) => {
+    const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
     const response = await apiFetch(`/api/list${query}`);
     if (!response.ok) {
@@ -132,9 +136,19 @@ export default function App() {
     setCurrentPath(path);
     setSearchResults(null);
     setSearchQuery("");
-    setSelectedIndex(0);
-    setSelectedPath(null);
-    setSelectedPaths(new Set());
+    const restoredIndex =
+      previousPath != null
+        ? selectedRowIndexForPath(path, data, previousPath)
+        : null;
+    if (restoredIndex != null) {
+      setSelectedIndex(restoredIndex);
+      setSelectedPath(previousPath);
+      setSelectedPaths(new Set());
+    } else {
+      setSelectedIndex(0);
+      setSelectedPath(null);
+      setSelectedPaths(new Set());
+    }
     setReadyThumbnails((current) => {
       const visiblePaths = new Set(
         data.filter((entry) => !entry.is_dir).map((entry) => entry.path),
@@ -148,24 +162,6 @@ export default function App() {
       return next;
     });
     setError(null);
-    // #region agent log
-    fetch("http://localhost:7433/ingest/1ffc0fb8-13f3-4935-a0fc-268ab56fd807", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "a6473c",
-      },
-      body: JSON.stringify({
-        sessionId: "a6473c",
-        location: "App.tsx:loadListing",
-        message: "listing loaded",
-        data: { path, entryCount: data.length, imageCount: data.filter((e) => !e.is_dir).length },
-        hypothesisId: "H4",
-        timestamp: Date.now(),
-        runId: "initial",
-      }),
-    }).catch(() => {});
-    // #endregion
   }, []);
 
   const loadPlugins = useCallback(async () => {
@@ -175,7 +171,6 @@ export default function App() {
     }
     const plugins: PluginInfo[] = await response.json();
     setPluginDetails(plugins);
-    setReadyPlugins(plugins.map((plugin) => plugin.name));
     setSearcherReady(
       plugins.some((plugin) => plugin.capabilities.includes("searcher")),
     );
@@ -206,11 +201,17 @@ export default function App() {
           setKernelVersion(event.version);
           setReadOnly(event.read_only ?? false);
           break;
-        case "filesystem_changed":
-          loadListing(currentPathRef.current).catch((err: Error) =>
-            setError(err.message),
+        case "filesystem_changed": {
+          if (
+            !shouldRefreshListing(event.path, currentPathRef.current)
+          ) {
+            break;
+          }
+          loadListing(currentPathRef.current, { preserveSelection: true }).catch(
+            (err: Error) => setError(err.message),
           );
           break;
+        }
         case "upload_progress":
           setUploadProgress({
             id: event.id,
@@ -219,31 +220,10 @@ export default function App() {
           });
           break;
         case "plugin_ready":
-          // #region agent log
-          fetch("http://localhost:7433/ingest/1ffc0fb8-13f3-4935-a0fc-268ab56fd807", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "a6473c",
-            },
-            body: JSON.stringify({
-              sessionId: "a6473c",
-              location: "App.tsx:handleKernelEvent",
-              message: "plugin_ready received",
-              data: { name: event.name },
-              hypothesisId: "H1",
-              timestamp: Date.now(),
-              runId: "initial",
-            }),
-          }).catch(() => {});
-          // #endregion
-          setReadyPlugins((current) =>
-            current.includes(event.name) ? current : [...current, event.name],
-          );
           void loadPlugins().then(() => {
             if (event.name === "image-thumbnailer") {
-              loadListing(currentPathRef.current).catch((err: Error) =>
-                setError(err.message),
+              loadListing(currentPathRef.current, { preserveSelection: true }).catch(
+                (err: Error) => setError(err.message),
               );
             }
           });
@@ -256,24 +236,6 @@ export default function App() {
           }
           break;
         case "thumbnail_ready":
-          // #region agent log
-          fetch("http://localhost:7433/ingest/1ffc0fb8-13f3-4935-a0fc-268ab56fd807", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "a6473c",
-            },
-            body: JSON.stringify({
-              sessionId: "a6473c",
-              location: "App.tsx:handleKernelEvent",
-              message: "thumbnail_ready received",
-              data: { path: event.path, url: event.url },
-              hypothesisId: "H2",
-              timestamp: Date.now(),
-              runId: "initial",
-            }),
-          }).catch(() => {});
-          // #endregion
           setReadyThumbnails((current) => {
             const next = new Map(current);
             next.set(event.path, event.url);
@@ -489,31 +451,7 @@ export default function App() {
 
   useEffect(() => {
     listingEntriesRef.current = listingEntries;
-    const thumbCount = listingEntries.filter((entry) => entry.thumbnailUrl).length;
-    // #region agent log
-    fetch("http://localhost:7433/ingest/1ffc0fb8-13f3-4935-a0fc-268ab56fd807", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "a6473c",
-      },
-      body: JSON.stringify({
-        sessionId: "a6473c",
-        location: "App.tsx:listingEntries",
-        message: "listing entries thumbnail state",
-        data: {
-          thumbnailerReady,
-          readyThumbnailsCount: readyThumbnails.size,
-          rowsWithThumbnailUrl: thumbCount,
-          totalRows: listingEntries.length,
-        },
-        hypothesisId: "H3",
-        timestamp: Date.now(),
-        runId: "initial",
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [listingEntries, thumbnailerReady, readyThumbnails]);
+  }, [listingEntries]);
 
   const activateSelected = useCallback(() => {
     const selected = listingEntriesRef.current[selectedIndexRef.current];
@@ -708,12 +646,6 @@ export default function App() {
           </label>
         </Button>
       </section>
-
-      {readyPlugins.length > 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">
-          {t("plugins.ready", { names: readyPlugins.join(", ") })}
-        </p>
-      ) : null}
 
       {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 

@@ -18,7 +18,6 @@ export const en = {
   "upload.uploading": "Uploading…",
   "upload.uploadingProgress": "Uploading… {{percent}}%",
   "upload.chooseFiles": "Choose files",
-  "plugins.ready": "Plugins ready: {{names}}",
   "selection.count": "{{count}} selected",
   "selection.download": "Download {{name}}",
   "selection.copyPaths": "Copy paths",

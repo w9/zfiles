@@ -26,31 +26,6 @@ const WATCHER_TIMEOUT: Duration = Duration::from_millis(50);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 
-// #region agent log
-fn agent_debug_log(location: &str, message: &str, data: serde_json::Value, hypothesis_id: &str) {
-    use std::io::Write;
-    let line = serde_json::json!({
-        "sessionId": "a6473c",
-        "location": location,
-        "message": message,
-        "data": data,
-        "hypothesisId": hypothesis_id,
-        "timestamp": std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis())
-            .unwrap_or(0),
-        "runId": "initial",
-    });
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("/home/xunzhu.linux/Projects/zfiles/.cursor/debug-a6473c.log")
-    {
-        let _ = writeln!(file, "{line}");
-    }
-}
-// #endregion
-
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct ManifestAction {
     pub id: String,
@@ -370,19 +345,13 @@ impl PluginSupervisor {
     }
 
     pub fn prefetch_thumbnails(&self, entries: &[FileEntry], events: EventBus) {
-        let mut skipped_not_ready = 0usize;
-        let mut spawned = 0usize;
-        let mut file_entries = 0usize;
         for entry in entries {
             if entry.is_dir {
                 continue;
             }
-            file_entries += 1;
             if self.ready_plugin_for("thumbnailer", &entry.path).is_none() {
-                skipped_not_ready += 1;
                 continue;
             }
-            spawned += 1;
             let path = entry.path.clone();
             let supervisor = self.clone();
             let events = events.clone();
@@ -398,20 +367,6 @@ impl PluginSupervisor {
                 }
             });
         }
-        // #region agent log
-        agent_debug_log(
-            "plugins.rs:prefetch_thumbnails",
-            "prefetch_thumbnails completed scan",
-            serde_json::json!({
-                "totalEntries": entries.len(),
-                "fileEntries": file_entries,
-                "skippedNotReady": skipped_not_ready,
-                "spawned": spawned,
-                "thumbnailerReady": self.ready_plugin_for("thumbnailer", "").is_some(),
-            }),
-            "H1",
-        );
-        // #endregion
     }
 
     pub async fn run_action(&self, path: &str, action_id: &str) -> Result<()> {
@@ -733,21 +688,6 @@ impl PluginSupervisor {
                 return Err(error);
             }
             handle.ready.store(true, Ordering::SeqCst);
-            // #region agent log
-            if record
-                .manifest
-                .capabilities
-                .iter()
-                .any(|cap| cap == "thumbnailer")
-            {
-                agent_debug_log(
-                    "plugins.rs:run_plugin_once",
-                    "thumbnailer plugin became ready",
-                    serde_json::json!({ "pluginName": record.manifest.name }),
-                    "H1",
-                );
-            }
-            // #endregion
             events.publish(KernelEvent::PluginReady {
                 name: record.manifest.name.clone(),
             });

@@ -18,7 +18,6 @@ export const zhCN: Record<MessageKey, string> = {
   "upload.uploading": "上传中…",
   "upload.uploadingProgress": "上传中… {{percent}}%",
   "upload.chooseFiles": "选择文件",
-  "plugins.ready": "插件已就绪：{{names}}",
   "selection.count": "已选 {{count}} 项",
   "selection.download": "下载 {{name}}",
   "selection.copyPaths": "复制路径",
