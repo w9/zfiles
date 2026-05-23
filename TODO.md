@@ -1,6 +1,6 @@
 ## High-level plan next
 
-The action system v1 is in place. This cycle adds locale control via `?lang=` URL parameter and `--lang` CLI flag (`en`, `zh-CN`), with URL taking precedence over stored preference on load and CLI-injected lang appearing in banner/share URLs.
+Locale via URL/CLI is done. This cycle completes deferred action-system work: menu bar and toolbar surfaces, user `keybindings.toml` with API merge, arg prompting and destructive confirm in dispatch, and kernel manifest `[[actions]]` registration merged with plugin RPC lists.
 
 ## TODO List
 
@@ -146,3 +146,22 @@ The action system v1 is in place. This cycle adds locale control via `?lang=` UR
 - [x] `dispatchAction` invokes handlers, enforces `when`, logs debug outcome
 - [x] Unit tests: palette search ranking and action availability filtering
 - [x] E2E smoke: command palette opens and runs a built-in action; plugin context menu still works
+- [x] `readInitialLocale`: URL `?lang=` overrides localStorage; persist URL choice
+- [x] Unit tests for URL locale resolution and alias handling
+- [x] Update `index.html` boot script to apply `?lang=` before first paint
+- [x] Add `--lang` to `ServeArgs` with validation for `en` and `zh-CN`
+- [x] Extend `share_url` / browser URL builder to append `lang` query param
+- [x] Wire `--lang` through transport banner and browser auto-open URL
+- [x] Rust unit tests: CLI `--lang` parsing and share URL with token + lang
+- [x] E2E smoke: `?lang=zh-CN` renders Simplified Chinese header strings
+- [ ] Kernel: `[[actions]]` in plugin manifest; merge with RPC `action/list`
+- [ ] `GET /api/actions/catalog` and `GET /api/keybindings` endpoints
+- [ ] Rust `keybindings.toml` loader (`~/.config/zfiles/keybindings.toml`) with tests
+- [ ] Frontend arg schema resolution and palette arg prompting step
+- [ ] Destructive action confirm modal; `selection.clear` marked destructive
+- [ ] `invokeAction` pipeline: when → confirm → args → handler
+- [ ] Menu bar surface: category menus dispatching registry actions
+- [ ] Toolbar surface: icon buttons for default action ids with `when` grey-out
+- [ ] Merge user keybindings over defaults in keyboard dispatch
+- [ ] Unit tests: arg resolution, keybinding merge, invoke confirm skip via args
+- [ ] Integration + E2E: manifest actions listed; menu/toolbar smoke
