@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Strong tokens and startup banner are done. Next: migrate the web explorer to Tailwind CSS, shadcn/ui components, and en/zh-CN i18n per AGENTS.md frontend rules.
+Tailwind/shadcn/i18n migration is done. This cycle implements the frontend action system from DESIGN_action_system.md: registry, context keys, `when` DSL, keybindings, command palette, and migrating existing shortcuts/context menus. Plugin actions stay API-backed; menu bar, toolbar, and user keybindings.toml defer to a later cycle.
 
 ## TODO List
 
@@ -128,9 +128,21 @@ Strong tokens and startup banner are done. Next: migrate the web explorer to Tai
 - [x] Update integration/E2E tests that assert `zfiles-` token shape
 - [x] Update QR/share URL unit tests to use unprefixed sample tokens
 - [x] Integration test: `--token` startup prints 32-char hex auth token
-- [ ] Tailwind CSS v4 + Vite plugin; global `index.css` with shadcn design tokens
-- [ ] shadcn/ui baseline: `cn()`, Button, Input, ToggleGroup, DropdownMenu
-- [ ] i18n layer with English and Simplified Chinese catalogs + locale persistence
-- [ ] Migrate header controls (theme, backend status, language) to shadcn + i18n
-- [ ] Migrate App shell and listing/preview/context menu to Tailwind + i18n
-- [ ] Unit tests for i18n lookup and locale resolution; rebuild `web/dist`
+- [x] Tailwind CSS v4 + Vite plugin; global `index.css` with shadcn design tokens
+- [x] shadcn/ui baseline: `cn()`, Button, Input, ToggleGroup, DropdownMenu
+- [x] i18n layer with English and Simplified Chinese catalogs + locale persistence
+- [x] Migrate header controls (theme, backend status, language) to shadcn + i18n
+- [x] Migrate App shell and listing/preview/context menu to Tailwind + i18n
+- [x] Unit tests for i18n lookup and locale resolution; rebuild `web/dist`
+- [ ] Action schema types and `ActionRegistry` with register/list/dispatch
+- [ ] Reactive context-keys store (`focus.pane`, `selection.count`, `current-path`, `searcher.ready`, `connection.online`)
+- [ ] `when` expression parser/evaluator with unit tests
+- [ ] Built-in actions: navigation, selection, copy-paths, focus-search, open-command-palette
+- [ ] i18n catalog entries (en/zh-CN) for built-in action names, categories, descriptions
+- [ ] Keybinding layer: `Mod` abstraction, default bindings, when-scoped dispatch
+- [ ] shadcn Command + Dialog command palette (`Mod+P`) with fuzzy search and ranking
+- [ ] Migrate App keyboard shortcuts from ad-hoc handler to action keybindings
+- [ ] Context menu surface: filter registry by `contexts` + plugin `/api/actions` adapter
+- [ ] `dispatchAction` invokes handlers, enforces `when`, logs debug outcome
+- [ ] Unit tests: palette search ranking and action availability filtering
+- [ ] E2E smoke: command palette opens and runs a built-in action; plugin context menu still works
