@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Shell primitives (Breadcrumb, Menubar, Kbd, Badge, Table) are in place. This cycle completes registry alignment for Command, Dialog, Context Menu, and Tooltip; wires plugin manifest actions into the menubar; adds toolbar shortcut hints and listing-header E2E coverage; documents the shadcn update workflow. Sortable columns stay deferred — virtual scroll + `@tanstack/react-table` needs a dedicated pass.
+Plugin action metadata and disabled-action tooltips are the focus: manifest `category`/`default_keybinding`, catalog propagation, and `whenFailureMessage` on toolbar hover. Then unify the last hand-written Radix wrapper (`dropdown-menu`) with the registry import style.
 
 ## TODO List
 
@@ -46,10 +46,17 @@ Shell primitives (Breadcrumb, Menubar, Kbd, Badge, Table) are in place. This cyc
 - [x] Migrate `BackendStatus` pill to shadcn `Badge` variants
 - [x] Refactor `VirtualListing` to shadcn `Table` + column header row (data-table pattern)
 - [x] Unit tests for keybinding chord → `Kbd` parts; update E2E for menubar roles
-- [ ] Re-add shadcn `command` and `dialog` via CLI; diff and reconcile with existing wrappers
-- [ ] Migrate `ContextMenu` to shadcn `Context Menu` component
-- [ ] Add keyboard shortcut tooltips on toolbar buttons using `Kbd` + `Tooltip`
-- [ ] E2E smoke: listing column headers (Name / Size) visible in explorer
-- [ ] Expose plugin manifest actions in menubar categories when contexts match
-- [ ] Document shadcn component update workflow in README (CLI add + reconcile)
-- [ ] Optional: evaluate `@tanstack/react-table` for sortable listing columns
+- [x] Re-add shadcn `command` and `dialog` via CLI; diff and reconcile with existing wrappers
+- [x] Migrate `ContextMenu` to shadcn `Context Menu` component
+- [x] Add keyboard shortcut tooltips on toolbar buttons using `Kbd` + `Tooltip`
+- [x] E2E smoke: listing column headers (Name / Size) visible in explorer
+- [x] Expose plugin manifest actions in menubar categories when contexts match
+- [x] Document shadcn component update workflow in README (CLI add + reconcile)
+- [x] Optional: evaluate `@tanstack/react-table` for sortable listing columns (deferred; documented in README)
+- [ ] Add `whenFailureMessage` i18n keys and show disabled-action reason in toolbar tooltips
+- [ ] Extend plugin manifest `[[actions]]` with optional `category` and `default_keybinding`
+- [ ] Merge manifest category/keybinding into `/api/actions/catalog` JSON
+- [ ] Frontend: register plugin actions with manifest category and default keybinding
+- [ ] E2E smoke: disabled toolbar button tooltip explains why action is unavailable
+- [ ] Migrate `dropdown-menu.tsx` to registry `radix-ui` import style (match menubar/kbd)
+- [ ] Unit tests: catalog action category/keybinding fields propagate to registry
