@@ -1,39 +1,52 @@
-import type { ThemeMode } from "./theme";
+import { Monitor, Moon, Sun } from "lucide-react";
+
+import { nextThemeMode, type ThemeMode } from "./theme";
+import type { MessageKey } from "@/i18n/locales/en";
+import { useTranslation } from "@/i18n";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ThemeToggleProps = {
   mode: ThemeMode;
   onChange: (mode: ThemeMode) => void;
 };
 
-const OPTIONS: ThemeMode[] = ["light", "dark", "auto"];
+const THEME_KEYS: Record<ThemeMode, MessageKey> = {
+  light: "theme.light",
+  dark: "theme.dark",
+  auto: "theme.auto",
+};
 
-function label(mode: ThemeMode): string {
-  switch (mode) {
-    case "light":
-      return "Light";
-    case "dark":
-      return "Dark";
-    case "auto":
-      return "Auto";
-  }
-}
+const THEME_ICONS: Record<ThemeMode, typeof Sun> = {
+  light: Sun,
+  dark: Moon,
+  auto: Monitor,
+};
 
 export default function ThemeToggle({ mode, onChange }: ThemeToggleProps) {
+  const { t } = useTranslation();
+  const Icon = THEME_ICONS[mode];
+  const label = `${t("theme.group")}: ${t(THEME_KEYS[mode])}`;
+
   return (
-    <div className="theme-toggle" role="radiogroup" aria-label="Color theme">
-      {OPTIONS.map((option) => (
-        <button
-          key={option}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
           type="button"
-          role="radio"
-          className="theme-toggle-option"
-          aria-checked={mode === option}
-          data-active={mode === option ? "true" : "false"}
-          onClick={() => onChange(option)}
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          aria-label={label}
+          onClick={() => onChange(nextThemeMode(mode))}
         >
-          {label(option)}
-        </button>
-      ))}
-    </div>
+          <Icon className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
   );
 }

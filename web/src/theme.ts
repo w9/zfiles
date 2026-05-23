@@ -31,9 +31,17 @@ export function applyTheme(mode: ThemeMode, prefersDark: boolean): ResolvedTheme
   const resolved = resolvedTheme(mode, prefersDark);
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themeMode = mode;
+  document.documentElement.classList.toggle("dark", resolved === "dark");
   return resolved;
 }
 
 export function storeThemeMode(mode: ThemeMode): void {
   localStorage.setItem(THEME_STORAGE_KEY, mode);
+}
+
+const THEME_CYCLE: ThemeMode[] = ["light", "dark", "auto"];
+
+export function nextThemeMode(mode: ThemeMode): ThemeMode {
+  const index = THEME_CYCLE.indexOf(mode);
+  return THEME_CYCLE[(index + 1) % THEME_CYCLE.length];
 }

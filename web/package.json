@@ -7,12 +7,28 @@
     "dev": "vite",
     "build": "tsc && vite build && node scripts/compress-dist.mjs",
     "preview": "vite preview",
-    "test": "tsx --test src/theme.test.ts"
+    "test": "tsx --test src/theme.test.ts src/i18n/i18n.test.ts src/actions/*.test.ts src/listing-format.test.ts src/i18n/pluginCatalog.test.ts"
   },
   "dependencies": {
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-toggle-group": "^1.1.11",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^1.16.0",
+    "radix-ui": "^1.4.3",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/react": "^19.1.2",

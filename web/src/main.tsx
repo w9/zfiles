@@ -1,10 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+
 import App from "./App";
-import "./App.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { I18nProvider } from "./i18n";
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <I18nProvider>
+      <TooltipProvider>
+        <App />
+      </TooltipProvider>
+    </I18nProvider>
   </React.StrictMode>,
 );
