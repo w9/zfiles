@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Tokenized UI auth is fixed. Next: generate cryptographically strong share tokens (UUID v4, no prefix), update tests and docs, then reachable LAN host in share URLs/QR.
+Strong tokens and startup banner are done. Next: migrate the web explorer to Tailwind CSS, shadcn/ui components, and en/zh-CN i18n per AGENTS.md frontend rules.
 
 ## TODO List
 
@@ -122,9 +122,15 @@ Tokenized UI auth is fixed. Next: generate cryptographically strong share tokens
 - [x] Skip `session_valid` when `--token` is used without `--expire`
 - [x] Integration test: non-expiring token accepts Bearer auth on `/api/list`
 - [x] E2E smoke: `--token` explorer loads listing (not blank UI)
-- [ ] `generate_token` uses UUID v4 (128-bit random, no `zfiles-` prefix)
-- [ ] Unit tests: token length, hex charset, and no prefix
-- [ ] Unit test: successive generated tokens differ
-- [ ] Update integration/E2E tests that assert `zfiles-` token shape
-- [ ] Update QR/share URL unit tests to use unprefixed sample tokens
-- [ ] Integration test: `--token` startup prints 32-char hex auth token
+- [x] `generate_token` uses UUID v4 (128-bit random, no `zfiles-` prefix)
+- [x] Unit tests: token length, hex charset, and no prefix
+- [x] Unit test: successive generated tokens differ
+- [x] Update integration/E2E tests that assert `zfiles-` token shape
+- [x] Update QR/share URL unit tests to use unprefixed sample tokens
+- [x] Integration test: `--token` startup prints 32-char hex auth token
+- [ ] Tailwind CSS v4 + Vite plugin; global `index.css` with shadcn design tokens
+- [ ] shadcn/ui baseline: `cn()`, Button, Input, ToggleGroup, DropdownMenu
+- [ ] i18n layer with English and Simplified Chinese catalogs + locale persistence
+- [ ] Migrate header controls (theme, backend status, language) to shadcn + i18n
+- [ ] Migrate App shell and listing/preview/context menu to Tailwind + i18n
+- [ ] Unit tests for i18n lookup and locale resolution; rebuild `web/dist`
