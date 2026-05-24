@@ -21,6 +21,13 @@ fn embedded_asset_path() -> String {
     format!("/{path}")
 }
 
+fn embedded_file_icon_path() -> String {
+    let path = DistAssets::iter()
+        .find(|path| path.starts_with("file-icons/") && path.ends_with(".svg"))
+        .expect("embedded file icon");
+    format!("/{path}")
+}
+
 fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Option<i64>) -> TestServer {
     let plugins = Arc::new(zfiles::plugins::PluginSupervisor::new(root.to_path_buf()));
     let state_store = Arc::new(StateStore::new(root.to_path_buf()));
@@ -44,6 +51,7 @@ fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Optio
 fn is_public_path_classifies_embedded_assets() {
     assert!(auth::is_public_path("/assets/index.js"));
     assert!(auth::is_public_path("/assets/index.css"));
+    assert!(auth::is_public_path("/file-icons/javascript.svg"));
     assert!(auth::is_public_path("/favicon.ico"));
     assert!(auth::is_public_path("/viewer-sandbox.html"));
     assert!(!auth::is_public_path("/api/list"));
@@ -58,6 +66,17 @@ async fn tokenized_server_serves_embedded_assets_without_credentials() {
     let asset_path = embedded_asset_path();
 
     let response = server.get(&asset_path).await;
+    response.assert_status_ok();
+}
+
+#[tokio::test]
+async fn tokenized_server_serves_file_icons_without_credentials() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    let server = test_server_with_token(dir.path(), "a1b2c3d4e5f6789012345678abcdef01", None);
+    let icon_path = embedded_file_icon_path();
+
+    let response = server.get(&icon_path).await;
     response.assert_status_ok();
 }
 

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Ship first-class HMR dev workflow: `dev-frontend` Cargo feature proxies UI to Vite while zfiles serves `/api` and plugins on the normal URL. Then resume explorer UX polish (icon sizing, optional icon-pack settings).
+Fix dev-frontend file icon serving (embedded `/file-icons/` before Vite proxy; public path for token auth), then resume explorer UX polish.
 
 ## TODO List
 
@@ -55,3 +55,9 @@ Ship first-class HMR dev workflow: `dev-frontend` Cargo feature proxies UI to Vi
 - [x] Vite `server.hmr` config for proxied dev; startup banner hint when dev-frontend is on
 - [x] Unit tests for proxy URL building and CLI parsing; document workflow in README
 - [x] Run full `cargo test`
+- [x] `ListingViewToggle` icon button on header toolbar (ThemeToggle pattern)
+- [x] Remove text toggle from breadcrumb bar; breadcrumb row spans full width
+- [x] Run web unit tests
+- [x] Serve `/file-icons/` from embedded assets before Vite proxy in dev-frontend mode
+- [x] Treat `/file-icons/` as a public path for token auth; add tests
+- [x] Run `cargo test` and web unit tests

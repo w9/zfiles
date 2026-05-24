@@ -664,8 +664,20 @@ async fn static_or_index(
     State(state): State<AppState>,
     request: axum::http::Request<Body>,
 ) -> Response {
+    let path = request.uri().path();
+    let accept_encoding = request
+        .headers()
+        .get(axum::http::header::ACCEPT_ENCODING)
+        .and_then(|value| value.to_str().ok());
+
     #[cfg(feature = "dev-frontend")]
     if let Some(proxy) = &state.vite_dev {
+        if path.starts_with("/file-icons/")
+            && let Some(response) = embed::try_serve_static(path, accept_encoding)
+        {
+            return response;
+        }
+
         let (mut parts, body) = request.into_parts();
         if crate::vite_proxy::is_websocket_upgrade(&parts.headers) {
             match WebSocketUpgrade::from_request_parts(&mut parts, &state).await {
@@ -686,11 +698,7 @@ async fn static_or_index(
         return proxy.forward_http(request).await;
     }
 
-    let accept_encoding = request
-        .headers()
-        .get(axum::http::header::ACCEPT_ENCODING)
-        .and_then(|value| value.to_str().ok());
-    embed::serve_static(request.uri().path(), accept_encoding)
+    embed::serve_static(path, accept_encoding)
 }
 
 fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<Option<String>, AppError> {

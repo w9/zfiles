@@ -37,6 +37,7 @@ pub fn generate_token() -> String {
 
 pub fn is_public_path(path: &str) -> bool {
     path.starts_with("/assets/")
+        || path.starts_with("/file-icons/")
         || path == "/favicon.ico"
         || path == "/viewer-sandbox.html"
 }
@@ -173,6 +174,7 @@ mod tests {
     #[test]
     fn is_public_path_matches_embedded_assets() {
         assert!(is_public_path("/assets/index.js"));
+        assert!(is_public_path("/file-icons/file.svg"));
         assert!(!is_public_path("/api/list"));
     }
 }

@@ -22,27 +22,8 @@ const FALLBACK_INDEX: &str = r#"<!doctype html>
 "#;
 
 pub fn serve_static(path: &str, accept_encoding: Option<&str>) -> Response {
-    let path = path.trim_start_matches('/');
-    let path = if path.is_empty() { "index.html" } else { path };
-
-    if let Some((encoding, data)) = select_encoded_asset(path, accept_encoding) {
-        return asset_response(path, data, Some(encoding));
-    }
-
-    if let Some(content) = Assets::get(path) {
-        return asset_response(path, content.data.into_owned(), None);
-    }
-
-    if !path.contains('.')
-        && let Some((encoding, data)) = select_encoded_asset("index.html", accept_encoding)
-    {
-        return asset_response("index.html", data, Some(encoding));
-    }
-
-    if !path.contains('.')
-        && let Some(content) = Assets::get("index.html")
-    {
-        return asset_response("index.html", content.data.into_owned(), None);
+    if let Some(response) = try_serve_static(path, accept_encoding) {
+        return response;
     }
 
     Response::builder()
@@ -50,6 +31,33 @@ pub fn serve_static(path: &str, accept_encoding: Option<&str>) -> Response {
         .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
         .body(Body::from(FALLBACK_INDEX))
         .expect("fallback index response")
+}
+
+pub fn try_serve_static(path: &str, accept_encoding: Option<&str>) -> Option<Response> {
+    let path = path.trim_start_matches('/');
+    let path = if path.is_empty() { "index.html" } else { path };
+
+    if let Some((encoding, data)) = select_encoded_asset(path, accept_encoding) {
+        return Some(asset_response(path, data, Some(encoding)));
+    }
+
+    if let Some(content) = Assets::get(path) {
+        return Some(asset_response(path, content.data.into_owned(), None));
+    }
+
+    if !path.contains('.')
+        && let Some((encoding, data)) = select_encoded_asset("index.html", accept_encoding)
+    {
+        return Some(asset_response("index.html", data, Some(encoding)));
+    }
+
+    if !path.contains('.')
+        && let Some(content) = Assets::get("index.html")
+    {
+        return Some(asset_response("index.html", content.data.into_owned(), None));
+    }
+
+    None
 }
 
 fn select_encoded_asset(path: &str, accept_encoding: Option<&str>) -> Option<(&'static str, Vec<u8>)> {
@@ -114,5 +122,24 @@ mod tests {
     fn falls_back_to_uncompressed_without_accept_encoding() {
         let response = serve_static("index.html", None);
         assert!(response.headers().get(header::CONTENT_ENCODING).is_none());
+    }
+
+    #[test]
+    fn try_serve_static_returns_none_for_missing_asset_with_extension() {
+        assert!(try_serve_static("file-icons/does-not-exist.svg", None).is_none());
+    }
+
+    #[test]
+    fn try_serve_static_serves_file_icons_when_embedded() {
+        let response = try_serve_static("file-icons/file.svg", None);
+        assert!(response.is_some());
+        assert_eq!(
+            response
+                .expect("file icon")
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok()),
+            Some("image/svg+xml")
+        );
     }
 }

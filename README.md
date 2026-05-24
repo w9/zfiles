@@ -155,7 +155,7 @@ cd web && pnpm install && pnpm dev
 cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
 ```
 
-Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*`, WebSocket events, and `/plugin/*` are served by zfiles as in production.
+Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*`, WebSocket events, and `/plugin/*` are served by zfiles as in production. `/file-icons/*` is served from the embedded `web/dist` build (run `pnpm build` once if icons are missing).
 
 Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
 
