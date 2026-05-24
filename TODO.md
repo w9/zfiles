@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Add HttpOnly session cookie bootstrap for `--token` shares so downloads, thumbnails, and plugin subresources auth without token in every URL; strip `?token=` from the address bar after bootstrap.
+Resume explorer UX polish. Tokenized shares now bootstrap an HttpOnly session cookie so subresource links work without token in every URL.
 
 ## TODO List
 
@@ -68,8 +68,8 @@ Add HttpOnly session cookie bootstrap for `--token` shares so downloads, thumbna
 - [x] Unit test for Unicode upload path encoding (round-trip via `TextDecoder`)
 - [x] Rebuild `web/dist` after upload fix
 - [x] Run web unit tests and full `cargo test`
-- [ ] Auth middleware: accept `zfiles_session` HttpOnly cookie; set cookie on valid `?token=` bootstrap
-- [ ] Integration tests: cookie auth for `/api/list`, `/api/file`; bootstrap sets Set-Cookie; expiry clears session
-- [ ] Frontend: strip `?token=` via `replaceState`; rely on cookie for fetch/WebSocket (drop URL token wiring)
-- [ ] Rebuild `web/dist` after session cookie changes
-- [ ] Run web unit tests and full `cargo test`
+- [x] Auth middleware: accept `zfiles_session` HttpOnly cookie; set cookie on valid `?token=` bootstrap
+- [x] Integration tests: cookie auth for `/api/list`, `/api/file`; bootstrap sets Set-Cookie; expiry clears session
+- [x] Frontend: strip `?token=` via `replaceState`; rely on cookie for fetch/WebSocket (drop URL token wiring)
+- [x] Rebuild `web/dist` after session cookie changes
+- [x] Run web unit tests and full `cargo test`

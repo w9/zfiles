@@ -114,6 +114,73 @@ async fn tokenized_server_accepts_token_query_without_expiry_session() {
 }
 
 #[tokio::test]
+async fn bootstrap_sets_session_cookie_on_tokenized_root() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    let token = "a1b2c3d4e5f6789012345678abcdef01";
+    let server = test_server_with_token(dir.path(), token, None);
+
+    let response = server.get(&format!("/?token={token}")).await;
+    response.assert_status_ok();
+    let cookie_header = response.header("set-cookie");
+    let set_cookie = cookie_header.to_str().expect("ascii cookie");
+    assert!(set_cookie.starts_with("zfiles_session="));
+    assert!(set_cookie.contains("HttpOnly"));
+    assert!(set_cookie.contains("SameSite=Lax"));
+}
+
+#[tokio::test]
+async fn tokenized_server_accepts_session_cookie() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    let token = "a1b2c3d4e5f6789012345678abcdef01";
+    let server = test_server_with_token(dir.path(), token, None);
+
+    let response = server
+        .get("/api/list")
+        .add_header("Cookie", format!("zfiles_session={token}"))
+        .await;
+    response.assert_status_ok();
+}
+
+#[tokio::test]
+async fn session_cookie_authenticates_file_download() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    let token = "a1b2c3d4e5f6789012345678abcdef01";
+    let server = test_server_with_token(dir.path(), token, None);
+
+    let response = server
+        .get("/api/file?path=notes.txt")
+        .add_header("Cookie", format!("zfiles_session={token}"))
+        .await;
+    response.assert_status_ok();
+    response.assert_text("hello");
+}
+
+#[tokio::test]
+async fn expired_session_cookie_is_rejected_and_cleared() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
+    let token = "b2c3d4e5f6789012345678abcdef0123";
+    let expired = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64
+        - 60;
+    let server = test_server_with_token(dir.path(), token, Some(expired));
+
+    let response = server
+        .get("/api/list")
+        .add_header("Cookie", format!("zfiles_session={token}"))
+        .await;
+    response.assert_status(axum::http::StatusCode::UNAUTHORIZED);
+    let cookie_header = response.header("set-cookie");
+    let set_cookie = cookie_header.to_str().expect("ascii cookie");
+    assert!(set_cookie.contains("Max-Age=0"));
+}
+
+#[tokio::test]
 async fn expiring_token_requires_session_row() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();

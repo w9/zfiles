@@ -1,21 +1,30 @@
-const bearerToken = new URLSearchParams(window.location.search).get("token");
+/** Build a path/query/hash string with `token` removed from search params. */
+export function stripTokenFromUrl(url: URL): string {
+  if (!url.searchParams.has("token")) {
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+  url.searchParams.delete("token");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+/** Remove one-time share token from the address bar after the server sets the session cookie. */
+export function bootstrapSessionFromUrl(): void {
+  const url = new URL(window.location.href);
+  const next = stripTokenFromUrl(new URL(window.location.href));
+  const current = `${url.pathname}${url.search}${url.hash}`;
+  if (next !== current) {
+    window.history.replaceState(null, "", next);
+  }
+}
 
 export function apiFetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
-  const headers = new Headers(init?.headers);
-  if (bearerToken) {
-    headers.set("Authorization", `Bearer ${bearerToken}`);
-  }
-  return fetch(input, { ...init, headers });
+  return fetch(input, { ...init, credentials: "same-origin" });
 }
 
 export function websocketUrl(path: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const url = new URL(path, `${protocol}//${window.location.host}`);
-  if (bearerToken) {
-    url.searchParams.set("token", bearerToken);
-  }
-  return url.toString();
+  return new URL(path, `${protocol}//${window.location.host}`).toString();
 }

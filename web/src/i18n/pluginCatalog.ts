@@ -1,4 +1,5 @@
 import type { Locale } from "./messages";
+import { apiFetch } from "../api";
 
 const pluginCatalogs: Record<Locale, Record<string, string>> = {
   en: {},
@@ -23,7 +24,7 @@ export function translatePlugin(locale: Locale, key: string): string | undefined
 
 export async function loadPluginCatalogs(): Promise<void> {
   clearPluginCatalogs();
-  const response = await fetch("/api/plugins/i18n");
+  const response = await apiFetch("/api/plugins/i18n");
   if (!response.ok) {
     return;
   }
