@@ -73,3 +73,5 @@ Resume explorer UX polish. Tokenized shares now bootstrap an HttpOnly session co
 - [x] Frontend: strip `?token=` via `replaceState`; rely on cookie for fetch/WebSocket (drop URL token wiring)
 - [x] Rebuild `web/dist` after session cookie changes
 - [x] Run web unit tests and full `cargo test`
+- [x] Create `design/` and move `DESIGN*.md` there with `DESIGN_` prefix removed from filenames
+- [x] Update references in `README.md`, `AGENTS.md`, and any other docs pointing at old paths

@@ -2,7 +2,7 @@
 
 Local file server with a browser-based explorer. Run `zfiles` in a directory to browse, download, and upload files instantly — no indexing, no configuration.
 
-See [DESIGN.md](DESIGN.md) for architecture and goals. See [TODO.md](TODO.md) for current work.
+See [design/design.md](design/design.md) for architecture and goals. See [TODO.md](TODO.md) for current work.
 
 ## Quick start
 

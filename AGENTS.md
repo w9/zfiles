@@ -1,6 +1,6 @@
 # Agent instructions
 
-You are working on **zfiles**, a local file server with a browser-based explorer. Read [DESIGN.md](DESIGN.md) for architecture, invariants, and technical goals before making structural changes.
+You are working on **zfiles**, a local file server with a browser-based explorer. Read [design/design.md](design/design.md) for architecture, invariants, and technical goals before making structural changes.
 
 ## Task tracking
 
@@ -27,7 +27,7 @@ Triggers include — but are not limited to — phrases like: *implement*, *add*
 - you believe you "know" what to build without updating `TODO.md`;
 - the user did not say **"Go!"** — **"Go!"** is optional shorthand for the same cycle, not the only trigger.
 
-On the **first tool call** of a cycle, prefer reading `DESIGN.md`, `TODO.md`, and `AGENTS.md` over opening implementation files. If steps 1–3 are not done yet, your first edits must be **`TODO.md` only** (plus the planning commit), not application code.
+On the **first tool call** of a cycle, prefer reading `design/design.md`, `TODO.md`, and `AGENTS.md` over opening implementation files. If steps 1–3 are not done yet, your first edits must be **`TODO.md` only** (plus the planning commit), not application code.
 
 Whenever the user asks you to **do something** in chat — implement, fix, refactor, add a feature, update behavior, or otherwise change the codebase — treat that request as **one full development cycle**. Do not jump straight to code; follow the sequence below. (Pure questions, reviews, planning, and read-only investigation are not cycles.)
 
@@ -51,11 +51,11 @@ Common mistakes to avoid:
 
 For each cycle:
 
-1. **Update the high-level plan** — Read [DESIGN.md](DESIGN.md) and [TODO.md](TODO.md). Revise the "High-level plan next" paragraph in `TODO.md` to reflect current progress and near-term priorities (including the user's request when they gave one). If it is still accurate, leave it unchanged.
+1. **Update the high-level plan** — Read [design/design.md](design/design.md) and [TODO.md](TODO.md). Revise the "High-level plan next" paragraph in `TODO.md` to reflect current progress and near-term priorities (including the user's request when they gave one). If it is still accurate, leave it unchanged.
 2. **Add TODO items** — Break the cycle's scope into concrete unchecked items in `TODO.md` (from the user's request and/or the plan). **Append them to the bottom** of the TODO list; never prepend them above existing entries. Use **as many items as the work warrants**, up to a **maximum of 7** per cycle — do not pad the list to hit a count, and do not exceed seven in the batch you commit before implementation. Each item should be a concrete, deliverable slice of work.
 3. **Commit** — Commit the plan and new TODO items before writing implementation code.
 4. **Implement** — Work through the new unfinished items. For each item:
-   - Write tests first (see DESIGN.md §5), then implement the minimum to pass.
+   - Write tests first (see design/design.md §5), then implement the minimum to pass.
    - Mark the item complete when finished — **never remove completed items**.
    - Commit whenever appropriate; Update .gitignore when appropriate; follow the user's git instructions.
 5. **Verify** — Before the cycle is complete, run the full test suite (`cargo test`) and fix any failures. **All tests must pass** — do not leave the cycle with a failing or skipped suite.
@@ -69,7 +69,7 @@ Do not skip steps or reorder them. Planning and TODO updates come first; impleme
 
 **Do not implement** new behavior, features, or structural changes unless at least one of these applies:
 
-1. **Design-aligned** — The work aligns explicitly with something described in [DESIGN.md](DESIGN.md) (architecture, invariants, goals, or documented behavior).
+1. **Design-aligned** — The work aligns explicitly with something described in [design/design.md](design/design.md) (architecture, invariants, goals, or documented behavior).
 2. **Fix** — The work fixes a bug, regression, broken test, or clear defect in existing behavior.
 3. **Trivial** — The change is trivially simple (e.g. typo, one-line config, requested doc edit with no behavioral impact). **Still run the full development cycle** when the user asked you to make the change; "trivial" only waives the approval dialog in step 3 of the scope gate, not the cycle steps.
 
@@ -89,6 +89,6 @@ When working on the React explorer under `web/`:
 
 | File | Purpose |
 |------|---------|
-| [DESIGN.md](DESIGN.md) | Architecture, module layout, plugin contract, testing strategy |
+| [design/design.md](design/design.md) | Architecture, module layout, plugin contract, testing strategy |
 | [TODO.md](TODO.md) | Implementation checklist |
 | [README.md](README.md) | Quick start and API summary |
