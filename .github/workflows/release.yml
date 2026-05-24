@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to attach assets to
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  linux-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: install native deps
+        run: sudo apt-get update && sudo apt-get install -y libheif-dev libde265-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: build frontend
+        run: |
+          cd web
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: build release binary
+        run: cargo build --release
+
+      - name: package binary
+        run: |
+          strip target/release/zfiles
+          cp target/release/zfiles zfiles-linux-amd64
+          chmod +x zfiles-linux-amd64
+
+      - name: upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$TAG" zfiles-linux-amd64 --clobber
