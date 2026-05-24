@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Resume explorer UX polish. Tokenized shares now bootstrap an HttpOnly session cookie so subresource links work without token in every URL.
+Implement XDG config/cache storage (cycle 1): path helpers, merged config load, folder state under `~/.config/zfiles/folders/<id>/`, plugin install/discovery and cache paths. Follow-up cycles: frontend listing refresh, README polish, migration helper.
 
 ## TODO List
 
@@ -75,3 +75,12 @@ Resume explorer UX polish. Tokenized shares now bootstrap an HttpOnly session co
 - [x] Run web unit tests and full `cargo test`
 - [x] Create `design/` and move `DESIGN*.md` there with `DESIGN_` prefix removed from filenames
 - [x] Update references in `README.md`, `AGENTS.md`, and any other docs pointing at old paths
+- [x] Write `design/config_and_cache.md` — XDG layout for config, state, and cache
+- [x] Update `design/design.md` — remove in-tree `.zfiles/` storage; point at new doc
+- [ ] Add `xdg` module: config/cache roots, serve-id, folder state paths + unit tests
+- [ ] Config: global + per-folder merge; drop `state.dotfolder_path` and in-tree bootstrap
+- [ ] Serve layout + state: resolve under `folders/<serve-id>/`; simplify relocated logic
+- [ ] Plugins: install/discover under XDG config; plugin `storagePath` under XDG cache
+- [ ] Wire CLI (`init`, `config`, `plugin`, `status`), transport banner, and daemon pid paths
+- [ ] Update integration/unit tests for XDG layout; run full `cargo test`
+- [ ] Update README for centralized XDG storage (remove `.zfiles/` relocation docs)
