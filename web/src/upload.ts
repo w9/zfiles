@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import { base64EncodeUtf8 } from "./base64Utf8";
 
 const CHUNK_SIZE = 256 * 1024;
 
@@ -9,7 +10,7 @@ export type UploadProgress = {
 };
 
 function encodeMetadata(filename: string): string {
-  return `filename ${btoa(filename)}`;
+  return `filename ${base64EncodeUtf8(filename)}`;
 }
 
 async function headOffset(location: string): Promise<number> {
