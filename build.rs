@@ -60,6 +60,23 @@ fn main() {
     }
 }
 
+/// Build scripts still receive PROFILE=`debug`/`release`; Cargo 1.95 rejects `--profile debug`.
+fn cargo_build_profile(profile: &str) -> &str {
+    match profile {
+        "debug" => "dev",
+        other => other,
+    }
+}
+
+/// Dev/test artifacts live under `target/debug/` even though the profile is named `dev`.
+fn target_subdir(profile: &str) -> &str {
+    match profile {
+        "dev" | "debug" | "test" => "debug",
+        "bench" => "release",
+        other => other,
+    }
+}
+
 fn find_plugin_binary(
     target_dir: &Path,
     profile: &str,
@@ -80,7 +97,8 @@ fn find_plugin_binary(
     }
 
     panic!(
-        "image-thumbnailer binary not found; run `cargo build -p image-thumbnailer --profile {profile}` first"
+        "image-thumbnailer binary not found; run `cargo build -p image-thumbnailer --profile {}` first",
+        cargo_build_profile(profile)
     );
 }
 
@@ -90,18 +108,19 @@ fn plugin_binary_candidates(
     target_triple: &str,
     host: &str,
 ) -> Vec<PathBuf> {
+    let subdir = target_subdir(profile);
     let mut candidates = Vec::new();
     if target_triple == host {
-        candidates.push(target_dir.join(profile).join("image-thumbnailer"));
+        candidates.push(target_dir.join(subdir).join("image-thumbnailer"));
     }
     candidates.push(
         target_dir
             .join(target_triple)
-            .join(profile)
+            .join(subdir)
             .join("image-thumbnailer"),
     );
     if target_triple != host {
-        candidates.push(target_dir.join(profile).join("image-thumbnailer"));
+        candidates.push(target_dir.join(subdir).join("image-thumbnailer"));
     }
     candidates
 }
