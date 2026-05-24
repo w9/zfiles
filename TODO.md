@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix dev-frontend file icon serving (embedded `/file-icons/` before Vite proxy; public path for token auth), then resume explorer UX polish.
+Fix upload metadata encoding for Unicode paths/filenames (browser `btoa` Latin1 limitation), then resume explorer UX polish.
 
 ## TODO List
 
@@ -61,3 +61,10 @@ Fix dev-frontend file icon serving (embedded `/file-icons/` before Vite proxy; p
 - [x] Serve `/file-icons/` from embedded assets before Vite proxy in dev-frontend mode
 - [x] Treat `/file-icons/` as a public path for token auth; add tests
 - [x] Run `cargo test` and web unit tests
+- [x] `build.rs`: map PROFILE `debug` to `--profile dev` for nested plugin build (Cargo 1.95)
+- [x] Keep plugin binary path at `target/debug/` for dev profile (historical layout)
+- [x] Run full `cargo test` to verify bundled-plugin build
+- [ ] Upload metadata: base64-encode UTF-8 bytes instead of `btoa` on raw string
+- [ ] Unit test for Unicode upload path encoding (round-trip via `TextDecoder`)
+- [ ] Rebuild `web/dist` after upload fix
+- [ ] Run web unit tests and full `cargo test`
