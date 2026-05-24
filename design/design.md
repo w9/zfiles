@@ -30,12 +30,12 @@ The rest of this section unpacks each objective.
 This is the load-bearing invariant of the project. Nothing in the startup path is allowed to block on work that scales with the size of the served directory or the state of any cache. The startup sequence is fixed:
 
 1. Parse CLI args (`clap`, sub-millisecond)
-2. Read `.zfiles/config.toml` if it exists; otherwise use defaults
+2. Load merged config from XDG paths if present; otherwise use defaults (see [config_and_cache.md](config_and_cache.md))
 3. Bind the TCP listener
 4. Spawn the browser (`xdg-open`, async — we don't wait for it)
 5. Begin serving
 
-Conspicuously absent: directory scanning, index building, plugin startup, hashing, any filesystem stat work beyond the requested-directory listing. The dot-folder is created lazily on first write, so a fresh-clone repo can be browsed with zero side effects on disk.
+Conspicuously absent: directory scanning, index building, plugin startup, hashing, any filesystem stat work beyond the requested-directory listing. XDG config and cache directories are created lazily on first write, so browsing an arbitrary folder — including a fresh clone — has zero side effects on disk.
 
 The plugin supervisor begins discovering and spawning plugins in parallel in the background once the listener is up. Plugins reach ready state asynchronously. Until they are ready, capability requests for them return "unavailable" and the UI degrades gracefully.
 
@@ -49,9 +49,9 @@ Downloads use HTTP Range requests for resumability. The response body is a strea
 
 Target throughput: 110+ MB/s sustained on a single connection from local SSD over gigabit. This is well within `sendfile`'s capability — modern Linux moves several GB/s with `sendfile` on local hardware — so we're bounded by the network, not the kernel.
 
-Uploads use the tus.io protocol. The client issues a Creation request describing the upload (size, metadata); the server allocates a state row in `state.db` and returns an Upload URL. The client sends PATCH requests with `Content-Range`; the server appends to a spool file at `.zfiles/uploads/<uuid>` and updates the recorded offset. On disconnect, the client queries the server's current offset with a HEAD request and resumes from there. Tus has mature implementations in JS, Go, Python, and Rust, including the canonical browser client (`tus-js-client`) we use in the frontend.
+Uploads use the tus.io protocol. The client issues a Creation request describing the upload (size, metadata); the server allocates a state row in `state.db` and returns an Upload URL. The client sends PATCH requests with `Content-Range`; the server appends to a spool file under the serve root's XDG state directory (see [config_and_cache.md](config_and_cache.md)) and updates the recorded offset. On disconnect, the client queries the server's current offset with a HEAD request and resumes from there. Tus has mature implementations in JS, Go, Python, and Rust, including the canonical browser client (`tus-js-client`) we use in the frontend.
 
-Completion is atomic: the spool file is `fsync`'d and `rename(2)`'d into place. This is atomic on the same filesystem; we document the same-filesystem constraint and warn at startup if the served directory and dot-folder cross a mount point.
+Completion is atomic: the spool file is `fsync`'d and `rename(2)`'d into place. This is atomic on the same filesystem; we document the same-filesystem constraint and warn at startup if the served directory and upload spool cross a mount point.
 
 ### Microkernel architecture
 
@@ -128,9 +128,9 @@ The binary is one OS process organized into the following Rust modules. Each is 
 
 `fs` is the cross-platform filesystem abstraction. It exposes directory listing, stat, read, write, atomic move, and a watch service. The v1 implementation uses `tokio::fs` for I/O and `notify` for watching, configured to use inotify on Linux.
 
-`state` manages the dot-folder. It creates `.zfiles/` on demand (not at startup), owns the kernel's `state.db` (SQLite in WAL mode for in-progress tus uploads and session tokens), and provides per-folder configuration accessors.
+`state` manages per-serve-root runtime state under XDG config paths. It creates directories on demand (not at startup), owns the kernel's `state.db` (SQLite in WAL mode for in-progress tus uploads and session tokens), and provides configuration accessors. See [config_and_cache.md](config_and_cache.md) for layout.
 
-`plugins` is the plugin supervisor. It discovers manifests under `.zfiles/plugins/` (folder-scoped) and `~/.config/zfiles/plugins/` (user-scoped), spawns enabled plugins as child processes, performs the handshake, maintains the capability registry, routes capability requests to the right plugin, and restarts crashed plugins with exponential backoff. Process groups ensure plugins die when the kernel exits.
+`plugins` is the plugin supervisor. It discovers manifests under `~/.config/zfiles/plugins/` (user-installed) and materialized copies under `~/.cache/zfiles/bundled/` (official), spawns enabled plugins as child processes, performs the handshake, maintains the capability registry, routes capability requests to the right plugin, and restarts crashed plugins with exponential backoff. Process groups ensure plugins die when the kernel exits.
 
 `auth` is bearer-token middleware applied to every route. It generates tokens, performs constant-time comparison, and enforces read-only mode at the handler layer.
 
@@ -158,7 +158,7 @@ Plugins are the central extensibility mechanism, so this contract is the most im
 
 When the kernel needs a capability (the UI asks for a thumbnail, say), it queries the registry for plugins matching the file type, dispatches the request with a per-call timeout, and returns a structured "no capability available" response if nothing matches or the timeout expires. The UI degrades gracefully in every such case.
 
-**Storage.** Each plugin gets a private subdirectory at `.zfiles/plugins/<name>/data/` it can read and write freely. The kernel makes no assumptions about contents. This is where a search plugin would put its index, a thumbnailer would put its cache, an EXIF extractor would put a metadata database.
+**Storage.** Each plugin gets a private subdirectory at `~/.cache/zfiles/plugins/<name>/data/` it can read and write freely. The kernel makes no assumptions about contents. This is where a search plugin would put its index, a thumbnailer would put its cache, an EXIF extractor would put a metadata database. Config and cache layout is specified in [config_and_cache.md](config_and_cache.md).
 
 ### Request flow
 
@@ -171,23 +171,11 @@ The handler asks `fs` for the listing — a direct `read_dir` returning immediat
 
 This pattern — kernel responds immediately, plugins enhance asynchronously — applies everywhere a plugin might contribute. Thumbnails follow the same flow: the listing returns with placeholder thumbnails, the actual thumbnails arrive over the WebSocket as the thumbnailer produces them. Search is the one operation that has no useful kernel-only answer; if no `searcher` is installed, the search box is hidden in the UI entirely.
 
-### Dot-folder layout
+### Config, state, and cache
 
-```
-.zfiles/
-  config.toml             Per-folder settings
-  state.db                Kernel-only state (uploads, sessions)
-  uploads/                In-progress tus uploads
-  plugins/
-    <plugin-name>/
-      manifest.toml
-      bin/                Plugin executable(s)
-      data/               Plugin's private writable directory
-      logs/               Plugin's stderr capture
-  logs/                   Kernel logs
-```
+Kernel configuration, durable per-serve-root state, and plugin caches live under `~/.config/zfiles` and `~/.cache/zfiles` by default. The served directory is never modified for zfiles housekeeping.
 
-The kernel owns `config.toml`, `state.db`, `uploads/`, and `logs/`. Plugins own everything under `plugins/<name>/data/`. The dot-folder lives inside the served directory so it travels when the folder is moved or rsync'd, with a config option to relocate it for workflows that want a clean tree.
+Full layout, resolution order, CLI mapping, and failure modes: [config_and_cache.md](config_and_cache.md).
 
 ### Frontend strategy
 
@@ -211,7 +199,7 @@ Plugin storage corruption is the plugin's problem. The kernel does not back up o
 
 Network interruptions are recovered by tus on uploads and HTTP Range resumption on downloads. The kernel persists upload state to `state.db` so resume works across kernel restarts.
 
-The dot-folder may be deleted at any time; the kernel recreates it lazily on next write. Plugin data is lost; the kernel's running state (in-progress uploads) is lost, which is acceptable.
+Per-serve-root state under XDG config may be deleted at any time; the kernel recreates it lazily on next write. Plugin cache under XDG cache may be cleared; plugins rebuild. In-progress uploads in deleted state are lost, which is acceptable.
 
 ## 4. Example CLI invocations
 
@@ -276,7 +264,7 @@ zfiles plugin test ./my-plugin    # run the conformance suite against a plugin
 ### Initialization and daemon
 
 ```bash
-# Create .zfiles/ with defaults but do not start the server
+# Create ~/.config/zfiles/ with defaults but do not start the server
 zfiles init
 
 # Long-running mode watching multiple folders on separate ports
