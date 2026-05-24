@@ -44,6 +44,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: build bundled plugins
+        run: cargo build --release -p image-thumbnailer
+
       - name: build release binary
         run: cargo build --release
 

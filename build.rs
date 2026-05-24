@@ -1,7 +1,6 @@
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 fn main() {
     if env::var("CARGO_FEATURE_BUNDLED_PLUGINS").is_err() {
@@ -22,11 +21,12 @@ fn main() {
     }
 
     let profile = env::var("PROFILE").unwrap_or_else(|_| "debug".into());
+    let target_triple = env::var("TARGET").unwrap_or_else(|_| env::var("HOST").expect("HOST"));
+    let host = env::var("HOST").unwrap_or_else(|_| target_triple.clone());
     let target_dir = env::var("CARGO_TARGET_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|_| manifest_dir.join("target"));
-    let binary = target_dir.join(&profile).join("image-thumbnailer");
-    let binary = ensure_plugin_binary(&manifest_dir, &target_dir, &profile, binary);
+    let binary = find_plugin_binary(&target_dir, &profile, &target_triple, &host);
 
     fs::create_dir_all(bundled_root.join("bin")).expect("create bundled bin directory");
     fs::create_dir_all(bundled_root.join("locales")).expect("create bundled locales directory");
@@ -60,14 +60,16 @@ fn main() {
     }
 }
 
-fn ensure_plugin_binary(
-    manifest_dir: &Path,
-    _target_dir: &Path,
+fn find_plugin_binary(
+    target_dir: &Path,
     profile: &str,
-    binary: PathBuf,
+    target_triple: &str,
+    host: &str,
 ) -> PathBuf {
-    if binary.is_file() {
-        return binary;
+    for candidate in plugin_binary_candidates(target_dir, profile, target_triple, host) {
+        if candidate.is_file() {
+            return candidate;
+        }
     }
 
     if let Ok(path) = env::var("CARGO_BIN_EXE_image-thumbnailer") {
@@ -77,20 +79,29 @@ fn ensure_plugin_binary(
         }
     }
 
-    let cargo = env::var("CARGO").unwrap_or_else(|_| "cargo".into());
-    let status = Command::new(cargo)
-        .current_dir(manifest_dir)
-        .args(["build", "-p", "image-thumbnailer", "--profile", profile])
-        .status()
-        .expect("spawn cargo build for image-thumbnailer");
-    if !status.success() {
-        panic!("failed to build image-thumbnailer for bundled plugins");
+    panic!(
+        "image-thumbnailer binary not found; run `cargo build -p image-thumbnailer --profile {profile}` first"
+    );
+}
+
+fn plugin_binary_candidates(
+    target_dir: &Path,
+    profile: &str,
+    target_triple: &str,
+    host: &str,
+) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if target_triple == host {
+        candidates.push(target_dir.join(profile).join("image-thumbnailer"));
     }
-    if !binary.is_file() {
-        panic!(
-            "image-thumbnailer binary missing at {} after build",
-            binary.display()
-        );
+    candidates.push(
+        target_dir
+            .join(target_triple)
+            .join(profile)
+            .join("image-thumbnailer"),
+    );
+    if target_triple != host {
+        candidates.push(target_dir.join(profile).join("image-thumbnailer"));
     }
-    binary
+    candidates
 }

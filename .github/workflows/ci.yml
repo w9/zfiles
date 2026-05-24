@@ -49,6 +49,9 @@ jobs:
       - name: perf smoke
         run: cargo test --test perf
 
+      - name: build bundled plugins
+        run: cargo build -p image-thumbnailer
+
       - name: build zfiles binary
         run: cargo build
 
