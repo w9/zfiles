@@ -4,6 +4,7 @@ import ExplorerBreadcrumb from "./ExplorerBreadcrumb";
 import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import StatusBar from "./StatusBar";
 import ThemeToggle from "./ThemeToggle";
+import ListingViewToggle from "./ListingViewToggle";
 import { apiFetch } from "./api";
 import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
@@ -27,7 +28,6 @@ import { useActionSystem } from "./actions/useActionSystem";
 import { isImagePath, matchesGlob } from "./imagePaths";
 import {
   readListingViewMode,
-  toggleListingViewMode,
   type ListingViewMode,
 } from "./listingView";
 import {
@@ -596,6 +596,10 @@ export default function App() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
+            <ListingViewToggle
+              mode={listingViewMode}
+              onChange={setListingViewMode}
+            />
             <ThemeToggle mode={themeMode} onChange={setThemeMode} />
             <ActionToolbar
               registry={actionSystem.registry}
@@ -688,21 +692,13 @@ export default function App() {
         </section>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-3 py-2">
+      <div className="mt-4 rounded-xl border bg-card px-3 py-2">
         <ExplorerBreadcrumb
           parts={breadcrumbs}
           rootLabel={t("breadcrumb.root")}
           ariaLabel={t("breadcrumb.label")}
           onNavigate={navigateTo}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setListingViewMode((mode) => toggleListingViewMode(mode))}
-        >
-          {listingViewMode === "grid" ? t("listing.view.table") : t("listing.view.grid")}
-        </Button>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
