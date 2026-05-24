@@ -7,10 +7,12 @@ use zfiles::config::Config;
 use zfiles::daemon::pid_file;
 use zfiles::daemon_config::{start_config, status_config, stop_config};
 use zfiles::plugins::PluginSupervisor;
+use zfiles::xdg;
 
 #[test]
 fn daemon_config_start_stop_round_trip() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     let share_a = dir.path().join("share-a");
     let share_b = dir.path().join("share-b");
     fs::create_dir_all(&share_a).unwrap();
@@ -57,11 +59,7 @@ fn test_server_with_plugins(root: &std::path::Path) -> TestServer {
     use zfiles::state::StateStore;
     use zfiles::transport::{router, AppState};
 
-    let dotfolder = zfiles::dotfolder::resolve_for_root(root);
-    let plugins = Arc::new(PluginSupervisor::with_dotfolder(
-        root.to_path_buf(),
-        dotfolder.clone(),
-    ));
+    let plugins = Arc::new(PluginSupervisor::new(root.to_path_buf()));
     let events = EventBus::new();
     zfiles::watch::start(root.to_path_buf(), events.clone()).expect("watch");
     plugins.clone().start_watcher_dispatch(events.clone());
@@ -71,7 +69,7 @@ fn test_server_with_plugins(root: &std::path::Path) -> TestServer {
         Arc::new(LocalFs::new(root.to_path_buf())),
         AuthConfig::disabled(),
         false,
-        Arc::new(StateStore::with_dotfolder(root.to_path_buf(), dotfolder)),
+        Arc::new(StateStore::new(root.to_path_buf())),
         events,
         plugins,
     );
@@ -97,6 +95,7 @@ async fn wait_for_plugin(server: &TestServer, capability: &str) {
 #[tokio::test]
 async fn watcher_plugin_receives_filesystem_notify() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -110,9 +109,8 @@ async fn watcher_plugin_receives_filesystem_notify() {
 
     std::fs::write(dir.path().join("created.txt"), b"new file").unwrap();
 
-    let notify_path = dir
-        .path()
-        .join(".zfiles/plugins/watcher-stub/data/last_notify.txt");
+    let notify_path = xdg::user_plugins_dir()
+        .join("watcher-stub/data/last_notify.txt");
     for _ in 0..50 {
         if notify_path.is_file() {
             let contents = std::fs::read_to_string(&notify_path).unwrap();

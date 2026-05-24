@@ -56,9 +56,9 @@ pub enum Command {
         #[command(flatten)]
         args: crate::search::SearchArgs,
     },
-    /// Create `.zfiles/` with default configuration
+    /// Create `~/.config/zfiles/` with default configuration
     Init {
-        /// Directory to initialize
+        /// Also create per-folder config for this serve root
         #[arg(default_value = ".")]
         path: PathBuf,
     },
@@ -111,18 +111,11 @@ pub enum DaemonCommand {
 #[derive(Debug, Subcommand)]
 pub enum PluginCommand {
     /// List discovered plugins
-    List {
-        /// Directory whose `.zfiles/plugins` directory should be scanned
-        #[arg(default_value = ".")]
-        path: PathBuf,
-    },
-    /// Install a plugin directory into `.zfiles/plugins/`
+    List,
+    /// Install a plugin directory into `~/.config/zfiles/plugins/`
     Install {
         /// Plugin source directory containing `manifest.toml`
         source: PathBuf,
-        /// Directory whose `.zfiles/plugins` directory should receive the plugin
-        #[arg(long, default_value = ".")]
-        path: PathBuf,
     },
     /// Run the plugin conformance suite
     Test {
@@ -133,9 +126,6 @@ pub enum PluginCommand {
     Remove {
         /// Plugin name to remove
         name: String,
-        /// Directory whose `.zfiles/plugins` directory should be modified
-        #[arg(long, default_value = ".")]
-        path: PathBuf,
     },
 }
 
@@ -143,17 +133,17 @@ pub enum PluginCommand {
 pub enum ConfigCommand {
     /// Read a config value
     Get {
-        /// Directory whose `.zfiles/config.toml` should be read
-        #[arg(long, default_value = ".")]
-        folder: PathBuf,
+        /// Serve root for per-folder config (omit for global config)
+        #[arg(long)]
+        folder: Option<PathBuf>,
         /// Dotted config key (e.g. server.read_only)
         key: String,
     },
     /// Write a config value
     Set {
-        /// Directory whose `.zfiles/config.toml` should be written
-        #[arg(long, default_value = ".")]
-        folder: PathBuf,
+        /// Serve root for per-folder config (omit for global config)
+        #[arg(long)]
+        folder: Option<PathBuf>,
         /// Dotted config key (e.g. server.read_only)
         key: String,
         /// Value to store

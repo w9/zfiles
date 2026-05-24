@@ -131,11 +131,13 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn pid_file_lives_under_dotfolder() {
+    fn pid_file_lives_under_state_dir() {
         let dir = tempdir().unwrap();
+        let _homes = crate::xdg::TestHomes::new(dir.path().to_path_buf());
+        let root = dir.path().canonicalize().unwrap();
         assert_eq!(
-            pid_file(dir.path()),
-            dir.path().join(".zfiles/daemon.pid")
+            pid_file(&root),
+            crate::dotfolder::resolve_for_root(&root).join("daemon.pid")
         );
     }
 }

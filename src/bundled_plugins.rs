@@ -37,7 +37,7 @@ pub fn materialize_image_thumbnailer() -> Result<PathBuf> {
     let manifest = BundledAssets::get("image-thumbnailer/manifest.toml")
         .context("bundled image-thumbnailer manifest missing; rebuild with bundled-plugins enabled")?;
     let parsed: PluginManifest = toml::from_str(std::str::from_utf8(&manifest.data)?)?;
-    let dest = cache_base_dir()
+    let dest = crate::xdg::bundled_plugins_dir()
         .join(PLUGIN_NAME)
         .join(&parsed.version);
 
@@ -104,44 +104,8 @@ fn set_executable(path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn cache_base_dir() -> PathBuf {
-    test_cache_base().unwrap_or_else(default_cache_base_dir)
-}
-
-fn default_cache_base_dir() -> PathBuf {
-    std::env::var_os("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .or_else(|| {
-            std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".cache"))
-        })
-        .unwrap_or_else(|| PathBuf::from(".cache"))
-        .join("zfiles/bundled")
-}
-
-#[cfg(debug_assertions)]
-fn test_cache_base() -> Option<PathBuf> {
-    use std::sync::{Mutex, OnceLock};
-
-    static SLOT: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
-    SLOT.get_or_init(|| Mutex::new(None))
-        .lock()
-        .ok()
-        .and_then(|guard| guard.clone())
-}
-
-#[cfg(not(debug_assertions))]
-fn test_cache_base() -> Option<PathBuf> {
-    None
-}
-
-#[cfg(debug_assertions)]
 pub fn set_test_cache_base(dir: Option<PathBuf>) {
-    use std::sync::{Mutex, OnceLock};
-
-    static SLOT: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
-    if let Ok(mut guard) = SLOT.get_or_init(|| Mutex::new(None)).lock() {
-        *guard = dir;
-    }
+    crate::xdg::set_test_cache_home(dir);
 }
 
 #[cfg(test)]

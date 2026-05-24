@@ -1,37 +1,41 @@
 use tempfile::tempdir;
 use zfiles::config::Config;
 use zfiles::state::StateStore;
+use zfiles::xdg;
 
-#[test]
-fn relocated_dotfolder_stores_state_outside_serve_root() {
-    let dir = tempdir().unwrap();
-    let external = dir.path().join("external-dotfolder");
-    std::fs::create_dir_all(dir.path().join(".zfiles")).unwrap();
-    std::fs::write(
-        dir.path().join(".zfiles/config.toml"),
-        format!("[state]\ndotfolder_path = {:?}\n", external),
-    )
-    .unwrap();
-
-    let store = StateStore::new(dir.path().to_path_buf());
-    store.ensure_dotfolder().unwrap();
-    assert!(external.is_dir());
-    assert!(!dir.path().join(".zfiles/state.db").exists());
-
-    store.create_upload("file.txt".into(), None).unwrap();
-    assert!(external.join("state.db").exists());
+fn with_test_homes<F: FnOnce()>(base: std::path::PathBuf, f: F) {
+    xdg::set_test_config_home(Some(base.join("config")));
+    xdg::set_test_cache_home(Some(base.join("cache")));
+    f();
+    xdg::set_test_config_home(None);
+    xdg::set_test_cache_home(None);
 }
 
 #[test]
-fn config_get_set_dotfolder_path_round_trip() {
+fn xdg_state_dir_stores_state_outside_serve_root() {
     let dir = tempdir().unwrap();
-    let external = dir.path().join("relocated");
-    let mut config = Config::default();
-    config
-        .set("state.dotfolder_path", &external.display().to_string())
-        .unwrap();
-    assert_eq!(
-        config.get("state.dotfolder_path").unwrap(),
-        Some(external.display().to_string())
-    );
+    with_test_homes(dir.path().to_path_buf(), || {
+        let root = dir.path().canonicalize().unwrap();
+        let store = StateStore::new(root.clone());
+        store.ensure_state_dir().unwrap();
+        assert!(store.state_dir().starts_with(xdg::config_home()));
+        assert!(!store.state_dir().starts_with(&root));
+
+        store.create_upload("file.txt".into(), None).unwrap();
+        assert!(store.state_dir().join("state.db").exists());
+    });
+}
+
+#[test]
+fn config_get_set_round_trip() {
+    let dir = tempdir().unwrap();
+    with_test_homes(dir.path().to_path_buf(), || {
+        let root = dir.path().canonicalize().unwrap();
+        let mut config = Config::default();
+        config.set("server.read_only", "true").unwrap();
+        config.save_to(&Config::folder_config_path(&root)).unwrap();
+
+        let loaded = Config::load(&root).unwrap();
+        assert!(loaded.read_only());
+    });
 }

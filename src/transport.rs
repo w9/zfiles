@@ -120,14 +120,14 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let root = serve.root_path()?;
     let config = Config::load(&root)?;
     let layout = dotfolder::plan_serve_layout(&root, &config, serve.read_only);
-    let dotfolder = layout.dotfolder.clone();
+    let state_dir = layout.state_dir.clone();
     let read_only = layout.read_only;
     let listener = TcpListener::bind(serve.listen_addr()?)
         .await
         .context("failed to bind TCP listener")?;
     let bound = listener.local_addr()?;
 
-    let state_store = Arc::new(StateStore::with_dotfolder(root.clone(), dotfolder.clone()));
+    let state_store = Arc::new(StateStore::with_state_dir(root.clone(), state_dir.clone()));
     let expires_at = if let Some(expire) = &serve.expire {
         let duration = duration::parse_duration(expire)?;
         let now = std::time::SystemTime::now()
@@ -155,7 +155,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     };
 
     let events = EventBus::new();
-    let plugins = Arc::new(PluginSupervisor::with_dotfolder(root.clone(), dotfolder.clone()));
+    let plugins = Arc::new(PluginSupervisor::new(root.clone()));
     #[cfg(feature = "dev-frontend")]
     let vite_dev = if serve.vite_dev_enabled() {
         Some(Arc::new(
@@ -187,7 +187,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         open_browser,
         read_only,
         layout.auto_read_only,
-        layout.dotfolder_relocated.then_some(dotfolder.as_path()),
+        Some(state_dir.as_path()),
         public_share,
         #[cfg(feature = "dev-frontend")]
         serve.vite_dev_enabled().then(|| serve.vite_dev_url()),
@@ -206,7 +206,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         }
     }
 
-    mount::warn_if_cross_mount("dot-folder", &root, &dotfolder);
+    mount::warn_if_cross_mount("upload spool", &root, &state_dir);
 
     watch::start(root.clone(), events.clone())?;
     plugins.clone().start_watcher_dispatch(events.clone());

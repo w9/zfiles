@@ -11,6 +11,7 @@ use zfiles::fs::{FileEntry, LocalFs};
 use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
+use zfiles::xdg;
 
 fn test_server_for_layout(root: &std::path::Path, config: &Config, cli_read_only: bool) -> TestServer {
     let layout = dotfolder::plan_serve_layout(root, config, cli_read_only);
@@ -18,15 +19,12 @@ fn test_server_for_layout(root: &std::path::Path, config: &Config, cli_read_only
         Arc::new(LocalFs::new(root.to_path_buf())),
         AuthConfig::disabled(),
         layout.read_only,
-        Arc::new(StateStore::with_dotfolder(
+        Arc::new(StateStore::with_state_dir(
             root.to_path_buf(),
-            layout.dotfolder.clone(),
+            layout.state_dir.clone(),
         )),
         EventBus::new(),
-        Arc::new(PluginSupervisor::with_dotfolder(
-            root.to_path_buf(),
-            layout.dotfolder,
-        )),
+        Arc::new(PluginSupervisor::new(root.to_path_buf())),
     );
     TestServer::new(router(state)).expect("test server")
 }
@@ -44,6 +42,7 @@ fn make_read_only(path: &std::path::Path) {
 #[tokio::test]
 async fn read_only_serve_root_lists_and_reports_read_only() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let root = dir.path().canonicalize().unwrap();
 
@@ -63,7 +62,7 @@ async fn read_only_serve_root_lists_and_reports_read_only() {
     assert!(entries.iter().any(|entry| entry.name == "notes.txt"));
 
     let layout = dotfolder::plan_serve_layout(&root, &Config::default(), false);
-    assert!(layout.dotfolder_relocated);
     assert!(layout.auto_read_only);
-    assert!(!layout.dotfolder.starts_with(&root));
+    assert!(!layout.state_dir.starts_with(&root));
+    assert!(layout.state_dir.starts_with(xdg::config_home()));
 }

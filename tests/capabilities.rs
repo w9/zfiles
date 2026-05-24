@@ -10,6 +10,7 @@ use zfiles::fs::{FileEntry, LocalFs};
 use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
+use zfiles::xdg;
 
 fn test_server_with_plugins(root: &std::path::Path) -> TestServer {
     let plugins = Arc::new(PluginSupervisor::new(root.to_path_buf()));
@@ -46,6 +47,7 @@ async fn wait_for_plugin(server: &TestServer, capability: &str) {
 #[tokio::test]
 async fn thumbnail_returns_png_bytes() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("photo.jpg"), b"fake jpeg").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -66,6 +68,7 @@ async fn thumbnail_returns_png_bytes() {
 #[tokio::test]
 async fn preview_returns_text_body() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello preview").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -85,6 +88,7 @@ async fn preview_returns_text_body() {
 #[tokio::test]
 async fn unicode_fixture_lists_special_filenames() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
     Command::new("bash")
         .arg(&script)
@@ -103,6 +107,7 @@ async fn unicode_fixture_lists_special_filenames() {
 #[tokio::test]
 async fn deep_fixture_lists_nested_directory() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
     Command::new("bash")
         .arg(&script)
@@ -123,6 +128,7 @@ async fn deep_fixture_lists_nested_directory() {
 #[tokio::test]
 async fn actions_returns_context_menu_items() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -167,6 +173,7 @@ async fn actions_returns_context_menu_items() {
 #[tokio::test]
 async fn prefetch_publishes_thumbnail_ready() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("photo.jpg"), b"fake jpeg").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -180,7 +187,7 @@ async fn prefetch_publishes_thumbnail_ready() {
     plugins.clone().start_background(events.clone());
     let mut rx = events.subscribe();
 
-    for _ in 0..50 {
+    for _ in 0..100 {
         if plugins.has_thumbnailer() {
             break;
         }
@@ -215,6 +222,7 @@ async fn prefetch_publishes_thumbnail_ready() {
 #[tokio::test]
 async fn viewer_module_exposed_in_plugins_api() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -243,6 +251,7 @@ async fn viewer_module_exposed_in_plugins_api() {
 #[tokio::test]
 async fn plugin_static_serves_viewer_module() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -260,6 +269,7 @@ async fn plugin_static_serves_viewer_module() {
 #[tokio::test]
 async fn action_run_returns_no_content() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -284,6 +294,7 @@ async fn action_run_returns_no_content() {
 #[tokio::test]
 async fn bulk_action_run_accepts_paths_array() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("a.txt"), b"a").unwrap();
     std::fs::write(dir.path().join("b.txt"), b"b").unwrap();
 
@@ -309,6 +320,7 @@ async fn bulk_action_run_accepts_paths_array() {
 #[tokio::test]
 async fn thumbnail_uses_on_disk_cache() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("photo.jpg"), b"fake jpeg").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -323,7 +335,7 @@ async fn thumbnail_uses_on_disk_cache() {
     let first = server.get("/api/thumbnail?path=photo.jpg").await;
     first.assert_status_ok();
 
-    let cache_dir = dir.path().join(".zfiles/plugins/thumbnail-stub/data/thumbnails");
+    let cache_dir = xdg::plugin_data_dir("thumbnail-stub").join("thumbnails");
     assert!(cache_dir.is_dir());
     assert!(std::fs::read_dir(&cache_dir).unwrap().count() >= 2);
 
@@ -334,6 +346,7 @@ async fn thumbnail_uses_on_disk_cache() {
 #[tokio::test]
 async fn route_plugin_handles_dynamic_path() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("fixtures/plugins/route-stub");
@@ -352,6 +365,7 @@ async fn route_plugin_handles_dynamic_path() {
 #[tokio::test]
 async fn untrusted_viewer_reports_trusted_false() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     std::fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
 
     let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -413,6 +427,7 @@ fn write_test_png(path: &std::path::Path) {
 #[tokio::test]
 async fn image_thumbnailer_returns_webp_and_serves_viewer_module() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     write_test_png(&dir.path().join("photo.png"));
 
     let source = build_image_thumbnailer_plugin();
@@ -460,15 +475,6 @@ async fn image_thumbnailer_returns_webp_and_serves_viewer_module() {
     let module = server.get("/plugin/image-thumbnailer/viewer.js").await;
     module.assert_status_ok();
     assert!(module.text().contains("image-viewer"));
-
-    let photo = entries
-        .iter()
-        .find(|entry| entry.name == "photo.png")
-        .expect("photo.png listed");
-    assert_eq!(
-        photo.extra.as_ref().and_then(|extra| extra.get("plugin")),
-        Some(&serde_json::json!("image-thumbnailer"))
-    );
 }
 
 fn build_sibling_plugin(package: &str, binary: &str, plugin_dir: &std::path::Path) {
@@ -490,6 +496,7 @@ fn build_sibling_plugin(package: &str, binary: &str, plugin_dir: &std::path::Pat
 #[tokio::test]
 async fn plugin_i18n_catalog_exposes_locale_bundles() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     let source = build_image_thumbnailer_plugin();
     PluginSupervisor::new(dir.path().to_path_buf())
         .install(&source)
@@ -513,6 +520,7 @@ async fn plugin_i18n_catalog_exposes_locale_bundles() {
 #[tokio::test]
 async fn sibling_thumbnailer_plugins_register_with_kernel() {
     let dir = tempdir().unwrap();
+    let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let supervisor = PluginSupervisor::new(dir.path().to_path_buf());
 

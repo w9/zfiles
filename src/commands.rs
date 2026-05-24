@@ -63,10 +63,8 @@ fn run_daemon(command: crate::cli::DaemonCommand) -> anyhow::Result<()> {
 
 async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
     match command {
-        PluginCommand::List { path } => {
-            let root = std::fs::canonicalize(&path)
-                .with_context(|| format!("failed to resolve path {}", path.display()))?;
-            let plugins = PluginSupervisor::new(root).list()?;
+        PluginCommand::List => {
+            let plugins = PluginSupervisor::new(std::env::current_dir()?).list()?;
             if plugins.is_empty() {
                 println!("No plugins discovered.");
                 return Ok(());
@@ -78,10 +76,8 @@ async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
                 );
             }
         }
-        PluginCommand::Install { path, source } => {
-            let root = std::fs::canonicalize(&path)
-                .with_context(|| format!("failed to resolve path {}", path.display()))?;
-            let record = PluginSupervisor::new(root).install(&source)?;
+        PluginCommand::Install { source } => {
+            let record = PluginSupervisor::new(std::env::current_dir()?).install(&source)?;
             println!(
                 "Installed plugin {} to {}",
                 record.manifest.name,
@@ -94,10 +90,8 @@ async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
             conformance::run(&plugin).await?;
             println!("Plugin conformance passed.");
         }
-        PluginCommand::Remove { path, name } => {
-            let root = std::fs::canonicalize(&path)
-                .with_context(|| format!("failed to resolve path {}", path.display()))?;
-            PluginSupervisor::new(root).remove(&name)?;
+        PluginCommand::Remove { name } => {
+            PluginSupervisor::new(std::env::current_dir()?).remove(&name)?;
             println!("Removed plugin {name}");
         }
     }
@@ -107,31 +101,42 @@ async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
 async fn run_config(command: ConfigCommand) -> anyhow::Result<()> {
     match command {
         ConfigCommand::Get { folder, key } => {
-            let root = std::fs::canonicalize(&folder)
-                .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
-            let config = Config::load(&root)?;
+            let config = if let Some(folder) = folder {
+                let root = std::fs::canonicalize(&folder)
+                    .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
+                Config::load(&root)?
+            } else {
+                Config::load_global()?
+            };
             let value = config
                 .get(&key)?
                 .ok_or_else(|| anyhow::anyhow!("config key {key} is unset"))?;
             println!("{value}");
         }
         ConfigCommand::Set { folder, key, value } => {
-            let root = std::fs::canonicalize(&folder)
-                .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
-            let mut config = Config::load(&root)?;
-            config.set(&key, &value)?;
-            config.save_to(&Config::dotfolder_config(&root))?;
-            println!("ok");
+            if let Some(folder) = folder {
+                let root = std::fs::canonicalize(&folder)
+                    .with_context(|| format!("failed to resolve folder {}", folder.display()))?;
+                let mut config = Config::load(&root)?;
+                config.set(&key, &value)?;
+                config.save_to(&Config::folder_config_path(&root))?;
+            } else {
+                let mut config = Config::load_global()?;
+                config.set(&key, &value)?;
+                config.save_to(&Config::global_config_path())?;
+            }
         }
     }
     Ok(())
 }
 
 async fn run_init(path: std::path::PathBuf) -> anyhow::Result<()> {
+    let global = Config::init_global()?;
+    println!("Initialized {}", global.display());
     let root = std::fs::canonicalize(&path)
         .with_context(|| format!("failed to resolve path {}", path.display()))?;
-    let config_path = Config::init_folder(&root)?;
-    println!("Initialized {}", config_path.display());
+    let folder = Config::init_folder(&root)?;
+    println!("Initialized {}", folder.display());
     Ok(())
 }
 

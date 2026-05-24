@@ -19,19 +19,21 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to resolve path {}", args.path.display()))?;
     let config = Config::load(&root)?;
     let layout = dotfolder::plan_serve_layout(&root, &config, false);
-    let dotfolder = layout.dotfolder.clone();
-    let plugins = PluginSupervisor::with_dotfolder(root.clone(), dotfolder.clone()).list()?;
+    let state_dir = layout.state_dir.clone();
+    let plugins = PluginSupervisor::new(root.clone()).list()?;
 
     println!("root: {}", root.display());
-    println!("dot-folder: {}", dotfolder.display());
-    if dotfolder.is_dir() {
-        println!("dot-folder-status: present");
+    println!("serve-id: {}", layout.serve_id);
+    println!("state-dir: {}", state_dir.display());
+    if state_dir.is_dir() {
+        println!("state-dir-status: present");
     } else {
-        println!("dot-folder-status: missing");
+        println!("state-dir-status: missing");
     }
-    if layout.dotfolder_relocated {
-        println!("dot-folder-relocated: true");
-    }
+    println!(
+        "folder-config: {}",
+        Config::folder_config_path(&root).display()
+    );
     println!("read_only: {}", layout.read_only);
     println!("open_browser: {}", config.open_browser());
     println!("plugins: {}", plugins.len());
@@ -49,14 +51,25 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::xdg;
     use tempfile::tempdir;
+
+    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
+        xdg::set_test_config_home(Some(base.join("config")));
+        xdg::set_test_cache_home(Some(base.join("cache")));
+        f();
+        xdg::set_test_config_home(None);
+        xdg::set_test_cache_home(None);
+    }
 
     #[test]
     fn status_runs_for_empty_folder() {
         let dir = tempdir().unwrap();
-        run(StatusArgs {
-            path: dir.path().to_path_buf(),
-        })
-        .unwrap();
+        with_test_homes(dir.path().to_path_buf(), || {
+            run(StatusArgs {
+                path: dir.path().to_path_buf(),
+            })
+            .unwrap();
+        });
     }
 }

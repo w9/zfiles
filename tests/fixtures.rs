@@ -4,11 +4,13 @@ use std::sync::Arc;
 use axum_test::TestServer;
 use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
+use zfiles::config::Config;
 use zfiles::events::EventBus;
 use zfiles::fs::{FileEntry, LocalFs};
 use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
+use zfiles::xdg;
 
 fn test_server(root: &std::path::Path) -> TestServer {
     let state = AppState::new(
@@ -23,12 +25,20 @@ fn test_server(root: &std::path::Path) -> TestServer {
 }
 
 #[test]
-fn init_creates_dotfolder() {
+fn init_creates_xdg_config() {
     let dir = tempdir().unwrap();
+    xdg::set_test_config_home(Some(dir.path().join("config")));
+    xdg::set_test_cache_home(Some(dir.path().join("cache")));
+
     let root = dir.path().canonicalize().unwrap();
-    let config_path = zfiles::config::Config::init_folder(&root).unwrap();
-    assert!(config_path.is_file());
-    assert!(root.join(".zfiles/plugins").is_dir());
+    let global = Config::init_global().unwrap();
+    assert!(global.is_file());
+    let folder = Config::init_folder(&root).unwrap();
+    assert!(folder.is_file());
+    assert!(folder.starts_with(xdg::config_home()));
+
+    xdg::set_test_config_home(None);
+    xdg::set_test_cache_home(None);
 }
 
 #[tokio::test]

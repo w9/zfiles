@@ -36,22 +36,23 @@ zfiles -vv --port 9000
 ## CLI
 
 ```bash
-# Initialize .zfiles/ with defaults (no server)
+# Initialize ~/.config/zfiles/ (and per-folder config when a path is given)
+zfiles init
 zfiles init ~/Downloads
 
 # Search filenames via installed searcher plugin
 zfiles search ~/notes "meeting"
 
-# Show folder status
+# Show folder status (serve id, state dir, plugins)
 zfiles status ~/Downloads
 
 # Upload to a remote server
 zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
 
-# Plugin management
+# Plugin management (installs under ~/.config/zfiles/plugins/)
 zfiles plugin install ./fixtures/plugins/search-filename
 zfiles plugin list
-zfiles plugin remove search-filename --path ~/Downloads
+zfiles plugin remove search-filename
 
 # Background daemon
 zfiles daemon start ~/Downloads --port 8080
@@ -75,28 +76,33 @@ port = 8081
 ```
 
 ```bash
-# Configuration
+# Configuration (global defaults + per-folder overrides)
+zfiles config get server.read_only
+zfiles config set server.open_browser false
 zfiles config get server.read_only --folder ~/Downloads
 zfiles config set server.read_only true --folder ~/Downloads
-
-# Relocate .zfiles/ outside the served tree (bootstrap config stays in-place)
-zfiles config set state.dotfolder_path /var/lib/zfiles/downloads --folder ~/Downloads
 ```
 
-# Read-only or non-writable folders
+## Config and cache layout
 
-If the served directory cannot be written (read-only mount, permission-restricted folder, etc.), zfiles automatically:
+Kernel settings and durable state live under **`~/.config/zfiles/`**; regeneratable plugin data and bundled plugin binaries live under **`~/.cache/zfiles/`**. The served directory is never modified for zfiles housekeeping.
 
-- enables **read-only mode** (uploads and deletes are disabled), and
-- stores kernel state under **`~/.config/zfiles/dotfolders/<id>/`** instead of `<folder>/.zfiles/`.
+```
+~/.config/zfiles/
+  config.toml              Global defaults
+  plugins/                 User-installed plugins
+  folders/<serve-id>/      Per serve-root config, state.db, upload spools
 
-The startup banner shows when this happens (`Mode: read-only …` and `State: …`). You can still pass `--read-only` explicitly or relocate state manually:
-
-```bash
-zfiles config set state.dotfolder_path /var/lib/zfiles/downloads --folder ~/Downloads
+~/.cache/zfiles/
+  bundled/                 Materialized official plugins
+  plugins/<name>/data/     Plugin caches (thumbnails, indexes, …)
 ```
 
-Relocated dot-folders store `state.db`, uploads, plugins, and daemon pid files under the configured path while a bootstrap `~/Downloads/.zfiles/config.toml` can point at the external location.
+Each absolute serve root gets a stable id (hash of the canonical path). Use `zfiles status` to see the id and paths for a folder.
+
+## Read-only serve roots
+
+If the served directory cannot be written (read-only mount, permission-restricted folder, etc.), zfiles automatically enables **read-only mode** (uploads and deletes are disabled). State still lives under `~/.config/zfiles/folders/<serve-id>/`; the startup banner shows `Mode: read-only …` and the state directory path.
 
 ## Frontend (shadcn/ui)
 

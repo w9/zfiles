@@ -3,19 +3,12 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use crate::dotfolder;
+use crate::xdg;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
 pub struct Config {
     #[serde(default)]
     pub server: ServerConfig,
-    #[serde(default)]
-    pub state: StateConfig,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
-pub struct StateConfig {
-    pub dotfolder_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
@@ -25,25 +18,22 @@ pub struct ServerConfig {
 }
 
 impl Config {
-    pub fn dotfolder_config(root: &Path) -> PathBuf {
-        root.join(".zfiles/config.toml")
+    pub fn global_config_path() -> PathBuf {
+        xdg::global_config_path()
     }
 
-    pub fn load(root: &Path) -> Result<Self> {
-        let bootstrap_path = Self::dotfolder_config(root);
-        if bootstrap_path.is_file() {
-            let bootstrap = Self::load_from(&bootstrap_path)?;
-            let dot = dotfolder::resolve(root, &bootstrap);
-            let resolved_path = dot.join("config.toml");
-            if resolved_path == bootstrap_path {
-                return Ok(bootstrap);
-            }
-            if resolved_path.is_file() {
-                return Self::load_from(&resolved_path);
-            }
-            return Ok(bootstrap);
-        }
-        Self::load_from(&dotfolder::resolve(root, &Self::default()).join("config.toml"))
+    pub fn folder_config_path(serve_root: &Path) -> PathBuf {
+        xdg::folder_config_path(serve_root)
+    }
+
+    pub fn load(serve_root: &Path) -> Result<Self> {
+        let global = Self::load_from(&Self::global_config_path())?;
+        let folder = Self::load_from(&Self::folder_config_path(serve_root))?;
+        Ok(global.merge(folder))
+    }
+
+    pub fn load_global() -> Result<Self> {
+        Self::load_from(&Self::global_config_path())
     }
 
     pub fn load_from(path: &Path) -> Result<Self> {
@@ -65,15 +55,20 @@ impl Config {
         std::fs::write(path, contents).with_context(|| format!("write config {}", path.display()))
     }
 
+    pub fn merge(mut self, overlay: Self) -> Self {
+        if overlay.server.read_only.is_some() {
+            self.server.read_only = overlay.server.read_only;
+        }
+        if overlay.server.open_browser.is_some() {
+            self.server.open_browser = overlay.server.open_browser;
+        }
+        self
+    }
+
     pub fn get(&self, key: &str) -> Result<Option<String>> {
         match key {
             "server.read_only" => Ok(Some(self.read_only().to_string())),
             "server.open_browser" => Ok(Some(self.open_browser().to_string())),
-            "state.dotfolder_path" => Ok(self
-                .state
-                .dotfolder_path
-                .as_ref()
-                .map(|path| path.display().to_string())),
             _ => bail!("unknown config key {key}"),
         }
     }
@@ -85,9 +80,6 @@ impl Config {
             }
             "server.open_browser" => {
                 self.server.open_browser = Some(parse_bool(value)?);
-            }
-            "state.dotfolder_path" => {
-                self.state.dotfolder_path = Some(PathBuf::from(value));
             }
             _ => bail!("unknown config key {key}"),
         }
@@ -102,20 +94,19 @@ impl Config {
         self.server.open_browser.unwrap_or(true)
     }
 
-    pub fn init_folder(root: &Path) -> Result<PathBuf> {
-        let config_path = Self::dotfolder_config(root);
+    pub fn init_global() -> Result<PathBuf> {
+        let config_path = Self::global_config_path();
         if !config_path.is_file() {
-            std::fs::create_dir_all(
-                config_path
-                    .parent()
-                    .context("config path must have a parent")?,
-            )?;
             Self::default().save_to(&config_path)?;
         }
-        let config = Self::load(root)?;
-        let dotfolder = dotfolder::resolve(root, &config);
-        std::fs::create_dir_all(dotfolder.join("plugins"))
-            .context("create plugins directory")?;
+        Ok(config_path)
+    }
+
+    pub fn init_folder(serve_root: &Path) -> Result<PathBuf> {
+        let config_path = Self::folder_config_path(serve_root);
+        if !config_path.is_file() {
+            Self::default().save_to(&config_path)?;
+        }
         Ok(config_path)
     }
 }
@@ -133,38 +124,54 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
+    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
+        xdg::set_test_config_home(Some(base.join("config")));
+        xdg::set_test_cache_home(Some(base.join("cache")));
+        f();
+        xdg::set_test_config_home(None);
+        xdg::set_test_cache_home(None);
+    }
+
     #[test]
     fn defaults_when_missing() {
         let dir = tempdir().unwrap();
-        let config = Config::load(dir.path()).unwrap();
-        assert!(!config.read_only());
-        assert!(config.open_browser());
+        with_test_homes(dir.path().to_path_buf(), || {
+            let root = dir.path().canonicalize().unwrap();
+            let config = Config::load(&root).unwrap();
+            assert!(!config.read_only());
+            assert!(config.open_browser());
+        });
     }
 
     #[test]
-    fn parses_existing_file() {
+    fn folder_config_overrides_global() {
         let dir = tempdir().unwrap();
-        let dot = dir.path().join(".zfiles");
-        std::fs::create_dir_all(&dot).unwrap();
-        std::fs::write(
-            dot.join("config.toml"),
-            "[server]\nread_only = true\nopen_browser = false\n",
-        )
-        .unwrap();
+        with_test_homes(dir.path().to_path_buf(), || {
+            let root = dir.path().canonicalize().unwrap();
+            Config::default()
+                .save_to(&Config::global_config_path())
+                .unwrap();
+            let mut folder = Config::default();
+            folder.server.read_only = Some(true);
+            folder
+                .save_to(&Config::folder_config_path(&root))
+                .unwrap();
 
-        let config = Config::load(dir.path()).unwrap();
-        assert!(config.read_only());
-        assert!(!config.open_browser());
+            let config = Config::load(&root).unwrap();
+            assert!(config.read_only());
+            assert!(config.open_browser());
+        });
     }
 
     #[test]
-    fn init_folder_creates_defaults() {
+    fn init_global_creates_defaults() {
         let dir = tempdir().unwrap();
-        let config_path = Config::init_folder(dir.path()).unwrap();
-        assert!(config_path.is_file());
-        assert!(dir.path().join(".zfiles/plugins").is_dir());
-        let config = Config::load(dir.path()).unwrap();
-        assert!(!config.read_only());
+        with_test_homes(dir.path().to_path_buf(), || {
+            let config_path = Config::init_global().unwrap();
+            assert!(config_path.is_file());
+            let config = Config::load_global().unwrap();
+            assert!(!config.read_only());
+        });
     }
 
     #[test]

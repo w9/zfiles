@@ -97,7 +97,6 @@ pub struct PluginSupervisor {
 
 struct Inner {
     serve_root: PathBuf,
-    dotfolder: PathBuf,
     handles: Mutex<HashMap<String, Arc<PluginHandle>>>,
 }
 
@@ -123,29 +122,23 @@ struct PluginIo {
 
 impl PluginSupervisor {
     pub fn new(serve_root: PathBuf) -> Self {
-        Self::with_dotfolder(serve_root.clone(), crate::dotfolder::resolve_for_root(&serve_root))
-    }
-
-    pub fn with_dotfolder(serve_root: PathBuf, dotfolder: PathBuf) -> Self {
         Self {
             inner: Arc::new(Inner {
                 serve_root,
-                dotfolder,
                 handles: Mutex::new(HashMap::new()),
             }),
         }
+    }
+
+    pub fn with_dotfolder(serve_root: PathBuf, _state_dir: PathBuf) -> Self {
+        Self::new(serve_root)
     }
 
     pub fn discover(&self) -> Result<Vec<PluginRecord>> {
         let mut discovered = Vec::new();
         let mut seen = HashMap::new();
 
-        let folder_plugins = self.inner.dotfolder.join("plugins");
-        discover_in(&folder_plugins, &mut discovered, &mut seen)?;
-
-        if let Some(home) = home_plugins_dir() {
-            discover_in(&home, &mut discovered, &mut seen)?;
-        }
+        discover_in(&crate::xdg::user_plugins_dir(), &mut discovered, &mut seen)?;
 
         #[cfg(feature = "bundled-plugins")]
         crate::bundled_plugins::discover_bundled(&mut discovered, &mut seen)?;
@@ -164,11 +157,12 @@ impl PluginSupervisor {
         let manifest: PluginManifest =
             toml::from_str(&contents).context("parse plugin manifest")?;
 
-        let dest = self.inner.dotfolder.join("plugins").join(&manifest.name);
+        let dest = crate::xdg::user_plugins_dir().join(&manifest.name);
         if dest.exists() {
             std::fs::remove_dir_all(&dest).with_context(|| format!("replace {}", dest.display()))?;
         }
         copy_dir_recursive(source, &dest)?;
+        set_executable(&dest.join(&manifest.executable))?;
 
         Ok(PluginRecord {
             manifest,
@@ -177,7 +171,7 @@ impl PluginSupervisor {
     }
 
     pub fn remove(&self, name: &str) -> Result<()> {
-        let dest = self.inner.dotfolder.join("plugins").join(name);
+        let dest = crate::xdg::user_plugins_dir().join(name);
         if !dest.is_dir() {
             bail!("plugin {name} is not installed");
         }
@@ -293,7 +287,7 @@ impl PluginSupervisor {
     ) -> Option<(String, Vec<u8>)> {
         let handle = self.ready_plugin_for("thumbnailer", path)?;
         if let Some(cached) =
-            read_thumbnail_cache(&handle.record.root, &handle.serve_root, path, tier)
+            read_thumbnail_cache(&handle.record.manifest.name, &handle.serve_root, path, tier)
         {
             return Some(cached);
         }
@@ -321,7 +315,7 @@ impl PluginSupervisor {
 
         if let Some(result) = result {
             let _ = write_thumbnail_cache(
-                &handle.record.root,
+                &handle.record.manifest.name,
                 &handle.serve_root,
                 path,
                 tier,
@@ -670,6 +664,13 @@ impl PluginSupervisor {
 
     async fn run_plugin_once(&self, record: &PluginRecord, events: &EventBus) -> Result<()> {
         ensure_plugin_dirs(&record.root)?;
+        std::fs::create_dir_all(crate::xdg::plugin_data_dir(&record.manifest.name))
+            .with_context(|| {
+                format!(
+                    "create plugin cache directory {}",
+                    crate::xdg::plugin_data_dir(&record.manifest.name).display()
+                )
+            })?;
         let log_path = record
             .root
             .join("logs")
@@ -774,7 +775,7 @@ impl PluginHandle {
                 "protocolVersion": self.record.manifest.protocol_version,
                 "capabilities": self.record.manifest.capabilities,
                 "globs": self.record.manifest.globs,
-                "storagePath": self.record.root.join("data").display().to_string(),
+                "storagePath": crate::xdg::plugin_data_dir(&self.record.manifest.name).display().to_string(),
                 "rootPath": self.serve_root.display().to_string(),
             }
         });
@@ -966,7 +967,7 @@ fn encode_query_path(path: &str) -> String {
     encoded
 }
 
-fn thumbnail_cache_paths(plugin_root: &Path, path: &str, tier: &str) -> (PathBuf, PathBuf) {
+fn thumbnail_cache_paths(plugin_name: &str, path: &str, tier: &str) -> (PathBuf, PathBuf) {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
@@ -974,17 +975,17 @@ fn thumbnail_cache_paths(plugin_root: &Path, path: &str, tier: &str) -> (PathBuf
     path.hash(&mut hasher);
     tier.hash(&mut hasher);
     let key = format!("{:016x}", hasher.finish());
-    let dir = plugin_root.join("data/thumbnails");
+    let dir = crate::xdg::plugin_data_dir(plugin_name).join("thumbnails");
     (dir.join(format!("{key}.meta")), dir.join(format!("{key}.bin")))
 }
 
 fn read_thumbnail_cache(
-    plugin_root: &Path,
+    plugin_name: &str,
     serve_root: &Path,
     path: &str,
     tier: &str,
 ) -> Option<(String, Vec<u8>)> {
-    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path, tier);
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_name, path, tier);
     let meta = std::fs::read_to_string(meta_path).ok()?;
     let mut lines = meta.lines();
     let content_type = lines.next()?.trim().to_string();
@@ -998,14 +999,14 @@ fn read_thumbnail_cache(
 }
 
 fn write_thumbnail_cache(
-    plugin_root: &Path,
+    plugin_name: &str,
     serve_root: &Path,
     path: &str,
     tier: &str,
     content_type: &str,
     bytes: &[u8],
 ) -> Result<()> {
-    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_root, path, tier);
+    let (meta_path, bin_path) = thumbnail_cache_paths(plugin_name, path, tier);
     if let Some(parent) = meta_path.parent() {
         std::fs::create_dir_all(parent).context("create thumbnail cache directory")?;
     }
@@ -1222,6 +1223,18 @@ fn discover_in(
     Ok(())
 }
 
+fn set_executable(path: &Path) -> Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        let mut permissions = std::fs::metadata(path)?.permissions();
+        permissions.set_mode(permissions.mode() | 0o111);
+        std::fs::set_permissions(path, permissions)?;
+    }
+    Ok(())
+}
+
 fn copy_dir_recursive(source: &Path, dest: &Path) -> Result<()> {
     std::fs::create_dir_all(dest)?;
     for entry in std::fs::read_dir(source)? {
@@ -1230,16 +1243,11 @@ fn copy_dir_recursive(source: &Path, dest: &Path) -> Result<()> {
         if entry.file_type()?.is_dir() {
             copy_dir_recursive(&entry.path(), &target)?;
         } else {
-            std::fs::copy(entry.path(), target)?;
+            std::fs::copy(entry.path(), &target)?;
         }
     }
     Ok(())
 }
-
-fn home_plugins_dir() -> Option<PathBuf> {
-    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config/zfiles/plugins"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1412,15 +1420,15 @@ mod tests {
     #[test]
     fn thumbnail_cache_invalidates_when_meta_mtime_stale() {
         let dir = tempfile::tempdir().unwrap();
+        crate::xdg::set_test_cache_home(Some(dir.path().join("cache")));
         let serve = dir.path();
-        let plugin_root = dir.path().join("plugin");
-        std::fs::create_dir_all(&plugin_root).unwrap();
         let file = serve.join("photo.jpg");
         std::fs::write(&file, b"v1").unwrap();
-        write_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid", "image/png", b"x").unwrap();
-        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid").is_some());
-        let (meta_path, _) = thumbnail_cache_paths(&plugin_root, "photo.jpg", "grid");
+        write_thumbnail_cache("demo", serve, "photo.jpg", "grid", "image/png", b"x").unwrap();
+        assert!(read_thumbnail_cache("demo", serve, "photo.jpg", "grid").is_some());
+        let (meta_path, _) = thumbnail_cache_paths("demo", "photo.jpg", "grid");
         std::fs::write(&meta_path, "image/png\n0").unwrap();
-        assert!(read_thumbnail_cache(&plugin_root, serve, "photo.jpg", "grid").is_none());
+        assert!(read_thumbnail_cache("demo", serve, "photo.jpg", "grid").is_none());
+        crate::xdg::set_test_cache_home(None);
     }
 }

@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 pub struct StateStore {
     serve_root: PathBuf,
-    dotfolder: PathBuf,
+    state_dir: PathBuf,
     db: Mutex<Option<Connection>>,
 }
 
@@ -21,33 +21,40 @@ pub struct UploadRecord {
 
 impl StateStore {
     pub fn new(serve_root: PathBuf) -> Self {
-        let dotfolder = crate::dotfolder::resolve_for_root(&serve_root);
-        Self::with_dotfolder(serve_root, dotfolder)
+        let state_dir = crate::dotfolder::resolve_for_root(&serve_root);
+        Self::with_state_dir(serve_root, state_dir)
     }
 
-    pub fn with_dotfolder(serve_root: PathBuf, dotfolder: PathBuf) -> Self {
+    pub fn with_state_dir(serve_root: PathBuf, state_dir: PathBuf) -> Self {
         Self {
             serve_root,
-            dotfolder,
+            state_dir,
             db: Mutex::new(None),
         }
+    }
+
+    pub fn with_dotfolder(serve_root: PathBuf, state_dir: PathBuf) -> Self {
+        Self::with_state_dir(serve_root, state_dir)
     }
 
     pub fn serve_root(&self) -> &Path {
         &self.serve_root
     }
 
-    pub fn dotfolder(&self) -> PathBuf {
-        self.dotfolder.clone()
+    pub fn state_dir(&self) -> PathBuf {
+        self.state_dir.clone()
     }
 
-    pub fn ensure_dotfolder(&self) -> Result<PathBuf> {
-        let dot = self.dotfolder();
-        std::fs::create_dir_all(&dot).with_context(|| format!("create {}", dot.display()))?;
-        std::fs::create_dir_all(dot.join("uploads")).context("create uploads directory")?;
-        std::fs::create_dir_all(dot.join("logs")).context("create logs directory")?;
-        std::fs::create_dir_all(dot.join("plugins")).context("create plugins directory")?;
-        Ok(dot)
+    pub fn dotfolder(&self) -> PathBuf {
+        self.state_dir()
+    }
+
+    pub fn ensure_state_dir(&self) -> Result<PathBuf> {
+        let dir = self.state_dir();
+        std::fs::create_dir_all(&dir).with_context(|| format!("create {}", dir.display()))?;
+        std::fs::create_dir_all(dir.join("uploads")).context("create uploads directory")?;
+        std::fs::create_dir_all(dir.join("logs")).context("create logs directory")?;
+        Ok(dir)
     }
 
     fn with_db<R>(&self, f: impl FnOnce(&Connection) -> Result<R>) -> Result<R> {
@@ -57,8 +64,8 @@ impl StateStore {
             .map_err(|_| anyhow::anyhow!("state database mutex poisoned"))?;
 
         if slot.is_none() {
-            let dot = self.ensure_dotfolder()?;
-            let db_path = dot.join("state.db");
+            let dir = self.ensure_state_dir()?;
+            let db_path = dir.join("state.db");
             let conn = Connection::open(&db_path)
                 .with_context(|| format!("open database {}", db_path.display()))?;
             conn.execute_batch(
@@ -89,7 +96,7 @@ impl StateStore {
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |duration| duration.as_secs() as i64);
 
-        self.ensure_dotfolder()?;
+        self.ensure_state_dir()?;
         let spool = self.upload_spool_path(&id);
         std::fs::File::create(&spool)
             .with_context(|| format!("create upload spool {}", spool.display()))?;
@@ -203,7 +210,7 @@ impl StateStore {
     }
 
     pub fn upload_spool_path(&self, id: &str) -> PathBuf {
-        self.dotfolder().join("uploads").join(id)
+        self.state_dir().join("uploads").join(id)
     }
 
     pub fn create_session(&self, token: &str, expires_at: i64) -> Result<()> {
@@ -236,52 +243,70 @@ impl StateStore {
 mod tests {
     use super::*;
     use crate::fs::LocalFs;
+    use crate::xdg;
     use tempfile::tempdir;
 
-    #[test]
-    fn dotfolder_is_created_lazily() {
-        let dir = tempdir().unwrap();
-        let store = StateStore::new(dir.path().to_path_buf());
-        assert!(!store.dotfolder().exists());
+    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
+        xdg::set_test_config_home(Some(base.join("config")));
+        xdg::set_test_cache_home(Some(base.join("cache")));
+        f();
+        xdg::set_test_config_home(None);
+        xdg::set_test_cache_home(None);
+    }
 
-        store.ensure_dotfolder().unwrap();
-        assert!(store.dotfolder().is_dir());
-        assert!(store.dotfolder().join("uploads").is_dir());
+    #[test]
+    fn state_dir_is_created_lazily() {
+        let dir = tempdir().unwrap();
+        with_test_homes(dir.path().to_path_buf(), || {
+            let root = dir.path().canonicalize().unwrap();
+            let store = StateStore::new(root);
+            assert!(!store.state_dir().exists());
+
+            store.ensure_state_dir().unwrap();
+            assert!(store.state_dir().is_dir());
+            assert!(store.state_dir().join("uploads").is_dir());
+        });
     }
 
     #[test]
     fn upload_round_trip() {
         let dir = tempdir().unwrap();
-        let root = dir.path().canonicalize().unwrap();
-        let store = StateStore::new(root.clone());
-        let fs = LocalFs::new(root);
+        with_test_homes(dir.path().to_path_buf(), || {
+            let root = dir.path().canonicalize().unwrap();
+            let store = StateStore::new(root.clone());
+            let fs = LocalFs::new(root.clone());
 
-        let record = store.create_upload("incoming.txt".into(), Some(5)).unwrap();
-        assert_eq!(record.offset, 0);
-        assert!(store.upload_spool_path(&record.id).exists());
+            let record = store.create_upload("incoming.txt".into(), Some(5)).unwrap();
+            assert_eq!(record.offset, 0);
+            assert!(store.upload_spool_path(&record.id).exists());
+            assert!(store.state_dir().starts_with(xdg::config_home()));
 
-        let updated = store.append_upload(&record.id, b"hello").unwrap();
-        assert_eq!(updated.offset, 5);
+            let updated = store.append_upload(&record.id, b"hello").unwrap();
+            assert_eq!(updated.offset, 5);
 
-        let target = store.finalize_upload(&record.id, &fs).unwrap();
-        assert_eq!(std::fs::read(target).unwrap(), b"hello");
-        assert!(store.get_upload(&record.id).unwrap().is_none());
+            let target = store.finalize_upload(&record.id, &fs).unwrap();
+            assert_eq!(std::fs::read(target).unwrap(), b"hello");
+            assert!(store.get_upload(&record.id).unwrap().is_none());
+        });
     }
 
     #[test]
     fn session_expiry_is_enforced() {
         let dir = tempdir().unwrap();
-        let store = StateStore::new(dir.path().to_path_buf());
-        let expired = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |duration| duration.as_secs() as i64)
-            - 60;
+        with_test_homes(dir.path().to_path_buf(), || {
+            let root = dir.path().canonicalize().unwrap();
+            let store = StateStore::new(root);
+            let expired = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |duration| duration.as_secs() as i64)
+                - 60;
 
-        store.create_session("expired-token", expired).unwrap();
-        assert!(!store.session_valid("expired-token").unwrap());
+            store.create_session("expired-token", expired).unwrap();
+            assert!(!store.session_valid("expired-token").unwrap());
 
-        let future = expired + 7200;
-        store.create_session("valid-token", future).unwrap();
-        assert!(store.session_valid("valid-token").unwrap());
+            let future = expired + 7200;
+            store.create_session("valid-token", future).unwrap();
+            assert!(store.session_valid("valid-token").unwrap());
+        });
     }
 }
