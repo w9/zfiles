@@ -3,6 +3,7 @@
 /web/node_modules
 /web/public/file-icons
 /web/src/generated
+/web/pnpm-workspace.yaml
 /e2e/node_modules
 /e2e/test-results
 /.cursor
