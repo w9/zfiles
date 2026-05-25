@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Mapping strict-mode navigation errors to friendly UI messages in progress.
+Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Sonner toasts for explorer errors and friendlier preview-pane error UI in progress.
 
 ## TODO List
 
@@ -93,7 +93,7 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Mapping str
 - [x] Unit tests: strict rejects outside symlink; flag enables follow + logical listing paths
 - [x] Document flag in README
 - [x] Run full `cargo test` (91 lib unit tests pass; integration tests OOM in this environment)
-- [ ] `apiError`: map `path escapes served directory` response body to i18n message (no CLI mention)
-- [ ] Wire into `loadListing` (and search fetch errors); add en + zh-CN strings
-- [ ] Unit test for error body mapping
-- [ ] Run web unit tests
+- [x] `apiError`: map `path escapes served directory` response body to i18n message (no CLI mention)
+- [x] Wire into `loadListing` (and search fetch errors); add en + zh-CN strings
+- [x] Unit test for error body mapping
+- [x] Run web unit tests
