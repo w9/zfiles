@@ -3,7 +3,6 @@ use std::sync::Arc;
 use anyhow::Context;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::FromRequestParts;
 use axum::extract::{Path as AxumPath, Query, State};
 use axum::http::header::{ACCEPT_RANGES, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, LOCATION};
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
@@ -165,7 +164,10 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         None
     };
     let state = AppState {
-        fs: Arc::new(LocalFs::new(root.clone())),
+        fs: Arc::new(LocalFs::with_symlink_policy(
+            root.clone(),
+            serve.follow_symlinks_outside_root,
+        )),
         auth,
         read_only,
         state: state_store,
@@ -228,6 +230,7 @@ async fn health(State(state): State<AppState>) -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "ok",
         "read_only": state.read_only,
+        "follow_symlinks_outside_root": state.fs.follow_symlinks_outside_root(),
     }))
 }
 
@@ -661,6 +664,7 @@ async fn handle_ws(mut socket: WebSocket, events: EventBus, read_only: bool) {
 }
 
 async fn static_or_index(
+    #[cfg_attr(not(feature = "dev-frontend"), allow(unused_variables))]
     State(state): State<AppState>,
     request: axum::http::Request<Body>,
 ) -> Response {
@@ -672,6 +676,8 @@ async fn static_or_index(
 
     #[cfg(feature = "dev-frontend")]
     if let Some(proxy) = &state.vite_dev {
+        use axum::extract::FromRequestParts;
+
         if path.starts_with("/file-icons/")
             && let Some(response) = embed::try_serve_static(path, accept_encoding)
         {

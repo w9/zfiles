@@ -34,7 +34,11 @@ async fn health_returns_ok() {
 
     let response = server.get("/api/health").await;
     response.assert_status_ok();
-    response.assert_json(&serde_json::json!({ "status": "ok", "read_only": false }));
+    response.assert_json(&serde_json::json!({
+        "status": "ok",
+        "read_only": false,
+        "follow_symlinks_outside_root": false,
+    }));
 }
 
 #[tokio::test]

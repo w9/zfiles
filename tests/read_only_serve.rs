@@ -53,7 +53,11 @@ async fn read_only_serve_root_lists_and_reports_read_only() {
 
     let health = server.get("/api/health").await;
     health.assert_status_ok();
-    health.assert_json(&serde_json::json!({ "status": "ok", "read_only": true }));
+    health.assert_json(&serde_json::json!({
+        "status": "ok",
+        "read_only": true,
+        "follow_symlinks_outside_root": false,
+    }));
 
     let response = server.get("/api/list").await;
     response.assert_status_ok();

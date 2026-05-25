@@ -35,11 +35,23 @@ pub trait Fs: Send + Sync {
 #[derive(Debug, Clone)]
 pub struct LocalFs {
     root: PathBuf,
+    follow_symlinks_outside_root: bool,
 }
 
 impl LocalFs {
     pub fn new(root: PathBuf) -> Self {
-        Self { root }
+        Self::with_symlink_policy(root, false)
+    }
+
+    pub fn with_symlink_policy(root: PathBuf, follow_symlinks_outside_root: bool) -> Self {
+        Self {
+            root,
+            follow_symlinks_outside_root,
+        }
+    }
+
+    pub fn follow_symlinks_outside_root(&self) -> bool {
+        self.follow_symlinks_outside_root
     }
 
     pub fn root(&self) -> &Path {
@@ -76,14 +88,12 @@ impl LocalFs {
             normalize_relative(path)?
         };
 
-        let joined = self.root.join(relative);
+        let joined = self.root.join(&relative);
         let canonical = std::fs::canonicalize(&joined)
             .with_context(|| format!("failed to resolve path {}", joined.display()))?;
-
-        if !canonical.starts_with(&self.root) {
+        if !self.follow_symlinks_outside_root && !canonical.starts_with(&self.root) {
             bail!("path escapes served directory");
         }
-
         Ok(canonical)
     }
 
@@ -116,17 +126,27 @@ impl LocalFs {
         Ok(())
     }
 
-    fn relative_path(&self, absolute: &Path) -> Result<String> {
-        absolute
-            .strip_prefix(&self.root)
-            .with_context(|| "path outside served root")
-            .map(|path| path.to_string_lossy().replace('\\', "/"))
+    fn join_logical_path(parent: &Path, name: &str) -> String {
+        if parent.as_os_str().is_empty() {
+            name.to_string()
+        } else {
+            format!(
+                "{}/{}",
+                parent.to_string_lossy().replace('\\', "/"),
+                name
+            )
+        }
     }
 }
 
 #[async_trait]
 impl Fs for LocalFs {
     async fn read_dir(&self, path: &Path) -> Result<Vec<FileEntry>> {
+        let parent_relative = if path.as_os_str().is_empty() {
+            PathBuf::new()
+        } else {
+            normalize_relative(path)?
+        };
         let dir = self.resolve(path)?;
         let mut entries = Vec::new();
         let mut read_dir = tokio::fs::read_dir(&dir)
@@ -135,33 +155,20 @@ impl Fs for LocalFs {
 
         while let Some(entry) = read_dir.next_entry().await? {
             let name = entry.file_name().to_string_lossy().into_owned();
-            let file_type = match entry.file_type().await {
-                Ok(file_type) => file_type,
-                Err(error) => {
-                    tracing::debug!(entry = %name, %error, "skipping unreadable directory entry");
-                    continue;
-                }
-            };
-            let metadata = match entry.metadata().await {
+            let entry_path = entry.path();
+            let metadata = match tokio::fs::metadata(&entry_path).await {
                 Ok(metadata) => metadata,
                 Err(error) => {
                     tracing::debug!(entry = %name, %error, "skipping unreadable directory entry");
                     continue;
                 }
             };
-            let entry_path = entry.path();
-            let relative = match self.relative_path(&entry_path) {
-                Ok(relative) => relative,
-                Err(error) => {
-                    tracing::debug!(entry = %name, %error, "skipping directory entry outside served root");
-                    continue;
-                }
-            };
+            let relative = Self::join_logical_path(&parent_relative, &name);
 
             entries.push(FileEntry {
                 name,
                 path: relative,
-                is_dir: file_type.is_dir(),
+                is_dir: metadata.is_dir(),
                 size: metadata.len(),
                 modified: metadata.modified().ok(),
                 extra: None,
@@ -173,13 +180,17 @@ impl Fs for LocalFs {
     }
 
     async fn stat(&self, path: &Path) -> Result<FileStat> {
+        if path.as_os_str().is_empty() {
+            bail!("path is required");
+        }
+        let relative = normalize_relative(path)?;
         let absolute = self.resolve(path)?;
         let metadata = tokio::fs::metadata(&absolute)
             .await
             .with_context(|| format!("failed to stat path {}", absolute.display()))?;
 
         Ok(FileStat {
-            path: self.relative_path(&absolute)?,
+            path: relative.to_string_lossy().replace('\\', "/"),
             is_dir: metadata.is_dir(),
             size: metadata.len(),
             modified: metadata.modified().ok(),
@@ -251,6 +262,80 @@ mod tests {
                 .iter()
                 .any(|entry| entry.name == "beta" && entry.is_dir)
         );
+    }
+
+    #[tokio::test]
+    async fn read_dir_classifies_symlink_to_directory_as_dir() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            fs::create_dir(dir.path().join("target-dir")).unwrap();
+            symlink("target-dir", dir.path().join("linked-dir")).unwrap();
+
+            let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+            let entries = fs.read_dir(Path::new("")).await.unwrap();
+
+            let linked = entries
+                .iter()
+                .find(|entry| entry.name == "linked-dir")
+                .expect("symlink entry in listing");
+            assert!(linked.is_dir);
+        }
+    }
+
+    #[tokio::test]
+    async fn resolve_rejects_symlink_outside_root_by_default() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            let outside = tempdir().unwrap();
+            symlink(outside.path(), dir.path().join("link-out")).unwrap();
+
+            let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+            let err = fs.resolve(Path::new("link-out")).unwrap_err();
+            assert!(err.to_string().contains("escapes"));
+        }
+    }
+
+    #[tokio::test]
+    async fn read_dir_follows_symlink_to_directory_outside_root() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            let outside = tempdir().unwrap();
+            fs::write(outside.path().join("inside.txt"), b"hi").unwrap();
+            symlink(outside.path(), dir.path().join("link-out")).unwrap();
+
+            let fs = LocalFs::with_symlink_policy(dir.path().canonicalize().unwrap(), true);
+            let entries = fs.read_dir(Path::new("link-out")).await.unwrap();
+
+            assert!(
+                entries
+                    .iter()
+                    .any(|entry| entry.name == "inside.txt" && entry.path == "link-out/inside.txt")
+            );
+        }
     }
 
     #[tokio::test]

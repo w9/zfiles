@@ -104,6 +104,16 @@ Each absolute serve root gets a stable id (hash of the canonical path). Use `zfi
 
 If the served directory cannot be written (read-only mount, permission-restricted folder, etc.), zfiles automatically enables **read-only mode** (uploads and deletes are disabled). State still lives under `~/.config/zfiles/folders/<serve-id>/`; the startup banner shows `Mode: read-only …` and the state directory path.
 
+## Symlinks outside the serve root
+
+By default, zfiles rejects navigation into symlinks whose targets resolve **outside** the served directory (`path escapes served directory`, HTTP 400). Symlinks to folders inside the serve root work normally. To follow outbound symlinks (for example `~/Projects` → `/Projects`), pass:
+
+```bash
+zfiles --follow-symlinks-outside-root ~
+```
+
+The flag is read/list only; uploads and writes still cannot escape the serve root via symlinks. `/api/health` reports `follow_symlinks_outside_root`.
+
 ## Frontend (shadcn/ui)
 
 The explorer UI lives in `web/` and uses [shadcn/ui](https://ui.shadcn.com/docs/components) components configured via `web/components.json`.
@@ -142,8 +152,16 @@ cargo test
 # Build the embedded frontend (required before release builds)
 cd web && pnpm install && pnpm build && cd ..
 
-# Build with bundled image plugin (default; build.rs compiles image-thumbnailer first)
-cargo build
+# Build with bundled image plugin (default)
+# build.rs stages the plugin binary from target/ into bundled/ for rust-embed.
+# Build the plugin crate first (or run a full workspace build):
+cargo build -p image-thumbnailer
+cargo build -p zfiles
+
+# Install to ~/.cargo/bin (plugin must be built for the same profile first)
+./scripts/install-local.sh
+# Or manually:
+# cargo build --release -p image-thumbnailer && cargo install --path .
 
 # Build kernel only, without bundled plugins
 cargo build --no-default-features
@@ -169,7 +187,7 @@ Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/health` | GET | Health check (`read_only` flag) |
+| `/api/health` | GET | Health check (`read_only`, `follow_symlinks_outside_root`) |
 | `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
 | `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |

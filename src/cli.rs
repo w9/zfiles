@@ -177,6 +177,10 @@ pub struct ServeArgs {
     #[arg(long)]
     pub read_only: bool,
 
+    /// Follow symlinks whose targets lie outside the serve root (read/list only)
+    #[arg(long)]
+    pub follow_symlinks_outside_root: bool,
+
     /// Do not open a browser tab on startup
     #[arg(long)]
     pub no_open: bool,
@@ -315,6 +319,15 @@ mod tests {
 
         let cli = Cli::parse_from(["zfiles", "--verbose", "--verbose"]);
         assert_eq!(cli.verbose, 2);
+    }
+
+    #[test]
+    fn parse_follow_symlinks_outside_root_flag() {
+        let cli = Cli::parse_from(["zfiles", "--follow-symlinks-outside-root"]);
+        assert!(cli.serve.follow_symlinks_outside_root);
+
+        let cli = Cli::parse_from(["zfiles"]);
+        assert!(!cli.serve.follow_symlinks_outside_root);
     }
 
     #[test]
