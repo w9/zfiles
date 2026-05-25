@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Gate symlink-outside-root navigation behind `--follow-symlinks-outside-root` (strict default). Then: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
+Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Mapping strict-mode navigation errors to friendly UI messages in progress.
 
 ## TODO List
 
@@ -87,3 +87,13 @@ Gate symlink-outside-root navigation behind `--follow-symlinks-outside-root` (st
 - [x] Unit test: `read_dir` classifies symlink to directory as `is_dir: true`
 - [x] `read_dir`: classify directories via `tokio::fs::metadata(path)` (follow symlinks; `DirEntry::metadata` uses d_type on Unix)
 - [x] Run full `cargo test` (lib + listing pass; capabilities thumbnail tests fail in this environment — unrelated to symlink fix)
+- [x] Add `--follow-symlinks-outside-root` to `ServeArgs`; unit test CLI parsing
+- [x] `LocalFs`: strict `resolve()` by default; opt-in follow outside root; restore write-path escape check
+- [x] Wire flag into `transport::serve`; expose on `/api/health`
+- [x] Unit tests: strict rejects outside symlink; flag enables follow + logical listing paths
+- [x] Document flag in README
+- [x] Run full `cargo test` (91 lib unit tests pass; integration tests OOM in this environment)
+- [ ] `apiError`: map `path escapes served directory` response body to i18n message (no CLI mention)
+- [ ] Wire into `loadListing` (and search fetch errors); add en + zh-CN strings
+- [ ] Unit test for error body mapping
+- [ ] Run web unit tests
