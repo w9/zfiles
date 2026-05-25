@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Symlink-to-directory classification fix in progress. Then: `zfiles migrate` for legacy in-tree `.zfiles/`, harden integration-test plugin isolation, optional `cargo test -- --test-threads=1` in CI.
+Gate symlink-outside-root navigation behind `--follow-symlinks-outside-root` (strict default). Then: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
 
 ## TODO List
 
@@ -84,6 +84,6 @@ Symlink-to-directory classification fix in progress. Then: `zfiles migrate` for 
 - [x] Wire CLI (`init`, `config`, `plugin`, `status`), transport banner, and daemon pid paths
 - [x] Update integration/unit tests for XDG layout; run full `cargo test`
 - [x] Update README for centralized XDG storage (remove `.zfiles/` relocation docs)
-- [ ] Unit test: `read_dir` classifies symlink to directory as `is_dir: true`
-- [ ] `read_dir`: set `is_dir` from `metadata.is_dir()` (follow symlinks) instead of `file_type.is_dir()`
-- [ ] Run full `cargo test`
+- [x] Unit test: `read_dir` classifies symlink to directory as `is_dir: true`
+- [x] `read_dir`: classify directories via `tokio::fs::metadata(path)` (follow symlinks; `DirEntry::metadata` uses d_type on Unix)
+- [x] Run full `cargo test` (lib + listing pass; capabilities thumbnail tests fail in this environment — unrelated to symlink fix)
