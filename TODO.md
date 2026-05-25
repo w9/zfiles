@@ -106,6 +106,6 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Explorer sh
 - [x] Merge breadcrumb, file list, and status bar into one card with single borders between sections
 - [x] Strip per-section card chrome from listing and status bar when embedded in explorer card
 - [x] Run web unit tests; rebuild `web/dist`
-- [ ] Restructure explorer card: breadcrumb and status bar span listing + preview columns
-- [ ] Embed preview pane beside file list with a single vertical divider; strip preview card chrome
-- [ ] Run web unit tests; rebuild `web/dist`
+- [x] Restructure explorer card: breadcrumb and status bar span listing + preview columns
+- [x] Embed preview pane beside file list with a single vertical divider; strip preview card chrome
+- [x] Run web unit tests; rebuild `web/dist`
