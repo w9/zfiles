@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Sonner toasts for explorer errors and friendlier preview-pane error UI in progress.
+Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Next: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
 
 ## TODO List
 
@@ -97,3 +97,9 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Sonner toas
 - [x] Wire into `loadListing` (and search fetch errors); add en + zh-CN strings
 - [x] Unit test for error body mapping
 - [x] Run web unit tests
+- [x] Add shadcn Sonner (`Toaster` in app shell)
+- [x] Explorer errors: toast via Sonner instead of inline red text; keep `messageFromApiResponse` mapping
+- [x] Preview pane: map `/api/metadata` errors; show Alert-style helpful message (not raw HTTP status)
+- [x] Run web unit tests; rebuild `web/dist`
+- [ ] Move search input into header toolbar (compact, left of view/theme/action buttons)
+- [ ] Run web unit tests
