@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Cycle 1 XDG storage is in place. Next: `zfiles migrate` for legacy in-tree `.zfiles/`, harden integration-test plugin isolation, optional `cargo test -- --test-threads=1` in CI.
+Symlink-to-directory classification fix in progress. Then: `zfiles migrate` for legacy in-tree `.zfiles/`, harden integration-test plugin isolation, optional `cargo test -- --test-threads=1` in CI.
 
 ## TODO List
 
@@ -84,3 +84,6 @@ Cycle 1 XDG storage is in place. Next: `zfiles migrate` for legacy in-tree `.zfi
 - [x] Wire CLI (`init`, `config`, `plugin`, `status`), transport banner, and daemon pid paths
 - [x] Update integration/unit tests for XDG layout; run full `cargo test`
 - [x] Update README for centralized XDG storage (remove `.zfiles/` relocation docs)
+- [ ] Unit test: `read_dir` classifies symlink to directory as `is_dir: true`
+- [ ] `read_dir`: set `is_dir` from `metadata.is_dir()` (follow symlinks) instead of `file_type.is_dir()`
+- [ ] Run full `cargo test`
