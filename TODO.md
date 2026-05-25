@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Next: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
+Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Explorer shell: unified listing card (breadcrumb, file list, status bar). Next: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
 
 ## TODO List
 
@@ -101,5 +101,8 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Next: `zfil
 - [x] Explorer errors: toast via Sonner instead of inline red text; keep `messageFromApiResponse` mapping
 - [x] Preview pane: map `/api/metadata` errors; show Alert-style helpful message (not raw HTTP status)
 - [x] Run web unit tests; rebuild `web/dist`
-- [ ] Move search input into header toolbar (compact, left of view/theme/action buttons)
-- [ ] Run web unit tests
+- [x] Move search input into header toolbar (compact, left of view/theme/action buttons)
+- [x] Run web unit tests
+- [ ] Merge breadcrumb, file list, and status bar into one card with single borders between sections
+- [ ] Strip per-section card chrome from listing and status bar when embedded in explorer card
+- [ ] Run web unit tests; rebuild `web/dist`
