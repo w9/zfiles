@@ -109,3 +109,5 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Explorer sh
 - [x] Restructure explorer card: breadcrumb and status bar span listing + preview columns
 - [x] Embed preview pane beside file list with a single vertical divider; strip preview card chrome
 - [x] Run web unit tests; rebuild `web/dist`
+- [x] Cap explorer middle row height to match listing; preview pane scrolls internally with `overflow-auto`
+- [x] Run web unit tests; rebuild `web/dist`

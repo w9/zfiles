@@ -34,7 +34,9 @@ import {
   selectedRowIndexForPath,
   shouldRefreshListing,
 } from "./listingRefresh";
+import { notifyApiError, notifyError } from "./notifyError";
 import { setViewerBridge, clearViewerBridge, type ViewerBridge } from "./viewerBridge";
+import { Toaster } from "@/components/ui/sonner";
 
 type FileEntry = {
   name: string;
@@ -87,7 +89,6 @@ export default function App() {
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [searchResults, setSearchResults] = useState<FileEntry[] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
@@ -129,7 +130,8 @@ export default function App() {
     const query = path ? `?path=${encodeURIComponent(path)}` : "";
     const response = await apiFetch(`/api/list${query}`);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      await notifyApiError(response, t);
+      return;
     }
     const data: FileEntry[] = await response.json();
     setEntries(data);
@@ -161,8 +163,7 @@ export default function App() {
       }
       return next;
     });
-    setError(null);
-  }, []);
+  }, [t]);
 
   const loadPlugins = useCallback(async () => {
     const response = await apiFetch("/api/plugins");
@@ -180,7 +181,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    loadListing("").catch((err: Error) => setError(err.message));
+    loadListing("").catch((err: Error) => notifyError(err.message));
     void loadPlugins();
     void loadPluginCatalogs();
     void apiFetch("/api/health")
@@ -208,7 +209,7 @@ export default function App() {
             break;
           }
           loadListing(currentPathRef.current, { preserveSelection: true }).catch(
-            (err: Error) => setError(err.message),
+            (err: Error) => notifyError(err.message),
           );
           break;
         }
@@ -223,7 +224,7 @@ export default function App() {
           void loadPlugins().then(() => {
             if (event.name === "image-thumbnailer") {
               loadListing(currentPathRef.current, { preserveSelection: true }).catch(
-                (err: Error) => setError(err.message),
+                (err: Error) => notifyError(err.message),
               );
             }
           });
@@ -279,25 +280,29 @@ export default function App() {
       apiFetch(`/api/search?${params.toString()}`)
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            await notifyApiError(response, t);
+            return;
           }
           return response.json() as Promise<FileEntry[]>;
         })
         .then((results) => {
+          if (!results) {
+            return;
+          }
           setSearchResults(results);
           setSelectedIndex(0);
           setSelectedPath(results[0]?.path ?? null);
           setSelectedPaths(new Set());
         })
-        .catch((err: Error) => setError(err.message));
+        .catch((err: Error) => notifyError(err.message));
     }, 200);
 
     return () => window.clearTimeout(handle);
-  }, [searchQuery, currentPath, searcherReady]);
+  }, [searchQuery, currentPath, searcherReady, t]);
 
   const navigateTo = useCallback(
     (path: string) => {
-      loadListing(path).catch((err: Error) => setError(err.message));
+      loadListing(path).catch((err: Error) => notifyError(err.message));
     },
     [loadListing],
   );
@@ -310,7 +315,7 @@ export default function App() {
         body: JSON.stringify({ paths, action_id: actionId }),
       });
       if (!response.ok) {
-        setError(t("error.actionFailed", { status: String(response.status) }));
+        notifyError(t("error.actionFailed", { status: String(response.status) }));
         return;
       }
       if (actionId === "copy-path") {
@@ -554,7 +559,6 @@ export default function App() {
     }
 
     setUploading(true);
-    setError(null);
     setUploadProgress(null);
 
     try {
@@ -564,7 +568,7 @@ export default function App() {
       }
       await loadListing(currentPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("error.uploadFailed"));
+      notifyError(err instanceof Error ? err.message : t("error.uploadFailed"));
     } finally {
       setUploading(false);
       setUploadProgress(null);
@@ -596,6 +600,20 @@ export default function App() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
+            {searcherReady ? (
+              <Input
+                ref={searchInputRef}
+                type="search"
+                className="h-8 w-44 shrink-0"
+                placeholder={t("search.placeholderShort")}
+                title={t("search.placeholder")}
+                aria-label={t("search.placeholder")}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onFocus={() => setFocusPane("search-input")}
+                onBlur={() => setFocusPane("file-list")}
+              />
+            ) : null}
             <ListingViewToggle
               mode={listingViewMode}
               onChange={setListingViewMode}
@@ -612,20 +630,6 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      {searcherReady ? (
-        <section className="mt-4">
-          <Input
-            ref={searchInputRef}
-            type="search"
-            placeholder={t("search.placeholder")}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            onFocus={() => setFocusPane("search-input")}
-            onBlur={() => setFocusPane("file-list")}
-          />
-        </section>
-      ) : null}
 
       <section
         className={cn(
@@ -650,8 +654,6 @@ export default function App() {
           </label>
         </Button>
       </section>
-
-      {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 
       {bulkDownloadPaths.length > 0 ? (
         <section
@@ -692,59 +694,66 @@ export default function App() {
         </section>
       ) : null}
 
-      <div className="mt-4 rounded-xl border bg-card px-3 py-2">
-        <ExplorerBreadcrumb
-          parts={breadcrumbs}
-          rootLabel={t("breadcrumb.root")}
-          ariaLabel={t("breadcrumb.label")}
-          onNavigate={navigateTo}
-        />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
-        {listingViewMode === "grid" ? (
-          <GridListing
-            entries={listingEntries}
-            selectedIndex={selectedIndex}
-            multiSelectedPaths={selectedPaths}
-            ariaLabel={t("listing.label")}
-            iconTheme={resolvedTheme}
-            listingAtRoot={!currentPath}
+      <section className="mt-4 flex flex-col overflow-hidden rounded-xl border bg-card">
+        <div className="shrink-0 border-b px-3 py-2">
+          <ExplorerBreadcrumb
+            parts={breadcrumbs}
+            rootLabel={t("breadcrumb.root")}
+            ariaLabel={t("breadcrumb.label")}
+            onNavigate={navigateTo}
           />
-        ) : (
-          <VirtualListing
-            entries={listingEntries}
-            selectedIndex={selectedIndex}
-            multiSelectedPaths={selectedPaths}
-            ariaLabel={t("listing.label")}
-            iconTheme={resolvedTheme}
-            listingAtRoot={!currentPath}
-            columnLabels={{
-              name: t("listing.column.name"),
-              type: t("listing.column.type"),
-              size: t("listing.column.size"),
-              modified: t("listing.column.modified"),
-              typeDirectory: t("listing.type.directory"),
-              typeFile: t("listing.type.file"),
-              locale: locale === "zh-CN" ? "zh-CN" : "en",
-            }}
-          />
-        )}
-        <PreviewPane
-          path={selectedPath}
-          plugins={pluginDetails}
-          theme={resolvedTheme}
-          onFocusPreview={() => setFocusPane("preview")}
-          onDispatch={handlePreviewDispatch}
-          onRegisterBridge={handleRegisterViewerBridge}
+        </div>
+        <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
+          <div className="h-full min-h-0 min-w-0 overflow-hidden">
+            {listingViewMode === "grid" ? (
+              <GridListing
+                entries={listingEntries}
+                selectedIndex={selectedIndex}
+                multiSelectedPaths={selectedPaths}
+                ariaLabel={t("listing.label")}
+                iconTheme={resolvedTheme}
+                listingAtRoot={!currentPath}
+                className="h-full rounded-none border-0 shadow-none"
+              />
+            ) : (
+              <VirtualListing
+                entries={listingEntries}
+                selectedIndex={selectedIndex}
+                multiSelectedPaths={selectedPaths}
+                ariaLabel={t("listing.label")}
+                iconTheme={resolvedTheme}
+                listingAtRoot={!currentPath}
+                className="h-full rounded-none border-0 shadow-none"
+                columnLabels={{
+                  name: t("listing.column.name"),
+                  type: t("listing.column.type"),
+                  size: t("listing.column.size"),
+                  modified: t("listing.column.modified"),
+                  typeDirectory: t("listing.type.directory"),
+                  typeFile: t("listing.type.file"),
+                  locale: locale === "zh-CN" ? "zh-CN" : "en",
+                }}
+              />
+            )}
+          </div>
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-t border-border lg:border-t-0 lg:border-l">
+            <PreviewPane
+              path={selectedPath}
+              plugins={pluginDetails}
+              theme={resolvedTheme}
+              onFocusPreview={() => setFocusPane("preview")}
+              onDispatch={handlePreviewDispatch}
+              onRegisterBridge={handleRegisterViewerBridge}
+              className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-transparent shadow-none"
+            />
+          </div>
+        </div>
+        <StatusBar
+          backendStatus={backendStatus}
+          kernelVersion={kernelVersion}
+          className="shrink-0 rounded-none border-0 border-t shadow-none"
         />
-      </div>
-
-      <StatusBar
-        backendStatus={backendStatus}
-        kernelVersion={kernelVersion}
-        className="mt-4"
-      />
+      </section>
 
       {contextMenu ? (
         <ContextMenu
@@ -815,6 +824,8 @@ export default function App() {
         startPath={slideshowStartPath}
         onOpenChange={setSlideshowOpen}
       />
+
+      <Toaster richColors closeButton position="bottom-right" />
     </main>
   );
 }

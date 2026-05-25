@@ -46,10 +46,13 @@ export default function GridListing({
 
   return (
     <div
-      className={cn("overflow-hidden rounded-xl border bg-card", className)}
+      className={cn(
+        "flex min-h-[440px] flex-col overflow-hidden rounded-xl border bg-card",
+        className,
+      )}
       aria-label={ariaLabel}
     >
-      <div ref={parentRef} className="h-[440px] overflow-auto p-3">
+      <div ref={parentRef} className="min-h-0 flex-1 overflow-auto p-3">
         <div
           className="relative w-full"
           style={{ height: `${virtualizer.getTotalSize()}px` }}

@@ -79,7 +79,10 @@ export default function VirtualListing({
 
   return (
     <div
-      className={cn("overflow-hidden rounded-xl border bg-card", className)}
+      className={cn(
+        "flex min-h-[440px] flex-col overflow-hidden rounded-xl border bg-card",
+        className,
+      )}
       aria-label={ariaLabel}
     >
       <Table>
@@ -105,7 +108,7 @@ export default function VirtualListing({
           ))}
         </TableHeader>
       </Table>
-      <div ref={parentRef} className="h-[440px] overflow-auto border-t">
+      <div ref={parentRef} className="min-h-0 flex-1 overflow-auto border-t">
         <Table>
           <TableBody
             className="relative block"

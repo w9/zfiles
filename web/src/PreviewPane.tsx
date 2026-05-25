@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Info } from "lucide-react";
+import { Info, TriangleAlertIcon } from "lucide-react";
 
 import { apiFetch } from "./api";
+import { messageFromApiResponse } from "./apiError";
 import { useTranslation } from "@/i18n";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -38,6 +40,7 @@ type PreviewPaneProps = {
   onFocusPreview?: () => void;
   onDispatch?: (actionId: string) => void;
   onRegisterBridge?: (bridge: ViewerBridge) => void;
+  className?: string;
 };
 
 type ViewerModule = {
@@ -120,6 +123,7 @@ export default function PreviewPane({
   onFocusPreview,
   onDispatch,
   onRegisterBridge,
+  className,
 }: PreviewPaneProps) {
   const { t } = useTranslation();
   const [stat, setStat] = useState<FileStat | null>(null);
@@ -196,7 +200,7 @@ export default function PreviewPane({
     apiFetch(`/api/metadata?path=${encodeURIComponent(path)}`)
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(await messageFromApiResponse(response, t));
         }
         return response.json() as Promise<FileStat>;
       })
@@ -208,7 +212,7 @@ export default function PreviewPane({
         setStat(null);
         setError(err.message);
       });
-  }, [path]);
+  }, [path, t]);
 
   useEffect(() => {
     if (!path || !viewerModule) {
@@ -301,7 +305,10 @@ export default function PreviewPane({
     tryDeliverSandboxPreview();
   }, [path, preview, viewerTrusted, tryDeliverSandboxPreview]);
 
-  const shellClass = "relative min-h-[320px] rounded-xl border bg-card p-4";
+  const shellClass = cn(
+    "relative min-h-[320px] overflow-auto rounded-xl border bg-card p-4",
+    className,
+  );
 
   if (!path) {
     return (
@@ -314,7 +321,11 @@ export default function PreviewPane({
   if (error) {
     return (
       <aside className={shellClass} aria-label={t("preview.label")}>
-        <p className="text-sm text-destructive">{error}</p>
+        <Alert variant="destructive">
+          <TriangleAlertIcon />
+          <AlertTitle>{t("preview.errorTitle")}</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       </aside>
     );
   }
