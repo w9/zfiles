@@ -60,23 +60,6 @@ fn main() {
     }
 }
 
-/// Build scripts still receive PROFILE=`debug`/`release`; Cargo 1.95 rejects `--profile debug`.
-fn cargo_build_profile(profile: &str) -> &str {
-    match profile {
-        "debug" => "dev",
-        other => other,
-    }
-}
-
-/// Dev/test artifacts live under `target/debug/` even though the profile is named `dev`.
-fn target_subdir(profile: &str) -> &str {
-    match profile {
-        "dev" | "debug" | "test" => "debug",
-        "bench" => "release",
-        other => other,
-    }
-}
-
 fn find_plugin_binary(
     target_dir: &Path,
     profile: &str,
@@ -96,10 +79,31 @@ fn find_plugin_binary(
         }
     }
 
+    let cargo_profile = cargo_build_profile(profile);
     panic!(
-        "image-thumbnailer binary not found; run `cargo build -p image-thumbnailer --profile {}` first",
-        cargo_build_profile(profile)
+        "image-thumbnailer binary not found.\n\
+         Build the bundled plugin first, then rebuild zfiles:\n\
+           cargo build --profile {cargo_profile} -p image-thumbnailer\n\
+           cargo build --profile {cargo_profile} -p zfiles\n\
+         For local install, use ./scripts/install-local.sh (or build the plugin before cargo install --path .)."
     );
+}
+
+/// Build scripts still receive PROFILE=`debug`/`release`; Cargo 1.95 rejects `--profile debug`.
+fn cargo_build_profile(profile: &str) -> &str {
+    match profile {
+        "debug" => "dev",
+        other => other,
+    }
+}
+
+/// Dev/test artifacts live under `target/debug/` even though the profile is named `dev`.
+fn target_subdir(profile: &str) -> &str {
+    match profile {
+        "dev" | "debug" | "test" => "debug",
+        "bench" => "release",
+        other => other,
+    }
 }
 
 fn plugin_binary_candidates(
