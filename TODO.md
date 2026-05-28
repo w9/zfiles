@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 7 — CORS guide, cloud connect documentation, README and design doc updates. Next: Phase 8 — cleanup and verification.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)) is complete: one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA. Plugins and filename search are removed (not deferred). **Current cycle:** Phase 8 — final cleanup, verification, binary size check, and smoke tests.
 
 ## TODO List
 
@@ -58,7 +58,14 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Dual Vite configs: local → `web/dist`, cloud → `web/dist-cloud` without kernel imports in cloud entry
 - [x] Update `package.json` scripts (`dev:cloud`, `build:cloud`); document cloud self-hosting in README
 - [x] Rebuild local `web/dist`; run `pnpm test` and verify local bundle excludes AWS SDK
-- [ ] Add `docs/cors.md` with AWS S3 and Cloudflare R2 CORS rules for cloud mode
-- [ ] Add `docs/cloud-connect.md` (connect flow, least-privilege credentials, disconnect, URL params)
-- [ ] Update README for dual-mode product description; link to cloud docs
-- [ ] Update `design/design.md` cloud sections to reference the new documentation
+- [x] Add `docs/cors.md` with AWS S3 and Cloudflare R2 CORS rules for cloud mode
+- [x] Add `docs/cloud-connect.md` (connect flow, least-privilege credentials, disconnect, URL params)
+- [x] Update README for dual-mode product description; link to cloud docs
+- [x] Update `design/design.md` cloud sections to reference the new documentation
+- [ ] Trim stale plugin/search references from design docs (`action_system.md`, `config_and_cache.md`, `image_extension.md`, phase status in `dual_mode_refactor.md`)
+- [ ] Remove dead plugin xdg helpers, `fixtures/plugins/`, and stale plugin build scripts; fix `install-local.sh`
+- [ ] Remove dead `thumbnailUrl` plumbing from listing types and icon components
+- [ ] Add integration test: removed routes (`/api/plugins`, `/api/search`, `/api/thumbnail`) return 404
+- [ ] Add e2e assertion: normal browse does not call plugin or search API routes
+- [ ] Run full test suite; rebuild `web/dist`; record release binary size in docs
+- [ ] Mark Phase 8 complete; update high-level plan to reflect refactor done
