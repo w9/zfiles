@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 3 — remove plugins (frontend preview, kernel supervisor, bundled build, CLI). Next: Phase 4 — slim WebSocket events.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 5 — `S3Backend`, connect dialog, cloud boot path, and list pagination. Phase 4 kernel slimming is largely done (WebSocket events, plugin removal). Next: Phase 6 — package layout and dual build targets.
 
 ## TODO List
 
@@ -41,3 +41,15 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Remove `GET /api/search`, plugin searcher dispatch, `src/search.rs`, and `zfiles search` CLI
 - [x] Delete `tests/search.rs`; move sendfile smoke test; update README
 - [x] Rebuild `web/dist`; run `pnpm test` and `cargo test`
+- [x] Replace PreviewPane with client-side image preview; metadata + download fallback
+- [x] Remove plugin/thumbnail UI, WebSocket events, action catalog, and plugin i18n from frontend
+- [x] Remove kernel plugin supervisor, `/api/plugins*`, thumbnail/preview/plugin routes
+- [x] Remove plugin CLI, `plugins/` tree, bundled build, and plugin integration tests
+- [x] Simplify WebSocket events to connected, filesystem_changed, upload_progress
+- [x] Rebuild `web/dist`; run `pnpm test` and `cargo test`
+- [ ] Add AWS SDK deps; S3 config, credential sessionStorage, and boot URL param parsing
+- [ ] Implement `S3Backend` (paginated list, stat, presigned download, multipart upload, delete)
+- [ ] Build connect dialog with AWS/R2 presets, test connection, and disconnect
+- [ ] Cloud boot path: detect mode, gate explorer behind connect, wire `ExplorerBackendProvider`
+- [ ] Async download URLs in preview/slideshow; load-more when listing returns `nextCursor`
+- [ ] Unit tests for S3 path/key mapping and boot params; rebuild `web/dist`; run `pnpm test`
