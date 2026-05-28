@@ -19,18 +19,23 @@ const IMAGE_EXTENSIONS = [
   ".rw2",
 ];
 
+const BROWSER_PREVIEW_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+  ".avif",
+  ".bmp",
+  ".ico",
+];
+
 export function isImagePath(path: string): boolean {
   const lower = path.toLowerCase();
   return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
-export function matchesGlob(glob: string, name: string): boolean {
-  if (glob === "*") {
-    return true;
-  }
-  if (glob.startsWith("*.")) {
-    const ext = glob.slice(2);
-    return name.endsWith(`.${ext}`) || name === ext;
-  }
-  return glob === name;
+export function isBrowserPreviewImage(path: string): boolean {
+  const lower = path.toLowerCase();
+  return BROWSER_PREVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }

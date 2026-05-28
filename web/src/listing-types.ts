@@ -5,7 +5,6 @@ export type ListingEntry = {
   isDir: boolean;
   size?: number;
   modified?: unknown;
-  thumbnailUrl?: string;
   onSelect: (event: React.MouseEvent) => void;
   onActivate: () => void;
   onContextMenu?: (event: React.MouseEvent) => void;

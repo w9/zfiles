@@ -1,19 +1,6 @@
-import type { ActionDefinition, PluginActionDefinition } from "./types";
+import type { ActionDefinition, BuiltinActionDeps } from "./types";
 
-export type BuiltinActionDeps = {
-  getListingLength: () => number;
-  getSelectedIndex: () => number;
-  getSelectedPaths: () => string[];
-  getCurrentPath: () => string;
-  setSelectedIndex: (updater: (index: number) => number) => void;
-  activateSelected: () => void;
-  navigateTo: (path: string) => void;
-  toggleMultiSelect: (path: string) => void;
-  clearSelection: () => void;
-  openCommandPalette: () => void;
-  runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
-  getListingPathAt: (index: number) => string | null;
-};
+export type { BuiltinActionDeps };
 
 export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDefinition[] {
   return [
@@ -161,23 +148,4 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
   ];
-}
-
-export function pluginActionToDefinition(
-  action: PluginActionDefinition,
-  run: (actionId: string) => Promise<void>,
-): ActionDefinition {
-  return {
-    id: action.id,
-    nameKey: action.name,
-    descriptionKey: action.description,
-    categoryKey: action.category ?? "actions.plugin.category",
-    when: action.when,
-    contexts: action.contexts ?? ["file-list"],
-    destructive: action.destructive,
-    defaultKeybinding: action.defaultKeybinding,
-    handler: async () => {
-      await run(action.id);
-    },
-  };
 }

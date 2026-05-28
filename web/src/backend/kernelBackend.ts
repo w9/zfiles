@@ -3,22 +3,16 @@ import { base64EncodeUtf8 } from "../base64Utf8";
 import type {
   BackendEvent,
   BackendStatus,
-  ContextMenuAction,
   ExplorerBackend,
   FileEntry,
   FileStat,
   HealthInfo,
   ListResult,
-  PluginInfo,
   UploadProgress,
 } from "./types";
 
 const UPLOAD_CHUNK_SIZE = 256 * 1024;
 const HEALTH_POLL_MS = 5_000;
-
-function encodePathForQuery(path: string): string {
-  return encodeURIComponent(path).replace(/%2F/g, "/");
-}
 
 function encodeUploadMetadata(filename: string): string {
   return `filename ${base64EncodeUtf8(filename)}`;
@@ -56,18 +50,6 @@ export class KernelBackend implements ExplorerBackend {
 
   downloadUrl(path: string): string {
     return `/api/file?path=${encodeURIComponent(path)}`;
-  }
-
-  thumbnailUrl(path: string, tier = "grid"): string {
-    return `/api/thumbnail?path=${encodePathForQuery(path)}&tier=${encodeURIComponent(tier)}`;
-  }
-
-  async previewText(path: string): Promise<string | null> {
-    const response = await apiFetch(`/api/preview?path=${encodeURIComponent(path)}`);
-    if (!response.ok) {
-      return null;
-    }
-    return response.text();
   }
 
   async upload(
@@ -130,28 +112,12 @@ export class KernelBackend implements ExplorerBackend {
     }
   }
 
-  async listContextActions(path: string): Promise<ContextMenuAction[]> {
-    const response = await apiFetch(`/api/actions?path=${encodeURIComponent(path)}`);
-    if (!response.ok) {
-      return [];
-    }
-    return (await response.json()) as ContextMenuAction[];
-  }
-
   async fetchHealth(): Promise<HealthInfo | null> {
     const response = await apiFetch("/api/health");
     if (!response.ok) {
       return null;
     }
     return (await response.json()) as HealthInfo;
-  }
-
-  async listPlugins(): Promise<PluginInfo[]> {
-    const response = await apiFetch("/api/plugins");
-    if (!response.ok) {
-      return [];
-    }
-    return (await response.json()) as PluginInfo[];
   }
 
   subscribe(
@@ -246,5 +212,3 @@ export class KernelBackend implements ExplorerBackend {
 export function createKernelBackend(): KernelBackend {
   return new KernelBackend();
 }
-
-export { encodePathForQuery };

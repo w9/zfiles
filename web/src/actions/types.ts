@@ -42,13 +42,17 @@ export type KeybindingDefinition = {
   args?: Record<string, unknown>;
 };
 
-export type PluginActionDefinition = {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  when?: string;
-  contexts?: string[];
-  destructive?: boolean;
-  defaultKeybinding?: string;
+export type BuiltinActionDeps = {
+  getListingLength: () => number;
+  getSelectedIndex: () => number;
+  getSelectedPaths: () => string[];
+  getCurrentPath: () => string;
+  setSelectedIndex: (updater: (index: number) => number) => void;
+  activateSelected: () => void;
+  navigateTo: (path: string) => void;
+  toggleMultiSelect: (path: string) => void;
+  clearSelection: () => void;
+  openCommandPalette: () => void;
+  runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
+  getListingPathAt: (index: number) => string | null;
 };

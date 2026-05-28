@@ -10,7 +10,7 @@ export const MENU_CATEGORIES = [
   "actions.navigation.category",
   "actions.selection.category",
   "actions.file.category",
-  "actions.plugin.category",
+  "viewer.category",
 ] as const;
 
 export const MENU_CONTEXT = "menubar";

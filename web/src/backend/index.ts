@@ -1,15 +1,14 @@
 export { ExplorerBackendProvider, useExplorerBackend } from "./context";
-export { createKernelBackend, KernelBackend, encodePathForQuery } from "./kernelBackend";
+export { createKernelBackend, KernelBackend } from "./kernelBackend";
+export { createS3Backend, S3Backend, validateS3Connection } from "./s3Backend";
 export type {
   BackendEvent,
   BackendMode,
   BackendStatus,
-  ContextMenuAction,
   ExplorerBackend,
   FileEntry,
   FileStat,
   HealthInfo,
   ListResult,
-  PluginInfo,
   UploadProgress,
 } from "./types";

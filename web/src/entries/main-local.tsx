@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import App from "./App";
-import { bootstrapSessionFromUrl } from "./api";
-import { ExplorerBackendProvider } from "./backend";
+import { bootstrapSessionFromUrl } from "../api";
+import { ExplorerBackendProvider } from "../backend";
+import { ExplorerApp } from "../explorer";
+import { I18nProvider } from "../i18n";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider } from "./i18n";
-import "./index.css";
+import "../index.css";
 
 bootstrapSessionFromUrl();
 
@@ -15,7 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <I18nProvider>
       <ExplorerBackendProvider>
         <TooltipProvider>
-          <App />
+          <ExplorerApp />
         </TooltipProvider>
       </ExplorerBackendProvider>
     </I18nProvider>

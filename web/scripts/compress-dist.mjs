@@ -1,8 +1,10 @@
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
-const dist = new URL("../dist", import.meta.url).pathname;
+const dist = process.argv[2]
+  ? resolve(process.cwd(), process.argv[2])
+  : new URL("../dist", import.meta.url).pathname;
 
 function walk(dir) {
   for (const entry of readdirSync(dir)) {

@@ -142,7 +142,6 @@ export default function VirtualListing({
                         <FileIcon
                           name={entry.name}
                           isDir={entry.isDir}
-                          thumbnailUrl={entry.thumbnailUrl}
                           theme={iconTheme}
                           atListingRoot={listingAtRoot}
                         />

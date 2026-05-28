@@ -1,25 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { KernelBackend, encodePathForQuery } from "./kernelBackend";
-
-test("encodePathForQuery preserves slash segments", () => {
-  assert.equal(encodePathForQuery("photos/summer/a.jpg"), "photos/summer/a.jpg");
-});
+import { KernelBackend } from "./kernelBackend";
 
 test("KernelBackend downloadUrl encodes path query param", () => {
   const backend = new KernelBackend();
   assert.equal(
     backend.downloadUrl("nested/file name.txt"),
     "/api/file?path=nested%2Ffile%20name.txt",
-  );
-});
-
-test("KernelBackend thumbnailUrl includes tier", () => {
-  const backend = new KernelBackend();
-  assert.equal(
-    backend.thumbnailUrl("photos/a.jpg", "preview"),
-    "/api/thumbnail?path=photos/a.jpg&tier=preview",
   );
 });
 

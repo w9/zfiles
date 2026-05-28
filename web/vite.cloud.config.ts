@@ -14,19 +14,18 @@ export default defineConfig({
       "@": path.resolve(rootDir, "./src"),
     },
   },
-  server: {
-    strictPort: true,
-    hmr: {
-      host: "localhost",
-      port: 5173,
-      protocol: "ws",
-    },
+  define: {
+    "import.meta.env.VITE_BOOT_MODE": JSON.stringify("cloud"),
   },
   build: {
-    outDir: "dist",
+    outDir: "dist-cloud",
     emptyOutDir: true,
     rollupOptions: {
-      input: path.resolve(rootDir, "index.html"),
+      input: path.resolve(rootDir, "index.cloud.html"),
     },
+  },
+  server: {
+    strictPort: true,
+    open: "/index.cloud.html",
   },
 });

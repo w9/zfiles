@@ -5,10 +5,10 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { actionsForContext, isActionAvailable } from "./dispatch";
+import { isActionAvailable } from "./dispatch";
 import KeybindingKbd from "./KeybindingKbd";
 import { keybindingForAction } from "./keybindings";
-import { MENU_CATEGORIES, MENU_CONTEXT } from "./surfaces";
+import { MENU_CATEGORIES } from "./surfaces";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
 import type { ActionDefinition } from "./types";
@@ -39,9 +39,6 @@ function menuItemsForCategory(
     if (action.categoryKey !== categoryKey || !isActionAvailable(action, contextKeys)) {
       return false;
     }
-    if (categoryKey === "actions.plugin.category") {
-      return actionsForContext([action], MENU_CONTEXT, contextKeys).length > 0;
-    }
     return true;
   });
 }
@@ -69,9 +66,7 @@ export default function MenuBar({
             <MenubarContent>
               {items.map((action) => {
                 const chord = menuItemChord(action, keybindings);
-                const label = action.nameKey.startsWith("actions.")
-                  ? labelForKey(action.nameKey)
-                  : action.nameKey;
+                const label = labelForKey(action.nameKey);
                 return (
                   <MenubarItem key={action.id} onSelect={() => invoke(action.id)}>
                     <span className="flex-1">{label}</span>

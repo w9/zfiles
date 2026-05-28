@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
-import { createBuiltinActions, pluginActionToDefinition } from "./builtins";
+import { createBuiltinActions } from "./builtins";
 import { createImageViewerActions, type ImageViewerActionDeps } from "./imageViewerActions";
 import type { KeybindingDefinition } from "./types";
 import {
@@ -92,53 +92,6 @@ export function useActionSystem(
       })
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    void apiFetch("/api/actions/catalog")
-      .then(async (response) => {
-        if (!response.ok) {
-          return;
-        }
-        const items = (await response.json()) as Array<{
-          id: string;
-          label: string;
-          when?: string;
-          contexts?: string[];
-          destructive?: boolean;
-          category?: string;
-          default_keybinding?: string;
-        }>;
-        for (const item of items) {
-          if (registry.get(item.id)) {
-            continue;
-          }
-          registry.register(
-            pluginActionToDefinition(
-              {
-                id: item.id,
-                name: item.label,
-                when: item.when,
-                contexts: item.contexts,
-                destructive: item.destructive,
-                category: item.category ?? "actions.plugin.category",
-                defaultKeybinding: item.default_keybinding,
-              },
-              async (actionId) => {
-                const deps = depsRef.current;
-                const selected = deps.getSelectedPaths();
-                const fallback = deps.getListingPathAt(deps.getSelectedIndex());
-                const paths = selected.length > 0 ? selected : fallback ? [fallback] : [];
-                if (paths.length === 0) {
-                  return;
-                }
-                await deps.runBulkAction(actionId, paths);
-              },
-            ),
-          );
-        }
-      })
-      .catch(() => {});
-  }, [registry]);
 
   const keybindings = useMemo(
     () => mergeKeybindings(defaultKeybindings(), userKeybindings),

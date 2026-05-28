@@ -90,11 +90,9 @@ export default function GridListing({
                         <FileIcon
                           name={entry.name}
                           isDir={entry.isDir}
-                          thumbnailUrl={entry.thumbnailUrl}
                           theme={iconTheme}
                           atListingRoot={listingAtRoot}
                           size="lg"
-                          className={entry.thumbnailUrl ? "max-h-24 max-w-full object-contain" : undefined}
                         />
                       </div>
                       <div className="truncate border-t px-2 py-1.5 text-sm">

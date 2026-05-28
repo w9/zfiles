@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n";
 import { useExplorerBackend } from "./backend";
+import { useDownloadUrl } from "./useDownloadUrl";
 
 type SlideshowDialogProps = {
   open: boolean;
@@ -27,6 +28,8 @@ export default function SlideshowDialog({
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const currentPath = paths[index] ?? null;
+  const imageUrl = useDownloadUrl(backend, currentPath);
 
   useEffect(() => {
     if (!open || paths.length === 0) {
@@ -36,8 +39,6 @@ export default function SlideshowDialog({
     setIndex(startIndex >= 0 ? startIndex : 0);
     setPlaying(true);
   }, [open, paths, startPath]);
-
-  const currentPath = paths[index] ?? null;
 
   const goNext = useCallback(() => {
     setIndex((current) => (current + 1) % paths.length);
@@ -87,11 +88,15 @@ export default function SlideshowDialog({
           <DialogTitle>{t("slideshow.title", { name: fileName })}</DialogTitle>
         </DialogHeader>
         <div className="flex min-h-[360px] items-center justify-center rounded-lg border bg-muted/20 p-4">
-          <img
-            src={backend.thumbnailUrl(currentPath, "preview")}
-            alt={fileName}
-            className="max-h-[70vh] max-w-full object-contain"
-          />
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={fileName}
+              className="max-h-[70vh] max-w-full object-contain"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("preview.loading")}</p>
+          )}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-muted-foreground">

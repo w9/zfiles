@@ -1,6 +1,5 @@
 import { en, type MessageKey } from "./locales/en";
 import { zhCN } from "./locales/zh-CN";
-import { translatePlugin } from "./pluginCatalog";
 
 export type { MessageKey };
 export type Locale = "en" | "zh-CN";
@@ -53,11 +52,7 @@ export function translate(
   key: MessageKey,
   params?: Record<string, string>,
 ): string {
-  let message =
-    translatePlugin(locale, key) ??
-    catalogs[locale][key] ??
-    catalogs.en[key] ??
-    key;
+  let message = catalogs[locale][key] ?? catalogs.en[key] ?? key;
   if (params) {
     for (const [name, value] of Object.entries(params)) {
       message = message.split(`{{${name}}}`).join(value);
