@@ -10,14 +10,15 @@ const emptySelection: ContextKeys = {
   "selection.count": 0,
   "selection.paths": [],
   "current-path": "",
-  "searcher.ready": true,
   "connection.online": true,
+  "server.read-only": false,
+  "preview.is-image": false,
+  "preview.path": "",
 };
 
 const labelForKey = (key: string) =>
   ({
     "actions.whenFailure.selectionRequired": "Select one or more files",
-    "actions.whenFailure.searcherNotReady": "Search plugin is not ready",
     "actions.whenFailure.unavailable": "Unavailable",
     "actions.custom.reason": "Custom reason",
   })[key] ?? key;

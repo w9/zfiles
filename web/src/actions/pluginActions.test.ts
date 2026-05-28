@@ -11,8 +11,10 @@ const contextKeys: ContextKeys = {
   "selection.count": 1,
   "selection.paths": ["notes.txt"],
   "current-path": "",
-  "searcher.ready": true,
   "connection.online": true,
+  "server.read-only": false,
+  "preview.is-image": false,
+  "preview.path": "",
 };
 
 test("pluginActionToDefinition registers menubar-eligible plugin action", () => {

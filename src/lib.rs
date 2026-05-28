@@ -24,7 +24,6 @@ pub mod perf_baseline;
 pub mod plugins;
 pub mod qr;
 pub mod range;
-pub mod search;
 pub mod state;
 pub mod status_cmd;
 pub mod transport;

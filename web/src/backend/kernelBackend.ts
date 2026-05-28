@@ -154,18 +154,6 @@ export class KernelBackend implements ExplorerBackend {
     return (await response.json()) as PluginInfo[];
   }
 
-  async search(query: string, path: string): Promise<FileEntry[]> {
-    const params = new URLSearchParams({ q: query });
-    if (path) {
-      params.set("path", path);
-    }
-    const response = await apiFetch(`/api/search?${params.toString()}`);
-    if (!response.ok) {
-      throw response;
-    }
-    return (await response.json()) as FileEntry[];
-  }
-
   subscribe(
     onEvent: (event: BackendEvent) => void,
     onStatus?: (status: BackendStatus) => void,

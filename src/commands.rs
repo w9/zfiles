@@ -17,7 +17,6 @@ pub async fn run(cli: Cli) -> anyhow::Result<()> {
             token,
             resume,
         }) => run_upload(server, file, path, token, resume).await,
-        Some(Command::Search { args }) => crate::search::run(args).await,
         Some(Command::Init { path }) => run_init(path).await,
         Some(Command::Status { args }) => {
             crate::status_cmd::run(args)?;

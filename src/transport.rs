@@ -89,7 +89,6 @@ pub fn router(state: AppState) -> Router {
         .route("/api/plugins", get(list_plugins))
         .route("/api/plugins/i18n", get(list_plugin_i18n))
         .route("/api/list", get(list_directory))
-        .route("/api/search", get(search_directory))
         .route("/api/thumbnail", get(thumbnail_file))
         .route("/api/preview", get(preview_file))
         .route("/api/actions", get(list_actions).post(run_action))
@@ -378,25 +377,6 @@ async fn serve_plugin_file(absolute: std::path::PathBuf) -> Result<Response, App
             .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
     );
     Ok(response)
-}
-
-#[derive(Debug, Deserialize)]
-struct SearchQuery {
-    path: Option<String>,
-    q: String,
-}
-
-async fn search_directory(
-    State(state): State<AppState>,
-    Query(query): Query<SearchQuery>,
-) -> Result<Json<Vec<crate::fs::FileEntry>>, AppError> {
-    let relative = query.path.as_deref().unwrap_or("");
-    let results = state
-        .plugins
-        .search(relative, &query.q)
-        .await
-        .unwrap_or_default();
-    Ok(Json(results))
 }
 
 async fn thumbnail_file(

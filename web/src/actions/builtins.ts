@@ -10,7 +10,6 @@ export type BuiltinActionDeps = {
   navigateTo: (path: string) => void;
   toggleMultiSelect: (path: string) => void;
   clearSelection: () => void;
-  focusSearch: () => void;
   openCommandPalette: () => void;
   runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
   getListingPathAt: (index: number) => string | null;
@@ -26,19 +25,6 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       defaultKeybinding: "Mod+P",
       handler: async () => {
         getDeps().openCommandPalette();
-      },
-    },
-    {
-      id: "navigation.focus-search",
-      nameKey: "actions.navigation.focusSearch.name",
-      descriptionKey: "actions.navigation.focusSearch.description",
-      categoryKey: "actions.navigation.category",
-      aliasKeys: ["actions.navigation.focusSearch.alias"],
-      when: "searcher.ready",
-      whenFailureMessageKey: "actions.whenFailure.searcherNotReady",
-      defaultKeybinding: "/",
-      handler: async () => {
-        getDeps().focusSearch();
       },
     },
     {

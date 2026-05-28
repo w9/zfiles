@@ -26,11 +26,11 @@ test("matchKeybinding respects when expression", () => {
 
 test("mergeKeybindings lets user override default chords", () => {
   const merged = mergeKeybindings(defaultKeybindings(), [
-    { key: "Mod+P", command: "navigation.focus-search", when: "searcher.ready" },
+    { key: "Mod+P", command: "navigation.go-to-path" },
   ]);
   assert.equal(
     merged.find((binding) => binding.key === "Mod+P")?.command,
-    "navigation.focus-search",
+    "navigation.go-to-path",
   );
 });
 

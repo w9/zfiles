@@ -46,20 +46,3 @@ test("KernelBackend list calls /api/list with encoded path", async () => {
     globalThis.fetch = originalFetch;
   }
 });
-
-test("KernelBackend search builds query string", async () => {
-  const calls: string[] = [];
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = ((input: RequestInfo | URL) => {
-    calls.push(String(input));
-    return Promise.resolve(new Response("[]", { status: 200 }));
-  }) as typeof fetch;
-
-  try {
-    const backend = new KernelBackend();
-    await backend.search("notes", "projects/foo");
-    assert.equal(calls[0], "/api/search?q=notes&path=projects%2Ffoo");
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});

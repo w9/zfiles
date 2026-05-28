@@ -69,23 +69,6 @@ pub async fn run(plugin_root: &Path) -> Result<()> {
         }
     }
 
-    if manifest.capabilities.iter().any(|cap| cap == "searcher") {
-        let request = serde_json::json!({
-            "jsonrpc": "2.0",
-            "id": 3,
-            "method": "searcher/query",
-            "params": {
-                "path": "",
-                "query": "notes",
-            }
-        });
-        framing::write_message(&mut stdin, &request).await?;
-        let searched = framing::read_message(&mut stdout).await?;
-        if searched.get("error").is_some() {
-            bail!("searcher/query failed: {searched}");
-        }
-    }
-
     if manifest.capabilities.iter().any(|cap| cap == "thumbnailer") {
         let request = serde_json::json!({
             "jsonrpc": "2.0",

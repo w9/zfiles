@@ -4,7 +4,6 @@ import type { ActionDefinition } from "./types";
 
 const WHEN_FAILURE_KEYS: Record<string, string> = {
   "selection.count > 0": "actions.whenFailure.selectionRequired",
-  "searcher.ready": "actions.whenFailure.searcherNotReady",
   "focus.pane == 'file-list'": "actions.whenFailure.focusFileList",
 };
 

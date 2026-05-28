@@ -77,7 +77,6 @@ export function matchKeybinding(
 export function defaultKeybindings(): KeybindingDefinition[] {
   return [
     { key: "Mod+P", command: "view.open-command-palette" },
-    { key: "/", command: "navigation.focus-search", when: "searcher.ready" },
     { key: "J", command: "selection.move-down", when: "focus.pane == 'file-list'" },
     { key: "K", command: "selection.move-up", when: "focus.pane == 'file-list'" },
     { key: "Enter", command: "navigation.open", when: "focus.pane == 'file-list'" },

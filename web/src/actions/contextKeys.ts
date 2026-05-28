@@ -3,7 +3,6 @@ export type ContextKeys = {
   "selection.count": number;
   "selection.paths": string[];
   "current-path": string;
-  "searcher.ready": boolean;
   "connection.online": boolean;
   "server.read-only": boolean;
   "preview.is-image": boolean;
@@ -16,7 +15,6 @@ export function defaultContextKeys(): ContextKeys {
     "selection.count": 0,
     "selection.paths": [],
     "current-path": "",
-    "searcher.ready": false,
     "connection.online": false,
     "server.read-only": false,
     "preview.is-image": false,

@@ -8,7 +8,6 @@ const base: ContextKeys = {
   ...defaultContextKeys(),
   "focus.pane": "file-list",
   "selection.count": 2,
-  "searcher.ready": true,
   "connection.online": true,
 };
 
@@ -20,14 +19,14 @@ test("evaluateWhen returns true when expression omitted", () => {
 test("evaluateWhen compares numbers and booleans", () => {
   assert.equal(evaluateWhen("selection.count > 0", base), true);
   assert.equal(evaluateWhen("selection.count > 5", base), false);
-  assert.equal(evaluateWhen("searcher.ready", base), true);
-  assert.equal(evaluateWhen("!searcher.ready", base), false);
+  assert.equal(evaluateWhen("connection.online", base), true);
+  assert.equal(evaluateWhen("!connection.online", base), false);
 });
 
 test("evaluateWhen supports string equality", () => {
   assert.equal(evaluateWhen("focus.pane == 'file-list'", base), true);
   assert.equal(evaluateWhen('focus.pane == "file-list"', base), true);
-  assert.equal(evaluateWhen("focus.pane == 'search-input'", base), false);
+  assert.equal(evaluateWhen("focus.pane == 'preview'", base), false);
 });
 
 test("evaluateWhen supports and expressions", () => {

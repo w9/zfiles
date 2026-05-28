@@ -20,7 +20,6 @@ import { loadPluginCatalogs } from "./i18n/pluginCatalog";
 import { useBackendStatus, type BackendEvent } from "./useBackendStatus";
 import { useTheme } from "./useTheme";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import CommandPalette from "./actions/CommandPalette";
 import { ActionArgPromptDialog, ActionConfirmDialog } from "./actions/ActionDialogs";
@@ -75,13 +74,10 @@ export default function App() {
   const { t, locale } = useTranslation();
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<FileEntry[]>([]);
-  const [searchResults, setSearchResults] = useState<FileEntry[] | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
-  const [searcherReady, setSearcherReady] = useState(false);
   const [thumbnailerReady, setThumbnailerReady] = useState(false);
   const [pluginDetails, setPluginDetails] = useState<PluginInfo[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -91,16 +87,13 @@ export default function App() {
     () => new Map(),
   );
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const [focusPane, setFocusPane] = useState<"file-list" | "search-input" | "preview">(
-    "file-list",
-  );
+  const [focusPane, setFocusPane] = useState<"file-list" | "preview">("file-list");
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readListingViewMode(),
   );
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
   const listingEntriesRef = useRef<ListingEntry[]>([]);
@@ -119,8 +112,6 @@ export default function App() {
       const { entries: data } = await backend.list(path);
       setEntries(data);
       setCurrentPath(path);
-      setSearchResults(null);
-      setSearchQuery("");
       const restoredIndex =
         previousPath != null
           ? selectedRowIndexForPath(path, data, previousPath)
@@ -158,9 +149,6 @@ export default function App() {
   const loadPlugins = useCallback(async () => {
     const plugins = await backend.listPlugins();
     setPluginDetails(plugins);
-    setSearcherReady(
-      plugins.some((plugin) => plugin.capabilities.includes("searcher")),
-    );
     setThumbnailerReady(
       plugins.some((plugin) => plugin.capabilities.includes("thumbnailer")),
     );
@@ -242,41 +230,13 @@ export default function App() {
       "selection.count": selectedPaths.size,
       "selection.paths": Array.from(selectedPaths),
       "current-path": currentPath,
-      "searcher.ready": searcherReady,
       "connection.online": backendStatus === "connected",
       "server.read-only": readOnly,
       "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
       "preview.path": selectedPath ?? "",
     }),
-    [focusPane, selectedPaths, currentPath, searcherReady, backendStatus, readOnly, selectedPath],
+    [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath],
   );
-
-  useEffect(() => {
-    if (!searcherReady || !searchQuery.trim()) {
-      setSearchResults(null);
-      return;
-    }
-
-    const handle = window.setTimeout(() => {
-      backend
-        .search(searchQuery.trim(), currentPath)
-        .then((results) => {
-          setSearchResults(results);
-          setSelectedIndex(0);
-          setSelectedPath(results[0]?.path ?? null);
-          setSelectedPaths(new Set());
-        })
-        .catch(async (err) => {
-          if (err instanceof Response) {
-            await notifyApiError(err, t);
-            return;
-          }
-          notifyError(err instanceof Error ? err.message : String(err));
-        });
-    }, 200);
-
-    return () => window.clearTimeout(handle);
-  }, [searchQuery, currentPath, searcherReady, backend, t]);
 
   const navigateTo = useCallback(
     (path: string) => {
@@ -346,11 +306,11 @@ export default function App() {
   }, []);
 
   const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
-  const visibleEntries = searchResults ?? entries;
+  const visibleEntries = entries;
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
     const rows: ListingEntry[] = [];
-    if (!searchResults && currentPath) {
+    if (currentPath) {
       rows.push({
         key: "..",
         name: "..",
@@ -420,7 +380,6 @@ export default function App() {
   }, [
     visibleEntries,
     currentPath,
-    searchResults,
     navigateTo,
     thumbnailerReady,
     pluginDetails,
@@ -451,10 +410,6 @@ export default function App() {
       navigateTo,
       toggleMultiSelect,
       clearSelection: () => setSelectedPaths(new Set()),
-      focusSearch: () => {
-        setFocusPane("search-input");
-        searchInputRef.current?.focus();
-      },
       runBulkAction,
       getListingPathAt: (index: number) => {
         const row = listingEntriesRef.current[index];
@@ -571,20 +526,6 @@ export default function App() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
-            {searcherReady ? (
-              <Input
-                ref={searchInputRef}
-                type="search"
-                className="h-8 w-44 shrink-0"
-                placeholder={t("search.placeholderShort")}
-                title={t("search.placeholder")}
-                aria-label={t("search.placeholder")}
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                onFocus={() => setFocusPane("search-input")}
-                onBlur={() => setFocusPane("file-list")}
-              />
-            ) : null}
             <ListingViewToggle
               mode={listingViewMode}
               onChange={setListingViewMode}

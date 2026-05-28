@@ -51,11 +51,6 @@ pub enum Command {
         #[arg(long)]
         resume: bool,
     },
-    /// Search filenames under a folder using an installed searcher plugin
-    Search {
-        #[command(flatten)]
-        args: crate::search::SearchArgs,
-    },
     /// Create `~/.config/zfiles/` with default configuration
     Init {
         /// Also create per-folder config for this serve root

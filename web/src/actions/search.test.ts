@@ -6,10 +6,9 @@ import type { ActionDefinition } from "./types";
 
 const actions: ActionDefinition[] = [
   {
-    id: "navigation.focus-search",
-    nameKey: "actions.navigation.focusSearch.name",
-    categoryKey: "actions.navigation.category",
-    aliasKeys: ["actions.navigation.focusSearch.alias"],
+    id: "view.open-command-palette",
+    nameKey: "actions.view.openCommandPalette.name",
+    categoryKey: "actions.view.category",
     handler: async () => {},
   },
   {
@@ -22,16 +21,15 @@ const actions: ActionDefinition[] = [
 ];
 
 const labels: Record<string, string> = {
-  "actions.navigation.focusSearch.name": "Focus Search",
-  "actions.navigation.focusSearch.alias": "find",
-  "actions.navigation.category": "Navigation",
+  "actions.view.openCommandPalette.name": "Command Palette",
+  "actions.view.category": "View",
   "actions.selection.copyPaths.name": "Copy Paths",
   "actions.selection.category": "Selection",
 };
 
 test("searchActions ranks prefix matches above fuzzy matches", () => {
-  const results = searchActions(actions, "focus", labels, () => true);
-  assert.equal(results[0]?.action.id, "navigation.focus-search");
+  const results = searchActions(actions, "command", labels, () => true);
+  assert.equal(results[0]?.action.id, "view.open-command-palette");
 });
 
 test("searchActions filters unavailable actions", () => {

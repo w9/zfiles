@@ -72,7 +72,6 @@ export interface ExplorerBackend {
   listContextActions(path: string): Promise<ContextMenuAction[]>;
   fetchHealth(): Promise<HealthInfo | null>;
   listPlugins(): Promise<PluginInfo[]>;
-  search(query: string, path: string): Promise<FileEntry[]>;
   subscribe(
     onEvent: (event: BackendEvent) => void,
     onStatus?: (status: BackendStatus) => void,

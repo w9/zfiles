@@ -40,9 +40,6 @@ zfiles -vv --port 9000
 zfiles init
 zfiles init ~/Downloads
 
-# Search filenames via installed searcher plugin
-zfiles search ~/notes "meeting"
-
 # Show folder status (serve id, state dir, plugins)
 zfiles status ~/Downloads
 
@@ -136,7 +133,7 @@ Sortable listing columns are intentionally deferred: the virtual-scrolled table 
 
 ## Plugin capabilities
 
-Installed plugins can expose `lister`, `searcher`, `thumbnailer`, `viewer`, `action`, `route`, and `watcher` capabilities. Watcher plugins receive `watcher/notify` RPC calls when files change under the served directory (debounced, fire-and-forget).
+Installed plugins can expose `lister`, `thumbnailer`, `viewer`, `action`, `route`, and `watcher` capabilities.
 
 The release binary **bundles `image-thumbnailer`** by default (JPEG/PNG/WebP thumbnails, image preview, EXIF lister columns). On first run it is extracted to `~/.cache/zfiles/bundled/image-thumbnailer/<version>/`. Folder-scoped or user-scoped installs override the bundled copy. Disable bundling with `cargo build --no-default-features`.
 
@@ -190,7 +187,6 @@ Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
 | `/api/health` | GET | Health check (`read_only`, `follow_symlinks_outside_root`) |
 | `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
-| `/api/search?path=&q=` | GET | Filename search (requires searcher plugin) |
 | `/api/thumbnail?path=` | GET | Thumbnail image (requires thumbnailer plugin) |
 | `/api/preview?path=` | GET | File preview body (requires viewer plugin) |
 | `/api/actions?path=` | GET | Context-menu actions (requires action plugin) |

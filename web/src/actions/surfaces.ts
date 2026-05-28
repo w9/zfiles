@@ -1,6 +1,5 @@
 export const DEFAULT_TOOLBAR_ACTIONS = [
   "view.open-command-palette",
-  "navigation.focus-search",
   "navigation.go-to-path",
   "selection.copy-paths",
   "selection.clear",
