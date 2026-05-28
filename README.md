@@ -1,8 +1,13 @@
 # zfiles
 
-Local file server with a browser-based explorer. Run `zfiles` in a directory to browse, download, and upload files instantly — no indexing, no configuration.
+Dual-mode file explorer: browse **local folders** via a single Rust binary, or **S3-compatible buckets** (AWS S3, Cloudflare R2) from a static cloud SPA — same UI, two backends. No indexing, no plugins, no filename search.
 
-See [design/design.md](design/design.md) for architecture and goals. See [TODO.md](TODO.md) for current work.
+| Mode | How to run | Storage |
+|------|------------|---------|
+| **Local** | `zfiles ~/Downloads` | Filesystem via embedded kernel |
+| **Cloud** | Deploy `web/dist-cloud/` (see [cloud connect guide](docs/cloud-connect.md)) | S3 / R2 from the browser |
+
+See [design/design.md](design/design.md) for architecture, [design/dual_mode_refactor.md](design/dual_mode_refactor.md) for the migration plan, and [TODO.md](TODO.md) for current work.
 
 ## Quick start
 
@@ -40,16 +45,11 @@ zfiles -vv --port 9000
 zfiles init
 zfiles init ~/Downloads
 
-# Show folder status (serve id, state dir, plugins)
+# Show folder status (serve id, state dir)
 zfiles status ~/Downloads
 
 # Upload to a remote server
 zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
-
-# Plugin management (installs under ~/.config/zfiles/plugins/)
-zfiles plugin install ./fixtures/plugins/search-filename
-zfiles plugin list
-zfiles plugin remove search-filename
 
 # Background daemon
 zfiles daemon start ~/Downloads --port 8080
@@ -82,17 +82,12 @@ zfiles config set server.read_only true --folder ~/Downloads
 
 ## Config and cache layout
 
-Kernel settings and durable state live under **`~/.config/zfiles/`**; regeneratable plugin data and bundled plugin binaries live under **`~/.cache/zfiles/`**. The served directory is never modified for zfiles housekeeping.
+Kernel settings and durable state live under **`~/.config/zfiles/`**. The served directory is never modified for zfiles housekeeping.
 
 ```
 ~/.config/zfiles/
   config.toml              Global defaults
-  plugins/                 User-installed plugins
   folders/<serve-id>/      Per serve-root config, state.db, upload spools
-
-~/.cache/zfiles/
-  bundled/                 Materialized official plugins
-  plugins/<name>/data/     Plugin caches (thumbnails, indexes, …)
 ```
 
 Each absolute serve root gets a stable id (hash of the canonical path). Use `zfiles status` to see the id and paths for a folder.
@@ -127,15 +122,11 @@ After CLI updates, reconcile wrappers under `web/src/components/ui/` with any zf
 
 ### File icons
 
-Listing file and folder icons come from [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) (MIT). `pnpm build` runs `scripts/generate-file-icons.mts`, which calls the `material-icon-theme` npm package to emit association metadata and copy referenced SVGs into `web/public/file-icons/` for embedding in the static binary. Image thumbnails from plugins still take precedence over type icons when available.
+Listing file and folder icons come from [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) (MIT). `pnpm build` runs `scripts/generate-file-icons.mts`, which calls the `material-icon-theme` npm package to emit association metadata and copy referenced SVGs into `web/public/file-icons/` for embedding in the static binary.
+
+Image preview in the explorer uses the browser to decode common formats (JPEG, PNG, WebP, GIF, AVIF, BMP, ICO) via `/api/file`; other types show metadata and a download link.
 
 Sortable listing columns are intentionally deferred: the virtual-scrolled table would need `@tanstack/react-table` integrated with `@tanstack/react-virtual` in a follow-up pass.
-
-## Plugin capabilities
-
-Installed plugins can expose `lister`, `thumbnailer`, `viewer`, `action`, `route`, and `watcher` capabilities.
-
-The release binary **bundles `image-thumbnailer`** by default (JPEG/PNG/WebP thumbnails, image preview, EXIF lister columns). On first run it is extracted to `~/.cache/zfiles/bundled/image-thumbnailer/<version>/`. Folder-scoped or user-scoped installs override the bundled copy. Disable bundling with `cargo build --no-default-features`.
 
 ## Development
 
@@ -149,19 +140,17 @@ cargo test
 # Build the embedded frontend (required before release builds)
 cd web && pnpm install && pnpm build && cd ..
 
-# Build with bundled image plugin (default)
-# build.rs stages the plugin binary from target/ into bundled/ for rust-embed.
-# Build the plugin crate first (or run a full workspace build):
-cargo build -p image-thumbnailer
 cargo build -p zfiles
 
-# Install to ~/.cargo/bin (plugin must be built for the same profile first)
+# Cloud SPA (static deploy artifact, separate from the embedded binary)
+cd web && pnpm build:cloud
+# Serve locally: pnpm preview:cloud — open /index.cloud.html
+# Deploy the contents of web/dist-cloud/ to any static host (S3, R2, nginx, …)
+
+# Install to ~/.cargo/bin
 ./scripts/install-local.sh
 # Or manually:
-# cargo build --release -p image-thumbnailer && cargo install --path .
-
-# Build kernel only, without bundled plugins
-cargo build --no-default-features
+# cargo install --path .
 ```
 
 ### Frontend HMR (dev-frontend)
@@ -172,26 +161,43 @@ For interactive UI work without rebuilding `web/dist` or recompiling embedded as
 # Terminal 1 — Vite dev server (port 5173)
 cd web && pnpm install && pnpm dev
 
-# Terminal 2 — zfiles proxies UI to Vite; API and plugins stay on zfiles
+# Terminal 2 — zfiles proxies UI to Vite; API stays on zfiles
 cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
 ```
 
-Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*`, WebSocket events, and `/plugin/*` are served by zfiles as in production. `/file-icons/*` is served from the embedded `web/dist` build (run `pnpm build` once if icons are missing).
+Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*` and WebSocket events are served by zfiles as in production. `/file-icons/*` is served from the embedded `web/dist` build (run `pnpm build` once if icons are missing).
 
 Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
+
+### Cloud SPA (self-hosted)
+
+The explorer core lives in `web/src/explorer/` and is imported by two Vite entry points:
+
+| Entry | Build | Output | Use |
+|-------|-------|--------|-----|
+| `src/entries/main-local.tsx` | `pnpm build` | `web/dist/` | Embedded in the Rust binary (kernel backend) |
+| `src/entries/main-cloud.tsx` | `pnpm build:cloud` | `web/dist-cloud/` | Static deploy against S3/R2 |
+
+Cloud builds omit kernel-only boot code; local builds omit the AWS SDK. Interactive cloud development:
+
+```bash
+cd web && pnpm dev:cloud
+```
+
+Open the connect dialog, paste temporary bucket credentials, and browse. Non-secret URL params (`provider`, `bucket`, `region`, `endpoint`, `prefix`, `readonly`) pre-fill the form. Credentials stay in `sessionStorage` for the tab lifetime only.
+
+Documentation:
+
+- [Cloud connect flow and credentials](docs/cloud-connect.md)
+- [Bucket CORS setup (required)](docs/cors.md)
 
 ## API (kernel)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Health check (`read_only`, `follow_symlinks_outside_root`) |
-| `/api/plugins` | GET | Ready plugins and capabilities |
 | `/api/list?path=` | GET | Directory listing |
-| `/api/thumbnail?path=` | GET | Thumbnail image (requires thumbnailer plugin) |
-| `/api/preview?path=` | GET | File preview body (requires viewer plugin) |
-| `/api/actions?path=` | GET | Context-menu actions (requires action plugin) |
-| `/api/actions` | POST | Run action on `path` or `paths[]` (includes kernel `file.delete`) |
-| `/plugin/:name/*path` | GET | Plugin static assets or route-plugin handlers |
+| `/api/actions` | POST | Run action on `paths[]` (kernel `file.delete`) |
 | `/api/metadata?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |

@@ -19,7 +19,7 @@ The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scroll
 
 **Local mode** ships as a single static binary. No daemon or config file is required to run (XDG paths are optional; see [config_and_cache.md](config_and_cache.md)).
 
-**Cloud mode** is a static site only — no zfiles server, no accounts. Users paste **temporary** bucket credentials into a connect dialog. Credentials stay in the browser (`sessionStorage`); the host never receives them.
+**Cloud mode** is a static site only — no zfiles server, no accounts. Users paste **temporary** bucket credentials into a connect dialog. Credentials stay in the browser (`sessionStorage`); the host never receives them. Setup: [docs/cloud-connect.md](../docs/cloud-connect.md), CORS: [docs/cors.md](../docs/cors.md).
 
 ### What we removed
 
@@ -65,7 +65,7 @@ Target throughput: 110+ MB/s sustained on a single connection from local SSD ove
 
 **Local uploads** use the tus.io protocol. The client issues a Creation request; the server allocates state in `state.db` and returns an Upload URL. PATCH with `Content-Range` appends to a spool file under XDG state (see [config_and_cache.md](config_and_cache.md)). Completion is atomic: `fsync` + `rename(2)` into the served tree (same-filesystem constraint; warn at startup on cross-mount).
 
-**Cloud uploads** use S3 multipart upload via `@aws-sdk/lib-storage` in the browser. **Cloud downloads** use Range GET on `GetObject`. CORS must be configured on the bucket; see the CORS documentation referenced in [dual_mode_refactor.md](dual_mode_refactor.md).
+**Cloud uploads** use S3 multipart upload via `@aws-sdk/lib-storage` in the browser. **Cloud downloads** use Range GET on `GetObject`. CORS must be configured on the bucket; see [docs/cors.md](../docs/cors.md).
 
 ### Small focused kernel (local mode)
 
@@ -223,13 +223,15 @@ Allowed query params (non-secret): `provider` (`aws` / `r2`), `bucket`, `endpoin
 
 Forbidden in URLs: access keys, secret keys, session tokens.
 
+Connect flow, credential scoping, and disconnect: [docs/cloud-connect.md](../docs/cloud-connect.md).
+
 After connect, explorer navigation may update the URL for bucket/prefix only.
 
 ### Config, state, and cache (local)
 
 Kernel configuration and durable per-serve-root state live under XDG paths. The served directory is never modified for zfiles housekeeping.
 
-Layout and resolution: [config_and_cache.md](config_and_cache.md). Plugin cache directories under `~/.cache/zfiles/plugins/` become obsolete after refactor; tus spool and `state.db` remain.
+Layout and resolution: [config_and_cache.md](config_and_cache.md). Tus spool and `state.db` remain under per-folder state directories.
 
 ### Failure modes
 
@@ -241,7 +243,7 @@ Layout and resolution: [config_and_cache.md](config_and_cache.md). Plugin cache 
 
 **Cloud**
 
-- CORS misconfiguration: clear error pointing at setup documentation.
+- CORS misconfiguration: clear error pointing at [docs/cors.md](../docs/cors.md).
 - Expired or revoked credentials: connect dialog or inline re-auth; no silent retry with stale keys.
 - S3 rate limiting / 503: backoff and user-visible retry.
 - List pagination incomplete: UI must expose "load more" or equivalent when `nextCursor` is present — never pretend a truncated list is complete.

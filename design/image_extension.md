@@ -1,3 +1,7 @@
+# Image extension (historical)
+
+> **Removed.** The plugin microkernel and bundled image-thumbnailer were deleted in the dual-mode refactor. Preview is client-side for common image types; grid view uses generic file-type icons. This document is kept as historical design reference only.
+
 ## Capability composition
 
 The plugin registers four capabilities:

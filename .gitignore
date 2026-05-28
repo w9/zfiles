@@ -1,6 +1,7 @@
 /target
 /bundled
 /web/dist
+/web/dist-cloud
 /web/node_modules
 /web/public/file-icons
 /web/src/generated

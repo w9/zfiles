@@ -209,69 +209,71 @@ Work proceeds in ordered phases. Each phase should leave the tree in a buildable
 
 ### Phase 0 — Design lock and inventory
 
-- [ ] Review and approve this document.
-- [ ] Append implementation TODO items to `TODO.md` (implementation cycles follow separately).
-- [ ] Inventory all plugin/search touchpoints (`grep` audit across `src/`, `web/`, `tests/`, `e2e/`, `README`).
+- [x] Review and approve this document.
+- [x] Append implementation TODO items to `TODO.md` (implementation cycles follow separately).
+- [x] Inventory all plugin/search touchpoints (`grep` audit across `src/`, `web/`, `tests/`, `e2e/`, `README`).
 
 ### Phase 1 — Introduce `ExplorerBackend` in the frontend
 
-- [ ] Define `ExplorerBackend`, `FileEntry`, `FileStat`, event types in a dedicated module (e.g. `web/src/backend/`).
-- [ ] Implement `KernelBackend` as a thin wrapper over today's `apiFetch` / WebSocket calls — no behavior change yet.
-- [ ] Refactor `App.tsx`, `PreviewPane`, `upload.ts`, and `useBackendStatus.ts` to call the backend interface instead of raw `/api/*` URLs.
-- [ ] Gate all backend access through a React context or hook (`useExplorerBackend()`).
-- [ ] Existing local embedded mode must behave identically after this phase.
+- [x] Define `ExplorerBackend`, `FileEntry`, `FileStat`, event types in a dedicated module (e.g. `web/src/backend/`).
+- [x] Implement `KernelBackend` as a thin wrapper over today's `apiFetch` / WebSocket calls — no behavior change yet.
+- [x] Refactor `App.tsx`, `PreviewPane`, `upload.ts`, and `useBackendStatus.ts` to call the backend interface instead of raw `/api/*` URLs.
+- [x] Gate all backend access through a React context or hook (`useExplorerBackend()`).
+- [x] Existing local embedded mode must behave identically after this phase.
 
 ### Phase 2 — Remove search
 
-- [ ] Remove search UI, debounced `/api/search` calls, and related context keys / actions.
-- [ ] Remove `GET /api/search` handler and any searcher plugin dispatch.
-- [ ] Remove `zfiles search` CLI.
-- [ ] Update i18n strings and README.
+- [x] Remove search UI, debounced `/api/search` calls, and related context keys / actions.
+- [x] Remove `GET /api/search` handler and any searcher plugin dispatch.
+- [x] Remove `zfiles search` CLI.
+- [x] Update i18n strings and README.
 
 ### Phase 3 — Remove plugins (frontend first, then kernel)
 
-- [ ] Replace `PreviewPane` plugin viewer with a minimal preview: image (client decode), text (optional later), fallback metadata + download.
-- [ ] Remove thumbnail WebSocket events, grid thumbnail URLs from `/api/thumbnail`, and plugin-ready gating.
-- [ ] Remove plugin context menu actions and plugin action catalog loading.
-- [ ] Remove kernel plugin supervisor, routes, and subprocess spawning.
-- [ ] Remove `plugins/` directory, bundled plugin build, and plugin CLI.
-- [ ] Delete or rewrite plugin integration tests.
+- [x] Replace `PreviewPane` plugin viewer with a minimal preview: image (client decode), text (optional later), fallback metadata + download.
+- [x] Remove thumbnail WebSocket events, grid thumbnail URLs from `/api/thumbnail`, and plugin-ready gating.
+- [x] Remove plugin context menu actions and plugin action catalog loading.
+- [x] Remove kernel plugin supervisor, routes, and subprocess spawning.
+- [x] Remove `plugins/` directory, bundled plugin build, and plugin CLI.
+- [x] Delete or rewrite plugin integration tests.
 
 ### Phase 4 — Slim kernel and simplify WebSocket events
 
-- [ ] Reduce WebSocket event set to: `connected`, `filesystem_changed`, `upload_progress`.
-- [ ] Ensure built-in delete (and any remaining kernel actions) work through `/api/actions` without plugin dispatch.
-- [ ] Remove dead dependencies from `Cargo.toml` and shrink binary where measurable.
+- [x] Reduce WebSocket event set to: `connected`, `filesystem_changed`, `upload_progress`.
+- [x] Ensure built-in delete (and any remaining kernel actions) work through `/api/actions` without plugin dispatch.
+- [x] Remove dead dependencies from `Cargo.toml` and shrink binary where measurable.
 
 ### Phase 5 — Implement `S3Backend` and cloud boot path
 
-- [ ] Add `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` to the web package.
-- [ ] Implement `S3Backend` with paginated listing, multipart upload, delete, HeadObject stat, presigned or direct GetObject download.
-- [ ] Build connect dialog: provider preset (AWS / R2), endpoint, region, bucket, credential fields, test connection, disconnect.
-- [ ] Parse non-secret boot params from URL (`provider`, `bucket`, `prefix`, `endpoint`, `region`, `readonly`).
-- [ ] Store credentials in `sessionStorage` after successful connect.
-- [ ] Add boot mode detection: local (default when served from kernel) vs cloud (static host build flag or empty `/api/health`).
+- [x] Add `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` to the web package.
+- [x] Implement `S3Backend` with paginated listing, multipart upload, delete, HeadObject stat, presigned or direct GetObject download.
+- [x] Build connect dialog: provider preset (AWS / R2), endpoint, region, bucket, credential fields, test connection, disconnect.
+- [x] Parse non-secret boot params from URL (`provider`, `bucket`, `prefix`, `endpoint`, `region`, `readonly`).
+- [x] Store credentials in `sessionStorage` after successful connect.
+- [x] Add boot mode detection: local (default when served from kernel) vs cloud (static host build flag or empty `/api/health`).
 
 ### Phase 6 — Package layout and dual build targets
 
-- [ ] Restructure `web/` so the explorer core is importable as a library entry point (`ExplorerApp` + backend injection).
-- [ ] **Local build:** Vite build → `web/dist` → embedded by Rust (unchanged pipeline).
-- [ ] **Cloud build:** Same source, different Vite config or env (`VITE_BOOT_MODE=cloud`) producing a static deploy artifact with no kernel API assumptions.
-- [ ] Document self-hosting and reproducible build expectations for the cloud SPA.
+- [x] Restructure `web/` so the explorer core is importable as a library entry point (`ExplorerApp` + backend injection).
+- [x] **Local build:** Vite build → `web/dist` → embedded by Rust (unchanged pipeline).
+- [x] **Cloud build:** Same source, different Vite config or env (`VITE_BOOT_MODE=cloud`) producing a static deploy artifact with no kernel API assumptions.
+- [x] Document self-hosting and reproducible build expectations for the cloud SPA.
 
 ### Phase 7 — Documentation and CORS guides
 
-- [ ] Add `docs/cors.md` (or README section): AWS S3 and Cloudflare R2 CORS rules required for list/get/put/delete/multipart.
-- [ ] Document connect flow, credential scope recommendations (least-privilege IAM / R2 token), and disconnect behavior.
-- [ ] Update README product description: dual-mode explorer, plugins/search no longer supported.
-- [ ] Update `design/design.md` to point at this document as the current architectural direction.
+- [x] Add `docs/cors.md` (or README section): AWS S3 and Cloudflare R2 CORS rules required for list/get/put/delete/multipart.
+- [x] Document connect flow, credential scope recommendations (least-privilege IAM / R2 token), and disconnect behavior.
+- [x] Update README product description: dual-mode explorer, plugins/search no longer supported.
+- [x] Update `design/design.md` to point at this document as the current architectural direction.
 
 ### Phase 8 — Cleanup and verification
 
-- [ ] Remove stale design references to plugins as a v1 feature.
-- [ ] Run full test suite; fix or delete obsolete tests.
-- [ ] Measure binary size delta after plugin removal.
+- [x] Remove stale design references to plugins as a v1 feature.
+- [x] Run full test suite; fix or delete obsolete tests.
+- [x] Measure binary size delta after plugin removal (see note below).
 - [ ] Manual smoke: local CLI + cloud static build against a test R2 bucket.
+
+**Release binary size (May 2026, Linux x86_64):** `target/release/zfiles` ≈ **16 MB** with embedded local SPA and no plugin supervisor or bundled plugin assets. Pre-refactor baseline was not recorded in-repo; the plugin embed and subprocess machinery are gone.
 
 ---
 

@@ -1,10 +1,12 @@
 # zfiles UI — action system
 
+> **Scope (post–dual-mode refactor):** Built-in actions only. Plugin action registration, `plugin.*` context keys, and JSON-RPC action dispatch were removed. Sections below that describe plugin integration are **historical** and kept for reference.
+
 ## Overview
 
-The action system is the unified entry point for everything a user can ask zfiles to do. Each user-invocable operation — delete the selected files, toggle the preview pane, regenerate thumbnails, search for "transformer" — is defined once as a piece of data and exposed through multiple surfaces: a command palette, the menu bar, the toolbar, keyboard shortcuts, context menus, and any future automation or scripting layer.
+The action system is the unified entry point for everything a user can ask zfiles to do. Each user-invocable operation — delete the selected files, toggle the preview pane, open the command palette — is defined once as a piece of data and exposed through multiple surfaces: a command palette, the menu bar, the toolbar, keyboard shortcuts, context menus, and any future automation or scripting layer.
 
-Adding a new action gives you all these surfaces for free. Adding a new surface gives you discoverability over every existing action. Plugins register actions through the same shape as built-ins and become indistinguishable from them at the point of use.
+Adding a new action gives you all these surfaces for free. Adding a new surface gives you discoverability over every existing action.
 
 The model is what VS Code, Sublime, Linear, and Obsidian converged on independently. The cost of adopting it is upfront design; the payoff compounds as the app grows.
 
@@ -14,21 +16,19 @@ The system rests on seven principles.
 
 1. **Actions are data, not functions.** The handler is one field on an action object; everything else (name, args, keybinding, availability) lives alongside it as declarative metadata.
 
-2. **Ids are stable; display strings are i18n'd.** The id is the canonical identity used in keybindings, settings, telemetry, and plugin contracts. It never changes and is never translated.
+2. **Ids are stable; display strings are i18n'd.** The id is the canonical identity used in keybindings, settings, and telemetry. It never changes and is never translated.
 
 3. **Every action declares when it's available.** A `when` expression over a reactive context-keys store determines whether the action is visible, enabled, or hidden across every surface.
 
 4. **Arguments are typed and have context-driven defaults.** Arg schemas describe what the action needs; default resolvers pull from current selection, focus, and path so most invocations require zero manual input.
 
-5. **Keybindings are layered and scoped.** Built-in defaults + plugin contributions + user overrides, resolved with explicit precedence. The same chord can mean different things in different focused contexts.
+5. **Keybindings are layered and scoped.** Built-in defaults + user overrides, resolved with explicit precedence. The same chord can mean different things in different focused contexts.
 
-6. **Plugins are first-class.** Plugin-registered actions use the same shape as built-ins. In the palette, the only difference is the category label.
-
-7. **The palette is the universal discovery surface.** Anything a user can do is findable by typing a few characters.
+6. **The palette is the universal discovery surface.** Anything a user can do is findable by typing a few characters.
 
 ## The action schema
 
-Each action is an object with this shape (TypeScript notation; serialize as JSON for plugin contributions):
+Each action is an object with this shape (TypeScript notation):
 
 ```ts
 interface Action {
@@ -49,7 +49,7 @@ interface Action {
 
 `I18nKey` is a string referencing an entry in the i18n message catalog. `Keybinding` is the abstract key declaration discussed below.
 
-Ids are hierarchical and dot-separated: `file.delete-selected`, `view.toggle-preview-pane`, `selection.invert`, `plugin.image-thumbnailer.regenerate-all`. The convention is `category.action-name`, with plugin actions auto-namespaced under `plugin.<plugin-id>.`. Ids are part of the public contract — they appear in user keybinding files, plugin manifests, and exported settings — so they are stable across releases.
+Ids are hierarchical and dot-separated: `file.delete-selected`, `view.toggle-preview-pane`, `selection.invert`. The convention is `category.action-name`. Ids are part of the public contract — they appear in user keybinding files and exported settings — so they are stable across releases.
 
 ## Context keys and `when` expressions
 
@@ -63,14 +63,12 @@ Context keys are a small reactive store of named values that components write to
 | `current-path` | string | navigation moves |
 | `connection.online` | boolean | WebSocket connects / disconnects |
 | `read-only` | boolean | mode toggles |
-| `plugin.<id>.ready` | boolean | plugin reaches ready state |
 
 The `when` DSL is a minimal boolean expression language over these keys:
 
 ```
 selection.count > 0
 focus.pane == 'file-list' && !read-only
-plugin.image-thumbnailer.ready && 'image/*' in selection.types
 ```
 
 When relevant context keys change, every dependent `when` evaluation re-runs and the corresponding UI updates: the palette filters, menus enable or disable, toolbar buttons grey out. Each surface decides what to do with a failed `when` — palette typically hides; menu bar typically greys; keybindings simply don't fire.
@@ -132,17 +130,16 @@ Each surface is a presentation layer over the action registry. None of them know
 
 **Keybindings.** A layered keymap dispatches chords to actions. Detailed below.
 
-**Programmatic.** Plugins and (eventually) scripts dispatch actions by id through the registry. Same auth model and `when` checks apply.
+**Programmatic.** Future scripts or automation may dispatch actions by id through the registry. Same auth model and `when` checks apply.
 
 ## Keybindings
 
-Bindings layer in three tiers:
+Bindings layer in two tiers:
 
-1. Built-in defaults shipped with the kernel
-2. Plugin-contributed defaults (each plugin's actions can include a `defaultKeybinding`)
-3. User overrides in `~/.config/zfiles/keybindings.toml`
+1. Built-in defaults shipped with the app
+2. User overrides in `~/.config/zfiles/keybindings.toml`
 
-User overrides win. Plugin defaults resolve in plugin load order, deterministically. Conflicts surface in the settings UI rather than silently overriding.
+User overrides win. Conflicts surface in the settings UI rather than silently overriding.
 
 Bindings are context-scoped via the same `when` mechanism, so the same chord can dispatch different actions depending on focus:
 
@@ -158,7 +155,7 @@ command = "edit.select-all-text"
 when = "focus.pane == 'search-input'"
 ```
 
-Chord sequences are two-stroke chains: `Mod+K Mod+S`. Plugin authors will expect them even when built-ins don't use them heavily.
+Chord sequences are two-stroke chains: `Mod+K Mod+S`.
 
 Cross-platform key abstraction: declare keys using `Mod` (resolves to Cmd on macOS, Ctrl elsewhere), plus `Alt`, `Shift`, and `Meta`. Even on Linux-first v1, declare bindings abstractly so v2 cross-platform support is trivial.
 
@@ -177,22 +174,9 @@ Multi-step argument prompting: when an invoked action has required args without 
 
 The palette also displays the bound keybinding next to each action name, which doubles as keyboard discoverability — users learn shortcuts for the actions they use repeatedly.
 
-## Plugin integration
-
-Plugin actions are registered via the `action` capability declared in `plugin.toml`, or dynamically via a JSON-RPC `registerActions` notification after handshake.
-
-The shape of a plugin's action declaration matches the built-in `Action` interface above, with two differences:
-
-- The plugin omits the `handler` field; the kernel routes invocations back to the plugin over JSON-RPC.
-- The plugin ships an i18n bundle for its action strings, loaded by the kernel into the plugin's namespace.
-
-The kernel auto-namespaces ids under `plugin.<plugin-id>.`, so an EXIF plugin's "Extract Metadata" action becomes `plugin.exif.extract-metadata`. The user-facing name and category are untouched.
-
-Plugin actions can use `when` expressions over the documented subset of context keys the kernel exposes. They cannot read arbitrary kernel state — only the published context surface. This is a forward-compatibility hedge: the kernel can evolve internal state without breaking plugins.
-
 ## i18n
 
-Action strings flow through the standard i18n pipeline. `name`, `description`, `category`, `aliases`, and any enum value labels reference message catalog keys. Plugins ship their own message bundles in a `locales/` directory; the kernel loads them when the plugin is enabled.
+Action strings flow through the standard i18n pipeline. `name`, `description`, `category`, `aliases`, and any enum value labels reference message catalog keys.
 
 Search uses the current locale's strings with English as a fallback. The palette does not search across all locales simultaneously — that produces too many coincidental matches.
 
@@ -212,6 +196,6 @@ Three things are deliberately deferred from v1 of the action system:
 
 **Action results consumed by other actions.** If handlers can return values other actions consume, you're building a scripting layer. Powerful but a much bigger commitment; revisit when macro and automation requests appear.
 
-**Inter-plugin action invocation.** Whether plugin A can invoke plugin B's actions through the kernel. Probably yes long-term, but a security and stability consideration that needs its own design pass.
+**Inter-action scripting.** Whether one action can invoke another through the registry. Probably yes long-term, but a security and stability consideration that needs its own design pass.
 
 These are noted to make sure their absence is a choice and not an oversight.
