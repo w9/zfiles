@@ -4,13 +4,8 @@ version = "0.1.0"
 edition = "2024"
 build = "build.rs"
 
-[workspace]
-members = [".", "plugins/image-thumbnailer", "plugins/thumbnailer-raw", "plugins/thumbnailer-heic"]
-resolver = "2"
-
 [features]
-default = ["bundled-plugins"]
-bundled-plugins = []
+default = []
 dev-frontend = ["dep:tokio-tungstenite"]
 
 [dependencies]

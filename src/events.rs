@@ -14,15 +14,6 @@ pub enum KernelEvent {
         length: Option<u64>,
     },
     FilesystemChanged { path: String },
-    PluginReady { name: String },
-    ListingEnrichment {
-        path: String,
-        entries: Vec<crate::fs::FileEntry>,
-    },
-    ThumbnailReady {
-        path: String,
-        url: String,
-    },
 }
 
 #[derive(Clone)]

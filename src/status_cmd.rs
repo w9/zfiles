@@ -5,7 +5,6 @@ use clap::Parser;
 
 use crate::config::Config;
 use crate::dotfolder;
-use crate::plugins::PluginSupervisor;
 
 #[derive(Debug, Parser)]
 pub struct StatusArgs {
@@ -20,7 +19,6 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
     let config = Config::load(&root)?;
     let layout = dotfolder::plan_serve_layout(&root, &config, false);
     let state_dir = layout.state_dir.clone();
-    let plugins = PluginSupervisor::new(root.clone()).list()?;
 
     println!("root: {}", root.display());
     println!("serve-id: {}", layout.serve_id);
@@ -36,15 +34,6 @@ pub fn run(args: StatusArgs) -> anyhow::Result<()> {
     );
     println!("read_only: {}", layout.read_only);
     println!("open_browser: {}", config.open_browser());
-    println!("plugins: {}", plugins.len());
-    for plugin in plugins {
-        println!(
-            "  - {} {} [{}]",
-            plugin.manifest.name,
-            plugin.manifest.version,
-            plugin.manifest.capabilities.join(", ")
-        );
-    }
     Ok(())
 }
 

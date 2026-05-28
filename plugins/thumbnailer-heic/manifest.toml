@@ -1,6 +1,0 @@
-name = "thumbnailer-heic"
-version = "0.1.0"
-executable = "bin/thumbnailer-heic"
-protocol_version = 1
-capabilities = ["thumbnailer", "watcher"]
-globs = ["*.heic", "*.heif", "*.HEIC", "*.HEIF"]

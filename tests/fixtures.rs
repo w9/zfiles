@@ -7,7 +7,6 @@ use zfiles::auth::AuthConfig;
 use zfiles::config::Config;
 use zfiles::events::EventBus;
 use zfiles::fs::{FileEntry, LocalFs};
-use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 use zfiles::xdg;
@@ -19,7 +18,6 @@ fn test_server(root: &std::path::Path) -> TestServer {
         false,
         Arc::new(StateStore::new(root.to_path_buf())),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(root.to_path_buf())),
     );
     TestServer::new(router(state)).expect("test server")
 }

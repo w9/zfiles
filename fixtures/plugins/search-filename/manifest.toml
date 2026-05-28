@@ -1,6 +1,0 @@
-name = "search-filename"
-version = "0.1.0"
-executable = "bin/search-filename"
-protocol_version = 1
-capabilities = ["searcher"]
-globs = ["*"]

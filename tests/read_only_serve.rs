@@ -8,7 +8,6 @@ use zfiles::config::Config;
 use zfiles::dotfolder;
 use zfiles::events::EventBus;
 use zfiles::fs::{FileEntry, LocalFs};
-use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 use zfiles::xdg;
@@ -24,7 +23,6 @@ fn test_server_for_layout(root: &std::path::Path, config: &Config, cli_read_only
             layout.state_dir.clone(),
         )),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(root.to_path_buf())),
     );
     TestServer::new(router(state)).expect("test server")
 }

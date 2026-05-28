@@ -6,7 +6,6 @@ use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
 use zfiles::fs::LocalFs;
-use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
@@ -22,7 +21,6 @@ async fn download_large_file_returns_full_body() {
         false,
         Arc::new(StateStore::new(dir.path().to_path_buf())),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
     );
     let server = TestServer::new(router(state)).expect("test server");
 

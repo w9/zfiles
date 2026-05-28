@@ -1,6 +1,0 @@
-name = "thumbnailer-raw"
-version = "0.1.0"
-executable = "bin/thumbnailer-raw"
-protocol_version = 1
-capabilities = ["thumbnailer", "watcher"]
-globs = ["*.nef", "*.cr2", "*.arw", "*.dng", "*.orf", "*.rw2", "*.raf", "*.pef", "*.srw"]

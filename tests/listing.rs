@@ -15,14 +15,16 @@ fn test_server(root: &std::path::Path) -> TestServer {
 }
 
 fn test_server_with_options(root: &std::path::Path, read_only: bool) -> TestServer {
-    let plugins = Arc::new(zfiles::plugins::PluginSupervisor::new(root.to_path_buf()));
+    let root = root.to_path_buf();
     let state = AppState::new(
-        Arc::new(LocalFs::new(root.to_path_buf())),
+        Arc::new(LocalFs::new(root.clone())),
         AuthConfig::disabled(),
         read_only,
-        Arc::new(StateStore::new(root.to_path_buf())),
+        Arc::new(StateStore::with_state_dir(
+            root.clone(),
+            root.join(".state"),
+        )),
         EventBus::new(),
-        plugins,
     );
     TestServer::new(router(state)).expect("test server")
 }
@@ -231,4 +233,22 @@ async fn index_fallback_is_served() {
     response.assert_status_ok();
     let body = response.text();
     assert!(body.contains("zfiles") || body.contains("placeholder"));
+}
+
+#[tokio::test]
+async fn removed_plugin_and_search_routes_return_not_found() {
+    let dir = tempdir().unwrap();
+    let server = test_server(dir.path());
+
+    for path in [
+        "/api/plugins",
+        "/api/plugins/i18n",
+        "/api/search?q=test",
+        "/api/thumbnail?path=notes.txt",
+        "/api/preview?path=notes.txt",
+        "/plugin/image-thumbnailer/viewer.js",
+    ] {
+        let response = server.get(path).await;
+        response.assert_status(axum::http::StatusCode::NOT_FOUND);
+    }
 }

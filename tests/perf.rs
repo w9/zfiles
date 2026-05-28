@@ -10,7 +10,6 @@ use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
 use zfiles::fs::LocalFs;
 use zfiles::perf_baseline::PerfBaseline;
-use zfiles::plugins::PluginSupervisor;
 use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 
@@ -38,7 +37,6 @@ async fn list_small_fixture_under_sla() {
         false,
         Arc::new(StateStore::new(dir.path().join("small"))),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(dir.path().join("small"))),
     );
     let server = TestServer::new(router(state)).expect("test server");
 
@@ -63,7 +61,6 @@ async fn download_one_mib_under_sla() {
         false,
         Arc::new(StateStore::new(dir.path().to_path_buf())),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
     );
     let server = TestServer::new(router(state)).expect("test server");
 
@@ -99,7 +96,6 @@ async fn upload_one_mib_under_sla() {
         false,
         Arc::new(StateStore::new(dir.path().to_path_buf())),
         EventBus::new(),
-        Arc::new(PluginSupervisor::new(dir.path().to_path_buf())),
     );
     let server = TestServer::new(router(state)).expect("test server");
 

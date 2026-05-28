@@ -1,6 +1,0 @@
-name = "thumbnail-stub"
-version = "0.1.0"
-executable = "bin/thumbnail-stub"
-protocol_version = 1
-capabilities = ["thumbnailer"]
-globs = ["*.jpg", "*.png", "*.txt"]

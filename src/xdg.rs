@@ -32,18 +32,6 @@ pub fn global_config_path() -> PathBuf {
     config_home().join("config.toml")
 }
 
-pub fn user_plugins_dir() -> PathBuf {
-    config_home().join("plugins")
-}
-
-pub fn bundled_plugins_dir() -> PathBuf {
-    cache_home().join("bundled")
-}
-
-pub fn plugin_data_dir(plugin_name: &str) -> PathBuf {
-    cache_home().join("plugins").join(plugin_name).join("data")
-}
-
 pub fn folder_dir(serve_root: &Path) -> PathBuf {
     config_home()
         .join("folders")
@@ -191,26 +179,6 @@ mod tests {
                     .join("config/folders")
                     .join(id)
                     .join("config.toml")
-            );
-        });
-    }
-
-    #[test]
-    fn plugin_paths_use_config_and_cache_homes() {
-        let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
-            assert_eq!(
-                user_plugins_dir(),
-                dir.path().join("config/plugins")
-            );
-            assert_eq!(
-                plugin_data_dir("image-thumbnailer"),
-                dir.path()
-                    .join("cache/plugins/image-thumbnailer/data")
-            );
-            assert_eq!(
-                bundled_plugins_dir(),
-                dir.path().join("cache/bundled")
             );
         });
     }

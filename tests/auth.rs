@@ -29,7 +29,6 @@ fn embedded_file_icon_path() -> String {
 }
 
 fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Option<i64>) -> TestServer {
-    let plugins = Arc::new(zfiles::plugins::PluginSupervisor::new(root.to_path_buf()));
     let state_store = Arc::new(StateStore::new(root.to_path_buf()));
     if let Some(expires_at) = expires_at {
         state_store
@@ -42,7 +41,6 @@ fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Optio
         false,
         state_store,
         EventBus::new(),
-        plugins,
     );
     TestServer::new(router(state)).expect("test server")
 }

@@ -25,11 +25,6 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Manage plugins
-    Plugin {
-        #[command(subcommand)]
-        command: PluginCommand,
-    },
     /// Read or write per-folder configuration
     Config {
         #[command(subcommand)]
@@ -57,7 +52,7 @@ pub enum Command {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
-    /// Print folder and plugin status
+    /// Print folder status
     Status {
         #[command(flatten)]
         args: crate::status_cmd::StatusArgs,
@@ -100,27 +95,6 @@ pub enum DaemonCommand {
         /// Multi-folder daemon config with `[[share]]` entries
         #[arg(long)]
         config: Option<PathBuf>,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-pub enum PluginCommand {
-    /// List discovered plugins
-    List,
-    /// Install a plugin directory into `~/.config/zfiles/plugins/`
-    Install {
-        /// Plugin source directory containing `manifest.toml`
-        source: PathBuf,
-    },
-    /// Run the plugin conformance suite
-    Test {
-        /// Plugin directory containing `manifest.toml`
-        plugin: PathBuf,
-    },
-    /// Remove an installed plugin
-    Remove {
-        /// Plugin name to remove
-        name: String,
     },
 }
 
@@ -327,7 +301,7 @@ mod tests {
 
     #[test]
     fn verbose_flag_works_on_subcommands() {
-        let cli = Cli::parse_from(["zfiles", "-v", "plugin", "list"]);
+        let cli = Cli::parse_from(["zfiles", "-v", "config", "get", "--folder", ".", "server.read_only"]);
         assert_eq!(cli.verbose, 1);
     }
 

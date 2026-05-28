@@ -1,6 +1,0 @@
-name = "route-stub"
-version = "0.1.0"
-executable = "bin/route-stub"
-protocol_version = 1
-capabilities = ["route"]
-globs = []

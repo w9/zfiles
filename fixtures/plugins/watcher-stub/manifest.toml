@@ -1,6 +1,0 @@
-name = "watcher-stub"
-version = "0.1.0"
-executable = "bin/watcher-stub"
-protocol_version = 1
-capabilities = ["watcher"]
-globs = []

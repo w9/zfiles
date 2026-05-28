@@ -28,7 +28,6 @@ use crate::embed;
 use crate::events::{EventBus, KernelEvent};
 use crate::fs::{FileStat, Fs, LocalFs};
 use crate::mount;
-use crate::plugins::PluginSupervisor;
 use crate::qr;
 use crate::range;
 use crate::state::StateStore;
@@ -45,7 +44,6 @@ pub struct AppState {
     pub read_only: bool,
     pub state: Arc<StateStore>,
     pub events: EventBus,
-    pub plugins: Arc<PluginSupervisor>,
     #[cfg(feature = "dev-frontend")]
     pub vite_dev: Option<Arc<crate::vite_proxy::ViteDevProxy>>,
 }
@@ -57,7 +55,6 @@ impl AppState {
         read_only: bool,
         state: Arc<StateStore>,
         events: EventBus,
-        plugins: Arc<PluginSupervisor>,
     ) -> Self {
         Self {
             fs,
@@ -65,7 +62,6 @@ impl AppState {
             read_only,
             state,
             events,
-            plugins,
             #[cfg(feature = "dev-frontend")]
             vite_dev: None,
         }
@@ -77,24 +73,12 @@ struct PathQuery {
     path: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
-struct ThumbnailQuery {
-    path: Option<String>,
-    tier: Option<String>,
-}
-
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/api/health", get(health))
-        .route("/api/plugins", get(list_plugins))
-        .route("/api/plugins/i18n", get(list_plugin_i18n))
         .route("/api/list", get(list_directory))
-        .route("/api/thumbnail", get(thumbnail_file))
-        .route("/api/preview", get(preview_file))
-        .route("/api/actions", get(list_actions).post(run_action))
-        .route("/api/actions/catalog", get(list_action_catalog))
+        .route("/api/actions", post(run_action))
         .route("/api/keybindings", get(list_keybindings))
-        .route("/plugin/{name}/{*path}", get(plugin_static))
         .route("/api/metadata", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
@@ -153,7 +137,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     };
 
     let events = EventBus::new();
-    let plugins = Arc::new(PluginSupervisor::new(root.clone()));
     #[cfg(feature = "dev-frontend")]
     let vite_dev = if serve.vite_dev_enabled() {
         Some(Arc::new(
@@ -171,7 +154,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         read_only,
         state: state_store,
         events: events.clone(),
-        plugins: plugins.clone(),
         #[cfg(feature = "dev-frontend")]
         vite_dev,
     };
@@ -210,8 +192,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     mount::warn_if_cross_mount("upload spool", &root, &state_dir);
 
     watch::start(root.clone(), events.clone())?;
-    plugins.clone().start_watcher_dispatch(events.clone());
-    plugins.start_background(events);
 
     info!(root = %root.display(), addr = %bound, "zfiles listening");
 
@@ -233,21 +213,6 @@ async fn health(State(state): State<AppState>) -> impl IntoResponse {
     }))
 }
 
-async fn list_plugins(State(state): State<AppState>) -> impl IntoResponse {
-    Json(state.plugins.ready_plugins())
-}
-
-async fn list_plugin_i18n(
-    State(state): State<AppState>,
-) -> Result<Json<serde_json::Value>, AppError> {
-    Ok(Json(
-        state
-            .plugins
-            .plugin_i18n_catalog()
-            .unwrap_or_else(|_| serde_json::json!({})),
-    ))
-}
-
 async fn list_directory(
     State(state): State<AppState>,
     Query(query): Query<PathQuery>,
@@ -257,30 +222,7 @@ async fn list_directory(
         .fs
         .read_dir(std::path::Path::new(relative))
         .await?;
-    let entries = state
-        .plugins
-        .enrich_listing(relative, entries, state.events.clone())
-        .await;
-    state
-        .plugins
-        .prefetch_thumbnails(&entries, state.events.clone());
     Ok(Json(entries))
-}
-
-async fn list_actions(
-    State(state): State<AppState>,
-    Query(query): Query<PathQuery>,
-) -> Result<Json<Vec<crate::plugins::ActionItem>>, AppError> {
-    let relative = query
-        .path
-        .as_deref()
-        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
-    let actions = state.plugins.actions(relative).await;
-    Ok(Json(actions))
-}
-
-async fn list_action_catalog(State(state): State<AppState>) -> Json<Vec<crate::plugins::ActionItem>> {
-    Json(state.plugins.action_catalog())
 }
 
 async fn list_keybindings() -> Json<crate::keybindings::KeybindingsFile> {
@@ -318,11 +260,10 @@ async fn run_action(
         }
         return Ok(StatusCode::NO_CONTENT);
     }
-    state
-        .plugins
-        .run_actions(&targets, &body.action_id)
-        .await?;
-    Ok(StatusCode::NO_CONTENT)
+    Err(AppError(anyhow::anyhow!(
+        "unknown action: {}",
+        body.action_id
+    )))
 }
 
 fn parent_listing_path(relative: &str) -> String {
@@ -330,98 +271,6 @@ fn parent_listing_path(relative: &str) -> String {
         .rsplit_once('/')
         .map(|(parent, _)| parent.to_string())
         .unwrap_or_default()
-}
-
-async fn plugin_static(
-    State(state): State<AppState>,
-    AxumPath((name, path)): AxumPath<(String, String)>,
-) -> Result<Response, AppError> {
-    if let Ok(absolute) = state.plugins.resolve_plugin_asset(&name, &path) {
-        return serve_plugin_file(absolute).await;
-    }
-
-    if state.plugins.has_route(&name) {
-        let route_path = format!("/{path}");
-        let Some((status, content_type, bytes)) = state
-            .plugins
-            .route_handle(&name, "GET", &route_path)
-            .await
-        else {
-            return Err(AppError(anyhow::anyhow!("route unavailable")));
-        };
-        let status_code =
-            StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-        let mut response = Response::new(Body::from(bytes));
-        *response.status_mut() = status_code;
-        response.headers_mut().insert(
-            CONTENT_TYPE,
-            HeaderValue::from_str(&content_type)
-                .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-        );
-        return Ok(response);
-    }
-
-    Err(AppError(anyhow::anyhow!("plugin asset not found")))
-}
-
-async fn serve_plugin_file(absolute: std::path::PathBuf) -> Result<Response, AppError> {
-    let content_type = from_path(&absolute)
-        .first()
-        .map(|mime| mime.to_string())
-        .unwrap_or_else(|| "application/octet-stream".into());
-    let bytes = tokio::fs::read(&absolute).await?;
-    let mut response = Response::new(Body::from(bytes));
-    response.headers_mut().insert(
-        CONTENT_TYPE,
-        HeaderValue::from_str(&content_type)
-            .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-    );
-    Ok(response)
-}
-
-async fn thumbnail_file(
-    State(state): State<AppState>,
-    Query(query): Query<ThumbnailQuery>,
-) -> Result<Response, AppError> {
-    let relative = query
-        .path
-        .as_deref()
-        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
-    let tier = query.tier.as_deref().unwrap_or("grid");
-
-    let Some((content_type, bytes)) = state.plugins.thumbnail(relative, tier).await else {
-        return Err(AppError(anyhow::anyhow!("thumbnail unavailable")));
-    };
-
-    let mut response = Response::new(Body::from(bytes));
-    response.headers_mut().insert(
-        CONTENT_TYPE,
-        HeaderValue::from_str(&content_type)
-            .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-    );
-    Ok(response)
-}
-
-async fn preview_file(
-    State(state): State<AppState>,
-    Query(query): Query<PathQuery>,
-) -> Result<Response, AppError> {
-    let relative = query
-        .path
-        .as_deref()
-        .ok_or_else(|| anyhow::anyhow!("path is required"))?;
-
-    let Some((content_type, body)) = state.plugins.preview(relative).await else {
-        return Err(AppError(anyhow::anyhow!("preview unavailable")));
-    };
-
-    let mut response = Response::new(Body::from(body));
-    response.headers_mut().insert(
-        CONTENT_TYPE,
-        HeaderValue::from_str(&content_type)
-            .unwrap_or_else(|_| HeaderValue::from_static("text/plain")),
-    );
-    Ok(response)
 }
 
 async fn stat_path(
@@ -649,6 +498,9 @@ async fn static_or_index(
     request: axum::http::Request<Body>,
 ) -> Response {
     let path = request.uri().path();
+    if path.starts_with("/api/") || path.starts_with("/plugin/") {
+        return (StatusCode::NOT_FOUND, "not found").into_response();
+    }
     let accept_encoding = request
         .headers()
         .get(axum::http::header::ACCEPT_ENCODING)
@@ -737,10 +589,7 @@ impl IntoResponse for AppError {
             || message.contains("failed to resolve path")
             || message.contains("failed to read directory")
             || message.contains("failed to stat path")
-            || message.contains("thumbnail unavailable")
-            || message.contains("preview unavailable")
-            || message.contains("action unavailable")
-            || message.contains("plugin asset")
+            || message.contains("unknown action")
         {
             StatusCode::NOT_FOUND
         } else if message.contains("cannot download a directory") {

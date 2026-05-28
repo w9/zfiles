@@ -1,14 +1,11 @@
 use anyhow::Context;
 
-use crate::cli::{Cli, Command, ConfigCommand, PluginCommand};
+use crate::cli::{Cli, Command, ConfigCommand};
 use crate::config::Config;
-use crate::plugin::conformance;
-use crate::plugins::PluginSupervisor;
 
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         None => crate::transport::serve(cli.serve).await,
-        Some(Command::Plugin { command }) => run_plugin(command).await,
         Some(Command::Config { command }) => run_config(command).await,
         Some(Command::Upload {
             server,
@@ -58,43 +55,6 @@ fn run_daemon(command: crate::cli::DaemonCommand) -> anyhow::Result<()> {
             }
         }
     }
-}
-
-async fn run_plugin(command: PluginCommand) -> anyhow::Result<()> {
-    match command {
-        PluginCommand::List => {
-            let plugins = PluginSupervisor::new(std::env::current_dir()?).list()?;
-            if plugins.is_empty() {
-                println!("No plugins discovered.");
-                return Ok(());
-            }
-            for plugin in plugins {
-                println!(
-                    "{} {} ({})",
-                    plugin.manifest.name, plugin.manifest.version, plugin.root.display()
-                );
-            }
-        }
-        PluginCommand::Install { source } => {
-            let record = PluginSupervisor::new(std::env::current_dir()?).install(&source)?;
-            println!(
-                "Installed plugin {} to {}",
-                record.manifest.name,
-                record.root.display()
-            );
-        }
-        PluginCommand::Test { plugin } => {
-            let plugin = std::fs::canonicalize(&plugin)
-                .with_context(|| format!("resolve plugin path {}", plugin.display()))?;
-            conformance::run(&plugin).await?;
-            println!("Plugin conformance passed.");
-        }
-        PluginCommand::Remove { name } => {
-            PluginSupervisor::new(std::env::current_dir()?).remove(&name)?;
-            println!("Removed plugin {name}");
-        }
-    }
-    Ok(())
 }
 
 async fn run_config(command: ConfigCommand) -> anyhow::Result<()> {
