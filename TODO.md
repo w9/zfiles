@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 6 — extract `ExplorerApp` library entry, split local/cloud build targets (local bundle excludes AWS SDK). Next: Phase 7 — CORS docs and connect-flow documentation.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 7 — CORS guide, cloud connect documentation, README and design doc updates. Next: Phase 8 — cleanup and verification.
 
 ## TODO List
 
@@ -53,8 +53,12 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Cloud boot path: detect mode, gate explorer behind connect, wire `ExplorerBackendProvider`
 - [x] Async download URLs in preview/slideshow; load-more when listing returns `nextCursor`
 - [x] Unit tests for S3 path/key mapping and boot params; rebuild `web/dist`; run `pnpm test`
-- [ ] Extract `ExplorerApp` and `web/src/explorer/index.ts` library entry with backend re-exports
-- [ ] Split entry points: `main-local.tsx` (kernel) and `main-cloud.tsx` (S3 connect shell)
-- [ ] Dual Vite configs: local → `web/dist`, cloud → `web/dist-cloud` without kernel imports in cloud entry
-- [ ] Update `package.json` scripts (`dev:cloud`, `build:cloud`); document cloud self-hosting in README
-- [ ] Rebuild local `web/dist`; run `pnpm test` and verify local bundle excludes AWS SDK
+- [x] Extract `ExplorerApp` and `web/src/explorer/index.ts` library entry with backend re-exports
+- [x] Split entry points: `main-local.tsx` (kernel) and `main-cloud.tsx` (S3 connect shell)
+- [x] Dual Vite configs: local → `web/dist`, cloud → `web/dist-cloud` without kernel imports in cloud entry
+- [x] Update `package.json` scripts (`dev:cloud`, `build:cloud`); document cloud self-hosting in README
+- [x] Rebuild local `web/dist`; run `pnpm test` and verify local bundle excludes AWS SDK
+- [ ] Add `docs/cors.md` with AWS S3 and Cloudflare R2 CORS rules for cloud mode
+- [ ] Add `docs/cloud-connect.md` (connect flow, least-privilege credentials, disconnect, URL params)
+- [ ] Update README for dual-mode product description; link to cloud docs
+- [ ] Update `design/design.md` cloud sections to reference the new documentation
