@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Explorer shell: single card with full-width breadcrumb/status and listing+preview split. Next: `zfiles migrate`, integration-test plugin isolation, optional single-threaded CI tests.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 1 — introduce `ExplorerBackend`, implement `KernelBackend`, refactor App/PreviewPane/upload/WebSocket to use it with no behavior change.
 
 ## TODO List
 
@@ -111,3 +111,9 @@ Symlink-outside-root is opt-in via `--follow-symlinks-outside-root`. Explorer sh
 - [x] Run web unit tests; rebuild `web/dist`
 - [x] Cap explorer middle row height to match listing; preview pane scrolls internally with `overflow-auto`
 - [x] Run web unit tests; rebuild `web/dist`
+- [ ] Define `ExplorerBackend` types, events, and `ExplorerBackendProvider` / `useExplorerBackend()`
+- [ ] Implement `KernelBackend` wrapping `/api/*` REST and WebSocket (list, stat, upload, actions, plugins, search, health)
+- [ ] Refactor `App.tsx`, `PreviewPane.tsx`, `upload.ts`, and `useBackendStatus.ts` to use the backend (no `/api/` in components)
+- [ ] Wire `SlideshowDialog` thumbnail URLs through `KernelBackend.thumbnailUrl`
+- [ ] Unit tests for `KernelBackend` request mapping and URL helpers
+- [ ] Rebuild `web/dist`; run `pnpm test` and `cargo test`
