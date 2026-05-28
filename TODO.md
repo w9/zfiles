@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 5 — `S3Backend`, connect dialog, cloud boot path, and list pagination. Phase 4 kernel slimming is largely done (WebSocket events, plugin removal). Next: Phase 6 — package layout and dual build targets.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 6 — extract `ExplorerApp` library entry, split local/cloud build targets (local bundle excludes AWS SDK). Next: Phase 7 — CORS docs and connect-flow documentation.
 
 ## TODO List
 
@@ -47,9 +47,14 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Remove plugin CLI, `plugins/` tree, bundled build, and plugin integration tests
 - [x] Simplify WebSocket events to connected, filesystem_changed, upload_progress
 - [x] Rebuild `web/dist`; run `pnpm test` and `cargo test`
-- [ ] Add AWS SDK deps; S3 config, credential sessionStorage, and boot URL param parsing
-- [ ] Implement `S3Backend` (paginated list, stat, presigned download, multipart upload, delete)
-- [ ] Build connect dialog with AWS/R2 presets, test connection, and disconnect
-- [ ] Cloud boot path: detect mode, gate explorer behind connect, wire `ExplorerBackendProvider`
-- [ ] Async download URLs in preview/slideshow; load-more when listing returns `nextCursor`
-- [ ] Unit tests for S3 path/key mapping and boot params; rebuild `web/dist`; run `pnpm test`
+- [x] Add AWS SDK deps; S3 config, credential sessionStorage, and boot URL param parsing
+- [x] Implement `S3Backend` (paginated list, stat, presigned download, multipart upload, delete)
+- [x] Build connect dialog with AWS/R2 presets, test connection, and disconnect
+- [x] Cloud boot path: detect mode, gate explorer behind connect, wire `ExplorerBackendProvider`
+- [x] Async download URLs in preview/slideshow; load-more when listing returns `nextCursor`
+- [x] Unit tests for S3 path/key mapping and boot params; rebuild `web/dist`; run `pnpm test`
+- [ ] Extract `ExplorerApp` and `web/src/explorer/index.ts` library entry with backend re-exports
+- [ ] Split entry points: `main-local.tsx` (kernel) and `main-cloud.tsx` (S3 connect shell)
+- [ ] Dual Vite configs: local → `web/dist`, cloud → `web/dist-cloud` without kernel imports in cloud entry
+- [ ] Update `package.json` scripts (`dev:cloud`, `build:cloud`); document cloud self-hosting in README
+- [ ] Rebuild local `web/dist`; run `pnpm test` and verify local bundle excludes AWS SDK
