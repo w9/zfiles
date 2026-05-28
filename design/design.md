@@ -2,32 +2,48 @@
 
 ## 1. Overview
 
-zfiles is a local file server with a browser-based explorer. Run `zfiles` in a directory; the UI opens with no indexing step, no startup delay, and no configuration. It scales from small folders to directories with millions of entries.
+zfiles is a **dual-mode file explorer**: one shared React UI that browses files either on the **local filesystem** (via a Rust CLI) or in **S3-compatible object storage** (S3, Cloudflare R2) directly from the browser.
 
-Files can be uploaded by dragging them into the browser. Uploads and downloads are resumable — if the connection drops, they continue from where they stopped. Any HTTP client that supports range requests works, including `curl --continue-at`.
+| Mode | Delivery | Storage | Opens |
+|------|----------|---------|-------|
+| **Local** | Single static binary; SPA embedded via `rust-embed` | Directory on disk | `http://127.0.0.1:<port>/` |
+| **Cloud** | Static SPA hosted at `zfiles.com` (or self-hosted) | S3 / R2 bucket | Connect dialog → explorer |
 
-To expose a folder on the local network, run `zfiles --listen 0.0.0.0:8080 --token`. The server prints a URL and a QR code for other devices.
+Run `zfiles` in a directory and the UI opens with no indexing step, no startup delay, and no configuration. Local mode scales from small folders to directories with millions of entries. Cloud mode uses paginated object listing (S3 returns at most 1000 keys per call).
 
-The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scrolled listings, and an extensible preview pane. Format-specific features — thumbnails, EXIF metadata, DICOM viewing, full-text search — live in plugins that can be written in any language.
+Files can be uploaded by dragging them into the browser. **Local mode:** uploads and downloads are resumable — tus on upload, HTTP Range on download. **Cloud mode:** S3 multipart upload and Range GET. Any HTTP client that supports range requests works against the local kernel, including `curl --continue-at`.
 
-Everything ships as a single static binary. No daemon, database, or config file is required to run.
+To expose a local folder on the network, run `zfiles --listen 0.0.0.0:8080 --token`. The server prints a URL and a QR code for other devices.
+
+The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scrolled listings, and a preview pane. Built-in actions (navigation, delete, copy-path, view toggles) are unified through the [action system](action_system.md).
+
+**Local mode** ships as a single static binary. No daemon or config file is required to run (XDG paths are optional; see [config_and_cache.md](config_and_cache.md)).
+
+**Cloud mode** is a static site only — no zfiles server, no accounts. Users paste **temporary** bucket credentials into a connect dialog. Credentials stay in the browser (`sessionStorage`); the host never receives them.
+
+### What we removed
+
+Plugins and filename search are **out of scope** for the project going forward — not deferred, removed. There is no plugin supervisor, no JSON-RPC subprocess protocol, no `/api/search`, and no bundled thumbnail/search/viewer plugins. Preview is client-side for common image types; everything else shows metadata and a download link.
+
+Implementation phases and migration checklist: [dual_mode_refactor.md](dual_mode_refactor.md).
+
+---
 
 ## 2. Technical objectives
 
-zfiles is engineered around six technical goals. The shape of the project — what's in the core, what's outside it, how the pieces talk to each other — falls out of these.
+zfiles is engineered around these goals. Module boundaries and frontend/backend split follow from them.
 
-- **Always-instant cold start.** Under 100 ms from process spawn to first HTTP response, no matter how large the served directory is.
-- **Saturate the wire on both directions.** Single-connection downloads and uploads hit gigabit Ethernet throughput. Both transfer paths resume from any interruption.
-- **A genuine microkernel.** The core does not interpret file contents. Every format-specific feature — thumbnails, viewers, search, indexing — lives outside the kernel as a plugin.
-- **Language-agnostic plugin protocol.** Plugins are subprocesses speaking JSON-RPC over stdio. Authoring a plugin requires only the ability to read and write JSON on stdin/stdout. Python, Go, Node, Rust, shell — anything works.
-- **Single static binary.** One file, under 20 MB stripped, with the React frontend baked in. Drop it on a Linux machine and run it.
-- **Cross-platform forward compatibility on a Linux-first delivery.** v1 ships Linux only, but the kernel's abstractions don't preclude macOS or Windows. The platform boundaries are explicit and behind traits.
+- **One explorer, two backends.** A shared frontend library talks to storage through an `ExplorerBackend` interface. Local mode uses `KernelBackend` (REST + WebSocket against the embedded kernel). Cloud mode uses `S3Backend` (AWS SDK v3 in the browser). The UI never forks by mode.
+- **Always-instant cold start (local).** Under 100 ms from process spawn to first HTTP response, no matter how large the served directory is. Nothing in the startup path blocks on directory size or cache state.
+- **Saturate the wire (local).** Single-connection downloads and uploads hit gigabit Ethernet throughput where hardware allows. Both transfer paths resume from interruption (Range + tus).
+- **Small focused kernel (local).** The Rust binary serves filesystem primitives, auth, tus upload, static assets, and filesystem watch — not format interpretation, thumbnails, search, or extensibility hooks.
+- **Static cloud deployment.** The hosted SPA is static files only. Bucket credentials are user-supplied and ephemeral. URL params carry **non-secrets** only (bucket, prefix, provider, endpoint, region, read-only flag).
+- **Single static binary (local).** One file, with the React frontend baked in. Drop it on a Linux machine and run it.
+- **Cross-platform forward compatibility (local kernel).** v1 ships Linux only, but filesystem operations go through an `Fs` trait so macOS and Windows ports don't rewrite the center.
 
-The rest of this section unpacks each objective.
+### Always-instant cold start (local mode)
 
-### Always-instant cold start
-
-This is the load-bearing invariant of the project. Nothing in the startup path is allowed to block on work that scales with the size of the served directory or the state of any cache. The startup sequence is fixed:
+This is the load-bearing invariant for the CLI. Nothing in the startup path may block on work that scales with directory size. The startup sequence is fixed:
 
 1. Parse CLI args (`clap`, sub-millisecond)
 2. Load merged config from XDG paths if present; otherwise use defaults (see [config_and_cache.md](config_and_cache.md))
@@ -35,173 +51,210 @@ This is the load-bearing invariant of the project. Nothing in the startup path i
 4. Spawn the browser (`xdg-open`, async — we don't wait for it)
 5. Begin serving
 
-Conspicuously absent: directory scanning, index building, plugin startup, hashing, any filesystem stat work beyond the requested-directory listing. XDG config and cache directories are created lazily on first write, so browsing an arbitrary folder — including a fresh clone — has zero side effects on disk.
+Conspicuously absent: directory scanning, index building, subprocess spawning, hashing, any filesystem stat work beyond the requested-directory listing. XDG config directories are created lazily on first write, so browsing an arbitrary folder — including a fresh clone — has zero side effects on disk.
 
-The plugin supervisor begins discovering and spawning plugins in parallel in the background once the listener is up. Plugins reach ready state asynchronously. Until they are ready, capability requests for them return "unavailable" and the UI degrades gracefully.
-
-The same principle extends to every request: the kernel returns the fast answer immediately, plugin contributions arrive later over the WebSocket and update the UI in place. A directory listing returns in tens of milliseconds with raw `fs::read_dir` results; if a `lister` plugin is registered, its enrichment data (icons, metadata columns) follows over the websocket and the UI mutates. The UI is built to handle this — no waiting, no flickering.
+A directory listing returns in tens of milliseconds with raw `fs::read_dir` results. The WebSocket may push `filesystem_changed` when the watch service detects changes; the UI refreshes the current listing in place.
 
 Target time-to-first-byte on a modern x86_64 Linux machine: well under 50 ms in practice, leaving headroom on the 100 ms SLA.
 
 ### High-throughput resumable transfers
 
-Downloads use HTTP Range requests for resumability. The response body is a streaming reader over the file. On Linux, the hot path uses `sendfile(2)` for zero-copy file-to-socket transfer when the request is for a whole file or a single contiguous range; multi-range or transformed responses fall back to `ReaderStream` over `tokio::fs`. Buffer sizes start at 256 KiB and are tuned against benchmarks; TCP send buffers are left to the kernel to autotune unless we measure problems.
+**Local downloads** use HTTP Range requests. The response body is a streaming reader over the file. On Linux, the hot path uses `sendfile(2)` for zero-copy file-to-socket transfer when the request is for a whole file or a single contiguous range; multi-range or transformed responses fall back to `ReaderStream` over `tokio::fs`.
 
-Target throughput: 110+ MB/s sustained on a single connection from local SSD over gigabit. This is well within `sendfile`'s capability — modern Linux moves several GB/s with `sendfile` on local hardware — so we're bounded by the network, not the kernel.
+Target throughput: 110+ MB/s sustained on a single connection from local SSD over gigabit.
 
-Uploads use the tus.io protocol. The client issues a Creation request describing the upload (size, metadata); the server allocates a state row in `state.db` and returns an Upload URL. The client sends PATCH requests with `Content-Range`; the server appends to a spool file under the serve root's XDG state directory (see [config_and_cache.md](config_and_cache.md)) and updates the recorded offset. On disconnect, the client queries the server's current offset with a HEAD request and resumes from there. Tus has mature implementations in JS, Go, Python, and Rust, including the canonical browser client (`tus-js-client`) we use in the frontend.
+**Local uploads** use the tus.io protocol. The client issues a Creation request; the server allocates state in `state.db` and returns an Upload URL. PATCH with `Content-Range` appends to a spool file under XDG state (see [config_and_cache.md](config_and_cache.md)). Completion is atomic: `fsync` + `rename(2)` into the served tree (same-filesystem constraint; warn at startup on cross-mount).
 
-Completion is atomic: the spool file is `fsync`'d and `rename(2)`'d into place. This is atomic on the same filesystem; we document the same-filesystem constraint and warn at startup if the served directory and upload spool cross a mount point.
+**Cloud uploads** use S3 multipart upload via `@aws-sdk/lib-storage` in the browser. **Cloud downloads** use Range GET on `GetObject`. CORS must be configured on the bucket; see the CORS documentation referenced in [dual_mode_refactor.md](dual_mode_refactor.md).
 
-### Microkernel architecture
+### Small focused kernel (local mode)
 
-The core does not interpret file contents. Stated concretely, the kernel ships none of:
+The kernel does not interpret file contents. It ships none of:
 
-- thumbnails of any format
-- viewers of any format
-- filename search (yes, even filename search — it's a plugin)
-- content search
+- thumbnails, viewers, or transcoding
+- filename or content search
 - file indexing
 - content-based MIME sniffing (extension-based guessing only, for `Content-Type` headers)
-- syntax highlighting, markdown rendering, image decoding, PDF parsing, video processing
+- plugin lifecycle, JSON-RPC, or bundled extensions
 
-What the kernel does ship: HTTP transport, filesystem primitives (`read_dir`, `stat`, `read`, `write`, atomic move), plugin lifecycle and capability dispatch, authentication, per-folder configuration, a filesystem watch service, and a storage primitive (each plugin gets a writable subdirectory).
+What the kernel ships: HTTP transport, embedded SPA, filesystem primitives (`read_dir`, `stat`, `read`, `write`, delete), tus upload, authentication, per-folder configuration, filesystem watch over WebSocket, and built-in action dispatch (`file.delete`, etc.).
 
-The reasoning: file handling is a permanently moving target. New formats appear constantly. The quality bar varies wildly by domain — a bioinformatician wants `.bam` preview; a designer wants `.psd` thumbnails; a photographer wants RAW. A kernel that tried to handle this in-tree would either be enormous and slow to release, or thin and inadequate. By pushing file-handling out, the kernel stays small and stable, the official plugin set covers 80% of users, and the long tail is unblocked.
+### Single static binary with embedded UI (local mode)
 
-The honest downside is that v1 with no plugins is austere: file names, sizes, dates, raw downloads. We mitigate by bundling a curated set of official plugins with the installer; the kernel doesn't know about them, but `brew install zfiles` results in image thumbnails, filename search, and text preview working out of the box.
-
-### Language-agnostic plugin protocol
-
-JSON-RPC 2.0 over stdio with LSP-style framing (`Content-Length` header followed by JSON body). Each choice earns its place:
-
-- JSON-RPC 2.0 is small, well-specified, and easy to implement in any language.
-- LSP framing handles the "where does one message end?" problem cleanly, without the streaming-parser fragility of newline-delimited JSON.
-- Stdio means no port management, no kernel-to-plugin authentication, no risk of plugins accidentally exposing themselves to the network.
-- Any language with subprocess and JSON support can write a plugin: Python, Go, Rust, Node, shell with `jq`.
-
-The startup handshake exchanges protocol version (we maintain multiple in parallel during transitions), plugin-declared capabilities and supported file patterns, kernel-offered services (filesystem watch subscriptions, plugin storage path), and resource limits (max concurrent requests, max response size).
-
-The kernel never trusts plugin output blindly. Responses are validated against the protocol schema. Stdout output that doesn't parse as a valid message is logged and discarded; stderr is captured to the plugin's log file. The kernel can kill and restart a misbehaving plugin without affecting anything else.
-
-Sandboxing in v1 is subprocess isolation alone: plugins inherit the kernel's user and have full filesystem access, the same as if you ran them yourself. This is appropriate when users install plugins they trust. v2 will add WASM-based sandboxing via `wasmtime` for untrusted plugins, with the same JSON-RPC contract — the transport changes, the protocol does not.
-
-### Single static binary with embedded UI
-
-The deliverable is one file: `zfiles`. No installer, no package manager required, no companion files.
-
-The React frontend (built by Vite) is embedded via `rust-embed`. Vite emits assets pre-compressed (gzip and brotli) alongside the originals; `rust-embed` bundles all three; axum's response handler does content negotiation on `Accept-Encoding` and ships the right encoding without decompressing first.
+The deliverable for local use is one file: `zfiles`. The React frontend (built by Vite) is embedded via `rust-embed` with pre-compressed gzip and brotli variants; axum negotiates `Accept-Encoding`.
 
 Static linking strategy:
 
-- The Rust standard library statically links by default.
-- SQLite is bundled via `rusqlite`'s `bundled` feature, which compiles a vendored SQLite source.
-- TLS (when added) uses `rustls`, pure Rust, no OpenSSL dependency.
-- libc resolves through the `x86_64-unknown-linux-musl` target for true static linking with no glibc dependency.
+- Rust standard library statically links by default.
+- SQLite via `rusqlite` `bundled` feature (tus upload state, session tokens).
+- TLS (when added) uses `rustls`.
+- Linux delivery targets `x86_64-unknown-linux-musl` for true static linking where applicable.
 
-Size budget: under 20 MB stripped. Vite output for an app of this scope is typically 200–500 KB after brotli; the bulk of the binary is Rust + SQLite + axum + dependencies.
+Removing the plugin embed and supervisor reduces binary size; budget remains under 20 MB stripped.
 
-### Forward-compatible cross-platform foundation
+### Cloud static SPA
 
-v1 ships Linux only. The kernel is structured so v2 can add macOS and Windows without rewriting anything central.
+The cloud build is the same frontend source with `VITE_BOOT_MODE=cloud` (or equivalent): no kernel API assumptions, `S3Backend` wired at boot, connect screen before explorer.
 
-The load-bearing abstraction is the `Fs` trait. Every filesystem operation the kernel performs goes through it. The v1 implementation is Linux-only; later platforms supply equivalent implementations. Test suites are written against the trait, so adding a platform means writing the impl and inheriting most coverage for free.
+Security model:
 
-Other platform-specific concerns sit behind portable abstractions:
+- Credentials pasted in UI → validated with `HeadBucket` or minimal `ListObjectsV2` → stored in `sessionStorage`.
+- **Disconnect** clears credentials and state.
+- `localStorage` may persist non-secret preferences (provider, bucket name, endpoint, theme, locale) — never keys or tokens.
+- No analytics or third-party scripts on pages that handle credentials.
 
-- File watching uses the `notify` crate in portable mode (inotify on Linux; FSEvents on macOS; ReadDirectoryChangesW on Windows).
-- All path manipulation uses `std::path::Path` and `PathBuf`. We never concatenate strings with `/`.
-- Browser launch (`xdg-open` on Linux, `open` on macOS, `start` on Windows) sits behind a function with platform-specific implementations.
-- Linux-specific fast paths (`sendfile`, `splice`) are optimizations behind portable fallbacks (`ReaderStream`), not contracts.
+The CLI **does not** open `zfiles.com` for local filesystem mode. A public HTTPS page cannot reliably call `http://127.0.0.1:<port>` (mixed content, Private Network Access). Local mode always opens localhost with the embedded SPA.
 
-The biggest cross-platform footgun is Unicode normalization. macOS HFS+/APFS normalizes filenames to NFD; Linux filesystems store whatever bytes you wrote; Windows NTFS normalizes case but not Unicode. Our v1 fixture corpus includes a `unicode/` directory with NFC, NFD, and mixed cases so the eventual macOS port doesn't get surprised.
+### Forward-compatible cross-platform foundation (local kernel)
 
-## 3. How do we achieve all of this?
+The load-bearing abstraction is the `Fs` trait. Every filesystem operation the kernel performs goes through it. v1 implements Linux; later platforms supply equivalent implementations.
 
-This section is the concrete design: the modules inside the binary, the plugin contract details, the request flow, and the failure model. Implementation choices are called out where they matter; routine ones are left to the engineer.
+Other portable boundaries: `notify` for watching, `std::path::Path` for all path manipulation, platform-specific browser launch and `sendfile` behind fallbacks.
 
-### Module structure
+Unicode normalization differs by OS; the fixture corpus includes NFC, NFD, and mixed cases for future ports.
 
-The binary is one OS process organized into the following Rust modules. Each is independently testable; cross-module dependencies are explicit and minimal.
+---
 
-`transport` owns the axum HTTP server. It hosts the embedded React assets, the REST API for directory and file operations, the tus upload endpoint, the Range-aware download handler, and a WebSocket channel for live events (filesystem changes, upload progress, plugin status, plugin-contributed enrichments).
+## 3. Architecture
 
-`fs` is the cross-platform filesystem abstraction. It exposes directory listing, stat, read, write, atomic move, and a watch service. The v1 implementation uses `tokio::fs` for I/O and `notify` for watching, configured to use inotify on Linux.
+### Dual-mode diagram
 
-`state` manages per-serve-root runtime state under XDG config paths. It creates directories on demand (not at startup), owns the kernel's `state.db` (SQLite in WAL mode for in-progress tus uploads and session tokens), and provides configuration accessors. See [config_and_cache.md](config_and_cache.md) for layout.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Shared explorer (web/)                      │
+│  Listing · breadcrumb · upload UI · preview · actions · i18n  │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ ExplorerBackend
+              ┌──────────────┴──────────────┐
+              ▼                             ▼
+   ┌─────────────────────┐       ┌─────────────────────┐
+   │   KernelBackend     │       │     S3Backend       │
+   │ /api/* + WebSocket  │       │ AWS SDK in browser  │
+   └──────────┬──────────┘       └──────────┬──────────┘
+              ▼                             ▼
+   ┌─────────────────────┐       ┌─────────────────────┐
+   │  zfiles kernel      │       │  S3 / R2 API        │
+   │  (embedded SPA)     │       │                     │
+   └─────────────────────┘       └─────────────────────┘
+```
 
-`plugins` is the plugin supervisor. It discovers manifests under `~/.config/zfiles/plugins/` (user-installed) and materialized copies under `~/.cache/zfiles/bundled/` (official), spawns enabled plugins as child processes, performs the handshake, maintains the capability registry, routes capability requests to the right plugin, and restarts crashed plugins with exponential backoff. Process groups ensure plugins die when the kernel exits.
+UI components depend on `ExplorerBackend`, not on `/api/*` paths or AWS types directly. Boot configuration selects the adapter; there is no parallel component tree per mode.
 
-`auth` is bearer-token middleware applied to every route. It generates tokens, performs constant-time comparison, and enforces read-only mode at the handler layer.
+### `ExplorerBackend` contract
 
-`cli` is the entry point. It uses `clap` for argument parsing and dispatches to either the serving path or one of the headless subcommands.
+```ts
+interface ExplorerBackend {
+  readonly mode: "local" | "s3";
 
-Plugins live as child processes outside this structure. They communicate with the supervisor exclusively over stdin and stdout.
+  connect?(): Promise<void>;
+  disconnect?(): Promise<void>;
 
-### The plugin contract
+  list(path: string, cursor?: string): Promise<ListResult>;
+  stat(path: string): Promise<FileStat>;
 
-Plugins are the central extensibility mechanism, so this contract is the most important interface in the system. It has four parts: manifest, protocol, capabilities, and storage.
+  downloadUrl(path: string): string | Promise<string>;
+  preview?(path: string): Promise<PreviewResult | null>;
 
-**Manifest.** Each plugin ships a `plugin.toml` declaring its name, version, executable path, arguments, required protocol version, declared capabilities, and supported file patterns (globs). The supervisor reads the manifest before spawning anything.
+  upload(file: File, destPath: string, onProgress?: UploadProgressFn): Promise<void>;
+  delete(paths: string[]): Promise<void>;
 
-**Protocol.** Plugins speak JSON-RPC 2.0 over stdio with LSP-style framing. The startup handshake exchanges protocol version, capabilities, supported globs, and resource limits.
+  subscribe?(handler: BackendEventHandler): () => void;
+}
 
-**Capabilities.** Each plugin declares one or more of:
+interface ListResult {
+  entries: FileEntry[];
+  nextCursor?: string;
+}
+```
 
-- `lister`: augments directory listings with additional metadata (icons, tags, computed columns)
-- `searcher`: provides a search interface over a path subtree
-- `thumbnailer`: takes a file path, returns image bytes for files matching its globs
-- `viewer`: registers UI components (served as ESM modules) for previewing files of a given type
-- `action`: registers context-menu actions for files or selections
-- `route`: serves additional HTTP endpoints reverse-proxied under `/plugin/<name>/`
-- `watcher`: subscribes to filesystem events for a path subtree
+`FileEntry` shape is stable across modes: `name`, `path`, `is_dir`, `size`, `modified`. Cloud mode maps object keys to paths with `/` as the folder delimiter (`ListObjectsV2` + `Delimiter: "/"`). Listing is paginated in cloud mode; local `/api/list` may add pagination later for parity.
 
-When the kernel needs a capability (the UI asks for a thumbnail, say), it queries the registry for plugins matching the file type, dispatches the request with a per-call timeout, and returns a structured "no capability available" response if nothing matches or the timeout expires. The UI degrades gracefully in every such case.
+**Local backend events:** `connected`, `filesystem_changed`, `upload_progress`.
 
-**Storage.** Each plugin gets a private subdirectory at `~/.cache/zfiles/plugins/<name>/data/` it can read and write freely. The kernel makes no assumptions about contents. This is where a search plugin would put its index, a thumbnailer would put its cache, an EXIF extractor would put a metadata database. Config and cache layout is specified in [config_and_cache.md](config_and_cache.md).
+**Cloud backend events:** optional polling; no filesystem watch.
 
-### Request flow
+### Module structure (local kernel)
 
-A directory listing request illustrates the kernel-plus-plugin pattern that runs throughout the system.
+The binary is one OS process. Cross-module dependencies are explicit and minimal.
 
-The handler asks `fs` for the listing — a direct `read_dir` returning immediately. If a `lister` plugin is installed and ready, the handler concurrently asks the plugin for augmenting metadata. Two things can happen:
+| Module | Responsibility |
+|--------|----------------|
+| `transport` | axum server: embedded React assets, REST API, tus upload, Range download, WebSocket events |
+| `fs` | `Fs` trait: directory listing, stat, read, write, delete; `LocalFs` via `tokio::fs` |
+| `state` | Per-serve-root XDG state: `state.db` (tus uploads, session tokens), config accessors |
+| `auth` | Bearer token + session cookie middleware; read-only enforcement |
+| `watch` | Filesystem watch → `filesystem_changed` on WebSocket |
+| `cli` | `clap` entry point: serve, init, config, status, upload, etc. |
 
-1. The plugin returns within the timeout (default 50 ms). The handler merges plugin metadata into the response and returns the enriched listing.
-2. The plugin doesn't return in time. The handler returns the raw filesystem listing without augmentation. The plugin's response, when it arrives, gets pushed to the UI over the WebSocket, which patches the displayed listing in place.
+There is no `plugins` module.
 
-This pattern — kernel responds immediately, plugins enhance asynchronously — applies everywhere a plugin might contribute. Thumbnails follow the same flow: the listing returns with placeholder thumbnails, the actual thumbnails arrive over the WebSocket as the thumbnailer produces them. Search is the one operation that has no useful kernel-only answer; if no `searcher` is installed, the search box is hidden in the UI entirely.
+### Kernel HTTP API (local mode)
 
-### Config, state, and cache
+| Route | Purpose |
+|-------|---------|
+| `GET /api/health` | Status, read-only flag |
+| `GET /api/list` | Directory listing |
+| `GET /api/metadata` | Stat |
+| `GET /api/file` | Range-aware download |
+| `POST /api/upload`, `HEAD/PATCH /api/upload/{id}` | tus upload |
+| `POST /api/actions` | Built-in actions (`file.delete`, …) |
+| `GET /api/ws` | Connection handshake, filesystem watch, upload progress |
 
-Kernel configuration, durable per-serve-root state, and plugin caches live under `~/.config/zfiles` and `~/.cache/zfiles` by default. The served directory is never modified for zfiles housekeeping.
+Removed: `/api/search`, `/api/plugins*`, `/api/thumbnail`, `/api/preview`, `/plugin/*`, plugin-scoped action routes.
 
-Full layout, resolution order, CLI mapping, and failure modes: [config_and_cache.md](config_and_cache.md).
+### Request flow (local listing)
+
+1. Handler calls `fs.read_dir` — returns immediately with names, sizes, dates.
+2. JSON response to the client; no secondary enrichment pipeline.
+3. If `watch` fires for the current path subtree, WebSocket sends `filesystem_changed`; UI reloads listing.
 
 ### Frontend strategy
 
-The React UI is compiled by Vite into static assets, embedded into the binary via `rust-embed` with pre-compressed gzip and brotli variants, and served by axum with content negotiation. In development, a feature flag swaps the embedded handler for a proxy to `vite dev` so HMR works without rebuilding the Rust binary.
+The React UI is compiled by Vite. **Local:** output embedded in the binary; dev mode may proxy to Vite HMR via the `dev-frontend` feature. **Cloud:** static build deployed to CDN or object storage.
 
-The UI is built to render usefully without any plugins. The file list, navigation, upload area, and download flows work entirely against the kernel's REST API. Plugins extend the UI through three mechanisms:
+- **Backend injection.** `useExplorerBackend()` (or equivalent context) is the only path from components to storage.
+- **Preview.** Client-side decode for common images (JPEG, PNG, WebP, GIF). Other types: metadata panel + download link. No dynamic plugin viewer imports.
+- **Actions.** Built-in actions only; see [action_system.md](action_system.md). No plugin action registration or `plugin.*` context keys.
+- **i18n.** English and Simplified Chinese (`zh-CN`) for all user-visible strings.
 
-- **Conditional rendering.** The search box appears only if a `searcher` is installed and ready. Thumbnail tiles appear only where a `thumbnailer` has produced one. The preview pane shows a "no viewer for this type" placeholder unless a matching `viewer` is registered.
-- **Slot mounts.** Viewer plugins register ESM URLs the React shell dynamically imports and mounts into named slots in the preview pane. Trusted plugins mount directly; untrusted plugins are sandboxed in iframes with a `postMessage` bridge.
-- **Context menu contributions.** Action plugins contribute entries to the right-click menu, scoped to file types they declared.
+### Cloud boot and URL params
 
-### Failure modes and graceful degradation
+Allowed query params (non-secret): `provider` (`aws` / `r2`), `bucket`, `endpoint`, `region`, `prefix`, `readonly`.
 
-The system is built around the assumption that any plugin can be missing, slow, or crashed at any moment.
+Forbidden in URLs: access keys, secret keys, session tokens.
 
-Plugin crashes are isolated. The supervisor restarts crashed plugins with exponential backoff. The kernel and other plugins continue serving. The UI shows the affected capability as unavailable until the plugin returns.
+After connect, explorer navigation may update the URL for bucket/prefix only.
 
-Plugin slowness is bounded. Every capability call has a per-call timeout. Exceeding it returns "unavailable" rather than blocking the response. Slow plugins do not slow down the kernel.
+### Config, state, and cache (local)
 
-Plugin storage corruption is the plugin's problem. The kernel does not back up or repair plugin data. The plugin must handle its own state recovery; the worst case is the plugin throws away its cache and rebuilds.
+Kernel configuration and durable per-serve-root state live under XDG paths. The served directory is never modified for zfiles housekeeping.
 
-Network interruptions are recovered by tus on uploads and HTTP Range resumption on downloads. The kernel persists upload state to `state.db` so resume works across kernel restarts.
+Layout and resolution: [config_and_cache.md](config_and_cache.md). Plugin cache directories under `~/.cache/zfiles/plugins/` become obsolete after refactor; tus spool and `state.db` remain.
 
-Per-serve-root state under XDG config may be deleted at any time; the kernel recreates it lazily on next write. Plugin cache under XDG cache may be cleared; plugins rebuild. In-progress uploads in deleted state are lost, which is acceptable.
+### Failure modes
+
+**Local**
+
+- Network interruptions: tus resume on upload; Range resume on download; upload state survives kernel restart via `state.db`.
+- Read-only serve root: uploads and delete rejected; `/api/health` reports `read_only`.
+- Cross-mount spool: documented constraint; startup warning.
+
+**Cloud**
+
+- CORS misconfiguration: clear error pointing at setup documentation.
+- Expired or revoked credentials: connect dialog or inline re-auth; no silent retry with stale keys.
+- S3 rate limiting / 503: backoff and user-visible retry.
+- List pagination incomplete: UI must expose "load more" or equivalent when `nextCursor` is present — never pretend a truncated list is complete.
+
+**Both**
+
+- Per-serve-root or session state may be cleared by the user; explorer recovers by reconnect or reload.
+
+---
 
 ## 4. Example CLI invocations
+
+Local mode only unless noted.
 
 ### Local serving
 
@@ -232,9 +285,6 @@ zfiles ~/talks/keynote-prep --read-only --token --expire 2h
 ### Headless and scripting
 
 ```bash
-# Search the index from the CLI (requires a search plugin installed)
-zfiles search ~/notes "transformer attention"
-
 # Serve only a curated set of files
 find . -name "*.raw" | zfiles --from-stdin --read-only --token
 
@@ -250,17 +300,6 @@ zfiles config set ui.sort_default size_desc --folder ~/downloads
 zfiles status
 ```
 
-### Plugin management
-
-```bash
-zfiles plugin install ./zfiles-thumbnailer-images
-zfiles plugin install github.com/zfiles/search-filename
-zfiles plugin list
-zfiles plugin remove zfiles-thumbnailer-images
-zfiles plugin run exif-extractor ~/photos/IMG_0042.jpg
-zfiles plugin test ./my-plugin    # run the conformance suite against a plugin
-```
-
 ### Initialization and daemon
 
 ```bash
@@ -271,84 +310,101 @@ zfiles init
 zfiles daemon start --config ~/.config/zfiles/daemon.toml
 ```
 
+### Cloud mode
+
+No CLI. User opens the hosted SPA (or self-hosted static build), connects with temporary bucket credentials, and browses. Example bookmark (non-secret params only):
+
+```
+https://zfiles.com/?provider=r2&bucket=my-data&prefix=photos/
+```
+
+---
+
 ## 5. Testing strategy
 
-zfiles is built test-first. Tests are written before behavior in every kernel module, and the architecture is structured to make testing cheap at every layer. Plugin internals are the plugin author's responsibility; the kernel ships a conformance suite they can run against their plugins.
+zfiles is built test-first. Tests are written before behavior in kernel and frontend modules where behavior changes.
 
 ### Test layers
 
-Five layers, ordered by speed and cost. The pyramid skews heavily toward the cheaper layers.
+**Unit tests (Rust)** — beside module source: Range parsing, tus state transitions, path normalization, token comparison, auth middleware helpers. Must stay fast (aggregate under ~5 s).
 
-**Unit tests** sit beside each module's source in the Rust convention (`#[cfg(test)] mod tests`). They cover pure functions, parsers, and state machines without I/O: HTTP Range header parsing, tus upload state transitions, manifest validation, plugin protocol message framing, path normalization, token comparison. These are the bulk of the test count and must run in under five seconds in aggregate.
+**Unit tests (frontend)** — Vitest: `KernelBackend` and `S3Backend` mapping, boot URL param parsing, credential storage rules, action context keys without plugin/search gates, listing formatters.
 
-**Module integration tests** live under each crate's `tests/` directory. They exercise a module's public API against real dependencies — a `tempfile::TempDir` for filesystem tests, an in-memory SQLite for state tests, a fixture plugin binary for plugin host tests. Example: spawning the echo plugin, sending a structured request, asserting on the response and on the plugin's exit code after shutdown.
+**Module integration tests (Rust)** — `tempfile` for filesystem, in-memory or file SQLite for state, real router tests for list/upload/delete/auth.
 
-**Binary integration tests** drive the assembled binary end to end through HTTP. They use axum's testing utilities against the real router. Examples: byte-exact range download correctness, tus protocol conformance against the upstream test suite, auth middleware behavior, plugin capability dispatch with fixture plugins running, timeout behavior when plugins are slow.
+**Binary integration tests** — HTTP against assembled router: Range download correctness, tus conformance, auth cookie bootstrap, removed routes return 404, no subprocess spawn on startup.
 
-**System tests** use Playwright to drive a real browser against a real `zfiles` process serving a real directory of test fixtures. Examples: drag-and-drop upload, kill-the-network resume, navigation, plugin-provided UI elements rendering when their plugin is enabled, graceful degradation when their plugin crashes.
+**Backend contract tests (TypeScript)** — shared scenario table (list, stat, upload, delete) against mocks for both backends to prevent UI divergence.
 
-**Performance tests** are benchmarks gated as a separate CI job. They establish baselines for the SLAs in section 2 and fail the build if they regress more than 5% from the previous release. Throughput is measured with `wrk` for download and upload; cold-start latency with a small Rust harness that times from process spawn to first response byte.
+**System tests (Playwright)** — real browser against real `zfiles` process for local mode: navigation, upload, download, delete, absence of search UI and plugin network calls. Cloud mode: static build against MinIO or SDK mocks — connect, paginated list, disconnect clears session.
+
+**Performance tests** — separate CI job: cold-start latency, download/upload throughput baselines for local mode; regressions >5% fail the build.
 
 ### Property-based tests
 
-A handful of areas warrant property testing with `proptest`. These are areas where the input space is large and edge cases are easy to miss in example-based tests:
+`proptest` where the input space is large:
 
-- HTTP Range header parsing and response math (single and multipart ranges, suffix ranges, off-by-one boundaries, malformed inputs)
-- Path normalization (relative resolution, Unicode NFC/NFD, symlink loops, `..` traversal, mixed separators)
-- Tus state machine transitions (for any sequence of valid client operations, the server ends in a valid state)
-- Plugin protocol message framing (malformed length prefixes, truncated bodies, embedded null bytes don't crash the parser)
-
-### The plugin conformance suite
-
-Because plugins are the extensibility surface and the project's promise is "any language," the kernel ships a conformance test suite that plugin authors run their plugin against. It exercises every protocol message the plugin claims to support and validates response shapes against the protocol schema. Authors invoke it as `zfiles plugin test ./my-plugin`. It also runs in our CI against every official plugin.
+- HTTP Range header parsing and response math
+- Path normalization (Unicode, `..`, symlinks)
+- Tus state machine transitions
+- S3 prefix/key ↔ explorer path conversion (frontend)
 
 ### Fixture corpus
 
-A separate fixtures repository contains representative test directories used across all test layers:
+Representative directories for local tests:
 
-- `small/` — 100 files, mixed types, for general behavior
-- `large/` — 100k files in a single directory, for listing performance
-- `deep/` — 1000 directories nested 20 levels deep, for traversal
-- `unicode/` — filenames with NFC/NFD, emoji, RTL scripts, control characters, for path edge cases
-- `huge-files/` — sparse files up to 10 GB, for transfer performance
+- `small/` — mixed types, general behavior
+- `large/` — 100k files, listing performance
+- `deep/` — nested directories, traversal
+- `unicode/` — NFC/NFD, emoji, edge-case names
+- `huge-files/` — sparse large files, transfer performance
 
-Large and huge fixtures are generated by scripts at test time rather than version-controlled.
-
-### Frontend testing
-
-Component tests use Vitest with React Testing Library and cover individual components in isolation, including conditional rendering paths that depend on plugin availability (plugins are mocked at the API layer). E2E tests use Playwright against a containerized zfiles instance, covering the full upload, download, navigation, and preview flows. Visual regression tests are advisory only — failures don't block merges, since they're inherently flaky.
+Cloud tests use generated key sets or MinIO fixtures for pagination (>1000 keys).
 
 ### CI gates
 
 Every pull request must pass:
 
 - `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`, `cargo deny check`
-- `pnpm lint`, `pnpm test`
-- Playwright suite against a containerized zfiles with the official fixture plugins enabled
+- `pnpm test` (and lint when configured)
+- Playwright local suite
 - Binary integration tests
 
-A nightly job runs the performance suite against the most recent tagged release as baseline and posts a regression report. Pre-release builds run cross-target smoke tests on all supported triples (only `x86_64-unknown-linux-gnu` for v1).
+Cloud E2E may run in a separate job (MinIO container or mocks).
 
 ### What we deliberately do not test
 
-- Plugin behavior beyond protocol conformance — that's the plugin author's job
-- Browsers other than recent Chromium and Firefox; Safari is best-effort
-- Filesystem behavior on non-Linux targets in v1
-- Network conditions beyond a small fixed set: clean LAN, lossy connection simulation, mid-transfer disconnect
+- Former plugin behavior or plugin conformance (removed)
+- Browsers other than recent Chromium and Firefox; Safari best-effort
+- Non-Linux kernel targets in v1
+- Live AWS/R2 accounts in CI (use MinIO/mocks)
 
-### TDD workflow expectations
+### TDD workflow
 
-The team writes tests before behavior. A typical task cycle: write a failing test capturing the desired behavior, implement the minimum to pass it, refactor while green. Pull requests that add behavior without a corresponding test are rejected during review. Pull requests that add test coverage to existing behavior are encouraged.
+Write a failing test, implement the minimum to pass, refactor while green. UI polish (CSS, layout) is exempt from strict TDD; behavior is not.
 
-Two practical concessions: exploratory spikes don't need tests (but the spike branch doesn't get merged — its findings get rewritten test-first). And UI polish (CSS, layout) is exempt from strict TDD; only behavior is.
+Detailed acceptance checklist and success metrics for the refactor: [dual_mode_refactor.md](dual_mode_refactor.md) § Testing strategy.
+
+---
 
 ## 6. Open decisions
 
-A few choices are deliberately deferred to the implementation team, with a default leaning noted:
+| Topic | Default leaning |
+|-------|-----------------|
+| Default port (local) | Ephemeral with browser auto-open |
+| Auth default policy | Refuse `--listen 0.0.0.0` without `--token`; localhost without token |
+| Local listing pagination | Defer until needed; cloud pagination required at launch |
+| Text file preview | Omit in v1; metadata + download |
+| Slideshow | Keep for client-decodable images in selection/cwd, or cut if blocking |
+| Cloud CI | MinIO container or `@aws-sdk/client-mock` |
+| npm publish of explorer library | Optional; monorepo path first |
 
-- **Default port.** Lean toward an ephemeral port with browser auto-open, rather than a fixed default that may conflict with other services.
-- **Auth default policy.** Lean toward refusing `--listen 0.0.0.0` without `--token`; localhost binding doesn't require a token.
-- **Plugin distribution format.** Lean toward a tarball containing `plugin.toml` plus a `bin/` directory. The plugin installer extracts to the appropriate plugins directory and validates the manifest.
-- **Plugin registry mechanics.** v1 supports local paths and direct git URLs. A centralized registry is a v2 concern.
-- **Whether the kernel's filesystem watch service is exposed to the WebSocket channel for the UI.** Lean toward yes, with a debounce, so the UI updates when files change without needing a watcher plugin. This is a borderline case — it interprets filesystem events without interpreting file contents.
-- **Bundled official plugins.** v1 installer should drop `zfiles-thumbnailer-images`, `zfiles-search-filename`, and `zfiles-viewer-text` into `~/.config/zfiles/plugins/` by default so the out-of-the-box experience isn't austere. The kernel doesn't know about them; the installer does.
+---
+
+## 7. Related documents
+
+| Document | Purpose |
+|----------|---------|
+| [dual_mode_refactor.md](dual_mode_refactor.md) | Refactor phases, removal inventory, acceptance checklist |
+| [action_system.md](action_system.md) | Built-in actions, palette, keybindings (plugin sections deprecated) |
+| [config_and_cache.md](config_and_cache.md) | XDG layout; plugin cache sections obsolete after refactor |
