@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 1 — introduce `ExplorerBackend`, implement `KernelBackend`, refactor App/PreviewPane/upload/WebSocket to use it with no behavior change.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 1 complete — `ExplorerBackend` + `KernelBackend` wired; next Phase 2 — remove search.
 
 ## TODO List
 
@@ -111,9 +111,9 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Run web unit tests; rebuild `web/dist`
 - [x] Cap explorer middle row height to match listing; preview pane scrolls internally with `overflow-auto`
 - [x] Run web unit tests; rebuild `web/dist`
-- [ ] Define `ExplorerBackend` types, events, and `ExplorerBackendProvider` / `useExplorerBackend()`
-- [ ] Implement `KernelBackend` wrapping `/api/*` REST and WebSocket (list, stat, upload, actions, plugins, search, health)
-- [ ] Refactor `App.tsx`, `PreviewPane.tsx`, `upload.ts`, and `useBackendStatus.ts` to use the backend (no `/api/` in components)
-- [ ] Wire `SlideshowDialog` thumbnail URLs through `KernelBackend.thumbnailUrl`
-- [ ] Unit tests for `KernelBackend` request mapping and URL helpers
-- [ ] Rebuild `web/dist`; run `pnpm test` and `cargo test`
+- [x] Define `ExplorerBackend` types, events, and `ExplorerBackendProvider` / `useExplorerBackend()`
+- [x] Implement `KernelBackend` wrapping `/api/*` REST and WebSocket (list, stat, upload, actions, plugins, search, health)
+- [x] Refactor `App.tsx`, `PreviewPane.tsx`, `upload.ts`, and `useBackendStatus.ts` to use the backend (no `/api/` in components)
+- [x] Wire `SlideshowDialog` thumbnail URLs through `KernelBackend.thumbnailUrl`
+- [x] Unit tests for `KernelBackend` request mapping and URL helpers
+- [x] Rebuild `web/dist`; run `pnpm test` and `cargo test`

@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/i18n";
+import { useExplorerBackend } from "./backend";
 
 type SlideshowDialogProps = {
   open: boolean;
@@ -16,16 +17,13 @@ type SlideshowDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-function encodePath(path: string): string {
-  return encodeURIComponent(path).replace(/%2F/g, "/");
-}
-
 export default function SlideshowDialog({
   open,
   paths,
   startPath,
   onOpenChange,
 }: SlideshowDialogProps) {
+  const backend = useExplorerBackend();
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -90,7 +88,7 @@ export default function SlideshowDialog({
         </DialogHeader>
         <div className="flex min-h-[360px] items-center justify-center rounded-lg border bg-muted/20 p-4">
           <img
-            src={`/api/thumbnail?path=${encodePath(currentPath)}&tier=preview`}
+            src={backend.thumbnailUrl(currentPath, "preview")}
             alt={fileName}
             className="max-h-[70vh] max-w-full object-contain"
           />

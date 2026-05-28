@@ -9,7 +9,7 @@
     "predev": "pnpm generate-icons",
     "build": "pnpm generate-icons && tsc && vite build && node scripts/compress-dist.mjs",
     "preview": "vite preview",
-    "test": "pnpm generate-icons && tsx --test src/theme.test.ts src/i18n/i18n.test.ts src/actions/*.test.ts src/listing-format.test.ts src/fileIcons.test.ts src/i18n/pluginCatalog.test.ts src/base64Utf8.test.ts src/api.test.ts"
+    "test": "pnpm generate-icons && tsx --test src/theme.test.ts src/i18n/i18n.test.ts src/actions/*.test.ts src/listing-format.test.ts src/fileIcons.test.ts src/i18n/pluginCatalog.test.ts src/base64Utf8.test.ts src/api.test.ts src/backend/*.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.2.16",

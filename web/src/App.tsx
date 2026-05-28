@@ -5,15 +5,19 @@ import ContextMenu, { type ContextMenuAction } from "./ContextMenu";
 import StatusBar from "./StatusBar";
 import ThemeToggle from "./ThemeToggle";
 import ListingViewToggle from "./ListingViewToggle";
-import { apiFetch } from "./api";
 import PreviewPane from "./PreviewPane";
 import VirtualListing, { type ListingEntry } from "./VirtualListing";
 import GridListing from "./GridListing";
 import SlideshowDialog from "./SlideshowDialog";
-import { uploadFileResumable, type UploadProgress } from "./upload";
+import {
+  useExplorerBackend,
+  type FileEntry,
+  type PluginInfo,
+  type UploadProgress,
+} from "./backend";
 import { useTranslation, type MessageKey } from "./i18n";
 import { loadPluginCatalogs } from "./i18n/pluginCatalog";
-import { useBackendStatus, type KernelEvent } from "./useBackendStatus";
+import { useBackendStatus, type BackendEvent } from "./useBackendStatus";
 import { useTheme } from "./useTheme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,23 +41,6 @@ import {
 import { notifyApiError, notifyError } from "./notifyError";
 import { setViewerBridge, clearViewerBridge, type ViewerBridge } from "./viewerBridge";
 import { Toaster } from "@/components/ui/sonner";
-
-type FileEntry = {
-  name: string;
-  path: string;
-  is_dir: boolean;
-  size: number;
-  modified?: unknown;
-  extra?: Record<string, unknown>;
-};
-
-type PluginInfo = {
-  name: string;
-  capabilities: string[];
-  globs: string[];
-  viewerModule?: string | null;
-  trusted?: boolean;
-};
 
 type ContextMenuState = {
   x: number;
@@ -84,6 +71,7 @@ function thumbnailEligible(plugins: PluginInfo[], path: string): boolean {
 }
 
 export default function App() {
+  const backend = useExplorerBackend();
   const { t, locale } = useTranslation();
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<FileEntry[]>([]);
@@ -127,50 +115,48 @@ export default function App() {
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }) => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
-    const query = path ? `?path=${encodeURIComponent(path)}` : "";
-    const response = await apiFetch(`/api/list${query}`);
-    if (!response.ok) {
-      await notifyApiError(response, t);
-      return;
-    }
-    const data: FileEntry[] = await response.json();
-    setEntries(data);
-    setCurrentPath(path);
-    setSearchResults(null);
-    setSearchQuery("");
-    const restoredIndex =
-      previousPath != null
-        ? selectedRowIndexForPath(path, data, previousPath)
-        : null;
-    if (restoredIndex != null) {
-      setSelectedIndex(restoredIndex);
-      setSelectedPath(previousPath);
-      setSelectedPaths(new Set());
-    } else {
-      setSelectedIndex(0);
-      setSelectedPath(null);
-      setSelectedPaths(new Set());
-    }
-    setReadyThumbnails((current) => {
-      const visiblePaths = new Set(
-        data.filter((entry) => !entry.is_dir).map((entry) => entry.path),
-      );
-      const next = new Map<string, string>();
-      for (const [entryPath, url] of current) {
-        if (visiblePaths.has(entryPath)) {
-          next.set(entryPath, url);
-        }
+    try {
+      const { entries: data } = await backend.list(path);
+      setEntries(data);
+      setCurrentPath(path);
+      setSearchResults(null);
+      setSearchQuery("");
+      const restoredIndex =
+        previousPath != null
+          ? selectedRowIndexForPath(path, data, previousPath)
+          : null;
+      if (restoredIndex != null) {
+        setSelectedIndex(restoredIndex);
+        setSelectedPath(previousPath);
+        setSelectedPaths(new Set());
+      } else {
+        setSelectedIndex(0);
+        setSelectedPath(null);
+        setSelectedPaths(new Set());
       }
-      return next;
-    });
-  }, [t]);
+      setReadyThumbnails((current) => {
+        const visiblePaths = new Set(
+          data.filter((entry) => !entry.is_dir).map((entry) => entry.path),
+        );
+        const next = new Map<string, string>();
+        for (const [entryPath, url] of current) {
+          if (visiblePaths.has(entryPath)) {
+            next.set(entryPath, url);
+          }
+        }
+        return next;
+      });
+    } catch (err) {
+      if (err instanceof Response) {
+        await notifyApiError(err, t);
+        return;
+      }
+      notifyError(err instanceof Error ? err.message : String(err));
+    }
+  }, [backend, t]);
 
   const loadPlugins = useCallback(async () => {
-    const response = await apiFetch("/api/plugins");
-    if (!response.ok) {
-      return;
-    }
-    const plugins: PluginInfo[] = await response.json();
+    const plugins = await backend.listPlugins();
     setPluginDetails(plugins);
     setSearcherReady(
       plugins.some((plugin) => plugin.capabilities.includes("searcher")),
@@ -178,25 +164,24 @@ export default function App() {
     setThumbnailerReady(
       plugins.some((plugin) => plugin.capabilities.includes("thumbnailer")),
     );
-  }, []);
+  }, [backend]);
 
   useEffect(() => {
     loadListing("").catch((err: Error) => notifyError(err.message));
     void loadPlugins();
     void loadPluginCatalogs();
-    void apiFetch("/api/health")
-      .then(async (response) => {
-        if (!response.ok) {
-          return;
+    void backend
+      .fetchHealth()
+      .then((data) => {
+        if (data) {
+          setReadOnly(data.read_only ?? false);
         }
-        const data = (await response.json()) as { read_only?: boolean };
-        setReadOnly(data.read_only ?? false);
       })
       .catch(() => {});
-  }, [loadListing, loadPlugins]);
+  }, [backend, loadListing, loadPlugins]);
 
   const handleKernelEvent = useCallback(
-    (event: KernelEvent) => {
+    (event: BackendEvent) => {
       switch (event.type) {
         case "connected":
           setKernelVersion(event.version);
@@ -273,32 +258,25 @@ export default function App() {
     }
 
     const handle = window.setTimeout(() => {
-      const params = new URLSearchParams({ q: searchQuery.trim() });
-      if (currentPath) {
-        params.set("path", currentPath);
-      }
-      apiFetch(`/api/search?${params.toString()}`)
-        .then(async (response) => {
-          if (!response.ok) {
-            await notifyApiError(response, t);
-            return;
-          }
-          return response.json() as Promise<FileEntry[]>;
-        })
+      backend
+        .search(searchQuery.trim(), currentPath)
         .then((results) => {
-          if (!results) {
-            return;
-          }
           setSearchResults(results);
           setSelectedIndex(0);
           setSelectedPath(results[0]?.path ?? null);
           setSelectedPaths(new Set());
         })
-        .catch((err: Error) => notifyError(err.message));
+        .catch(async (err) => {
+          if (err instanceof Response) {
+            await notifyApiError(err, t);
+            return;
+          }
+          notifyError(err instanceof Error ? err.message : String(err));
+        });
     }, 200);
 
     return () => window.clearTimeout(handle);
-  }, [searchQuery, currentPath, searcherReady, t]);
+  }, [searchQuery, currentPath, searcherReady, backend, t]);
 
   const navigateTo = useCallback(
     (path: string) => {
@@ -309,13 +287,10 @@ export default function App() {
 
   const runBulkAction = useCallback(
     async (actionId: string, paths: string[]) => {
-      const response = await apiFetch("/api/actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paths, action_id: actionId }),
-      });
-      if (!response.ok) {
-        notifyError(t("error.actionFailed", { status: String(response.status) }));
+      try {
+        await backend.runAction(actionId, paths);
+      } catch {
+        notifyError(t("error.actionFailed", { status: "failed" }));
         return;
       }
       if (actionId === "copy-path") {
@@ -327,7 +302,7 @@ export default function App() {
         await loadListing(currentPathRef.current);
       }
     },
-    [t, loadListing],
+    [backend, t, loadListing],
   );
 
   const runContextAction = useCallback(
@@ -438,9 +413,7 @@ export default function App() {
           }
         },
         onContextMenu: (event) => void openContextMenuRef.current(event, entry.path),
-        href: entry.is_dir
-          ? undefined
-          : `/api/file?path=${encodeURIComponent(entry.path)}`,
+        href: entry.is_dir ? undefined : backend.downloadUrl(entry.path),
       });
     }
     return rows;
@@ -452,6 +425,7 @@ export default function App() {
     thumbnailerReady,
     pluginDetails,
     readyThumbnails,
+    backend,
   ]);
 
   useEffect(() => {
@@ -517,10 +491,7 @@ export default function App() {
   const openContextMenu = useCallback(
     async (event: React.MouseEvent, path: string) => {
       event.preventDefault();
-      const response = await apiFetch(`/api/actions?path=${encodeURIComponent(path)}`);
-      const pluginActions: ContextMenuAction[] = response.ok
-        ? ((await response.json()) as ContextMenuAction[])
-        : [];
+      const pluginActions = await backend.listContextActions(path);
       const builtinActions = actionsForContext(
         actionSystem.registry.list(),
         "file-list",
@@ -542,7 +513,7 @@ export default function App() {
       }
       setContextMenu({ x: event.clientX, y: event.clientY, path, actions });
     },
-    [actionSystem.registry, actionLabel, contextKeys],
+    [actionSystem.registry, actionLabel, contextKeys, backend],
   );
   openContextMenuRef.current = openContextMenu;
 
@@ -564,7 +535,7 @@ export default function App() {
     try {
       for (const file of files) {
         const target = currentPath ? `${currentPath}/${file.name}` : file.name;
-        await uploadFileResumable(file, target, setUploadProgress);
+        await backend.upload(file, target, setUploadProgress);
       }
       await loadListing(currentPath);
     } catch (err) {
@@ -668,7 +639,7 @@ export default function App() {
               <a
                 key={path}
                 className="text-sm text-primary underline-offset-4 hover:underline"
-                href={`/api/file?path=${encodeURIComponent(path)}`}
+                href={backend.downloadUrl(path)}
                 download
               >
                 {t("selection.download", { name: path.split("/").pop() ?? path })}

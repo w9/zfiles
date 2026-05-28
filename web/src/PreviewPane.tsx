@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Info, TriangleAlertIcon } from "lucide-react";
 
-import { apiFetch } from "./api";
 import { messageFromApiResponse } from "./apiError";
+import { useExplorerBackend, type PluginInfo } from "./backend";
 import { useTranslation } from "@/i18n";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,6 @@ type FileStat = {
   is_dir: boolean;
   size: number;
   modified?: string;
-};
-
-type PluginInfo = {
-  name: string;
-  capabilities: string[];
-  globs: string[];
-  viewerModule?: string | null;
-  trusted?: boolean;
 };
 
 import { clearViewerBridge } from "./viewerBridge";
@@ -125,6 +117,7 @@ export default function PreviewPane({
   onRegisterBridge,
   className,
 }: PreviewPaneProps) {
+  const backend = useExplorerBackend();
   const { t } = useTranslation();
   const [stat, setStat] = useState<FileStat | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -197,38 +190,32 @@ export default function PreviewPane({
     pendingSandboxPreviewRef.current = null;
     viewerMountKeyRef.current = null;
 
-    apiFetch(`/api/metadata?path=${encodeURIComponent(path)}`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(await messageFromApiResponse(response, t));
-        }
-        return response.json() as Promise<FileStat>;
-      })
+    backend
+      .stat(path)
       .then((data) => {
-        setStat(data);
+        setStat(data as FileStat);
         setError(null);
       })
-      .catch((err: Error) => {
+      .catch(async (err) => {
         setStat(null);
-        setError(err.message);
+        if (err instanceof Response) {
+          setError(await messageFromApiResponse(err, t));
+          return;
+        }
+        setError(err instanceof Error ? err.message : String(err));
       });
-  }, [path, t]);
+  }, [path, backend, t]);
 
   useEffect(() => {
     if (!path || !viewerModule) {
       return;
     }
 
-    apiFetch(`/api/preview?path=${encodeURIComponent(path)}`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.text();
-      })
+    backend
+      .previewText(path)
       .then((body) => setPreview(body))
       .catch(() => setPreview(null));
-  }, [path, viewerModule]);
+  }, [path, viewerModule, backend]);
 
   const statReady = stat != null && stat.path === path;
 
@@ -397,7 +384,7 @@ export default function PreviewPane({
             <p className="text-sm text-muted-foreground">{t("preview.noViewer")}</p>
           )}
           <Button variant="link" className="h-auto p-0" asChild>
-            <a href={`/api/file?path=${encodeURIComponent(stat.path)}`}>
+            <a href={backend.downloadUrl(stat.path)}>
               {t("preview.download")}
             </a>
           </Button>
