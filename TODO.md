@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 1 complete — `ExplorerBackend` + `KernelBackend` wired; next Phase 2 — remove search.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)): one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA later. Plugins and search will be removed in later phases. **Current cycle:** Phase 2 — remove filename search (UI, API, CLI, plugin dispatch). Next: Phase 3 — remove plugins.
 
 ## TODO List
 
@@ -117,3 +117,9 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Wire `SlideshowDialog` thumbnail URLs through `KernelBackend.thumbnailUrl`
 - [x] Unit tests for `KernelBackend` request mapping and URL helpers
 - [x] Rebuild `web/dist`; run `pnpm test` and `cargo test`
+- [ ] Remove search UI, state, and `searcher.ready` from App and action context keys
+- [ ] Remove `search()` from `ExplorerBackend` / `KernelBackend` and related unit test
+- [ ] Remove `navigation.focus-search` builtin, `/` keybinding, and unused i18n strings
+- [ ] Remove `GET /api/search`, plugin searcher dispatch, `src/search.rs`, and `zfiles search` CLI
+- [ ] Delete `tests/search.rs`; move sendfile smoke test; update README
+- [ ] Rebuild `web/dist`; run `pnpm test` and `cargo test`
