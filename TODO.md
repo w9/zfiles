@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Current cycle:** throttle upload stats UI updates to 1 fps max.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Next:** optional parallel uploads, pause/cancel per item, or folder upload — defer until requested.
 
 ## TODO List
 
@@ -82,3 +82,5 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Cur
 - [x] Wire `ExplorerApp`: replace inline upload state; allow drops while queue active
 - [x] Unit tests for queue ordering, progress math, and status transitions
 - [x] Run `pnpm test` and `cargo test`
+- [x] Throttle upload queue progress UI commits to 1 fps; always flush on complete/fail
+- [x] Unit test throttle helper; run `pnpm test`
