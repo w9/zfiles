@@ -3,17 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
 import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
 import StatusBar from "../StatusBar";
+import LanguageToggle from "../LanguageToggle";
 import ThemeToggle from "../ThemeToggle";
 import ListingViewToggle from "../ListingViewToggle";
 import PreviewPane from "../PreviewPane";
 import VirtualListing, { type ListingEntry } from "../VirtualListing";
 import GridListing from "../GridListing";
 import SlideshowDialog from "../SlideshowDialog";
-import {
-  useExplorerBackend,
-  type FileEntry,
-  type UploadProgress,
-} from "../backend";
+import { useExplorerBackend, type FileEntry } from "../backend";
 import { useTranslation, type MessageKey } from "../i18n";
 import { useBackendStatus, type BackendEvent } from "../useBackendStatus";
 import { useTheme } from "../useTheme";
@@ -36,6 +33,8 @@ import {
   shouldRefreshListing,
 } from "../listingRefresh";
 import { notifyApiError, notifyError } from "../notifyError";
+import UploadPanel from "../UploadPanel";
+import { useUploadQueue } from "../upload-queue";
 import { Toaster } from "@/components/ui/sonner";
 
 type ContextMenuState = {
@@ -52,8 +51,6 @@ export default function ExplorerApp() {
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [listCursor, setListCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -136,6 +133,24 @@ export default function ExplorerApp() {
       .catch(() => {});
   }, [backend, loadListing]);
 
+  const {
+    items: uploadItems,
+    enqueue: enqueueUploads,
+    applyRemoteProgress,
+    cancelUpload,
+    clearFinished: clearFinishedUploads,
+    hasQueue: hasUploadQueue,
+  } = useUploadQueue({
+    backend,
+    readOnly,
+    onItemComplete: () => {
+      loadListing(currentPathRef.current, { preserveSelection: true }).catch(
+        (err: Error) => notifyError(err.message),
+      );
+    },
+    onItemFailed: (message) => notifyError(message),
+  });
+
   const handleKernelEvent = useCallback(
     (event: BackendEvent) => {
       switch (event.type) {
@@ -155,7 +170,7 @@ export default function ExplorerApp() {
           break;
         }
         case "upload_progress":
-          setUploadProgress({
+          applyRemoteProgress({
             id: event.id,
             offset: event.offset,
             length: event.length,
@@ -163,7 +178,7 @@ export default function ExplorerApp() {
           break;
       }
     },
-    [loadListing],
+    [applyRemoteProgress, loadListing],
   );
 
   const backendStatus = useBackendStatus(handleKernelEvent);
@@ -362,7 +377,7 @@ export default function ExplorerApp() {
       event.preventDefault();
       const actions = actionsForContext(
         actionSystem.registry.list(),
-        "file-list",
+        "context-menu",
         contextKeys,
       ).map((action) => ({
         id: action.id,
@@ -384,39 +399,25 @@ export default function ExplorerApp() {
     }
   }, [selectedIndex, listingEntries]);
 
-  const onUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || uploading) {
+  const onUpload = (files: FileList | null) => {
+    if (!files || files.length === 0 || readOnly) {
       return;
     }
-
-    setUploading(true);
-    setUploadProgress(null);
-
-    try {
-      for (const file of files) {
-        const target = currentPath ? `${currentPath}/${file.name}` : file.name;
-        await backend.upload(file, target, setUploadProgress);
-      }
-      await loadListing(currentPath);
-    } catch (err) {
-      notifyError(err instanceof Error ? err.message : t("error.uploadFailed"));
-    } finally {
-      setUploading(false);
-      setUploadProgress(null);
-    }
+    enqueueUploads(files, currentPath);
   };
 
-  const uploadLabel = uploading
-    ? uploadProgress?.length
-      ? t("upload.uploadingProgress", {
-          percent: String(
-            Math.round((uploadProgress.offset / uploadProgress.length) * 100),
-          ),
-        })
-      : t("upload.uploading")
-    : t("upload.drop");
-
-  const bulkDownloadPaths = Array.from(selectedPaths);
+  const activeUploadCount = uploadItems.filter((item) => item.status === "active").length;
+  const pendingUploadCount = uploadItems.filter((item) => item.status === "pending").length;
+  const uploadLabel = readOnly
+    ? t("upload.readOnly")
+    : hasUploadQueue
+      ? activeUploadCount > 0
+        ? t("upload.dropMoreActive", {
+            active: String(activeUploadCount),
+            pending: String(pendingUploadCount),
+          })
+        : t("upload.dropMore")
+      : t("upload.drop");
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-8">
@@ -436,6 +437,7 @@ export default function ExplorerApp() {
               onChange={setListingViewMode}
             />
             <ThemeToggle mode={themeMode} onChange={setThemeMode} />
+            <LanguageToggle iconOnly />
             <ActionToolbar
               registry={actionSystem.registry}
               contextKeys={contextKeys}
@@ -455,63 +457,30 @@ export default function ExplorerApp() {
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
-          void onUpload(event.dataTransfer.files);
+          onUpload(event.dataTransfer.files);
         }}
       >
         <p className="text-sm text-muted-foreground">{uploadLabel}</p>
-        <Button variant="secondary" asChild>
-          <label className="cursor-pointer">
-            {t("upload.chooseFiles")}
-            <input
-              type="file"
-              multiple
-              className="sr-only"
-              onChange={(event) => void onUpload(event.target.files)}
-            />
-          </label>
-        </Button>
+        {!readOnly ? (
+          <Button variant="secondary" asChild>
+            <label className="cursor-pointer">
+              {t("upload.chooseFiles")}
+              <input
+                type="file"
+                multiple
+                className="sr-only"
+                onChange={(event) => onUpload(event.target.files)}
+              />
+            </label>
+          </Button>
+        ) : null}
       </section>
 
-      {bulkDownloadPaths.length > 0 ? (
-        <section
-          className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3"
-          aria-label={t("selection.count", { count: String(bulkDownloadPaths.length) })}
-        >
-          <span className="text-sm font-medium">
-            {t("selection.count", { count: String(bulkDownloadPaths.length) })}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {backend.mode === "local"
-              ? bulkDownloadPaths.map((path) => (
-                  <a
-                    key={path}
-                    className="text-sm text-primary underline-offset-4 hover:underline"
-                    href={backend.downloadUrl(path) as string}
-                    download
-                  >
-                    {t("selection.download", { name: path.split("/").pop() ?? path })}
-                  </a>
-                ))
-              : null}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void actionSystem.invoke("selection.copy-paths")}
-          >
-            {t("selection.copyPaths")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => void actionSystem.invoke("selection.clear")}
-          >
-            {t("selection.clear")}
-          </Button>
-        </section>
-      ) : null}
+      <UploadPanel
+        items={uploadItems}
+        onClearFinished={clearFinishedUploads}
+        onCancel={cancelUpload}
+      />
 
       <section className="mt-4 flex flex-col overflow-hidden rounded-xl border bg-card">
         <div className="shrink-0 border-b px-3 py-2">
@@ -579,6 +548,7 @@ export default function ExplorerApp() {
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}
+          selectedCount={selectedPaths.size}
           className="shrink-0 rounded-none border-0 border-t shadow-none"
         />
       </section>

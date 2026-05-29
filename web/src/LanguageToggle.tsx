@@ -8,6 +8,11 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { type Locale, useTranslation } from "@/i18n";
 
 const LOCALES: Locale[] = ["en", "zh-CN"];
@@ -17,29 +22,38 @@ function localeLabel(locale: Locale, t: (key: "language.en" | "language.zhCN") =
 }
 
 type LanguageToggleProps = {
-  compact?: boolean;
+  iconOnly?: boolean;
 };
 
-export default function LanguageToggle({ compact = false }: LanguageToggleProps) {
+export default function LanguageToggle({ iconOnly = false }: LanguageToggleProps) {
   const { locale, setLocale, t } = useTranslation();
+  const currentLabel = localeLabel(locale, t);
+
+  const menuButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size={iconOnly ? "icon" : "sm"}
+      className={iconOnly ? "h-8 w-8" : undefined}
+      aria-label={t("language.group")}
+    >
+      <Languages className="h-4 w-4" />
+      {!iconOnly ? <span>{currentLabel}</span> : null}
+    </Button>
+  );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant={compact ? "ghost" : "outline"}
-          size={compact ? "sm" : "sm"}
-          className={compact ? "h-8 gap-2 px-2" : undefined}
-          aria-label={t("language.group")}
-        >
-          <Languages className="h-4 w-4" />
-          {compact ? (
-            <span className="text-sm">{localeLabel(locale, t)}</span>
-          ) : (
-            <span>{localeLabel(locale, t)}</span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+      {iconOnly ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>{menuButton}</DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{currentLabel}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <DropdownMenuTrigger asChild>{menuButton}</DropdownMenuTrigger>
+      )}
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup
           value={locale}

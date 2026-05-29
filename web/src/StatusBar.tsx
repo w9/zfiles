@@ -1,5 +1,4 @@
 import BackendStatus from "./BackendStatus";
-import LanguageToggle from "./LanguageToggle";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
@@ -7,15 +6,23 @@ import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
 type StatusBarProps = {
   backendStatus: BackendStatusValue;
   kernelVersion?: string | null;
+  selectedCount?: number;
   className?: string;
 };
 
 export default function StatusBar({
   backendStatus,
   kernelVersion,
+  selectedCount = 0,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
+  const selectionLabel =
+    selectedCount === 1
+      ? t("selection.fileSelected")
+      : selectedCount > 1
+        ? t("selection.filesSelected", { count: String(selectedCount) })
+        : null;
 
   return (
     <div
@@ -27,7 +34,9 @@ export default function StatusBar({
       aria-label={t("statusBar.label")}
     >
       <BackendStatus status={backendStatus} kernelVersion={kernelVersion} compact />
-      <LanguageToggle compact />
+      {selectionLabel ? (
+        <p className="text-xs text-muted-foreground">{selectionLabel}</p>
+      ) : null}
     </div>
   );
 }

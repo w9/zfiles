@@ -46,7 +46,7 @@ export function actionsForContext(
   context: ContextKeys,
 ): ActionDefinition[] {
   return actions.filter((action) => {
-    if (action.contexts && !action.contexts.includes(contextName)) {
+    if (!action.contexts?.includes(contextName)) {
       return false;
     }
     return isActionAvailable(action, context);

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Current cycle:** simplify upload queue row chrome (filename only, no status badge).
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested.
 
 ## TODO List
 
@@ -87,3 +87,4 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Add `AbortSignal` to `ExplorerBackend.upload` (kernel tus + S3 multipart abort)
 - [x] `useUploadQueue.cancelUpload` + cancelled status; UploadPanel cancel control + i18n
 - [x] Run `pnpm test`
+- [x] Upload queue cards: drop dest path subline and status badges

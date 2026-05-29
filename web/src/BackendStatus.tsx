@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { backendStatusMessage, useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { type BackendStatus } from "./useBackendStatus";
@@ -21,25 +20,25 @@ export default function BackendStatus({
       ? t("backend.kernelVersion", { version: kernelVersion })
       : label;
 
-  const variant =
-    status === "offline" ? "destructive" : status === "connecting" ? "outline" : "secondary";
-
   return (
-    <Badge
-      variant={variant}
+    <div
       className={cn(
-        "gap-2",
-        compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm",
-        status === "connected" &&
-          "border-success/30 bg-success/10 text-success hover:bg-success/10",
-        status === "connecting" &&
-          "border-warning/30 bg-warning/10 text-warning hover:bg-warning/10",
+        "inline-flex items-center gap-2 text-muted-foreground",
+        compact ? "text-xs" : "text-sm",
       )}
       role="status"
       aria-label={t("backend.status", { status: label })}
     >
-      <span className="size-2 rounded-full bg-current" aria-hidden="true" />
+      <span
+        className={cn(
+          "size-2 shrink-0 rounded-full",
+          status === "connected" && "bg-success",
+          status === "connecting" && "bg-warning",
+          status === "offline" && "bg-destructive",
+        )}
+        aria-hidden="true"
+      />
       <span>{detail}</span>
-    </Badge>
+    </div>
   );
 }
