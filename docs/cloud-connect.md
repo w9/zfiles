@@ -12,7 +12,7 @@ pnpm install
 pnpm build:cloud
 ```
 
-Deploy everything under `web/dist-cloud/` to any static host (S3 website, R2 public bucket, nginx, GitHub Pages, etc.). Open `/index.cloud.html` if your host does not rewrite `/` to that file.
+Deploy everything under `web/dist-cloud/` to any static host (S3 website, R2 public bucket, nginx, GitHub Pages, etc.). The cloud entry is emitted as `index.html`, so most hosts serve it at `/` automatically.
 
 Before sharing the URL with users, configure [bucket CORS](cors.md) for your SPA origin.
 
@@ -50,7 +50,7 @@ These query params pre-fill the connect form. They must **never** carry secrets.
 Example bookmark:
 
 ```
-https://files.example.com/index.cloud.html?provider=r2&bucket=photos&prefix=2024/&readonly=1
+https://files.example.com/?provider=r2&bucket=photos&prefix=2024/&readonly=1
 ```
 
 The user still pastes access keys in the dialog every session.
@@ -122,7 +122,7 @@ No objects are deleted on disconnect. Partial multipart uploads may remain in th
 
 | | Local (`zfiles` CLI) | Cloud (static SPA) |
 |--|----------------------|---------------------|
-| Opens | `http://127.0.0.1:<port>/` | Hosted `index.cloud.html` |
+| Opens | `http://127.0.0.1:<port>/` | Hosted `index.html` at `/` |
 | Storage API | Kernel `/api/*` | S3/R2 from browser |
 | Credentials | Optional LAN bearer token | User-pasted S3 keys in dialog |
 | CORS | Same-origin (no bucket CORS) | Bucket CORS required |

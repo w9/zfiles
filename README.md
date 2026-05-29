@@ -144,7 +144,7 @@ cargo build -p zfiles
 
 # Cloud SPA (static deploy artifact, separate from the embedded binary)
 cd web && pnpm build:cloud
-# Serve locally: pnpm preview:cloud — open /index.cloud.html
+# Serve locally: pnpm preview:cloud — open / (emitted as index.html)
 # Deploy the contents of web/dist-cloud/ to any static host (S3, R2, nginx, …)
 
 # Install to ~/.cargo/bin
