@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)) is **complete**: one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA. Plugins and filename search are removed (not deferred). Release binary ≈ 16 MB (Linux x86_64). Remaining optional work: manual cloud smoke against a live R2/S3 bucket, local listing pagination, text preview.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)) is **complete**: one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA. Plugins and filename search are removed (not deferred). Release binary ≈ 16 MB (Linux x86_64). **Current cycle:** emit the cloud SPA entry as `index.html` (not `index.cloud.html`) so static hosts serve it at `/` by default. Remaining optional work: manual cloud smoke against a live R2/S3 bucket, local listing pagination, text preview.
 
 ## TODO List
 
@@ -69,3 +69,6 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Add e2e assertion: normal browse does not call plugin or search API routes
 - [x] Run full test suite; rebuild `web/dist`; record release binary size in docs
 - [x] Mark Phase 8 complete; update high-level plan to reflect refactor done
+- [ ] Make cloud build emit `index.html` in `dist-cloud/` (rename Rollup HTML output from `index.cloud.html`)
+- [ ] Update docs/scripts that reference `/index.cloud.html` for deployment (README, `docs/cloud-connect.md`) to use `/`
+- [ ] Run `pnpm build:cloud`; confirm `dist-cloud/index.html` (+ `.gz`/`.br`) exists and no `index.cloud.html` remains
