@@ -190,9 +190,13 @@ export class S3Backend implements ExplorerBackend {
     file: File,
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
+    }
+    if (signal?.aborted) {
+      throw new DOMException("Upload aborted", "AbortError");
     }
     const key = keyForExplorerPath(this.config.prefix, destPath);
     const upload = new Upload({
@@ -204,6 +208,10 @@ export class S3Backend implements ExplorerBackend {
         ContentType: file.type || undefined,
       },
     });
+    const onAbort = () => {
+      void upload.abort();
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
     upload.on("httpUploadProgress", (progress) => {
       if (progress.loaded == null) {
         return;
@@ -214,7 +222,11 @@ export class S3Backend implements ExplorerBackend {
         length: progress.total ?? file.size,
       });
     });
-    await upload.done();
+    try {
+      await upload.done();
+    } finally {
+      signal?.removeEventListener("abort", onAbort);
+    }
   }
 
   async runAction(actionId: string, paths: string[]): Promise<void> {

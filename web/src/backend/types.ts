@@ -49,6 +49,7 @@ export interface ExplorerBackend {
     file: File,
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
+    signal?: AbortSignal,
   ): Promise<void>;
   runAction(actionId: string, paths: string[]): Promise<void>;
   fetchHealth(): Promise<HealthInfo | null>;

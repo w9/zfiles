@@ -18,8 +18,15 @@ function encodeUploadMetadata(filename: string): string {
   return `filename ${base64EncodeUtf8(filename)}`;
 }
 
-async function headUploadOffset(location: string): Promise<number> {
-  const response = await apiFetch(location, { method: "HEAD" });
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException("Upload aborted", "AbortError");
+  }
+}
+
+async function headUploadOffset(location: string, signal?: AbortSignal): Promise<number> {
+  throwIfAborted(signal);
+  const response = await apiFetch(location, { method: "HEAD", signal });
   if (!response.ok) {
     throw new Error(`upload head failed: HTTP ${response.status}`);
   }
@@ -56,13 +63,16 @@ export class KernelBackend implements ExplorerBackend {
     file: File,
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
+    throwIfAborted(signal);
     const create = await apiFetch("/api/upload", {
       method: "POST",
       headers: {
         "Upload-Length": String(file.size),
         "Upload-Metadata": encodeUploadMetadata(destPath),
       },
+      signal,
     });
 
     if (!create.ok) {
@@ -75,9 +85,10 @@ export class KernelBackend implements ExplorerBackend {
     }
 
     const uploadId = location.split("/").pop() ?? location;
-    let offset = await headUploadOffset(location);
+    let offset = await headUploadOffset(location, signal);
 
     while (offset < file.size) {
+      throwIfAborted(signal);
       const chunk = file.slice(offset, offset + UPLOAD_CHUNK_SIZE);
       const patch = await apiFetch(location, {
         method: "PATCH",
@@ -86,10 +97,11 @@ export class KernelBackend implements ExplorerBackend {
           "Content-Type": "application/offset+octet-stream",
         },
         body: chunk,
+        signal,
       });
 
       if (!patch.ok) {
-        offset = await headUploadOffset(location);
+        offset = await headUploadOffset(location, signal);
         if (offset >= file.size) {
           break;
         }
