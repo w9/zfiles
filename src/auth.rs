@@ -41,7 +41,6 @@ pub fn is_public_path(path: &str) -> bool {
     path.starts_with("/assets/")
         || path.starts_with("/file-icons/")
         || path == "/favicon.ico"
-        || path == "/viewer-sandbox.html"
 }
 
 pub async fn read_only_middleware(

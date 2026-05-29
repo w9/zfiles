@@ -51,7 +51,6 @@ fn is_public_path_classifies_embedded_assets() {
     assert!(auth::is_public_path("/assets/index.css"));
     assert!(auth::is_public_path("/file-icons/javascript.svg"));
     assert!(auth::is_public_path("/favicon.ico"));
-    assert!(auth::is_public_path("/viewer-sandbox.html"));
     assert!(!auth::is_public_path("/api/list"));
     assert!(!auth::is_public_path("/"));
 }

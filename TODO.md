@@ -76,3 +76,4 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Simplify `embed.rs` and `transport.rs` to serve uncompressed assets only
 - [x] Delete existing `.gz`/`.br` sidecars from `web/dist` and `web/dist-cloud`
 - [x] Update `design/design.md`; run `pnpm test` and `cargo test --lib`
+- [x] Delete `web/public/viewer-sandbox.html` and remove auth public-path whitelist + test
