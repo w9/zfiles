@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Next:** optional parallel uploads, pause/cancel per item, or folder upload — defer until requested.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Current cycle:** simplify upload queue row chrome (filename only, no status badge).
 
 ## TODO List
 
@@ -84,3 +84,6 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Nex
 - [x] Run `pnpm test` and `cargo test`
 - [x] Throttle upload queue progress UI commits to 1 fps; always flush on complete/fail
 - [x] Unit test throttle helper; run `pnpm test`
+- [x] Add `AbortSignal` to `ExplorerBackend.upload` (kernel tus + S3 multipart abort)
+- [x] `useUploadQueue.cancelUpload` + cancelled status; UploadPanel cancel control + i18n
+- [x] Run `pnpm test`
