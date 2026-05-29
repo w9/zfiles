@@ -21,8 +21,8 @@ const FALLBACK_INDEX: &str = r#"<!doctype html>
 </html>
 "#;
 
-pub fn serve_static(path: &str, accept_encoding: Option<&str>) -> Response {
-    if let Some(response) = try_serve_static(path, accept_encoding) {
+pub fn serve_static(path: &str) -> Response {
+    if let Some(response) = try_serve_static(path) {
         return response;
     }
 
@@ -33,71 +33,35 @@ pub fn serve_static(path: &str, accept_encoding: Option<&str>) -> Response {
         .expect("fallback index response")
 }
 
-pub fn try_serve_static(path: &str, accept_encoding: Option<&str>) -> Option<Response> {
+pub fn try_serve_static(path: &str) -> Option<Response> {
     let path = path.trim_start_matches('/');
     let path = if path.is_empty() { "index.html" } else { path };
 
-    if let Some((encoding, data)) = select_encoded_asset(path, accept_encoding) {
-        return Some(asset_response(path, data, Some(encoding)));
-    }
-
     if let Some(content) = Assets::get(path) {
-        return Some(asset_response(path, content.data.into_owned(), None));
-    }
-
-    if !path.contains('.')
-        && let Some((encoding, data)) = select_encoded_asset("index.html", accept_encoding)
-    {
-        return Some(asset_response("index.html", data, Some(encoding)));
+        return Some(asset_response(path, content.data.into_owned()));
     }
 
     if !path.contains('.')
         && let Some(content) = Assets::get("index.html")
     {
-        return Some(asset_response("index.html", content.data.into_owned(), None));
+        return Some(asset_response("index.html", content.data.into_owned()));
     }
 
     None
 }
 
-fn select_encoded_asset(path: &str, accept_encoding: Option<&str>) -> Option<(&'static str, Vec<u8>)> {
-    let accept = accept_encoding?;
-    let br_path = format!("{path}.br");
-    let gz_path = format!("{path}.gz");
-    if accept.contains("br")
-        && let Some(content) = Assets::get(br_path.as_str())
-    {
-        return Some(("br", content.data.into_owned()));
-    }
-    if accept.contains("gzip")
-        && let Some(content) = Assets::get(gz_path.as_str())
-    {
-        return Some(("gzip", content.data.into_owned()));
-    }
-    None
-}
-
-fn asset_response(path: &str, data: Vec<u8>, encoding: Option<&'static str>) -> Response {
+fn asset_response(path: &str, data: Vec<u8>) -> Response {
     let mime = mime_guess::from_path(path)
         .first_or_octet_stream()
         .to_string();
 
-    let mut builder = Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header(
             header::CONTENT_TYPE,
             HeaderValue::from_str(&mime)
                 .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-        );
-
-    if let Some(encoding) = encoding {
-        builder = builder.header(
-            header::CONTENT_ENCODING,
-            HeaderValue::from_static(encoding),
-        );
-    }
-
-    builder
+        )
         .body(Body::from(data))
         .expect("asset response")
 }
@@ -107,31 +71,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn prefers_brotli_when_accepted() {
-        let response = serve_static("index.html", Some("br, gzip"));
-        assert_eq!(
-            response
-                .headers()
-                .get(header::CONTENT_ENCODING)
-                .and_then(|value| value.to_str().ok()),
-            Some("br")
-        );
-    }
-
-    #[test]
-    fn falls_back_to_uncompressed_without_accept_encoding() {
-        let response = serve_static("index.html", None);
+    fn serve_static_serves_index_without_content_encoding() {
+        let response = serve_static("index.html");
         assert!(response.headers().get(header::CONTENT_ENCODING).is_none());
     }
 
     #[test]
     fn try_serve_static_returns_none_for_missing_asset_with_extension() {
-        assert!(try_serve_static("file-icons/does-not-exist.svg", None).is_none());
+        assert!(try_serve_static("file-icons/does-not-exist.svg").is_none());
     }
 
     #[test]
     fn try_serve_static_serves_file_icons_when_embedded() {
-        let response = try_serve_static("file-icons/file.svg", None);
+        let response = try_serve_static("file-icons/file.svg");
         assert!(response.is_some());
         assert_eq!(
             response

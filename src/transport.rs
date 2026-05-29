@@ -501,17 +501,13 @@ async fn static_or_index(
     if path.starts_with("/api/") || path.starts_with("/plugin/") {
         return (StatusCode::NOT_FOUND, "not found").into_response();
     }
-    let accept_encoding = request
-        .headers()
-        .get(axum::http::header::ACCEPT_ENCODING)
-        .and_then(|value| value.to_str().ok());
 
     #[cfg(feature = "dev-frontend")]
     if let Some(proxy) = &state.vite_dev {
         use axum::extract::FromRequestParts;
 
         if path.starts_with("/file-icons/")
-            && let Some(response) = embed::try_serve_static(path, accept_encoding)
+            && let Some(response) = embed::try_serve_static(path)
         {
             return response;
         }
@@ -536,7 +532,7 @@ async fn static_or_index(
         return proxy.forward_http(request).await;
     }
 
-    embed::serve_static(path, accept_encoding)
+    embed::serve_static(path)
 }
 
 fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<Option<String>, AppError> {

@@ -81,7 +81,7 @@ What the kernel ships: HTTP transport, embedded SPA, filesystem primitives (`rea
 
 ### Single static binary with embedded UI (local mode)
 
-The deliverable for local use is one file: `zfiles`. The React frontend (built by Vite) is embedded via `rust-embed` with pre-compressed gzip and brotli variants; axum negotiates `Accept-Encoding`.
+The deliverable for local use is one file: `zfiles`. The React frontend (built by Vite) is embedded via `rust-embed`; axum serves the uncompressed assets from the binary.
 
 Static linking strategy:
 

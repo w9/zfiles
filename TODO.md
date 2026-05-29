@@ -72,7 +72,7 @@ Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)
 - [x] Make cloud build emit `index.html` in `dist-cloud/` (rename Rollup HTML output from `index.cloud.html`)
 - [x] Update docs/scripts that reference `/index.cloud.html` for deployment (README, `docs/cloud-connect.md`) to use `/`
 - [x] Run `pnpm build:cloud`; confirm `dist-cloud/index.html` (+ `.gz`/`.br`) exists and no `index.cloud.html` remains
-- [ ] Remove `compress-dist.mjs` from local and cloud build scripts; delete the script
-- [ ] Simplify `embed.rs` and `transport.rs` to serve uncompressed assets only
-- [ ] Delete existing `.gz`/`.br` sidecars from `web/dist` and `web/dist-cloud`
-- [ ] Update `design/design.md`; run `pnpm test` and `cargo test --lib`
+- [x] Remove `compress-dist.mjs` from local and cloud build scripts; delete the script
+- [x] Simplify `embed.rs` and `transport.rs` to serve uncompressed assets only
+- [x] Delete existing `.gz`/`.br` sidecars from `web/dist` and `web/dist-cloud`
+- [x] Update `design/design.md`; run `pnpm test` and `cargo test --lib`
