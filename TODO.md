@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)) is **complete**: one shared explorer UI with `ExplorerBackend` adapters — `KernelBackend` for the embedded local binary, `S3Backend` for the cloud SPA. **Current cycle:** drop pre-compressed `.gz`/`.br` sidecars from frontend builds and simplify embedded static serving to shrink the CLI binary.
+Dual-mode refactor ([design/dual_mode_refactor.md](design/dual_mode_refactor.md)) is **complete**. **Current cycle:** remove orphaned `viewer-sandbox.html` from public assets and auth public-path whitelist.
 
 ## TODO List
 
