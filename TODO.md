@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** client-side upload queue with rich progress (speed, sizes, ETA), visual progress bars, and a queue panel in the explorer — one active upload at a time; backends unchanged.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped. **Current cycle:** throttle upload stats UI updates to 1 fps max.
 
 ## TODO List
 
@@ -77,8 +77,8 @@ Dual-mode refactor is **complete**. **Current cycle:** client-side upload queue 
 - [x] Delete existing `.gz`/`.br` sidecars from `web/dist` and `web/dist-cloud`
 - [x] Update `design/design.md`; run `pnpm test` and `cargo test --lib`
 - [x] Delete `web/public/viewer-sandbox.html` and remove auth public-path whitelist + test
-- [ ] Add `upload-queue` module: enqueue, single-worker drain, enriched progress (speed, ETA)
-- [ ] Add shadcn `Progress` and `UploadPanel` with per-file bars and stats (en + zh-CN)
-- [ ] Wire `ExplorerApp`: replace inline upload state; allow drops while queue active
-- [ ] Unit tests for queue ordering, progress math, and status transitions
-- [ ] Run `pnpm test` and `cargo test`
+- [x] Add `upload-queue` module: enqueue, single-worker drain, enriched progress (speed, ETA)
+- [x] Add shadcn `Progress` and `UploadPanel` with per-file bars and stats (en + zh-CN)
+- [x] Wire `ExplorerApp`: replace inline upload state; allow drops while queue active
+- [x] Unit tests for queue ordering, progress math, and status transitions
+- [x] Run `pnpm test` and `cargo test`
