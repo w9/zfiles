@@ -13,7 +13,7 @@ Run `zfiles` in a directory and the UI opens with no indexing step, no startup d
 
 Files can be uploaded by dragging them into the browser. **Local mode:** uploads and downloads are resumable — tus on upload, HTTP Range on download. **Cloud mode:** S3 multipart upload and Range GET. Any HTTP client that supports range requests works against the local kernel, including `curl --continue-at`.
 
-To expose a local folder on the network, run `zfiles --listen 0.0.0.0:8080 --token`. The server prints a URL and a QR code for other devices.
+To expose a local folder on the network, run `zfiles --host 0.0.0.0 --port 8080 --token`. The server prints a URL and a QR code for other devices.
 
 The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scrolled listings, and a preview pane. Built-in actions (navigation, delete, copy-path, view toggles) are unified through the [action system](action_system.md).
 
@@ -275,10 +275,10 @@ zfiles --port 9000 ~/projects
 
 ```bash
 # Bind all interfaces with auto-generated token; prints URL and QR code
-zfiles --listen 0.0.0.0:8080 --token
+zfiles --host 0.0.0.0 --port 8080 --token
 
-# Bind a specific interface by name (Tailscale, etc.)
-zfiles --listen tailscale0:8080 --token
+# Bind a specific address (e.g. Tailscale IP)
+zfiles --host 100.64.0.2 --port 8080 --token
 
 # Read-only share that auto-expires after two hours
 zfiles ~/talks/keynote-prep --read-only --token --expire 2h
@@ -394,7 +394,7 @@ Detailed acceptance checklist and success metrics for the refactor: [dual_mode_r
 | Topic | Default leaning |
 |-------|-----------------|
 | Default port (local) | Ephemeral with browser auto-open |
-| Auth default policy | Refuse `--listen 0.0.0.0` without `--token`; localhost without token |
+| Auth default policy | Refuse `--host 0.0.0.0` without `--token`; loopback without token |
 | Local listing pagination | Defer until needed; cloud pagination required at launch |
 | Text file preview | Omit in v1; metadata + download |
 | Slideshow | Keep for client-decodable images in selection/cwd, or cut if blocking |

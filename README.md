@@ -18,17 +18,17 @@ cargo build --release
 
 Open the printed startup banner in your browser. The explorer uses **Tailwind CSS** and **shadcn/ui** components, with **English** and **简体中文** language support in the header. By default zfiles binds `127.0.0.1` on an ephemeral port and launches your desktop browser. The header shows a live **Connected** / **Offline** status pill and a **Light / Dark / Auto** theme control (preference is saved in the browser).
 
-LAN shares (`--listen 0.0.0.0 --token`) include a network share URL in the banner and print a terminal QR code other devices can scan to open the explorer.
+LAN shares (`--host 0.0.0.0 --token`) include a network share URL in the banner and print a terminal QR code other devices can scan to open the explorer.
 
 ```bash
-# Pin the port
+# Pin the port (host defaults to 127.0.0.1)
 zfiles --port 9000
 
 # Bind all interfaces with auto-generated token; prints share URL and QR code
-zfiles --listen 0.0.0.0:8080 --token
+zfiles --host 0.0.0.0 --port 8080 --token
 
 # Read-only LAN share
-zfiles --listen 0.0.0.0:8080 --token --read-only
+zfiles --host 0.0.0.0 --port 8080 --token --read-only
 
 # Serve without opening a browser tab
 zfiles --no-open
@@ -98,13 +98,11 @@ If the served directory cannot be written (read-only mount, permission-restricte
 
 ## Symlinks outside the serve root
 
-By default, zfiles rejects navigation into symlinks whose targets resolve **outside** the served directory (`path escapes served directory`, HTTP 400). Symlinks to folders inside the serve root work normally. To follow outbound symlinks (for example `~/Projects` → `/Projects`), pass:
+When serving on **localhost** (loopback bind, the default), zfiles follows symlinks whose targets resolve **outside** the served directory — for example `~/Projects` → `/Projects`. Symlinks to folders inside the serve root always work normally.
 
-```bash
-zfiles --follow-symlinks-outside-root ~
-```
+When binding to a non-loopback address (e.g. `--host 0.0.0.0 --port 8080 --token`), outbound symlinks are rejected by default (`path escapes served directory`, HTTP 400). Pass `--follow-symlinks-outside-root` to enable follow mode on public binds, or `--no-follow-symlinks-outside-root` to disable it on localhost.
 
-The flag is read/list only; uploads and writes still cannot escape the serve root via symlinks. `/api/health` reports `follow_symlinks_outside_root`.
+The policy is read/list only; uploads and writes still cannot escape the serve root via symlinks. `/api/health` reports `follow_symlinks_outside_root`.
 
 ## Frontend (shadcn/ui)
 

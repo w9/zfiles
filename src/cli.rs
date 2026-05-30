@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
@@ -71,9 +71,12 @@ pub enum DaemonCommand {
         /// Directory to serve when `--config` is not set
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// Port to listen on when `--config` is not set
-        #[arg(long)]
-        port: Option<u16>,
+        /// Host address to bind when `--config` is not set
+        #[arg(long, default_value = "127.0.0.1", value_name = "HOST")]
+        host: String,
+        /// Port to listen on when `--config` is not set (`0` = ephemeral)
+        #[arg(long, default_value_t = 0, value_name = "PORT")]
+        port: u16,
         /// Multi-folder daemon config with `[[share]]` entries
         #[arg(long)]
         config: Option<PathBuf>,
@@ -126,32 +129,37 @@ pub struct ServeArgs {
     #[arg(default_value = ".")]
     pub path: PathBuf,
 
-    /// Port to listen on (binds 127.0.0.1)
-    #[arg(long, conflicts_with = "listen")]
-    pub port: Option<u16>,
+    /// Host address to bind (e.g. `127.0.0.1` or `0.0.0.0`)
+    #[arg(long, default_value = "127.0.0.1", value_name = "HOST")]
+    pub host: String,
 
-    /// Address to listen on (e.g. 127.0.0.1:8080 or 0.0.0.0:8080)
-    #[arg(long)]
-    pub listen: Option<String>,
+    /// TCP port to listen on (`0` = ephemeral)
+    #[arg(long, default_value_t = 0, value_name = "PORT")]
+    pub port: u16,
 
-    /// Require bearer-token authentication
-    #[arg(long)]
+    /// Require bearer-token authentication (default: false)
+    #[arg(long, default_value_t = false)]
     pub token: bool,
 
     /// Token lifetime (e.g. 2h, 30m)
     #[arg(long, value_name = "DURATION")]
     pub expire: Option<String>,
 
-    /// Disallow uploads and other mutating operations
-    #[arg(long)]
+    /// Disallow uploads and other mutating operations (default: false)
+    #[arg(long, default_value_t = false)]
     pub read_only: bool,
 
-    /// Follow symlinks whose targets lie outside the serve root (read/list only)
-    #[arg(long)]
+    /// Follow symlinks whose targets lie outside the serve root (read/list only).
+    /// Default: true on loopback, false on other hosts. Override with `--no-follow-symlinks-outside-root`.
+    #[arg(long, action = clap::ArgAction::SetTrue, default_value_t = false, conflicts_with = "no_follow_symlinks_outside_root")]
     pub follow_symlinks_outside_root: bool,
 
-    /// Do not open a browser tab on startup
-    #[arg(long)]
+    /// Reject symlinks whose targets lie outside the serve root even on loopback binds (default: false)
+    #[arg(long, action = clap::ArgAction::SetTrue, default_value_t = false, conflicts_with = "follow_symlinks_outside_root")]
+    pub no_follow_symlinks_outside_root: bool,
+
+    /// Do not open a browser tab on startup (default: false)
+    #[arg(long, default_value_t = false)]
     pub no_open: bool,
 
     /// Explorer UI language (`en` or `zh-CN`)
@@ -160,7 +168,7 @@ pub struct ServeArgs {
 
     /// Proxy UI assets to a Vite dev server for hot module replacement
     #[cfg(feature = "dev-frontend")]
-    #[arg(long)]
+    #[arg(long, default_value_t = false)]
     pub dev_frontend: bool,
 
     /// Vite dev server URL (used with `--dev-frontend`)
@@ -182,15 +190,11 @@ impl ServeArgs {
     }
 
     pub fn listen_addr(&self) -> Result<SocketAddr> {
-        if let Some(listen) = &self.listen {
-            return parse_listen(listen);
-        }
-
-        if let Some(port) = self.port {
-            return Ok(SocketAddr::from(([127, 0, 0, 1], port)));
-        }
-
-        Ok(SocketAddr::from(([127, 0, 0, 1], 0)))
+        let ip: IpAddr = self
+            .host
+            .parse()
+            .with_context(|| format!("invalid host address {:?}", self.host))?;
+        Ok(SocketAddr::from((ip, self.port)))
     }
 
     pub fn validate(&self) -> Result<()> {
@@ -213,6 +217,16 @@ impl ServeArgs {
         Ok(!self.listen_addr()?.ip().is_loopback())
     }
 
+    pub fn resolve_follow_symlinks_outside_root(&self) -> Result<bool> {
+        if self.follow_symlinks_outside_root {
+            return Ok(true);
+        }
+        if self.no_follow_symlinks_outside_root {
+            return Ok(false);
+        }
+        Ok(self.listen_addr()?.ip().is_loopback())
+    }
+
     pub fn locale(&self) -> Result<Option<&'static str>> {
         match &self.lang {
             Some(value) => Ok(Some(crate::locale::parse_locale(value)?)),
@@ -231,32 +245,31 @@ impl ServeArgs {
     }
 }
 
-fn parse_listen(listen: &str) -> Result<SocketAddr> {
-    if listen.contains(':') {
-        return listen
-            .parse()
-            .with_context(|| format!("invalid listen address {listen:?}"));
-    }
-
-    listen
-        .parse::<u16>()
-        .map(|port| SocketAddr::from(([127, 0, 0, 1], port)))
-        .with_context(|| format!("invalid listen address {listen:?}"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn parse_listen_host_port() {
-        let addr = parse_listen("127.0.0.1:9000").unwrap();
-        assert_eq!(addr, "127.0.0.1:9000".parse().unwrap());
+    fn listen_addr_from_host_and_port() {
+        let cli = Cli::parse_from(["zfiles", "--host", "127.0.0.1", "--port", "9000"]);
+        assert_eq!(
+            cli.serve.listen_addr().unwrap(),
+            "127.0.0.1:9000".parse().unwrap()
+        );
+    }
+
+    #[test]
+    fn default_listen_addr_is_loopback_ephemeral() {
+        let cli = Cli::parse_from(["zfiles"]);
+        assert_eq!(
+            cli.serve.listen_addr().unwrap(),
+            SocketAddr::from(([127, 0, 0, 1], 0))
+        );
     }
 
     #[test]
     fn public_bind_requires_token() {
-        let cli = Cli::parse_from(["zfiles", "--listen", "0.0.0.0:8080"]);
+        let cli = Cli::parse_from(["zfiles", "--host", "0.0.0.0", "--port", "8080"]);
         assert!(cli.serve.validate().is_err());
     }
 
@@ -291,12 +304,32 @@ mod tests {
     }
 
     #[test]
-    fn parse_follow_symlinks_outside_root_flag() {
-        let cli = Cli::parse_from(["zfiles", "--follow-symlinks-outside-root"]);
-        assert!(cli.serve.follow_symlinks_outside_root);
-
+    fn follow_symlinks_outside_root_defaults_on_loopback() {
         let cli = Cli::parse_from(["zfiles"]);
-        assert!(!cli.serve.follow_symlinks_outside_root);
+        assert!(cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+
+        let cli = Cli::parse_from(["zfiles", "--host", "0.0.0.0", "--port", "8080", "--token"]);
+        assert!(!cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+    }
+
+    #[test]
+    fn parse_follow_symlinks_outside_root_flags() {
+        let cli = Cli::parse_from(["zfiles", "--follow-symlinks-outside-root"]);
+        assert!(cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+
+        let cli = Cli::parse_from(["zfiles", "--no-follow-symlinks-outside-root"]);
+        assert!(!cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+
+        let cli = Cli::parse_from([
+            "zfiles",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8080",
+            "--token",
+            "--follow-symlinks-outside-root",
+        ]);
+        assert!(cli.serve.resolve_follow_symlinks_outside_root().unwrap());
     }
 
     #[test]

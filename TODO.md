@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. Generic folder icons now use `folder.svg` everywhere (no serve-root `folder-root` fallback). **This cycle:** merge dot-entry visibility into one persisted setting (toggle and Settings share the same value).
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** gitignore Understand Anything local scratch from `/understand` runs while keeping the knowledge graph committable for team onboarding.
 
 ## TODO List
 
@@ -113,3 +113,10 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Settings default for dot entries; i18n; unit tests; run `pnpm test`
 - [x] Lower opacity for visible dot entries in table and grid listings
 - [x] Unify dot-entry visibility into single persisted preference; update provider, settings, tests
+- [x] Resolve `follow_symlinks_outside_root` from bind address (on for loopback by default); add `--no-follow-symlinks-outside-root`
+- [x] Wire resolved policy into `transport::serve`; unit tests for loopback vs public defaults
+- [x] Update README symlink section; run `cargo test`
+- [x] Replace `--listen` with `--host` + `--port` on `ServeArgs`; resolve bind address from both
+- [x] Show CLI defaults in `--help` (host, port, path, booleans); update daemon start forwarding
+- [x] Update tests, README, and design docs; run `cargo test`
+- [x] Add `.understand-anything/intermediate/`, `tmp/`, and `diff-overlay.json` to `.gitignore`

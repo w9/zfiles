@@ -6,7 +6,8 @@ use anyhow::{Context, Result, bail};
 #[derive(Clone)]
 pub struct DaemonStartArgs {
     pub path: PathBuf,
-    pub port: Option<u16>,
+    pub host: String,
+    pub port: u16,
 }
 
 use crate::dotfolder;
@@ -32,9 +33,7 @@ pub fn start(args: DaemonStartArgs) -> Result<()> {
     let exe = std::env::current_exe().context("resolve current executable")?;
     let mut cmd = Command::new(&exe);
     cmd.arg("--no-open");
-    if let Some(port) = args.port {
-        cmd.args(["--port", &port.to_string()]);
-    }
+    cmd.args(["--host", &args.host, "--port", &args.port.to_string()]);
     cmd.arg(&root);
     cmd.stdin(std::process::Stdio::null());
     cmd.stdout(std::process::Stdio::null());

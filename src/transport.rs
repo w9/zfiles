@@ -148,7 +148,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let state = AppState {
         fs: Arc::new(LocalFs::with_symlink_policy(
             root.clone(),
-            serve.follow_symlinks_outside_root,
+            serve.resolve_follow_symlinks_outside_root()?,
         )),
         auth,
         read_only,

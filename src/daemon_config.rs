@@ -34,7 +34,8 @@ pub fn start_config(path: PathBuf) -> Result<()> {
     for share in config.shares {
         start(DaemonStartArgs {
             path: share.path,
-            port: Some(share.port),
+            host: "127.0.0.1".to_string(),
+            port: share.port,
         })?;
     }
     Ok(())
