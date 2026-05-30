@@ -1,2 +1,2 @@
 [alias]
-dev-frontend = "run --features dev-frontend -- --dev-frontend"
+dev = "run --features dev-frontend -- --dev-frontend"
