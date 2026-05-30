@@ -45,8 +45,10 @@ fn make_read_only(path: &std::path::Path) {
 async fn read_only_serve_root_lists_and_reports_read_only() {
     let dir = tempdir().unwrap();
     let _homes = xdg::TestHomes::new(dir.path().to_path_buf());
-    fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
-    let root = dir.path().canonicalize().unwrap();
+    let root = dir.path().join("share");
+    fs::create_dir_all(&root).unwrap();
+    fs::write(root.join("notes.txt"), b"hello").unwrap();
+    let root = root.canonicalize().unwrap();
 
     #[cfg(unix)]
     make_read_only(&root);
