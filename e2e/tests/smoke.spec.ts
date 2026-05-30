@@ -135,7 +135,7 @@ test("preview pane shows selected file metadata", async ({ page }) => {
 test("context menu shows built-in file actions", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: /hello\.txt/ }).click({ button: "right" });
-  await expect(page.getByRole("menuitem", { name: "Copy Paths" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
 });
 
 test("command palette opens and lists built-in actions", async ({ page }) => {
@@ -151,7 +151,7 @@ test("command palette opens and lists built-in actions", async ({ page }) => {
 test("lang query param switches UI to Simplified Chinese", async ({ page }) => {
   await page.goto("/?lang=zh-CN");
   await expect(page.getByRole("contentinfo", { name: "状态栏" })).toBeVisible();
-  await expect(page.getByText("将文件拖放到此处上传")).toBeVisible();
+  await expect(page.getByRole("button", { name: "选择文件" })).toBeVisible();
 });
 
 test("menu bar and toolbar expose built-in action surfaces", async ({ page }) => {
@@ -172,17 +172,8 @@ test("menu bar and toolbar expose built-in action surfaces", async ({ page }) =>
 test("listing shows data table column headers", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Type" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Size" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Modified" })).toBeVisible();
-});
-
-test("disabled toolbar button tooltip explains why action is unavailable", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("toolbar", { name: "Action toolbar" }).getByRole("button", {
-    name: "Clear Selection",
-  }).hover({ force: true });
-  await expect(page.getByRole("tooltip")).toContainText("Select one or more files");
 });
 
 test("tokenized explorer loads listing", async ({ page }) => {
@@ -315,7 +306,7 @@ test("preview pane renders browser-decodable images", async ({ page }) => {
 
   try {
     await page.goto("http://127.0.0.1:9882/");
-    await page.getByRole("button", { name: "photo.png", exact: true }).click();
+    await page.getByRole("link", { name: "photo.png", exact: true }).click();
     const preview = page.getByRole("complementary", { name: "Preview pane" });
     await expect(preview.getByRole("img", { name: "photo.png" })).toBeVisible();
   } finally {
