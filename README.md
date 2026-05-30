@@ -162,7 +162,8 @@ For interactive UI work without rebuilding `web/dist` or recompiling embedded as
 cd web && pnpm install && pnpm dev
 
 # Terminal 2 — zfiles proxies UI to Vite; API stays on zfiles
-cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
+cargo dev-frontend ~/Downloads --port 9000 --no-open
+# equivalent to: cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
 ```
 
 Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*` and WebSocket events are served by zfiles as in production. `/file-icons/*` is served from the embedded `web/dist` build (run `pnpm build` once if icons are missing).
