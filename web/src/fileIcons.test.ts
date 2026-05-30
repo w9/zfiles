@@ -16,20 +16,12 @@ test("resolveFileIconUrl matches exact file names", () => {
 
 test("resolveFileIconUrl maps folder associations", () => {
   assert.match(resolveFileIconUrl({ name: "src", isDir: true }), /folder-src\.svg$/);
-  assert.match(
-    resolveFileIconUrl({ name: "src", isDir: true, atListingRoot: true }),
-    /folder-src\.svg$/,
-  );
   assert.match(resolveFileIconUrl({ name: "misc", isDir: true }), /folder-other\.svg$/);
 });
 
 test("resolveFileIconUrl falls back to generic file and folder icons", () => {
   assert.match(resolveFileIconUrl({ name: "unknown.xyz123", isDir: false }), /file\.svg$/);
   assert.match(resolveFileIconUrl({ name: "random-dir", isDir: true }), /folder\.svg$/);
-  assert.match(
-    resolveFileIconUrl({ name: "random-dir", isDir: true, atListingRoot: true }),
-    /folder-root\.svg$/,
-  );
 });
 
 test("resolveFileIconUrl prefers compound extensions", () => {

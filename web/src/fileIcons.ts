@@ -6,7 +6,6 @@ export type ResolveFileIconOptions = {
   name: string;
   isDir: boolean;
   theme?: FileIconTheme;
-  atListingRoot?: boolean;
   expanded?: boolean;
 };
 
@@ -15,22 +14,16 @@ type LightOverrides = {
   fileNames?: Record<string, string>;
   folderNames?: Record<string, string>;
   folderNamesExpanded?: Record<string, string>;
-  rootFolderNames?: Record<string, string>;
-  rootFolderNamesExpanded?: Record<string, string>;
 };
 
 type FileIconsManifest = {
   file: string;
   folder: string;
   folderExpanded: string;
-  rootFolder?: string;
-  rootFolderExpanded?: string;
   fileExtensions: Record<string, string>;
   fileNames: Record<string, string>;
   folderNames: Record<string, string>;
   folderNamesExpanded: Record<string, string>;
-  rootFolderNames: Record<string, string>;
-  rootFolderNamesExpanded: Record<string, string>;
   light?: LightOverrides;
   iconFiles: Record<string, string>;
 };
@@ -68,35 +61,10 @@ function pickLightOverride(
 }
 
 function resolveIconKey(options: ResolveFileIconOptions): string {
-  const { name, isDir, theme = "dark", atListingRoot = false, expanded = false } = options;
+  const { name, isDir, theme = "dark", expanded = false } = options;
   const normalized = normalizeName(name);
 
   if (isDir) {
-    if (atListingRoot) {
-      const rootExpandedMap = ICONS.rootFolderNamesExpanded;
-      const rootMap = ICONS.rootFolderNames;
-      if (expanded) {
-        const expandedKey = pickLightOverride(
-          theme,
-          ICONS.light?.rootFolderNamesExpanded,
-          normalized,
-          rootExpandedMap[normalized],
-        );
-        if (expandedKey) {
-          return expandedKey;
-        }
-      }
-      const rootKey = pickLightOverride(
-        theme,
-        ICONS.light?.rootFolderNames,
-        normalized,
-        rootMap[normalized],
-      );
-      if (rootKey) {
-        return rootKey;
-      }
-    }
-
     const folderExpandedMap = ICONS.folderNamesExpanded;
     const folderMap = ICONS.folderNames;
     if (expanded) {
@@ -109,9 +77,6 @@ function resolveIconKey(options: ResolveFileIconOptions): string {
       if (expandedKey) {
         return expandedKey;
       }
-      if (atListingRoot && ICONS.rootFolderExpanded) {
-        return ICONS.rootFolderExpanded;
-      }
       return ICONS.folderExpanded;
     }
 
@@ -123,9 +88,6 @@ function resolveIconKey(options: ResolveFileIconOptions): string {
     );
     if (folderKey) {
       return folderKey;
-    }
-    if (atListingRoot && ICONS.rootFolder) {
-      return ICONS.rootFolder;
     }
     return ICONS.folder;
   }

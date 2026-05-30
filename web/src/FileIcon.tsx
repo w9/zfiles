@@ -5,25 +5,23 @@ type FileIconProps = {
   name: string;
   isDir: boolean;
   theme?: FileIconTheme;
-  atListingRoot?: boolean;
   size?: "sm" | "lg";
   className?: string;
 };
 
 const SIZE_CLASS = {
-  sm: "h-7 w-7",
-  lg: "h-12 w-12",
+  sm: "h-6 w-6",
+  lg: "h-10 w-10",
 } as const;
 
 export function FileIcon({
   name,
   isDir,
   theme = "dark",
-  atListingRoot = false,
   size = "sm",
   className,
 }: FileIconProps) {
-  const iconUrl = resolveFileIconUrl({ name, isDir, theme, atListingRoot });
+  const iconUrl = resolveFileIconUrl({ name, isDir, theme });
 
   return (
     <img
@@ -31,8 +29,8 @@ export function FileIcon({
       src={iconUrl}
       alt=""
       loading="lazy"
-      width={size === "lg" ? 48 : 28}
-      height={size === "lg" ? 48 : 28}
+      width={size === "lg" ? 40 : 24}
+      height={size === "lg" ? 40 : 24}
     />
   );
 }
