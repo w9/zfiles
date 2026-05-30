@@ -250,18 +250,10 @@ mod tests {
     use crate::xdg;
     use tempfile::tempdir;
 
-    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
-        xdg::set_test_config_home(Some(base.join("config")));
-        xdg::set_test_cache_home(Some(base.join("cache")));
-        f();
-        xdg::set_test_config_home(None);
-        xdg::set_test_cache_home(None);
-    }
-
     #[test]
     fn state_dir_is_created_lazily() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let root = dir.path().canonicalize().unwrap();
             let store = StateStore::new(root);
             assert!(!store.state_dir().exists());
@@ -275,7 +267,7 @@ mod tests {
     #[test]
     fn upload_round_trip() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let root = dir.path().canonicalize().unwrap();
             let store = StateStore::new(root.clone());
             let fs = LocalFs::new(root.clone());
@@ -297,7 +289,7 @@ mod tests {
     #[test]
     fn session_expiry_is_enforced() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let root = dir.path().canonicalize().unwrap();
             let store = StateStore::new(root);
             let expired = std::time::SystemTime::now()

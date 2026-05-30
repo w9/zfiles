@@ -25,18 +25,14 @@ fn test_server(root: &std::path::Path) -> TestServer {
 #[test]
 fn init_creates_xdg_config() {
     let dir = tempdir().unwrap();
-    xdg::set_test_config_home(Some(dir.path().join("config")));
-    xdg::set_test_cache_home(Some(dir.path().join("cache")));
-
-    let root = dir.path().canonicalize().unwrap();
-    let global = Config::init_global().unwrap();
-    assert!(global.is_file());
-    let folder = Config::init_folder(&root).unwrap();
-    assert!(folder.is_file());
-    assert!(folder.starts_with(xdg::config_home()));
-
-    xdg::set_test_config_home(None);
-    xdg::set_test_cache_home(None);
+    xdg::with_test_homes(dir.path().to_path_buf(), || {
+        let root = dir.path().canonicalize().unwrap();
+        let global = Config::init_global().unwrap();
+        assert!(global.is_file());
+        let folder = Config::init_folder(&root).unwrap();
+        assert!(folder.is_file());
+        assert!(folder.starts_with(xdg::config_home()));
+    });
 }
 
 #[tokio::test]

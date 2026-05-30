@@ -51,17 +51,11 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    fn with_test_config_base<F: FnOnce()>(base: PathBuf, f: F) {
-        set_test_config_base(Some(base));
-        f();
-        set_test_config_base(None);
-    }
-
     #[test]
     fn always_uses_xdg_folder_state_dir() {
         let dir = tempdir().unwrap();
         let root = dir.path().canonicalize().unwrap();
-        with_test_config_base(dir.path().join("xdg-config").join("zfiles"), || {
+        xdg::with_test_config_home(dir.path().join("xdg-config").join("zfiles"), || {
             let layout = plan_serve_layout(&root, &Config::default(), false);
             assert_eq!(layout.state_dir, xdg::folder_dir(&root));
             assert!(layout.state_dir.starts_with(xdg::config_home()));
@@ -83,7 +77,7 @@ mod tests {
         permissions.set_mode(metadata.permissions().mode() & !0o222);
         std::fs::set_permissions(&root, permissions).unwrap();
 
-        with_test_config_base(dir.path().join("xdg-config").join("zfiles"), || {
+        xdg::with_test_config_home(dir.path().join("xdg-config").join("zfiles"), || {
             let layout = plan_serve_layout(&root, &Config::default(), false);
             assert!(layout.read_only);
             assert!(layout.auto_read_only);

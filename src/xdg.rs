@@ -122,16 +122,55 @@ pub fn set_test_cache_home(dir: Option<PathBuf>) {
 pub fn set_test_cache_home(_dir: Option<PathBuf>) {}
 
 #[cfg(debug_assertions)]
+static TEST_HOMES_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+#[cfg(debug_assertions)]
+fn lock_test_homes() -> std::sync::MutexGuard<'static, ()> {
+    TEST_HOMES_GUARD
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(debug_assertions)]
+pub fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
+    let _guard = lock_test_homes();
+    set_test_config_home(Some(base.join("config")));
+    set_test_cache_home(Some(base.join("cache")));
+    f();
+    set_test_config_home(None);
+    set_test_cache_home(None);
+}
+
+#[cfg(not(debug_assertions))]
+pub fn with_test_homes<F: FnOnce()>(_base: PathBuf, f: F) {
+    f();
+}
+
+#[cfg(debug_assertions)]
+pub fn with_test_config_home<F: FnOnce()>(config_home: PathBuf, f: F) {
+    let _guard = lock_test_homes();
+    set_test_config_home(Some(config_home));
+    f();
+    set_test_config_home(None);
+}
+
+#[cfg(not(debug_assertions))]
+pub fn with_test_config_home<F: FnOnce()>(_config_home: PathBuf, f: F) {
+    f();
+}
+
+#[cfg(debug_assertions)]
 pub struct TestHomes {
-    _private: (),
+    _guard: std::sync::MutexGuard<'static, ()>,
 }
 
 #[cfg(debug_assertions)]
 impl TestHomes {
     pub fn new(base: PathBuf) -> Self {
+        let guard = lock_test_homes();
         set_test_config_home(Some(base.join("config")));
         set_test_cache_home(Some(base.join("cache")));
-        Self { _private: () }
+        Self { _guard: guard }
     }
 }
 
@@ -147,14 +186,6 @@ impl Drop for TestHomes {
 mod tests {
     use super::*;
     use tempfile::tempdir;
-
-    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
-        set_test_config_home(Some(base.join("config")));
-        set_test_cache_home(Some(base.join("cache")));
-        f();
-        set_test_config_home(None);
-        set_test_cache_home(None);
-    }
 
     #[test]
     fn serve_id_is_stable_for_same_canonical_root() {

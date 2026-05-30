@@ -43,18 +43,10 @@ mod tests {
     use crate::xdg;
     use tempfile::tempdir;
 
-    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
-        xdg::set_test_config_home(Some(base.join("config")));
-        xdg::set_test_cache_home(Some(base.join("cache")));
-        f();
-        xdg::set_test_config_home(None);
-        xdg::set_test_cache_home(None);
-    }
-
     #[test]
     fn status_runs_for_empty_folder() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             run(StatusArgs {
                 path: dir.path().to_path_buf(),
             })

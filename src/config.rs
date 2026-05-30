@@ -124,18 +124,10 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    fn with_test_homes<F: FnOnce()>(base: PathBuf, f: F) {
-        xdg::set_test_config_home(Some(base.join("config")));
-        xdg::set_test_cache_home(Some(base.join("cache")));
-        f();
-        xdg::set_test_config_home(None);
-        xdg::set_test_cache_home(None);
-    }
-
     #[test]
     fn defaults_when_missing() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let root = dir.path().canonicalize().unwrap();
             let config = Config::load(&root).unwrap();
             assert!(!config.read_only());
@@ -146,7 +138,7 @@ mod tests {
     #[test]
     fn folder_config_overrides_global() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let root = dir.path().canonicalize().unwrap();
             Config::default()
                 .save_to(&Config::global_config_path())
@@ -164,7 +156,7 @@ mod tests {
     #[test]
     fn init_global_creates_defaults() {
         let dir = tempdir().unwrap();
-        with_test_homes(dir.path().to_path_buf(), || {
+        xdg::with_test_homes(dir.path().to_path_buf(), || {
             let config_path = Config::init_global().unwrap();
             assert!(config_path.is_file());
             let config = Config::load_global().unwrap();
