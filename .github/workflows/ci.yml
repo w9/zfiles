@@ -11,9 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install native deps
-        run: sudo apt-get update && sudo apt-get install -y libheif-dev libde265-dev
-
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -48,9 +45,6 @@ jobs:
 
       - name: perf smoke
         run: cargo test --test perf
-
-      - name: build bundled plugins
-        run: cargo build -p image-thumbnailer
 
       - name: build zfiles binary
         run: cargo build

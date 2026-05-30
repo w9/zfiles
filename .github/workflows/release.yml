@@ -21,9 +21,6 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
-      - name: install native deps
-        run: sudo apt-get update && sudo apt-get install -y libheif-dev libde265-dev
-
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: pnpm/action-setup@v4
@@ -43,9 +40,6 @@ jobs:
           pnpm build
 
       - uses: Swatinem/rust-cache@v2
-
-      - name: build bundled plugins
-        run: cargo build --release -p image-thumbnailer
 
       - name: build release binary
         run: cargo build --release
