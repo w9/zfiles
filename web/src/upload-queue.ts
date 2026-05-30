@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ExplorerBackend, UploadProgress } from "./backend/types";
+import {
+  findKeepBothPath,
+  pathExistsAsFile,
+  type UploadConflictResolution,
+} from "./upload-conflict";
 
 export type UploadItemStatus =
   | "pending"
   | "active"
+  | "awaiting_conflict"
   | "done"
   | "failed"
   | "cancelled";
+
+export type { UploadConflictResolution };
 
 export function isUploadAbortError(err: unknown): boolean {
   if (err instanceof DOMException && err.name === "AbortError") {
@@ -21,6 +29,7 @@ export type UploadQueueItem = {
   file: File;
   fileName: string;
   destPath: string;
+  overwriteExisting?: boolean;
   status: UploadItemStatus;
   offset: number;
   total: number;
@@ -147,7 +156,14 @@ export function useUploadQueue({
   const progressFlushTimerRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const abortControllersRef = useRef(new Map<string, AbortController>());
   const cancelledIdsRef = useRef(new Set<string>());
+  const applyToAllResolutionRef = useRef<UploadConflictResolution | null>(null);
   const workerRef = useRef(false);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      applyToAllResolutionRef.current = null;
+    }
+  }, [items.length]);
 
   const clearProgressFlush = useCallback((queueId: string) => {
     const timer = progressFlushTimerRef.current.get(queueId);
@@ -269,7 +285,7 @@ export function useUploadQueue({
       return;
     }
     cancelledIdsRef.current.add(queueId);
-    if (item.status === "pending") {
+    if (item.status === "pending" || item.status === "awaiting_conflict") {
       setItems((prev) => prev.filter((entry) => entry.id !== queueId));
       cancelledIdsRef.current.delete(queueId);
       return;
@@ -278,6 +294,110 @@ export function useUploadQueue({
       abortControllersRef.current.get(queueId)?.abort();
     }
   }, []);
+
+  const resolveUploadConflict = useCallback(
+    (queueId: string, resolution: UploadConflictResolution, applyToAll: boolean) => {
+      if (applyToAll) {
+        applyToAllResolutionRef.current = resolution;
+      }
+
+      void (async () => {
+        const item = itemsRef.current.find((entry) => entry.id === queueId);
+        if (!item || item.status !== "awaiting_conflict") {
+          return;
+        }
+
+        if (resolution === "skip") {
+          setItems((prev) =>
+            prev.map((entry) =>
+              entry.id === queueId
+                ? { ...entry, status: "cancelled" as const, speedBps: null, etaSeconds: null }
+                : entry,
+            ),
+          );
+          return;
+        }
+
+        if (resolution === "keep_both") {
+          const newPath = await findKeepBothPath(backend, item.destPath);
+          setItems((prev) =>
+            prev.map((entry) =>
+              entry.id === queueId
+                ? { ...entry, destPath: newPath, status: "pending" as const }
+                : entry,
+            ),
+          );
+          return;
+        }
+
+        setItems((prev) =>
+          prev.map((entry) =>
+            entry.id === queueId
+              ? { ...entry, status: "pending" as const, overwriteExisting: true }
+              : entry,
+          ),
+        );
+      })();
+    },
+    [backend],
+  );
+
+  const handleUploadConflict = useCallback(
+    async (
+      item: UploadQueueItem,
+    ): Promise<
+      | { outcome: "proceed"; destPath: string }
+      | { outcome: "paused" }
+      | { outcome: "skipped" }
+    > => {
+      let destPath = item.destPath;
+      if (item.overwriteExisting) {
+        return { outcome: "proceed", destPath };
+      }
+      if (!(await pathExistsAsFile(backend, destPath))) {
+        return { outcome: "proceed", destPath };
+      }
+
+      const auto = applyToAllResolutionRef.current;
+      if (!auto) {
+        setItems((prev) =>
+          prev.map((entry) =>
+            entry.id === item.id ? { ...entry, status: "awaiting_conflict" as const } : entry,
+          ),
+        );
+        return { outcome: "paused" };
+      }
+
+      if (auto === "skip") {
+        setItems((prev) =>
+          prev.map((entry) =>
+            entry.id === item.id
+              ? { ...entry, status: "cancelled" as const, speedBps: null, etaSeconds: null }
+              : entry,
+          ),
+        );
+        return { outcome: "skipped" };
+      }
+
+      if (auto === "keep_both") {
+        destPath = await findKeepBothPath(backend, destPath);
+        setItems((prev) =>
+          prev.map((entry) =>
+            entry.id === item.id ? { ...entry, destPath } : entry,
+          ),
+        );
+      } else if (auto === "replace") {
+        setItems((prev) =>
+          prev.map((entry) =>
+            entry.id === item.id ? { ...entry, overwriteExisting: true } : entry,
+          ),
+        );
+      }
+
+      return { outcome: "proceed", destPath };
+    },
+    [backend],
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -297,9 +417,24 @@ export function useUploadQueue({
         return;
       }
 
+      const conflictResult = await handleUploadConflict(pending);
+      if (conflictResult.outcome === "paused" || conflictResult.outcome === "skipped") {
+        workerRef.current = false;
+        return;
+      }
+
+      const uploadDestPath = conflictResult.destPath;
+      const ready = itemsRef.current.find((item) => item.id === queueId) ?? pending;
+      if (ready.status !== "pending" && ready.status !== "active") {
+        workerRef.current = false;
+        return;
+      }
+
       setItems((prev) =>
         prev.map((item) =>
-          item.id === queueId ? { ...item, status: "active" as const } : item,
+          item.id === queueId
+            ? { ...item, status: "active" as const, destPath: uploadDestPath }
+            : item,
         ),
       );
       samplesRef.current.set(queueId, []);
@@ -312,8 +447,8 @@ export function useUploadQueue({
           abortController.abort();
         }
         await backend.upload(
-          pending.file,
-          pending.destPath,
+          ready.file,
+          uploadDestPath,
           (progress) => {
           const active = itemsRef.current.find((item) => item.id === queueId);
           if (!active) {
@@ -383,17 +518,20 @@ export function useUploadQueue({
 
     const hasPending = items.some((item) => item.status === "pending");
     const hasActive = items.some((item) => item.status === "active");
-    if (hasPending && !hasActive) {
+    const hasAwaitingConflict = items.some((item) => item.status === "awaiting_conflict");
+    if (hasPending && !hasActive && !hasAwaitingConflict) {
       void run();
     }
-  }, [items, backend, clearProgressFlush, commitProgressItem, ingestProgress, onItemComplete, onItemFailed]);
+  }, [items, backend, clearProgressFlush, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed]);
 
   return {
     items,
     enqueue,
     cancelUpload,
+    resolveUploadConflict,
     applyRemoteProgress,
     clearFinished,
     hasQueue: items.length > 0,
+    conflictItem: items.find((item) => item.status === "awaiting_conflict") ?? null,
   };
 }

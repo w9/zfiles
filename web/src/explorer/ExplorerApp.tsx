@@ -41,6 +41,7 @@ import {
 } from "../listingRefresh";
 import { notifyApiError, notifyError } from "../notifyError";
 import UploadPanel from "../UploadPanel";
+import UploadConflictDialog from "../UploadConflictDialog";
 import UploadButton from "../UploadButton";
 import { useUploadQueue } from "../upload-queue";
 import { useGlobalFileDrop } from "../useGlobalFileDrop";
@@ -157,7 +158,9 @@ export default function ExplorerApp() {
     enqueue: enqueueUploads,
     applyRemoteProgress,
     cancelUpload,
+    resolveUploadConflict,
     clearFinished: clearFinishedUploads,
+    conflictItem: uploadConflictItem,
   } = useUploadQueue({
     backend,
     readOnly,
@@ -505,6 +508,15 @@ export default function ExplorerApp() {
         items={uploadItems}
         onClearFinished={clearFinishedUploads}
         onCancel={cancelUpload}
+      />
+
+      <UploadConflictDialog
+        item={uploadConflictItem}
+        onResolve={(resolution, applyToAll) => {
+          if (uploadConflictItem) {
+            resolveUploadConflict(uploadConflictItem.id, resolution, applyToAll);
+          }
+        }}
       />
 
       <section className="mt-4 overflow-hidden rounded-xl border bg-card">

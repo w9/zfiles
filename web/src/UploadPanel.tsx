@@ -32,6 +32,8 @@ function statusLabel(
   switch (status) {
     case "pending":
       return t("upload.status.pending");
+    case "awaiting_conflict":
+      return t("upload.status.awaitingConflict");
     case "active":
       return t("upload.status.active");
     case "done":
@@ -46,7 +48,7 @@ function statusLabel(
 function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["t"]): string {
   const status = statusLabel(item.status, t);
 
-  if (item.status === "pending") {
+  if (item.status === "pending" || item.status === "awaiting_conflict") {
     return t("upload.statsQueued", {
       status,
       size: formatSize(item.total, false),
@@ -115,7 +117,9 @@ export default function UploadPanel({ items, onClearFinished, onCancel }: Upload
                 <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
                   {statsLine(item, t)}
                 </p>
-                {item.status === "pending" || item.status === "active" ? (
+                {item.status === "pending" ||
+                item.status === "active" ||
+                item.status === "awaiting_conflict" ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -131,7 +135,7 @@ export default function UploadPanel({ items, onClearFinished, onCancel }: Upload
               {item.status === "failed" && item.error ? (
                 <p className="text-xs text-destructive">{item.error}</p>
               ) : null}
-              {item.status !== "pending" ? (
+              {item.status !== "pending" && item.status !== "awaiting_conflict" ? (
                 <Progress value={item.offset} max={item.total || 1} />
               ) : null}
             </li>

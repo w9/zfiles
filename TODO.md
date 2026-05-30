@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** remove corner radius from the main file-view card.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** upload filename conflict prompt (Replace / Keep Both / Skip + apply-to-all). **Next:** optional parallel uploads or folder upload — defer until requested.
 
 ## TODO List
 
@@ -67,3 +67,7 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Run `pnpm test`
 - [x] Remove `rounded-xl` from main file-view card in `ExplorerApp`
 - [x] Run `pnpm test`
+- [x] `upload-conflict` helpers: detect existing file, suggest `name (n).ext` path
+- [x] Upload queue: pause on conflict, apply resolution (incl. apply-to-all ref)
+- [x] `UploadConflictDialog` + i18n (en + zh-CN); wire into `ExplorerApp`
+- [x] Upload panel status for awaiting conflict; unit tests; run `pnpm test`
