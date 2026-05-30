@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** document agent rule to run `cargo fmt` before git commits (CI currently fails on `cargo fmt --check`).
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** breadcrumb home icon for root + click-to-edit address bar in the breadcrumb region.
 
 ## TODO List
 
@@ -121,3 +121,7 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Update tests, README, and design docs; run `cargo test`
 - [x] Add `.understand-anything/intermediate/`, `tmp/`, and `diff-overlay.json` to `.gitignore`
 - [x] Add AGENTS.md rule: run `cargo fmt` before any git commit
+- [x] Breadcrumb root segment: Home icon with accessible label (en + zh-CN)
+- [x] Breadcrumb region: click empty area → editable address bar; Enter navigates, Escape cancels
+- [x] `normalizeExplorerPath` helper + unit tests; wire `ExplorerApp`
+- [x] Run `pnpm test`

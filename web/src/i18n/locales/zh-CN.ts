@@ -4,6 +4,7 @@ export const zhCN: Record<MessageKey, string> = {
   "app.title": "zfiles",
   "breadcrumb.root": "根目录",
   "breadcrumb.label": "路径导航",
+  "breadcrumb.addressBar": "地址栏",
   "theme.group": "颜色主题",
   "theme.light": "浅色",
   "theme.dark": "深色",

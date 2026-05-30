@@ -4,6 +4,7 @@ export const en = {
   "app.title": "zfiles",
   "breadcrumb.root": "root",
   "breadcrumb.label": "Breadcrumb",
+  "breadcrumb.addressBar": "Address bar",
   "theme.group": "Color theme",
   "theme.light": "Light",
   "theme.dark": "Dark",

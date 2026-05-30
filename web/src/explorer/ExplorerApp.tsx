@@ -278,7 +278,6 @@ export default function ExplorerApp() {
     setSlideshowOpen(true);
   }, []);
 
-  const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
   const visibleEntries = useMemo(
     () =>
       sortFileEntries(
@@ -527,14 +526,13 @@ export default function ExplorerApp() {
       />
 
       <section className="mt-4 flex flex-col overflow-hidden rounded-xl border bg-card">
-        <div className="shrink-0 border-b px-3 py-2">
-          <ExplorerBreadcrumb
-            parts={breadcrumbs}
-            rootLabel={t("breadcrumb.root")}
-            ariaLabel={t("breadcrumb.label")}
-            onNavigate={navigateTo}
-          />
-        </div>
+        <ExplorerBreadcrumb
+          currentPath={currentPath}
+          rootAriaLabel={t("breadcrumb.root")}
+          ariaLabel={t("breadcrumb.label")}
+          addressBarLabel={t("breadcrumb.addressBar")}
+          onNavigate={navigateTo}
+        />
         <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div className="h-full min-h-0 min-w-0 overflow-hidden">
             {listingViewMode === "grid" ? (
