@@ -65,6 +65,14 @@ Do not skip steps or reorder them. Planning and TODO updates come first; impleme
 
 **Cycle step 3 vs user commit preferences:** The planning commit (plan + new TODO items only) is **required** by this workflow before implementation, even when the user's general rule is to avoid unprompted commits. Implementation commits (step 4) still follow the user's git instructions — ask before committing code unless they explicitly asked you to commit or finish the cycle.
 
+### Rust formatting before git commits
+
+Before **any** git commit you create — planning, implementation, or otherwise — run **`cargo fmt`**. CI runs `cargo fmt --check` and rejects unformatted Rust; do not commit a tree that would fail that check.
+
+- Run `cargo fmt` after editing Rust files (`src/`, `tests/`, `plugins/`, `e2e/` Rust helpers, etc.) and before staging or committing.
+- If the commit includes only non-Rust files, still run `cargo fmt` — it is fast and catches accidental drift in the working tree.
+- When the user asks you to commit, treat `cargo fmt` as part of the commit workflow (alongside `git status` / `git diff`), not an optional cleanup step.
+
 ## Scope gate (before implementing)
 
 **Do not implement** new behavior, features, or structural changes unless at least one of these applies:

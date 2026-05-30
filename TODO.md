@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** gitignore Understand Anything local scratch from `/understand` runs while keeping the knowledge graph committable for team onboarding.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** document agent rule to run `cargo fmt` before git commits (CI currently fails on `cargo fmt --check`).
 
 ## TODO List
 
@@ -120,3 +120,4 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Show CLI defaults in `--help` (host, port, path, booleans); update daemon start forwarding
 - [x] Update tests, README, and design docs; run `cargo test`
 - [x] Add `.understand-anything/intermediate/`, `tmp/`, and `diff-overlay.json` to `.gitignore`
+- [x] Add AGENTS.md rule: run `cargo fmt` before any git commit
