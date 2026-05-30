@@ -1,4 +1,4 @@
-import { Link2 } from "lucide-react";
+import { CornerUpRight } from "lucide-react";
 
 import { resolveFileIconUrl, type FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
@@ -52,13 +52,13 @@ export function FileIcon({
       {isSymlink ? (
         <span
           className={cn(
-            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-background text-primary ring-1 ring-border",
+            "absolute -right-0.5 -top-0.5 flex items-center justify-center rounded-full bg-background text-primary ring-1 ring-border",
             BADGE_CLASS[size],
           )}
           title={t("fileIcon.symlink")}
           aria-hidden
         >
-          <Link2 className={BADGE_ICON_CLASS[size]} strokeWidth={2.5} />
+          <CornerUpRight className={BADGE_ICON_CLASS[size]} strokeWidth={2.5} />
         </span>
       ) : null}
     </span>

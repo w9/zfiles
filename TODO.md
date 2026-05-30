@@ -130,3 +130,5 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] `FileIcon`: relative wrapper + link badge when `isSymlink` (sm/lg sizes)
 - [x] i18n title on symlink badge (en + zh-CN)
 - [x] Unit tests; run `pnpm test` and `cargo test --lib`
+- [x] Symlink badge: use `CornerUpRight` arrow instead of chain link icon
+- [x] Symlink badge: move to top-right corner of file icon
