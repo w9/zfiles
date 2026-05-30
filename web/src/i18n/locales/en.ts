@@ -66,6 +66,8 @@ export const en = {
   "preview.type": "Type",
   "preview.type.directory": "Directory",
   "preview.type.file": "File",
+  "preview.type.symlink": "Symlink",
+  "preview.symlinkTarget": "Target",
   "preview.size": "Size",
   "preview.noPreview": "Preview is not available for this file type.",
   "preview.download": "Download",

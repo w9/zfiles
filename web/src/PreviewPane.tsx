@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { TriangleAlertIcon } from "lucide-react";
 
 import { messageFromApiResponse } from "./apiError";
-import { useExplorerBackend } from "./backend";
+import { useExplorerBackend, type FileStat } from "./backend";
 import { isBrowserPreviewImage } from "./imagePaths";
 import { formatSize } from "./listing-format";
 import { useTranslation } from "@/i18n";
@@ -11,13 +11,6 @@ import { useDownloadUrl } from "./useDownloadUrl";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-type FileStat = {
-  path: string;
-  is_dir: boolean;
-  size: number;
-  modified?: string;
-};
 
 type PreviewPaneProps = {
   path: string | null;
@@ -49,7 +42,7 @@ export default function PreviewPane({
     backend
       .stat(path)
       .then((data) => {
-        setStat(data as FileStat);
+        setStat(data);
         setError(null);
       })
       .catch(async (err) => {
@@ -96,6 +89,11 @@ export default function PreviewPane({
   }
 
   const canPreviewImage = !stat.is_dir && isBrowserPreviewImage(stat.path);
+  const typeLabel = stat.is_symlink
+    ? t("preview.type.symlink")
+    : stat.is_dir
+      ? t("preview.type.directory")
+      : t("preview.type.file");
 
   return (
     <aside
@@ -111,10 +109,14 @@ export default function PreviewPane({
         </div>
         <div className="grid grid-cols-[5rem_1fr] gap-2">
           <dt className="text-muted-foreground">{t("preview.type")}</dt>
-          <dd>
-            {stat.is_dir ? t("preview.type.directory") : t("preview.type.file")}
-          </dd>
+          <dd>{typeLabel}</dd>
         </div>
+        {stat.is_symlink && stat.symlink_target ? (
+          <div className="grid grid-cols-[5rem_1fr] gap-2">
+            <dt className="text-muted-foreground">{t("preview.symlinkTarget")}</dt>
+            <dd className="break-all font-mono text-xs">{stat.symlink_target}</dd>
+          </div>
+        ) : null}
         {!stat.is_dir ? (
           <div className="grid grid-cols-[5rem_1fr] gap-2">
             <dt className="text-muted-foreground">{t("preview.size")}</dt>

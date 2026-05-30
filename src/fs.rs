@@ -23,6 +23,10 @@ pub struct FileEntry {
 pub struct FileStat {
     pub path: String,
     pub is_dir: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub is_symlink: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub symlink_target: Option<String>,
     pub size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<SystemTime>,
@@ -182,7 +186,7 @@ impl Fs for LocalFs {
             });
         }
 
-        entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        entries.sort_by_key(|entry| entry.name.to_lowercase());
         Ok(entries)
     }
 
@@ -191,16 +195,39 @@ impl Fs for LocalFs {
             bail!("path is required");
         }
         let relative = normalize_relative(path)?;
-        let absolute = self.resolve(path)?;
-        let metadata = tokio::fs::metadata(&absolute)
+        let logical = self.root.join(&relative);
+        let link_metadata = tokio::fs::symlink_metadata(&logical)
             .await
-            .with_context(|| format!("failed to stat path {}", absolute.display()))?;
+            .with_context(|| format!("failed to stat path {}", logical.display()))?;
+        let is_symlink = link_metadata.is_symlink();
+        let symlink_target = if is_symlink {
+            let target = tokio::fs::read_link(&logical)
+                .await
+                .with_context(|| format!("failed to read symlink {}", logical.display()))?;
+            Some(target.to_string_lossy().replace('\\', "/"))
+        } else {
+            None
+        };
+
+        let (is_dir, size, modified) = match tokio::fs::metadata(&logical).await {
+            Ok(metadata) => (metadata.is_dir(), metadata.len(), metadata.modified().ok()),
+            Err(error) if is_symlink => {
+                tracing::debug!(path = %logical.display(), %error, "symlink target unavailable");
+                (false, 0, None)
+            }
+            Err(error) => {
+                return Err(error)
+                    .with_context(|| format!("failed to stat path {}", logical.display()));
+            }
+        };
 
         Ok(FileStat {
             path: relative.to_string_lossy().replace('\\', "/"),
-            is_dir: metadata.is_dir(),
-            size: metadata.len(),
-            modified: metadata.modified().ok(),
+            is_dir,
+            is_symlink,
+            symlink_target,
+            size,
+            modified,
         })
     }
 }
@@ -404,7 +431,60 @@ mod tests {
 
         assert_eq!(stat.path, "alpha.txt");
         assert!(!stat.is_dir);
+        assert!(!stat.is_symlink);
+        assert_eq!(stat.symlink_target, None);
         assert_eq!(stat.size, 5);
+    }
+
+    #[tokio::test]
+    async fn stat_returns_symlink_target() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            fs::write(dir.path().join("target.txt"), b"hello").unwrap();
+            symlink("target.txt", dir.path().join("linked.txt")).unwrap();
+
+            let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+            let stat = fs.stat(Path::new("linked.txt")).await.unwrap();
+
+            assert_eq!(stat.path, "linked.txt");
+            assert!(!stat.is_dir);
+            assert!(stat.is_symlink);
+            assert_eq!(stat.symlink_target.as_deref(), Some("target.txt"));
+            assert_eq!(stat.size, 5);
+        }
+    }
+
+    #[tokio::test]
+    async fn stat_returns_directory_symlink_target() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            fs::create_dir(dir.path().join("target-dir")).unwrap();
+            symlink("target-dir", dir.path().join("linked-dir")).unwrap();
+
+            let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+            let stat = fs.stat(Path::new("linked-dir")).await.unwrap();
+
+            assert_eq!(stat.path, "linked-dir");
+            assert!(stat.is_dir);
+            assert!(stat.is_symlink);
+            assert_eq!(stat.symlink_target.as_deref(), Some("target-dir"));
+        }
     }
 
     #[tokio::test]

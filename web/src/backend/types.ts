@@ -13,6 +13,8 @@ export type FileEntry = {
 export type FileStat = {
   path: string;
   is_dir: boolean;
+  is_symlink?: boolean;
+  symlink_target?: string;
   size: number;
   modified?: unknown;
 };

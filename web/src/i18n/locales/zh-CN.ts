@@ -66,6 +66,8 @@ export const zhCN: Record<MessageKey, string> = {
   "preview.type": "类型",
   "preview.type.directory": "目录",
   "preview.type.file": "文件",
+  "preview.type.symlink": "符号链接",
+  "preview.symlinkTarget": "链接目标",
   "preview.size": "大小",
   "preview.noPreview": "此文件类型无法预览。",
   "preview.download": "下载",
