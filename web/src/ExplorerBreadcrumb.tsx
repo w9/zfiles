@@ -98,10 +98,7 @@ export default function ExplorerBreadcrumb({
 
   return (
     <div
-      className={cn(
-        "shrink-0 border-b px-3 py-2",
-        !editing && "cursor-text",
-      )}
+      className={cn("shrink-0 px-3 py-2", !editing && "cursor-text")}
       onClick={handleRegionClick}
     >
       {editing ? (

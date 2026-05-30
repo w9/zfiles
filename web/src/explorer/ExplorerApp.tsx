@@ -507,7 +507,7 @@ export default function ExplorerApp() {
         onCancel={cancelUpload}
       />
 
-      <section className="mt-4 flex flex-col overflow-hidden rounded-xl border bg-card">
+      <section className="mt-4 overflow-hidden rounded-xl border bg-card">
         <ExplorerBreadcrumb
           currentPath={currentPath}
           rootAriaLabel={t("breadcrumb.root")}
@@ -515,6 +515,9 @@ export default function ExplorerApp() {
           addressBarLabel={t("breadcrumb.addressBar")}
           onNavigate={navigateTo}
         />
+      </section>
+
+      <section className="mt-4 flex flex-col overflow-hidden border bg-card">
         <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div className="h-full min-h-0 min-w-0 overflow-hidden">
             {listingViewMode === "grid" ? (
@@ -566,11 +569,13 @@ export default function ExplorerApp() {
             />
           </div>
         </div>
+      </section>
+
+      <section className="mt-4">
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}
           selectedCount={selectedPaths.size}
-          className="shrink-0 rounded-none border-0 border-t shadow-none"
         />
       </section>
 

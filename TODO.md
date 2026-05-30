@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** remove the dedicated upload dropzone; accept file drops anywhere on the explorer; add an upload icon in the top-right toolbar.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** remove corner radius from the main file-view card.
 
 ## TODO List
 
@@ -61,4 +61,9 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] `useGlobalFileDrop` hook: window-level drag/drop + overlay state; unit test
 - [x] `UploadButton` icon in top-right toolbar (hidden file input); i18n en + zh-CN
 - [x] Wire global drop + upload button into `ExplorerApp`; update drop hint strings
+- [x] Run `pnpm test`
+- [x] Restructure `ExplorerApp`: breadcrumb, listing/preview, and status bar as separate cards
+- [x] Update `ExplorerBreadcrumb` styling for standalone card (drop inner `border-b`)
+- [x] Run `pnpm test`
+- [x] Remove `rounded-xl` from main file-view card in `ExplorerApp`
 - [x] Run `pnpm test`
