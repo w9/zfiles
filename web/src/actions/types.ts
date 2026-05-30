@@ -53,6 +53,8 @@ export type BuiltinActionDeps = {
   toggleMultiSelect: (path: string) => void;
   clearSelection: () => void;
   openCommandPalette: () => void;
+  openSettings: () => void;
+  toggleShowDotEntries: () => void;
   runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
   getListingPathAt: (index: number) => string | null;
 };

@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { FileIcon } from "@/FileIcon";
 import type { FileIconTheme } from "@/fileIcons";
+import { shouldDimDotEntry } from "@/listingFilter";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,6 @@ type GridListingProps = {
   multiSelectedPaths?: Set<string>;
   ariaLabel: string;
   iconTheme?: FileIconTheme;
-  listingAtRoot?: boolean;
   className?: string;
 };
 
@@ -25,7 +25,6 @@ export default function GridListing({
   multiSelectedPaths,
   ariaLabel,
   iconTheme = "dark",
-  listingAtRoot = false,
   className,
 }: GridListingProps) {
   const rowCount = Math.ceil(entries.length / GRID_COLUMNS);
@@ -73,12 +72,14 @@ export default function GridListing({
                   const index = startIndex + columnIndex;
                   const selected = index === selectedIndex;
                   const multiSelected = multiSelectedPaths?.has(entry.path) ?? false;
+                  const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   return (
                     <button
                       key={entry.key}
                       type="button"
                       className={cn(
                         "flex h-full flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40",
+                        dimmed && "opacity-70",
                         selected && "border-primary bg-accent",
                         multiSelected && "ring-2 ring-primary/40",
                       )}
@@ -91,7 +92,6 @@ export default function GridListing({
                           name={entry.name}
                           isDir={entry.isDir}
                           theme={iconTheme}
-                          atListingRoot={listingAtRoot}
                           size="lg"
                         />
                       </div>

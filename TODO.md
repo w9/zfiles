@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. Generic folder icons now use `folder.svg` everywhere (no serve-root `folder-root` fallback). **This cycle:** dim visible dot entries slightly in list and grid views.
 
 ## TODO List
 
@@ -88,3 +88,27 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] `useUploadQueue.cancelUpload` + cancelled status; UploadPanel cancel control + i18n
 - [x] Run `pnpm test`
 - [x] Upload queue cards: drop dest path subline and status badges
+- [x] Add `.cargo/config.toml` alias: `dev-frontend` → `run --features dev-frontend -- --dev-frontend`
+- [x] Document alias in README Frontend HMR section
+- [x] Run `cargo test`
+- [x] Drop serve-root `folder-root` fallback; always use generic `folder.svg` for unmatched dirs
+- [x] Remove unused `atListingRoot` / `listingAtRoot` props from icon resolution and listings
+- [x] Update file icon unit tests; run `pnpm test`
+- [x] Reduce `FileIcon` sm/lg sizes (list + grid) by one Tailwind step
+- [x] Run `pnpm test`
+- [x] Remove Type column from list view; update grid layout and column labels
+- [x] Add `formatRelativeModified` with `Intl.RelativeTimeFormat` (locale-aware); wire Modified column
+- [x] Preview pane: show human-readable file size via `formatSize`
+- [x] Unit tests for relative modified formatting; run `pnpm test`
+- [x] Add `formatModifiedAbsolute` for locale-specific datetime strings
+- [x] Modified column cells: `title` tooltip with absolute time; unit tests; run `pnpm test`
+- [x] `modifiedTimeFormat` preference module (localStorage + provider hook)
+- [x] Lightweight `/settings` client routing (`AppShell`); wire local + cloud entry points
+- [x] Settings page UI (modified time toggle, back link, i18n en + zh-CN)
+- [x] Listing: respect modified-time format; tooltip only when showing relative
+- [x] Unit tests; run `pnpm test`
+- [x] Fix app routing with shared `AppRouteProvider` (back button)
+- [x] Add `navigation.open-settings` action + Navigation menu item (en + zh-CN)
+- [x] Settings page toggle + i18n; unit tests; run `pnpm test`
+- [x] Settings default for dot entries; i18n; unit tests; run `pnpm test`
+- [x] Lower opacity for visible dot entries in table and grid listings

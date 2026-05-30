@@ -15,6 +15,16 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
     {
+      id: "view.toggle-dot-entries",
+      nameKey: "actions.view.toggleDotEntries.name",
+      descriptionKey: "actions.view.toggleDotEntries.description",
+      categoryKey: "actions.view.category",
+      icon: "view.toggle-dot-entries",
+      handler: async () => {
+        getDeps().toggleShowDotEntries();
+      },
+    },
+    {
       id: "selection.move-down",
       nameKey: "actions.selection.moveDown.name",
       categoryKey: "actions.selection.category",
@@ -65,6 +75,15 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
           const parent = currentPath.split("/").slice(0, -1).join("/");
           deps.navigateTo(parent);
         }
+      },
+    },
+    {
+      id: "navigation.open-settings",
+      nameKey: "actions.navigation.openSettings.name",
+      categoryKey: "actions.navigation.category",
+      icon: "navigation.open-settings",
+      handler: async () => {
+        getDeps().openSettings();
       },
     },
     {

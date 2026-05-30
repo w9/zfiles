@@ -1,8 +1,17 @@
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Row, SortingFn } from "@tanstack/react-table";
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { formatModified, formatSize, parseModifiedMs } from "@/listing-format";
+import { formatModifiedDisplay, formatSize, parseModifiedMs } from "@/listing-format";
+import { compareListingEntries, compareNames } from "@/listingSort";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
+
+function withListingSortOrder(
+  order: ListingColumnLabels["listingSortOrder"],
+  tieBreaker: (left: ListingEntry, right: ListingEntry) => number,
+): SortingFn<ListingEntry> {
+  return (rowA: Row<ListingEntry>, rowB: Row<ListingEntry>) =>
+    compareListingEntries(rowA.original, rowB.original, order, tieBreaker);
+}
 
 export function createListingColumns(labels: ListingColumnLabels): ColumnDef<ListingEntry>[] {
   return [
@@ -13,15 +22,9 @@ export function createListingColumns(labels: ListingColumnLabels): ColumnDef<Lis
         <DataTableColumnHeader column={column} title={labels.name} />
       ),
       cell: ({ row }) => row.original.name,
-      sortingFn: "alphanumeric",
-    },
-    {
-      id: "type",
-      accessorFn: (row) => (row.isDir ? labels.typeDirectory : labels.typeFile),
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={labels.type} />
+      sortingFn: withListingSortOrder(labels.listingSortOrder, (left, right) =>
+        compareNames(left.name, right.name),
       ),
-      sortingFn: (a, b) => Number(a.original.isDir) - Number(b.original.isDir),
     },
     {
       id: "size",
@@ -30,7 +33,11 @@ export function createListingColumns(labels: ListingColumnLabels): ColumnDef<Lis
         <DataTableColumnHeader column={column} title={labels.size} className="justify-end" />
       ),
       cell: ({ row }) => formatSize(row.original.size, row.original.isDir),
-      sortingFn: "basic",
+      sortingFn: withListingSortOrder(labels.listingSortOrder, (left, right) => {
+        const leftSize = left.isDir ? -1 : (left.size ?? -1);
+        const rightSize = right.isDir ? -1 : (right.size ?? -1);
+        return leftSize - rightSize;
+      }),
     },
     {
       id: "modified",
@@ -38,8 +45,13 @@ export function createListingColumns(labels: ListingColumnLabels): ColumnDef<Lis
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={labels.modified} />
       ),
-      cell: ({ row }) => formatModified(row.original.modified, labels.locale),
-      sortingFn: "basic",
+      cell: ({ row }) =>
+        formatModifiedDisplay(row.original.modified, labels.locale, labels.modifiedTimeFormat),
+      sortingFn: withListingSortOrder(labels.listingSortOrder, (left, right) => {
+        const leftMs = parseModifiedMs(left.modified) ?? -1;
+        const rightMs = parseModifiedMs(right.modified) ?? -1;
+        return leftMs - rightMs;
+      }),
     },
   ];
 }

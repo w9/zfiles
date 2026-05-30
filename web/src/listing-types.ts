@@ -1,3 +1,6 @@
+import type { ModifiedTimeFormat } from "@/settings/modifiedTimeFormat";
+import type { ListingSortOrder } from "@/settings/listingSortOrder";
+
 export type ListingEntry = {
   key: string;
   name: string;
@@ -13,10 +16,9 @@ export type ListingEntry = {
 
 export type ListingColumnLabels = {
   name: string;
-  type: string;
   size: string;
   modified: string;
-  typeDirectory: string;
-  typeFile: string;
   locale: string;
+  modifiedTimeFormat: ModifiedTimeFormat;
+  listingSortOrder: ListingSortOrder;
 };

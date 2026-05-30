@@ -1,3 +1,5 @@
+import type { ModifiedTimeFormat } from "@/settings/modifiedTimeFormat";
+
 export function parseModifiedMs(value: unknown): number | null {
   if (value == null) {
     return null;
@@ -18,15 +20,61 @@ export function parseModifiedMs(value: unknown): number | null {
   return null;
 }
 
-export function formatModified(value: unknown, locale: string): string {
+const RELATIVE_TIME_UNITS: Array<{
+  unit: Intl.RelativeTimeFormatUnit;
+  seconds: number;
+}> = [
+  { unit: "year", seconds: 31_536_000 },
+  { unit: "month", seconds: 2_592_000 },
+  { unit: "week", seconds: 604_800 },
+  { unit: "day", seconds: 86_400 },
+  { unit: "hour", seconds: 3_600 },
+  { unit: "minute", seconds: 60 },
+  { unit: "second", seconds: 1 },
+];
+
+export function formatRelativeModified(value: unknown, locale: string): string {
   const ms = parseModifiedMs(value);
   if (ms == null) {
     return "—";
+  }
+
+  const diffSeconds = Math.round((ms - Date.now()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  if (Math.abs(diffSeconds) < 45) {
+    return formatter.format(0, "second");
+  }
+
+  for (const { unit, seconds } of RELATIVE_TIME_UNITS) {
+    if (Math.abs(diffSeconds) >= seconds || unit === "second") {
+      return formatter.format(Math.round(diffSeconds / seconds), unit);
+    }
+  }
+
+  return formatter.format(diffSeconds, "second");
+}
+
+export function formatModifiedAbsolute(value: unknown, locale: string): string | null {
+  const ms = parseModifiedMs(value);
+  if (ms == null) {
+    return null;
   }
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(ms));
+}
+
+export function formatModifiedDisplay(
+  value: unknown,
+  locale: string,
+  format: ModifiedTimeFormat,
+): string {
+  if (format === "absolute") {
+    return formatModifiedAbsolute(value, locale) ?? "—";
+  }
+  return formatRelativeModified(value, locale);
 }
 
 export function formatSize(bytes: number | undefined, isDir: boolean): string {

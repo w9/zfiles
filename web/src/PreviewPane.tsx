@@ -5,6 +5,7 @@ import { TriangleAlertIcon } from "lucide-react";
 import { messageFromApiResponse } from "./apiError";
 import { useExplorerBackend } from "./backend";
 import { isBrowserPreviewImage } from "./imagePaths";
+import { formatSize } from "./listing-format";
 import { useTranslation } from "@/i18n";
 import { useDownloadUrl } from "./useDownloadUrl";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -117,7 +118,7 @@ export default function PreviewPane({
         {!stat.is_dir ? (
           <div className="grid grid-cols-[5rem_1fr] gap-2">
             <dt className="text-muted-foreground">{t("preview.size")}</dt>
-            <dd>{t("preview.bytes", { size: String(stat.size) })}</dd>
+            <dd>{formatSize(stat.size, false)}</dd>
           </div>
         ) : null}
       </dl>

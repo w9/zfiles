@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/table";
 import { FileIcon } from "@/FileIcon";
 import { createListingColumns } from "@/listing-columns";
+import { formatModifiedAbsolute } from "@/listing-format";
+import { shouldDimDotEntry } from "@/listingFilter";
 import type { FileIconTheme } from "@/fileIcons";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 import { cn } from "@/lib/utils";
@@ -31,12 +33,11 @@ type VirtualListingProps = {
   ariaLabel: string;
   columnLabels: ListingColumnLabels;
   iconTheme?: FileIconTheme;
-  listingAtRoot?: boolean;
   className?: string;
 };
 
 const LISTING_GRID =
-  "grid w-full grid-cols-[minmax(0,2fr)_6rem_6rem_9rem]";
+  "grid w-full grid-cols-[minmax(0,2fr)_6rem_9rem]";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = "block min-w-0 truncate";
@@ -48,10 +49,9 @@ export default function VirtualListing({
   ariaLabel,
   columnLabels,
   iconTheme = "dark",
-  listingAtRoot = false,
   className,
 }: VirtualListingProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
   const columns = useMemo(() => createListingColumns(columnLabels), [columnLabels]);
   const table = useReactTable({
     data: entries,
@@ -94,7 +94,7 @@ export default function VirtualListing({
                   key={header.id}
                   className={cn(
                     CELL_CLIP,
-                    index === 2 && "text-right",
+                    index === 1 && "text-right",
                   )}
                 >
                   <span className={CELL_TEXT}>
@@ -120,6 +120,8 @@ export default function VirtualListing({
               const selected = item.index === selectedIndex;
               const multiSelected = multiSelectedPaths?.has(entry.path) ?? false;
 
+              const dimmed = shouldDimDotEntry(entry.name, entry.key);
+
               return (
                 <TableRow
                   key={entry.key}
@@ -127,6 +129,7 @@ export default function VirtualListing({
                   className={cn(
                     LISTING_GRID,
                     "absolute left-0 border-b",
+                    dimmed && "opacity-70",
                     selected && "bg-accent",
                     multiSelected && "ring-1 ring-inset ring-primary/40",
                   )}
@@ -137,13 +140,18 @@ export default function VirtualListing({
                 >
                   {row.getVisibleCells().map((cell, columnIndex) => {
                     const isName = columnIndex === 0;
+                    const modifiedTitle =
+                      cell.column.id === "modified" &&
+                      columnLabels.modifiedTimeFormat === "relative"
+                        ? formatModifiedAbsolute(entry.modified, columnLabels.locale) ??
+                          undefined
+                        : undefined;
                     const content = isName ? (
                       <>
                         <FileIcon
                           name={entry.name}
                           isDir={entry.isDir}
                           theme={iconTheme}
-                          atListingRoot={listingAtRoot}
                         />
                         <span className="min-w-0 truncate">{entry.name}</span>
                       </>
@@ -182,10 +190,12 @@ export default function VirtualListing({
                       <div
                         className={cn(
                           "flex h-11 items-center overflow-hidden px-2 text-sm",
-                          columnIndex === 2 && "justify-end text-right",
+                          columnIndex === 1 && "justify-end text-right",
                         )}
                       >
-                        <span className={CELL_TEXT}>{content}</span>
+                        <span className={CELL_TEXT} title={modifiedTitle}>
+                          {content}
+                        </span>
                       </div>
                     );
 

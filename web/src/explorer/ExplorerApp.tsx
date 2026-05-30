@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Settings } from "lucide-react";
+
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
 import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
 import StatusBar from "../StatusBar";
@@ -15,6 +17,12 @@ import { useTranslation, type MessageKey } from "../i18n";
 import { useBackendStatus, type BackendEvent } from "../useBackendStatus";
 import { useTheme } from "../useTheme";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import CommandPalette from "../actions/CommandPalette";
 import { ActionArgPromptDialog, ActionConfirmDialog } from "../actions/ActionDialogs";
@@ -35,7 +43,13 @@ import {
 import { notifyApiError, notifyError } from "../notifyError";
 import UploadPanel from "../UploadPanel";
 import { useUploadQueue } from "../upload-queue";
-import { Toaster } from "@/components/ui/sonner";
+import { useAppRoute } from "../routing/AppRouteProvider";
+import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
+import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
+import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
+import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
+import { filterDotEntries } from "../listingFilter";
+import { sortFileEntries } from "../listingSort";
 
 type ContextMenuState = {
   x: number;
@@ -47,6 +61,10 @@ type ContextMenuState = {
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
   const { t, locale } = useTranslation();
+  const { navigate } = useAppRoute();
+  const { format: modifiedTimeFormat } = useModifiedTimeFormat();
+  const { order: listingSortOrder } = useListingSortOrder();
+  const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
   const [currentPath, setCurrentPath] = useState("");
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [listCursor, setListCursor] = useState<string | undefined>();
@@ -194,8 +212,9 @@ export default function ExplorerApp() {
       "server.read-only": readOnly,
       "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
       "preview.path": selectedPath ?? "",
+      "listing.show-dot-entries": showDotEntries,
     }),
-    [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath],
+    [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath, showDotEntries],
   );
 
   const navigateTo = useCallback(
@@ -260,7 +279,14 @@ export default function ExplorerApp() {
   }, []);
 
   const breadcrumbs = currentPath ? ["", ...currentPath.split("/")] : [""];
-  const visibleEntries = entries;
+  const visibleEntries = useMemo(
+    () =>
+      sortFileEntries(
+        filterDotEntries(entries, showDotEntries),
+        listingSortOrder,
+      ),
+    [entries, listingSortOrder, showDotEntries],
+  );
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
     const rows: ListingEntry[] = [];
@@ -356,6 +382,8 @@ export default function ExplorerApp() {
         const row = listingEntriesRef.current[index];
         return row?.path && row.key !== ".." ? row.path : null;
       },
+      openSettings: () => navigate("settings"),
+      toggleShowDotEntries,
     },
     () => ({
       getImagePaths,
@@ -432,12 +460,28 @@ export default function ExplorerApp() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
+            <ShowDotEntriesToggle />
             <ListingViewToggle
               mode={listingViewMode}
               onChange={setListingViewMode}
             />
             <ThemeToggle mode={themeMode} onChange={setThemeMode} />
             <LanguageToggle iconOnly />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label={t("settings.title")}
+                  onClick={() => navigate("settings")}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("settings.title")}</TooltipContent>
+            </Tooltip>
             <ActionToolbar
               registry={actionSystem.registry}
               contextKeys={contextKeys}
@@ -500,7 +544,6 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
-                listingAtRoot={!currentPath}
                 className="h-full rounded-none border-0 shadow-none"
               />
             ) : (
@@ -510,16 +553,14 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
-                listingAtRoot={!currentPath}
                 className="h-full rounded-none border-0 shadow-none"
                 columnLabels={{
                   name: t("listing.column.name"),
-                  type: t("listing.column.type"),
                   size: t("listing.column.size"),
                   modified: t("listing.column.modified"),
-                  typeDirectory: t("listing.type.directory"),
-                  typeFile: t("listing.type.file"),
                   locale: locale === "zh-CN" ? "zh-CN" : "en",
+                  modifiedTimeFormat,
+                  listingSortOrder,
                 }}
               />
             )}

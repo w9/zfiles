@@ -7,6 +7,7 @@ export type ContextKeys = {
   "server.read-only": boolean;
   "preview.is-image": boolean;
   "preview.path": string;
+  "listing.show-dot-entries": boolean;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -19,6 +20,7 @@ export function defaultContextKeys(): ContextKeys {
     "server.read-only": false,
     "preview.is-image": false,
     "preview.path": "",
+    "listing.show-dot-entries": false,
   };
 }
 

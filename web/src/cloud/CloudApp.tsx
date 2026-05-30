@@ -1,11 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { ExplorerApp } from "@/explorer";
+import AppShell from "@/AppShell";
 import { ExplorerBackendProvider } from "@/backend";
 import { createS3Backend, type S3Backend } from "@/backend/s3Backend";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useTranslation } from "@/i18n";
+import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvider";
+import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
+import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
+import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
 import { readBootParamsFromUrl } from "./bootParams";
 import { clearSessionConfig, loadSessionConfig } from "./credentials";
@@ -32,7 +36,7 @@ function ConnectedCloudShell({
             {t("connect.disconnect")}
           </Button>
         </div>
-        <ExplorerApp />
+        <AppShell />
       </div>
     </ExplorerBackendProvider>
   );
@@ -59,9 +63,17 @@ export default function CloudApp() {
 
   return (
     <I18nProvider>
-      <TooltipProvider>
-        <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
-      </TooltipProvider>
+      <AppRouteProvider>
+        <ModifiedTimeFormatProvider>
+          <ListingSortOrderProvider>
+            <ShowDotEntriesProvider>
+              <TooltipProvider>
+                <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
+              </TooltipProvider>
+            </ShowDotEntriesProvider>
+          </ListingSortOrderProvider>
+        </ModifiedTimeFormatProvider>
+      </AppRouteProvider>
     </I18nProvider>
   );
 }
