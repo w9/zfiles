@@ -84,7 +84,7 @@ export const zhCN: Record<MessageKey, string> = {
   "settings.listingSort.foldersFirst": "文件夹优先",
   "settings.listingSort.mixed": "混合排序",
   "settings.dotEntries.label": "隐藏文件",
-  "settings.dotEntries.description": "选择打开文件浏览时是否显示以点号开头的名称。",
+  "settings.dotEntries.description": "选择文件列表中是否显示以点号开头的名称。",
   "settings.dotEntries.hidden": "隐藏",
   "settings.dotEntries.visible": "显示",
   "statusBar.label": "状态栏",

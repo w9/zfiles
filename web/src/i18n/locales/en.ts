@@ -87,7 +87,7 @@ export const en = {
   "settings.listingSort.mixed": "Mixed",
   "settings.dotEntries.label": "Hidden files",
   "settings.dotEntries.description":
-    "Choose whether names starting with a dot are shown when you open the explorer.",
+    "Choose whether names starting with a dot are shown in the file list.",
   "settings.dotEntries.hidden": "Hidden",
   "settings.dotEntries.visible": "Visible",
   "statusBar.label": "Status bar",

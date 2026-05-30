@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. Generic folder icons now use `folder.svg` everywhere (no serve-root `folder-root` fallback). **This cycle:** dim visible dot entries slightly in list and grid views.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. Generic folder icons now use `folder.svg` everywhere (no serve-root `folder-root` fallback). **This cycle:** merge dot-entry visibility into one persisted setting (toggle and Settings share the same value).
 
 ## TODO List
 
@@ -112,3 +112,4 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Settings page toggle + i18n; unit tests; run `pnpm test`
 - [x] Settings default for dot entries; i18n; unit tests; run `pnpm test`
 - [x] Lower opacity for visible dot entries in table and grid listings
+- [x] Unify dot-entry visibility into single persisted preference; update provider, settings, tests

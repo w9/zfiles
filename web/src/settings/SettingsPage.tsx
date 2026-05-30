@@ -11,7 +11,7 @@ import { useListingSortOrder } from "@/settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
 import type { ModifiedTimeFormat } from "@/settings/modifiedTimeFormat";
 import type { ListingSortOrder } from "@/settings/listingSortOrder";
-import type { ShowDotEntriesDefault } from "@/settings/showDotEntriesDefault";
+import type { ShowDotEntriesVisibility } from "@/settings/showDotEntries";
 import { useTheme } from "@/useTheme";
 
 export default function SettingsPage() {
@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const { navigate } = useAppRoute();
   const { format, setFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder, setOrder: setListingSortOrder } = useListingSortOrder();
-  const { defaultVisibility, setDefaultVisibility } = useShowDotEntries();
+  const { visibility, setVisibility } = useShowDotEntries();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
 
   return (
@@ -123,10 +123,10 @@ export default function SettingsPage() {
             type="single"
             variant="outline"
             size="sm"
-            value={defaultVisibility}
+            value={visibility}
             onValueChange={(value) => {
               if (value) {
-                setDefaultVisibility(value as ShowDotEntriesDefault);
+                setVisibility(value as ShowDotEntriesVisibility);
               }
             }}
             aria-label={t("settings.dotEntries.label")}

@@ -8,47 +8,48 @@ import {
 } from "react";
 
 import {
-  readStoredShowDotEntriesDefault,
-  showDotEntriesFromDefault,
-  storeShowDotEntriesDefault,
-  type ShowDotEntriesDefault,
-} from "./showDotEntriesDefault";
+  readStoredShowDotEntries,
+  showDotEntriesEnabled,
+  storeShowDotEntries,
+  toggleShowDotEntriesVisibility,
+  type ShowDotEntriesVisibility,
+} from "./showDotEntries";
 
 type ShowDotEntriesContextValue = {
+  visibility: ShowDotEntriesVisibility;
   showDotEntries: boolean;
+  setVisibility: (value: ShowDotEntriesVisibility) => void;
   toggleShowDotEntries: () => void;
-  defaultVisibility: ShowDotEntriesDefault;
-  setDefaultVisibility: (value: ShowDotEntriesDefault) => void;
 };
 
 const ShowDotEntriesContext = createContext<ShowDotEntriesContextValue | null>(null);
 
 export function ShowDotEntriesProvider({ children }: { children: ReactNode }) {
-  const [defaultVisibility, setDefaultVisibilityState] = useState<ShowDotEntriesDefault>(
-    () => readStoredShowDotEntriesDefault(),
-  );
-  const [showDotEntries, setShowDotEntries] = useState(() =>
-    showDotEntriesFromDefault(readStoredShowDotEntriesDefault()),
+  const [visibility, setVisibilityState] = useState<ShowDotEntriesVisibility>(() =>
+    readStoredShowDotEntries(),
   );
 
-  const toggleShowDotEntries = useCallback(() => {
-    setShowDotEntries((current) => !current);
+  const setVisibility = useCallback((next: ShowDotEntriesVisibility) => {
+    storeShowDotEntries(next);
+    setVisibilityState(next);
   }, []);
 
-  const setDefaultVisibility = useCallback((next: ShowDotEntriesDefault) => {
-    storeShowDotEntriesDefault(next);
-    setDefaultVisibilityState(next);
-    setShowDotEntries(showDotEntriesFromDefault(next));
+  const toggleShowDotEntries = useCallback(() => {
+    setVisibilityState((current) => {
+      const next = toggleShowDotEntriesVisibility(current);
+      storeShowDotEntries(next);
+      return next;
+    });
   }, []);
 
   const value = useMemo(
     () => ({
-      showDotEntries,
+      visibility,
+      showDotEntries: showDotEntriesEnabled(visibility),
+      setVisibility,
       toggleShowDotEntries,
-      defaultVisibility,
-      setDefaultVisibility,
     }),
-    [showDotEntries, toggleShowDotEntries, defaultVisibility, setDefaultVisibility],
+    [visibility, setVisibility, toggleShowDotEntries],
   );
 
   return (
