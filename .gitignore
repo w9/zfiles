@@ -12,3 +12,8 @@
 /.vscode
 /.wrangler
 /.zfiles
+
+# Understand Anything — local scratch (commit knowledge-graph.json + meta.json for team)
+.understand-anything/intermediate/
+.understand-anything/tmp/
+.understand-anything/diff-overlay.json
