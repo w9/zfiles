@@ -10,4 +10,5 @@
 /e2e/test-results
 /.cursor
 /.vscode
+/.wrangler
 /.zfiles
