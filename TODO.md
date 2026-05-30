@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** remove redundant "Go to path" toolbar button (breadcrumb address bar replaces it).
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** remove the dedicated upload dropzone; accept file drops anywhere on the explorer; add an upload icon in the top-right toolbar.
 
 ## TODO List
 
@@ -56,4 +56,9 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Run `pnpm test` and `cargo test --lib`
 - [x] Add AGENTS.md rule: run `cargo clippy -- -D warnings` before any git commit
 - [x] Remove `navigation.go-to-path` from default toolbar actions
+- [x] Run `pnpm test`
+- [x] Remove dedicated upload dropzone section from `ExplorerApp`
+- [x] `useGlobalFileDrop` hook: window-level drag/drop + overlay state; unit test
+- [x] `UploadButton` icon in top-right toolbar (hidden file input); i18n en + zh-CN
+- [x] Wire global drop + upload button into `ExplorerApp`; update drop hint strings
 - [x] Run `pnpm test`

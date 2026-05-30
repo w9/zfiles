@@ -23,7 +23,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import CommandPalette from "../actions/CommandPalette";
 import { ActionArgPromptDialog, ActionConfirmDialog } from "../actions/ActionDialogs";
 import MenuBar from "../actions/MenuBar";
@@ -42,7 +41,9 @@ import {
 } from "../listingRefresh";
 import { notifyApiError, notifyError } from "../notifyError";
 import UploadPanel from "../UploadPanel";
+import UploadButton from "../UploadButton";
 import { useUploadQueue } from "../upload-queue";
+import { useGlobalFileDrop } from "../useGlobalFileDrop";
 import { useAppRoute } from "../routing/AppRouteProvider";
 import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
@@ -157,7 +158,6 @@ export default function ExplorerApp() {
     applyRemoteProgress,
     cancelUpload,
     clearFinished: clearFinishedUploads,
-    hasQueue: hasUploadQueue,
   } = useUploadQueue({
     backend,
     readOnly,
@@ -427,25 +427,20 @@ export default function ExplorerApp() {
     }
   }, [selectedIndex, listingEntries]);
 
-  const onUpload = (files: FileList | null) => {
-    if (!files || files.length === 0 || readOnly) {
-      return;
-    }
-    enqueueUploads(files, currentPath);
-  };
+  const onUpload = useCallback(
+    (files: FileList | null) => {
+      if (!files || files.length === 0 || readOnly) {
+        return;
+      }
+      enqueueUploads(files, currentPath);
+    },
+    [enqueueUploads, currentPath, readOnly],
+  );
 
-  const activeUploadCount = uploadItems.filter((item) => item.status === "active").length;
-  const pendingUploadCount = uploadItems.filter((item) => item.status === "pending").length;
-  const uploadLabel = readOnly
-    ? t("upload.readOnly")
-    : hasUploadQueue
-      ? activeUploadCount > 0
-        ? t("upload.dropMoreActive", {
-            active: String(activeUploadCount),
-            pending: String(pendingUploadCount),
-          })
-        : t("upload.dropMore")
-      : t("upload.drop");
+  const { dragging: fileDragActive } = useGlobalFileDrop({
+    enabled: !readOnly,
+    onDrop: onUpload,
+  });
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-8">
@@ -460,6 +455,7 @@ export default function ExplorerApp() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
+            <UploadButton disabled={readOnly} onSelect={onUpload} />
             <ShowDotEntriesToggle />
             <ListingViewToggle
               mode={listingViewMode}
@@ -494,31 +490,16 @@ export default function ExplorerApp() {
         </div>
       </header>
 
-      <section
-        className={cn(
-          "mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-dashed border-border bg-card p-4",
-        )}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => {
-          event.preventDefault();
-          onUpload(event.dataTransfer.files);
-        }}
-      >
-        <p className="text-sm text-muted-foreground">{uploadLabel}</p>
-        {!readOnly ? (
-          <Button variant="secondary" asChild>
-            <label className="cursor-pointer">
-              {t("upload.chooseFiles")}
-              <input
-                type="file"
-                multiple
-                className="sr-only"
-                onChange={(event) => onUpload(event.target.files)}
-              />
-            </label>
-          </Button>
-        ) : null}
-      </section>
+      {fileDragActive ? (
+        <div
+          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          aria-hidden
+        >
+          <p className="rounded-lg border border-dashed border-primary bg-card px-6 py-4 text-base font-medium text-foreground shadow-lg">
+            {t("upload.drop")}
+          </p>
+        </div>
+      ) : null}
 
       <UploadPanel
         items={uploadItems}

@@ -14,7 +14,7 @@ export const en = {
   "backend.offline": "Offline",
   "backend.status": "Backend {{status}}",
   "backend.kernelVersion": "kernel v{{version}}",
-  "upload.drop": "Drop files here to upload",
+  "upload.drop": "Drop files anywhere to upload",
   "upload.uploading": "Uploading…",
   "upload.uploadingProgress": "Uploading… {{percent}}%",
   "upload.chooseFiles": "Choose files",

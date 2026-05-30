@@ -14,7 +14,7 @@ export const zhCN: Record<MessageKey, string> = {
   "backend.offline": "离线",
   "backend.status": "后端 {{status}}",
   "backend.kernelVersion": "内核 v{{version}}",
-  "upload.drop": "将文件拖放到此处上传",
+  "upload.drop": "将文件拖放到任意位置上传",
   "upload.uploading": "上传中…",
   "upload.uploadingProgress": "上传中… {{percent}}%",
   "upload.chooseFiles": "选择文件",
