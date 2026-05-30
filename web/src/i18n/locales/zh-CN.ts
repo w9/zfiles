@@ -51,6 +51,7 @@ export const zhCN: Record<MessageKey, string> = {
   "listing.loadingMore": "加载中…",
   "listing.dotEntries.show": "显示隐藏文件",
   "listing.dotEntries.hide": "隐藏点文件",
+  "fileIcon.symlink": "符号链接",
   "slideshow.title": "{{name}}",
   "slideshow.counter": "{{current}} / {{total}}",
   "slideshow.previous": "上一张",

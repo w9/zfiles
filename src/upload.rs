@@ -144,11 +144,7 @@ async fn create_upload(
         .context("upload create missing location header")
 }
 
-async fn head_offset(
-    client: &reqwest::Client,
-    location: &str,
-    token: Option<&str>,
-) -> Result<u64> {
+async fn head_offset(client: &reqwest::Client, location: &str, token: Option<&str>) -> Result<u64> {
     let head = client
         .head(location)
         .headers(auth_headers(token))
@@ -173,7 +169,9 @@ fn read_state(file: &Path) -> Result<Option<UploadState>> {
         return Ok(None);
     }
     let contents = std::fs::read_to_string(path).context("read upload state")?;
-    Ok(Some(serde_json::from_str(&contents).context("parse upload state")?))
+    Ok(Some(
+        serde_json::from_str(&contents).context("parse upload state")?,
+    ))
 }
 
 fn write_state(file: &Path, location: &str) -> Result<()> {
@@ -200,8 +198,7 @@ fn auth_headers(token: Option<&str>) -> HeaderMap {
     if let Some(token) = token {
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {token}"))
-                .expect("bearer token fits in header"),
+            HeaderValue::from_str(&format!("Bearer {token}")).expect("bearer token fits in header"),
         );
     }
     headers

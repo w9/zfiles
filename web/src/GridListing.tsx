@@ -91,6 +91,7 @@ export default function GridListing({
                         <FileIcon
                           name={entry.name}
                           isDir={entry.isDir}
+                          isSymlink={entry.isSymlink}
                           theme={iconTheme}
                           size="lg"
                         />

@@ -13,7 +13,9 @@ pub enum KernelEvent {
         offset: u64,
         length: Option<u64>,
     },
-    FilesystemChanged { path: String },
+    FilesystemChanged {
+        path: String,
+    },
 }
 
 #[derive(Clone)]

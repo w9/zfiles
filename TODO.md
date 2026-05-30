@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** breadcrumb home icon for root + click-to-edit address bar in the breadcrumb region.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **Next:** optional parallel uploads or folder upload — defer until requested. **This cycle:** symlink badge overlay on file icons in list and grid views.
 
 ## TODO List
 
@@ -125,3 +125,8 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Breadcrumb region: click empty area → editable address bar; Enter navigates, Escape cancels
 - [x] `normalizeExplorerPath` helper + unit tests; wire `ExplorerApp`
 - [x] Run `pnpm test`
+- [x] Kernel: add `is_symlink` to `FileEntry`; detect in `LocalFs::read_dir`; unit test
+- [x] Frontend: `is_symlink` on `FileEntry`; plumb `isSymlink` through `ListingEntry` to listings
+- [x] `FileIcon`: relative wrapper + link badge when `isSymlink` (sm/lg sizes)
+- [x] i18n title on symlink badge (en + zh-CN)
+- [x] Unit tests; run `pnpm test` and `cargo test --lib`

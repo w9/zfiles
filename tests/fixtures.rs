@@ -42,7 +42,8 @@ fn init_creates_xdg_config() {
 #[tokio::test]
 async fn small_fixture_lists_expected_files() {
     let dir = tempdir().unwrap();
-    let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
+    let script =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
     let status = Command::new("bash")
         .arg(&script)
         .arg(dir.path())

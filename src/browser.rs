@@ -40,7 +40,11 @@ mod tests {
     #[test]
     fn open_url_with_token() {
         assert_eq!(
-            open_url(&localhost(8765), Some("a1b2c3d4e5f6789012345678abcdef01"), None),
+            open_url(
+                &localhost(8765),
+                Some("a1b2c3d4e5f6789012345678abcdef01"),
+                None
+            ),
             "http://127.0.0.1:8765/?token=a1b2c3d4e5f6789012345678abcdef01"
         );
     }

@@ -139,9 +139,9 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let events = EventBus::new();
     #[cfg(feature = "dev-frontend")]
     let vite_dev = if serve.vite_dev_enabled() {
-        Some(Arc::new(
-            crate::vite_proxy::ViteDevProxy::new(serve.vite_dev_url())?,
-        ))
+        Some(Arc::new(crate::vite_proxy::ViteDevProxy::new(
+            serve.vite_dev_url(),
+        )?))
     } else {
         None
     };
@@ -218,10 +218,7 @@ async fn list_directory(
     Query(query): Query<PathQuery>,
 ) -> Result<Json<Vec<crate::fs::FileEntry>>, AppError> {
     let relative = query.path.as_deref().unwrap_or("");
-    let entries = state
-        .fs
-        .read_dir(std::path::Path::new(relative))
-        .await?;
+    let entries = state.fs.read_dir(std::path::Path::new(relative)).await?;
     Ok(Json(entries))
 }
 
@@ -493,8 +490,9 @@ async fn handle_ws(mut socket: WebSocket, events: EventBus, read_only: bool) {
 }
 
 async fn static_or_index(
-    #[cfg_attr(not(feature = "dev-frontend"), allow(unused_variables))]
-    State(state): State<AppState>,
+    #[cfg_attr(not(feature = "dev-frontend"), allow(unused_variables))] State(state): State<
+        AppState,
+    >,
     request: axum::http::Request<Body>,
 ) -> Response {
     let path = request.uri().path();

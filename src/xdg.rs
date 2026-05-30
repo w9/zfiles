@@ -3,8 +3,7 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 pub fn config_home() -> PathBuf {
-    test_config_home()
-        .unwrap_or_else(default_config_home)
+    test_config_home().unwrap_or_else(default_config_home)
 }
 
 fn default_config_home() -> PathBuf {
@@ -16,8 +15,7 @@ fn default_config_home() -> PathBuf {
 }
 
 pub fn cache_home() -> PathBuf {
-    test_cache_home()
-        .unwrap_or_else(default_cache_home)
+    test_cache_home().unwrap_or_else(default_cache_home)
 }
 
 fn default_cache_home() -> PathBuf {
@@ -33,9 +31,7 @@ pub fn global_config_path() -> PathBuf {
 }
 
 pub fn folder_dir(serve_root: &Path) -> PathBuf {
-    config_home()
-        .join("folders")
-        .join(serve_id(serve_root))
+    config_home().join("folders").join(serve_id(serve_root))
 }
 
 pub fn folder_config_path(serve_root: &Path) -> PathBuf {

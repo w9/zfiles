@@ -77,9 +77,7 @@ pub fn start(root: PathBuf, events: EventBus) -> Result<()> {
 fn should_emit(event: &notify::Event) -> bool {
     matches!(
         event.kind,
-        notify::EventKind::Create(_)
-            | notify::EventKind::Modify(_)
-            | notify::EventKind::Remove(_)
+        notify::EventKind::Create(_) | notify::EventKind::Modify(_) | notify::EventKind::Remove(_)
     )
 }
 

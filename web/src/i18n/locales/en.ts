@@ -51,6 +51,7 @@ export const en = {
   "listing.loadingMore": "Loading…",
   "listing.dotEntries.show": "Show hidden files",
   "listing.dotEntries.hide": "Hide hidden files",
+  "fileIcon.symlink": "Symlink",
   "slideshow.title": "{{name}}",
   "slideshow.counter": "{{current}} / {{total}}",
   "slideshow.previous": "Previous",

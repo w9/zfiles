@@ -28,7 +28,8 @@ mod tests {
 
     #[test]
     fn render_url_contains_qr_modules() {
-        let image = render_url("http://192.168.0.5:8080/?token=a1b2c3d4e5f6789012345678abcdef01").unwrap();
+        let image =
+            render_url("http://192.168.0.5:8080/?token=a1b2c3d4e5f6789012345678abcdef01").unwrap();
         assert!(
             dark_module_count(&image) >= MIN_DARK_MODULES,
             "expected scannable QR modules, got:\n{image}"
@@ -57,5 +58,4 @@ mod tests {
             "inverted colors should not produce a scannable QR"
         );
     }
-
 }

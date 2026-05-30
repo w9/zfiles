@@ -28,7 +28,11 @@ fn embedded_file_icon_path() -> String {
     format!("/{path}")
 }
 
-fn test_server_with_token(root: &std::path::Path, token: &str, expires_at: Option<i64>) -> TestServer {
+fn test_server_with_token(
+    root: &std::path::Path,
+    token: &str,
+    expires_at: Option<i64>,
+) -> TestServer {
     let state_store = Arc::new(StateStore::new(root.to_path_buf()));
     if let Some(expires_at) = expires_at {
         state_store
@@ -106,7 +110,9 @@ async fn tokenized_server_accepts_token_query_without_expiry_session() {
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let server = test_server_with_token(dir.path(), "a1b2c3d4e5f6789012345678abcdef01", None);
 
-    let response = server.get("/api/list?token=a1b2c3d4e5f6789012345678abcdef01").await;
+    let response = server
+        .get("/api/list?token=a1b2c3d4e5f6789012345678abcdef01")
+        .await;
     response.assert_status_ok();
 }
 
@@ -186,7 +192,8 @@ async fn expiring_token_requires_session_row() {
         .unwrap()
         .as_secs() as i64
         + 3600;
-    let server = test_server_with_token(dir.path(), "b2c3d4e5f6789012345678abcdef0123", Some(future));
+    let server =
+        test_server_with_token(dir.path(), "b2c3d4e5f6789012345678abcdef0123", Some(future));
 
     let response = server
         .get("/api/list")

@@ -51,7 +51,13 @@ mod tests {
             ),
             "http://127.0.0.1:9000/?token=a1b2c3d4e5f6789012345678abcdef01&lang=zh-CN"
         );
-        assert_eq!(share_url("127.0.0.1:9000", None, Some("en")), "http://127.0.0.1:9000/?lang=en");
-        assert_eq!(share_url("127.0.0.1:9000", None, None), "http://127.0.0.1:9000/");
+        assert_eq!(
+            share_url("127.0.0.1:9000", None, Some("en")),
+            "http://127.0.0.1:9000/?lang=en"
+        );
+        assert_eq!(
+            share_url("127.0.0.1:9000", None, None),
+            "http://127.0.0.1:9000/"
+        );
     }
 }

@@ -4,9 +4,9 @@ use anyhow::Context;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocket};
 use axum::http::header::{
-    ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, CONNECTION, COOKIE, HOST, IF_NONE_MATCH,
-    ORIGIN, PRAGMA, REFERER, SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_PROTOCOL,
-    SEC_WEBSOCKET_VERSION, USER_AGENT,
+    ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, CONNECTION, COOKIE, HOST,
+    IF_NONE_MATCH, ORIGIN, PRAGMA, REFERER, SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_KEY,
+    SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, USER_AGENT,
 };
 use axum::http::{HeaderMap, HeaderName, Request, Response, Uri};
 use axum::response::{Html, IntoResponse};
@@ -228,17 +228,29 @@ impl ViteDevProxy {
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Binary(data)) => {
-                        if client_sink.send(Message::Binary(data.into())).await.is_err() {
+                        if client_sink
+                            .send(Message::Binary(data.into()))
+                            .await
+                            .is_err()
+                        {
                             break;
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Ping(payload)) => {
-                        if client_sink.send(Message::Ping(payload.into())).await.is_err() {
+                        if client_sink
+                            .send(Message::Ping(payload.into()))
+                            .await
+                            .is_err()
+                        {
                             break;
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Pong(payload)) => {
-                        if client_sink.send(Message::Pong(payload.into())).await.is_err() {
+                        if client_sink
+                            .send(Message::Pong(payload.into()))
+                            .await
+                            .is_err()
+                        {
                             break;
                         }
                     }

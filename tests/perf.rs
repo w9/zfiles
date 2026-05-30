@@ -23,7 +23,8 @@ fn baseline() -> PerfBaseline {
 #[tokio::test]
 async fn list_small_fixture_under_sla() {
     let dir = tempdir().unwrap();
-    let script = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
+    let script =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("scripts/generate-fixtures.sh");
     let status = Command::new("bash")
         .arg(&script)
         .arg(dir.path())

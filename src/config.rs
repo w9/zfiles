@@ -153,9 +153,7 @@ mod tests {
                 .unwrap();
             let mut folder = Config::default();
             folder.server.read_only = Some(true);
-            folder
-                .save_to(&Config::folder_config_path(&root))
-                .unwrap();
+            folder.save_to(&Config::folder_config_path(&root)).unwrap();
 
             let config = Config::load(&root).unwrap();
             assert!(config.read_only());

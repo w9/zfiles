@@ -9,7 +9,10 @@ fn is_hex_token(token: &str) -> bool {
 }
 
 fn box_line_content(raw: &str) -> &str {
-    raw.trim().trim_start_matches('│').trim_end_matches('│').trim()
+    raw.trim()
+        .trim_start_matches('│')
+        .trim_end_matches('│')
+        .trim()
 }
 
 fn token_from_banner(output: &str) -> Option<String> {

@@ -151,6 +151,7 @@ export default function VirtualListing({
                         <FileIcon
                           name={entry.name}
                           isDir={entry.isDir}
+                          isSymlink={entry.isSymlink}
                           theme={iconTheme}
                         />
                         <span className="min-w-0 truncate">{entry.name}</span>

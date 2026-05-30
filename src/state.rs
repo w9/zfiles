@@ -186,7 +186,11 @@ impl StateStore {
                 .with_context(|| format!("create parent directory {}", parent.display()))?;
         }
 
-        crate::mount::warn_if_cross_mount("upload finalize", &spool, target.parent().unwrap_or(&target));
+        crate::mount::warn_if_cross_mount(
+            "upload finalize",
+            &spool,
+            target.parent().unwrap_or(&target),
+        );
 
         {
             let file = std::fs::OpenOptions::new()

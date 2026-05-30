@@ -6,9 +6,9 @@ pub mod commands;
 pub mod config;
 pub mod daemon;
 pub mod daemon_config;
+pub mod dotfolder;
 pub mod download;
 pub mod duration;
-pub mod dotfolder;
 pub mod embed;
 pub mod events;
 pub mod fs;
@@ -24,8 +24,8 @@ pub mod state;
 pub mod status_cmd;
 pub mod transport;
 pub mod upload;
+#[cfg(feature = "dev-frontend")]
+pub mod vite_proxy;
 pub mod watch;
 pub mod writable;
 pub mod xdg;
-#[cfg(feature = "dev-frontend")]
-pub mod vite_proxy;

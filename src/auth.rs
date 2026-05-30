@@ -38,9 +38,7 @@ pub fn generate_token() -> String {
 }
 
 pub fn is_public_path(path: &str) -> bool {
-    path.starts_with("/assets/")
-        || path.starts_with("/file-icons/")
-        || path == "/favicon.ico"
+    path.starts_with("/assets/") || path.starts_with("/file-icons/") || path == "/favicon.ico"
 }
 
 pub async fn read_only_middleware(
@@ -143,12 +141,7 @@ pub fn cookie_value(header: &str, name: &str) -> Option<String> {
     })
 }
 
-fn append_session_cookie(
-    response: &mut Response,
-    token: &str,
-    secure: bool,
-    max_age: Option<u64>,
-) {
+fn append_session_cookie(response: &mut Response, token: &str, secure: bool, max_age: Option<u64>) {
     if let Ok(cookie) = session_cookie_header(token, secure, max_age) {
         response
             .headers_mut()

@@ -1,5 +1,5 @@
 use tempfile::tempdir;
-use zfiles::daemon::{pid_file, start, status, stop, DaemonStartArgs};
+use zfiles::daemon::{DaemonStartArgs, pid_file, start, status, stop};
 
 #[test]
 fn daemon_start_stop_round_trip() {
@@ -16,8 +16,7 @@ fn daemon_start_stop_round_trip() {
     let pid_path = pid_file(dir.path());
     assert!(pid_path.is_file());
 
-    status(dir.path().to_path_buf())
-        .expect("status while running");
+    status(dir.path().to_path_buf()).expect("status while running");
 
     stop(dir.path().to_path_buf()).expect("stop daemon");
     assert!(!pid_path.exists());

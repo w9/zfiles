@@ -313,6 +313,7 @@ export default function ExplorerApp() {
         name: entry.name,
         path: entry.path,
         isDir: entry.is_dir,
+        isSymlink: entry.is_symlink,
         size: entry.is_dir ? undefined : entry.size,
         modified: entry.modified,
         onSelect: (event) => {

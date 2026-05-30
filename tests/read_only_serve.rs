@@ -12,7 +12,11 @@ use zfiles::state::StateStore;
 use zfiles::transport::{AppState, router};
 use zfiles::xdg;
 
-fn test_server_for_layout(root: &std::path::Path, config: &Config, cli_read_only: bool) -> TestServer {
+fn test_server_for_layout(
+    root: &std::path::Path,
+    config: &Config,
+    cli_read_only: bool,
+) -> TestServer {
     let layout = dotfolder::plan_serve_layout(root, config, cli_read_only);
     let state = AppState::new(
         Arc::new(LocalFs::new(root.to_path_buf())),

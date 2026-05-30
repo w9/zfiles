@@ -6,6 +6,7 @@ export type ListingEntry = {
   name: string;
   path: string;
   isDir: boolean;
+  isSymlink?: boolean;
   size?: number;
   modified?: unknown;
   onSelect: (event: React.MouseEvent) => void;

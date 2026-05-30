@@ -173,7 +173,11 @@ pub struct ServeArgs {
 
     /// Vite dev server URL (used with `--dev-frontend`)
     #[cfg(feature = "dev-frontend")]
-    #[arg(long, default_value = "http://127.0.0.1:5173", requires = "dev_frontend")]
+    #[arg(
+        long,
+        default_value = "http://127.0.0.1:5173",
+        requires = "dev_frontend"
+    )]
     pub vite_url: String,
 }
 
@@ -334,7 +338,15 @@ mod tests {
 
     #[test]
     fn verbose_flag_works_on_subcommands() {
-        let cli = Cli::parse_from(["zfiles", "-v", "config", "get", "--folder", ".", "server.read_only"]);
+        let cli = Cli::parse_from([
+            "zfiles",
+            "-v",
+            "config",
+            "get",
+            "--folder",
+            ".",
+            "server.read_only",
+        ]);
         assert_eq!(cli.verbose, 1);
     }
 

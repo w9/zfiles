@@ -10,6 +10,8 @@ pub struct FileEntry {
     pub name: String,
     pub path: String,
     pub is_dir: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub is_symlink: bool,
     pub size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<SystemTime>,
@@ -130,11 +132,7 @@ impl LocalFs {
         if parent.as_os_str().is_empty() {
             name.to_string()
         } else {
-            format!(
-                "{}/{}",
-                parent.to_string_lossy().replace('\\', "/"),
-                name
-            )
+            format!("{}/{}", parent.to_string_lossy().replace('\\', "/"), name)
         }
     }
 }
@@ -156,6 +154,14 @@ impl Fs for LocalFs {
         while let Some(entry) = read_dir.next_entry().await? {
             let name = entry.file_name().to_string_lossy().into_owned();
             let entry_path = entry.path();
+            let file_type = match entry.file_type().await {
+                Ok(file_type) => file_type,
+                Err(error) => {
+                    tracing::debug!(entry = %name, %error, "skipping unreadable directory entry");
+                    continue;
+                }
+            };
+            let is_symlink = file_type.is_symlink();
             let metadata = match tokio::fs::metadata(&entry_path).await {
                 Ok(metadata) => metadata,
                 Err(error) => {
@@ -169,6 +175,7 @@ impl Fs for LocalFs {
                 name,
                 path: relative,
                 is_dir: metadata.is_dir(),
+                is_symlink,
                 size: metadata.len(),
                 modified: metadata.modified().ok(),
                 extra: None,
@@ -287,6 +294,34 @@ mod tests {
                 .find(|entry| entry.name == "linked-dir")
                 .expect("symlink entry in listing");
             assert!(linked.is_dir);
+            assert!(linked.is_symlink);
+        }
+    }
+
+    #[tokio::test]
+    async fn read_dir_marks_file_symlink() {
+        #[cfg(not(unix))]
+        {
+            return;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let dir = tempdir().unwrap();
+            fs::write(dir.path().join("target.txt"), b"hi").unwrap();
+            symlink("target.txt", dir.path().join("linked.txt")).unwrap();
+
+            let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+            let entries = fs.read_dir(Path::new("")).await.unwrap();
+
+            let linked = entries
+                .iter()
+                .find(|entry| entry.name == "linked.txt")
+                .expect("symlink entry in listing");
+            assert!(!linked.is_dir);
+            assert!(linked.is_symlink);
         }
     }
 

@@ -25,7 +25,8 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         output.push_str(&line);
         output.push('\n');
         let dark_modules = zfiles::qr::dark_module_count(&output);
-        if dark_modules >= zfiles::qr::MIN_DARK_MODULES || start.elapsed() > Duration::from_secs(10) {
+        if dark_modules >= zfiles::qr::MIN_DARK_MODULES || start.elapsed() > Duration::from_secs(10)
+        {
             break;
         }
     }
@@ -49,5 +50,8 @@ fn public_bind_with_token_prints_scannable_qr_code() {
 }
 
 fn box_line_content(raw: &str) -> &str {
-    raw.trim().trim_start_matches('│').trim_end_matches('│').trim()
+    raw.trim()
+        .trim_start_matches('│')
+        .trim_end_matches('│')
+        .trim()
 }
