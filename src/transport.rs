@@ -163,30 +163,30 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let explorer_url = browser::open_url(&bound, share_token.as_deref(), ui_lang);
     let public_share = serve.token && serve.is_public_bind()?;
 
-    banner::serve_banner(
-        &root,
-        &explorer_url,
-        share_token.as_deref(),
+    banner::ServeBanner {
+        root: root.display().to_string(),
+        url: explorer_url.clone(),
+        token: share_token.clone(),
         open_browser,
         read_only,
-        layout.auto_read_only,
-        Some(state_dir.as_path()),
+        auto_read_only: layout.auto_read_only,
+        state_dir: Some(state_dir.display().to_string()),
         public_share,
         #[cfg(feature = "dev-frontend")]
-        serve.vite_dev_enabled().then(|| serve.vite_dev_url()),
+        vite_dev: serve
+            .vite_dev_enabled()
+            .then(|| serve.vite_dev_url().to_string()),
         #[cfg(not(feature = "dev-frontend"))]
-        None,
-    )
+        vite_dev: None,
+    }
     .print();
 
     if open_browser {
         browser::open_async(explorer_url.clone());
     }
 
-    if public_share {
-        if let Err(error) = qr::print_url(&explorer_url) {
-            tracing::warn!(%error, "failed to render QR code");
-        }
+    if public_share && let Err(error) = qr::print_url(&explorer_url) {
+        tracing::warn!(%error, "failed to render QR code");
     }
 
     mount::warn_if_cross_mount("upload spool", &root, &state_dir);

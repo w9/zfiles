@@ -1,5 +1,3 @@
-use std::path::Path;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ServeBanner {
     pub root: String,
@@ -106,30 +104,6 @@ pub fn render_box(lines: &[String]) -> String {
     output
 }
 
-pub fn serve_banner(
-    root: &Path,
-    url: &str,
-    token: Option<&str>,
-    open_browser: bool,
-    read_only: bool,
-    auto_read_only: bool,
-    state_dir: Option<&Path>,
-    public_share: bool,
-    vite_dev: Option<&str>,
-) -> ServeBanner {
-    ServeBanner {
-        root: root.display().to_string(),
-        url: url.to_string(),
-        token: token.map(str::to_string),
-        open_browser,
-        read_only,
-        auto_read_only,
-        state_dir: state_dir.map(|path| path.display().to_string()),
-        public_share,
-        vite_dev: vite_dev.map(str::to_string),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -147,17 +121,17 @@ mod tests {
 
     #[test]
     fn tokenized_banner_includes_url_token_and_browser_hint() {
-        let banner = serve_banner(
-            Path::new("/tmp/share"),
-            "http://127.0.0.1:9000/?token=abc123",
-            Some("abc123"),
-            true,
-            false,
-            false,
-            None,
-            false,
-            None,
-        );
+        let banner = ServeBanner {
+            root: "/tmp/share".to_string(),
+            url: "http://127.0.0.1:9000/?token=abc123".to_string(),
+            token: Some("abc123".to_string()),
+            open_browser: true,
+            read_only: false,
+            auto_read_only: false,
+            state_dir: None,
+            public_share: false,
+            vite_dev: None,
+        };
         let rendered = banner.render();
         assert!(rendered.contains("Open in your browser:"));
         assert!(rendered.contains("http://127.0.0.1:9000/?token=abc123"));
@@ -169,17 +143,17 @@ mod tests {
 
     #[test]
     fn no_open_banner_omits_browser_launch_hint() {
-        let banner = serve_banner(
-            Path::new("/tmp/share"),
-            "http://127.0.0.1:9000/",
-            None,
-            false,
-            false,
-            false,
-            None,
-            false,
-            None,
-        );
+        let banner = ServeBanner {
+            root: "/tmp/share".to_string(),
+            url: "http://127.0.0.1:9000/".to_string(),
+            token: None,
+            open_browser: false,
+            read_only: false,
+            auto_read_only: false,
+            state_dir: None,
+            public_share: false,
+            vite_dev: None,
+        };
         let rendered = banner.render();
         assert!(rendered.contains("Open the URL above in your browser."));
         assert!(!rendered.contains("Opening your default browser"));
@@ -187,34 +161,34 @@ mod tests {
 
     #[test]
     fn public_share_banner_uses_network_wording() {
-        let banner = serve_banner(
-            Path::new("/tmp/share"),
-            "http://192.168.0.5:8080/?token=abc123",
-            Some("abc123"),
-            false,
-            false,
-            false,
-            None,
-            true,
-            None,
-        );
+        let banner = ServeBanner {
+            root: "/tmp/share".to_string(),
+            url: "http://192.168.0.5:8080/?token=abc123".to_string(),
+            token: Some("abc123".to_string()),
+            open_browser: false,
+            read_only: false,
+            auto_read_only: false,
+            state_dir: None,
+            public_share: true,
+            vite_dev: None,
+        };
         let rendered = banner.render();
         assert!(rendered.contains("Share on your network:"));
     }
 
     #[test]
     fn dev_frontend_banner_lists_vite_proxy() {
-        let banner = serve_banner(
-            Path::new("/tmp/share"),
-            "http://127.0.0.1:9000/",
-            None,
-            false,
-            false,
-            false,
-            None,
-            false,
-            Some("http://127.0.0.1:5173"),
-        );
+        let banner = ServeBanner {
+            root: "/tmp/share".to_string(),
+            url: "http://127.0.0.1:9000/".to_string(),
+            token: None,
+            open_browser: false,
+            read_only: false,
+            auto_read_only: false,
+            state_dir: None,
+            public_share: false,
+            vite_dev: Some("http://127.0.0.1:5173".to_string()),
+        };
         let rendered = banner.render();
         assert!(rendered.contains("Frontend: Vite dev proxy (http://127.0.0.1:5173)"));
     }
