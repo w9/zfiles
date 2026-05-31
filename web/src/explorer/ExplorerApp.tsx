@@ -52,6 +52,7 @@ import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { filterDotEntries } from "../listingFilter";
 import { sortFileEntries } from "../listingSort";
+import { useExplorerNavigation } from "./useExplorerNavigation";
 
 type ContextMenuState = {
   x: number;
@@ -96,7 +97,7 @@ export default function ExplorerApp() {
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
 
-  const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }) => {
+  const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
     try {
       const { entries: data, nextCursor } = await backend.list(path);
@@ -116,12 +117,14 @@ export default function ExplorerApp() {
         setSelectedPath(null);
         setSelectedPaths(new Set());
       }
+      return true;
     } catch (err) {
       if (err instanceof Response) {
         await notifyApiError(err, t);
-        return;
+        return false;
       }
       notifyError(err instanceof Error ? err.message : String(err));
+      return false;
     }
   }, [backend, t]);
 
@@ -220,12 +223,24 @@ export default function ExplorerApp() {
     [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath, showDotEntries],
   );
 
-  const navigateTo = useCallback(
-    (path: string) => {
-      loadListing(path).catch((err: Error) => notifyError(err.message));
-    },
+  const loadListingForNavigation = useCallback(
+    (path: string) => loadListing(path),
     [loadListing],
   );
+
+  const {
+    navigateTo,
+    goBack,
+    goForward,
+    goUp,
+    canGoBack,
+    canGoForward,
+    trackCurrentPath,
+  } = useExplorerNavigation(loadListingForNavigation);
+
+  useEffect(() => {
+    trackCurrentPath(currentPath);
+  }, [currentPath, trackCurrentPath]);
 
   const runBulkAction = useCallback(
     async (actionId: string, paths: string[]) => {
@@ -525,7 +540,16 @@ export default function ExplorerApp() {
           rootAriaLabel={t("breadcrumb.root")}
           ariaLabel={t("breadcrumb.label")}
           addressBarLabel={t("breadcrumb.addressBar")}
-          onNavigate={navigateTo}
+          addressBarPlaceholder={t("breadcrumb.addressBarPlaceholder")}
+          backLabel={t("breadcrumb.back")}
+          forwardLabel={t("breadcrumb.forward")}
+          upLabel={t("breadcrumb.up")}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
+          onBack={() => void goBack()}
+          onForward={() => void goForward()}
+          onUp={() => void goUp()}
+          onNavigate={(path) => void navigateTo(path)}
         />
       </section>
 

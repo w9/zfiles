@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** remove borders from breadcrumb and status bar cards.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** keep back/up/forward buttons outside the address bar click-to-edit region.
 
 ## TODO List
 
@@ -38,4 +38,12 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Status bar: fixed `h-9` row to match breadcrumb address bar
 - [x] Run `pnpm test`
 - [x] Remove borders from breadcrumb card (`ExplorerApp`) and `StatusBar`
+- [x] Run `pnpm test`
+- [x] Navigation history helpers + unit tests (`push` / `back` / `forward` stacks)
+- [x] `useExplorerNavigation` hook; wire into `ExplorerApp` (`navigateTo`, back/forward/up)
+- [x] Address bar: back, up, forward icon buttons left of home in `ExplorerBreadcrumb`
+- [x] i18n for navigation button labels (en + zh-CN)
+- [x] Run `pnpm test`
+- [x] Run `pnpm test`
+- [x] Move click-to-edit handler off nav buttons onto path region only in `ExplorerBreadcrumb`
 - [x] Run `pnpm test`

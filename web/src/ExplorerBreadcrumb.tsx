@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Home } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Home } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { normalizeExplorerPath } from "./explorer/path";
@@ -18,6 +19,15 @@ type ExplorerBreadcrumbProps = {
   rootAriaLabel: string;
   ariaLabel: string;
   addressBarLabel: string;
+  addressBarPlaceholder: string;
+  backLabel: string;
+  forwardLabel: string;
+  upLabel: string;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onBack: () => void;
+  onForward: () => void;
+  onUp: () => void;
   onNavigate: (path: string) => void;
 };
 
@@ -26,6 +36,15 @@ export default function ExplorerBreadcrumb({
   rootAriaLabel,
   ariaLabel,
   addressBarLabel,
+  addressBarPlaceholder,
+  backLabel,
+  forwardLabel,
+  upLabel,
+  canGoBack,
+  canGoForward,
+  onBack,
+  onForward,
+  onUp,
   onNavigate,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
@@ -97,59 +116,70 @@ export default function ExplorerBreadcrumb({
   );
 
   return (
-    <div
-      className={cn(
-        "flex h-9 shrink-0 items-center px-3",
-        !editing && "cursor-text",
-      )}
-      onClick={handleRegionClick}
-    >
-      {editing ? (
-        <Input
-          ref={inputRef}
-          aria-label={addressBarLabel}
-          value={draft}
-          className="h-full w-full rounded-none border-0 p-0 text-sm leading-5 shadow-none focus-visible:ring-0"
-          onBlur={cancelEditing}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={handleInputKeyDown}
-        />
-      ) : (
-        <Breadcrumb aria-label={ariaLabel} className="min-w-0 flex-1 overflow-hidden">
-          <BreadcrumbList className="flex-nowrap">
-            {parts.map((part, index) => {
-              const path = parts.slice(1, index + 1).join("/");
-              const isRoot = index === 0;
-              const isLast = index === parts.length - 1;
-              return (
-                <span key={`${part}-${index}`} className="contents">
-                  {index > 0 ? <BreadcrumbSeparator /> : null}
-                  <BreadcrumbItem>
-                    {isLast ? (
-                      <BreadcrumbPage>
-                        {isRoot ? (
-                          <Home
-                            aria-hidden="true"
-                            className="size-4 shrink-0"
-                          />
-                        ) : (
-                          part
-                        )}
-                        {isRoot ? (
-                          <span className="sr-only">{rootAriaLabel}</span>
-                        ) : null}
-                      </BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink asChild>
-                        <button
-                          type="button"
-                          className="cursor-pointer bg-transparent p-0"
-                          aria-label={isRoot ? rootAriaLabel : undefined}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onNavigate(path);
-                          }}
-                        >
+    <div className="flex h-9 shrink-0 items-center gap-1 px-3">
+      <div className="flex shrink-0 items-center gap-0.5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label={backLabel}
+          disabled={!canGoBack}
+          onClick={onBack}
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label={upLabel}
+          disabled={!currentPath}
+          onClick={onUp}
+        >
+          <ArrowUp className="size-4" aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label={forwardLabel}
+          disabled={!canGoForward}
+          onClick={onForward}
+        >
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Button>
+      </div>
+      <div
+        className={cn("min-w-0 flex-1", !editing && "cursor-text")}
+        onClick={handleRegionClick}
+      >
+        {editing ? (
+          <Input
+            ref={inputRef}
+            aria-label={addressBarLabel}
+            placeholder={addressBarPlaceholder}
+            value={draft}
+            className="h-full w-full rounded-none border-0 p-0 text-sm leading-5 shadow-none focus-visible:ring-0"
+            onBlur={cancelEditing}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleInputKeyDown}
+          />
+        ) : (
+          <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
+            <BreadcrumbList className="flex-nowrap">
+              {parts.map((part, index) => {
+                const path = parts.slice(1, index + 1).join("/");
+                const isRoot = index === 0;
+                const isLast = index === parts.length - 1;
+                return (
+                  <span key={`${part}-${index}`} className="contents">
+                    {index > 0 ? <BreadcrumbSeparator /> : null}
+                    <BreadcrumbItem>
+                      {isLast ? (
+                        <BreadcrumbPage>
                           {isRoot ? (
                             <Home
                               aria-hidden="true"
@@ -158,16 +188,40 @@ export default function ExplorerBreadcrumb({
                           ) : (
                             part
                           )}
-                        </button>
-                      </BreadcrumbLink>
-                    )}
-                  </BreadcrumbItem>
-                </span>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
-      )}
+                          {isRoot ? (
+                            <span className="sr-only">{rootAriaLabel}</span>
+                          ) : null}
+                        </BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild>
+                          <button
+                            type="button"
+                            className="cursor-pointer bg-transparent p-0"
+                            aria-label={isRoot ? rootAriaLabel : undefined}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onNavigate(path);
+                            }}
+                          >
+                            {isRoot ? (
+                              <Home
+                                aria-hidden="true"
+                                className="size-4 shrink-0"
+                              />
+                            ) : (
+                              part
+                            )}
+                          </button>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </span>
+                );
+              })}
+            </BreadcrumbList>
+          </Breadcrumb>
+        )}
+      </div>
     </div>
   );
 }
