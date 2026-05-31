@@ -1,66 +1,111 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  createNavigationStacks,
-  navigateBack,
-  navigateForward,
-  pushNavigationPath,
-  type NavigationStacks,
-} from "./navigationHistory";
+  explorerHistoryHrefForPath,
+  explorerPathFromPathname,
+} from "./explorerUrl";
 
 type LoadListing = (path: string) => Promise<boolean>;
 
-export function useExplorerNavigation(loadListing: LoadListing) {
-  const currentPathRef = useRef("");
-  const stacksRef = useRef<NavigationStacks>(createNavigationStacks());
+function syncHistoryIndex(
+  stack: string[],
+  path: string,
+): number {
+  const index = stack.lastIndexOf(path);
+  return index >= 0 ? index : 0;
+}
+
+export function useExplorerNavigation(
+  loadListing: LoadListing,
+  initialPath: string,
+) {
+  const currentPathRef = useRef(initialPath);
+  const historyStackRef = useRef<string[]>([initialPath]);
+  const historyIndexRef = useRef(0);
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
-  const syncStacks = useCallback((stacks: NavigationStacks) => {
-    stacksRef.current = stacks;
-    setCanGoBack(stacks.back.length > 0);
-    setCanGoForward(stacks.forward.length > 0);
+  const syncHistoryControls = useCallback((index: number) => {
+    historyIndexRef.current = index;
+    setCanGoBack(index > 0);
+    setCanGoForward(index < historyStackRef.current.length - 1);
   }, []);
+
+  const applyLoadedPath = useCallback(
+    (path: string, options?: { pushHistory?: boolean }) => {
+      currentPathRef.current = path;
+      if (options?.pushHistory) {
+        const stack = historyStackRef.current.slice(0, historyIndexRef.current + 1);
+        stack.push(path);
+        historyStackRef.current = stack;
+        syncHistoryControls(stack.length - 1);
+        window.history.pushState(
+          { explorerPath: path },
+          "",
+          explorerHistoryHrefForPath(path),
+        );
+      } else {
+        syncHistoryControls(syncHistoryIndex(historyStackRef.current, path));
+      }
+    },
+    [syncHistoryControls],
+  );
+
+  useEffect(() => {
+    window.history.replaceState(
+      { explorerPath: initialPath },
+      "",
+      explorerHistoryHrefForPath(initialPath),
+    );
+  }, [initialPath]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const path = explorerPathFromPathname(window.location.pathname);
+      const previousPath = currentPathRef.current;
+      void (async () => {
+        const loaded = await loadListing(path);
+        if (!loaded) {
+          window.history.replaceState(
+            { explorerPath: previousPath },
+            "",
+            explorerHistoryHrefForPath(previousPath),
+          );
+          return;
+        }
+        applyLoadedPath(path);
+      })();
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [applyLoadedPath, loadListing]);
 
   const navigateTo = useCallback(
     async (path: string) => {
-      const current = currentPathRef.current;
-      const nextStacks = pushNavigationPath(stacksRef.current, current, path);
-      if (!nextStacks) {
+      if (path === currentPathRef.current) {
         return;
       }
       const loaded = await loadListing(path);
       if (loaded) {
-        currentPathRef.current = path;
-        syncStacks(nextStacks);
+        applyLoadedPath(path, { pushHistory: true });
       }
     },
-    [loadListing, syncStacks],
+    [applyLoadedPath, loadListing],
   );
 
-  const goBack = useCallback(async () => {
-    const result = navigateBack(stacksRef.current, currentPathRef.current);
-    if (!result) {
+  const goBack = useCallback(() => {
+    if (historyIndexRef.current <= 0) {
       return;
     }
-    const loaded = await loadListing(result.path);
-    if (loaded) {
-      currentPathRef.current = result.path;
-      syncStacks(result.stacks);
-    }
-  }, [loadListing, syncStacks]);
+    window.history.back();
+  }, []);
 
-  const goForward = useCallback(async () => {
-    const result = navigateForward(stacksRef.current, currentPathRef.current);
-    if (!result) {
+  const goForward = useCallback(() => {
+    if (historyIndexRef.current >= historyStackRef.current.length - 1) {
       return;
     }
-    const loaded = await loadListing(result.path);
-    if (loaded) {
-      currentPathRef.current = result.path;
-      syncStacks(result.stacks);
-    }
-  }, [loadListing, syncStacks]);
+    window.history.forward();
+  }, []);
 
   const trackCurrentPath = useCallback((path: string) => {
     currentPathRef.current = path;

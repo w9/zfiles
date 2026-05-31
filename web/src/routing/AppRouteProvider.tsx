@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -25,9 +26,11 @@ export function AppRouteProvider({ children }: { children: ReactNode }) {
   const [route, setRoute] = useState<AppRoute>(() =>
     routeFromPathname(window.location.pathname),
   );
+  const enteredSettingsFromExplorerRef = useRef(false);
 
   useEffect(() => {
     const onPopState = () => {
+      enteredSettingsFromExplorerRef.current = false;
       setRoute(routeFromPathname(window.location.pathname));
     };
     window.addEventListener("popstate", onPopState);
@@ -35,12 +38,25 @@ export function AppRouteProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const navigate = useCallback((next: AppRoute) => {
+    if (next === "explorer" && enteredSettingsFromExplorerRef.current) {
+      enteredSettingsFromExplorerRef.current = false;
+      window.history.back();
+      return;
+    }
+
     const pathname = pathnameForRoute(next);
-    if (window.location.pathname !== pathname) {
-      window.history.pushState(null, "", pathname);
+    const url = new URL(window.location.href);
+    url.pathname = pathname;
+    const href = `${url.pathname}${url.search}${url.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (current !== href) {
+      if (next === "settings" && route === "explorer") {
+        enteredSettingsFromExplorerRef.current = true;
+      }
+      window.history.pushState(null, "", href);
     }
     setRoute(next);
-  }, []);
+  }, [route]);
 
   const value = useMemo(
     () => ({

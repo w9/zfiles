@@ -53,6 +53,7 @@ import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { filterDotEntries } from "../listingFilter";
 import { sortFileEntries } from "../listingSort";
 import { useExplorerNavigation } from "./useExplorerNavigation";
+import { explorerPathFromPathname } from "./explorerUrl";
 
 type ContextMenuState = {
   x: number;
@@ -68,7 +69,11 @@ export default function ExplorerApp() {
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder } = useListingSortOrder();
   const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
-  const [currentPath, setCurrentPath] = useState("");
+  const initialPath = useMemo(
+    () => explorerPathFromPathname(window.location.pathname),
+    [],
+  );
+  const [currentPath, setCurrentPath] = useState(initialPath);
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [listCursor, setListCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
@@ -145,7 +150,7 @@ export default function ExplorerApp() {
   }, [backend, listCursor, loadingMore]);
 
   useEffect(() => {
-    loadListing("").catch((err: Error) => notifyError(err.message));
+    loadListing(initialPath).catch((err: Error) => notifyError(err.message));
     void backend
       .fetchHealth()
       .then((data) => {
@@ -154,7 +159,7 @@ export default function ExplorerApp() {
         }
       })
       .catch(() => {});
-  }, [backend, loadListing]);
+  }, [backend, loadListing, initialPath]);
 
   const {
     items: uploadItems,
@@ -235,7 +240,7 @@ export default function ExplorerApp() {
     canGoBack,
     canGoForward,
     trackCurrentPath,
-  } = useExplorerNavigation(loadListingForNavigation);
+  } = useExplorerNavigation(loadListingForNavigation, initialPath);
 
   useEffect(() => {
     trackCurrentPath(currentPath);

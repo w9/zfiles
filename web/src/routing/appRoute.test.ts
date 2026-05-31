@@ -5,7 +5,8 @@ import { pathnameForRoute, routeFromPathname } from "./appRoute";
 
 test("routeFromPathname maps explorer and settings routes", () => {
   assert.equal(routeFromPathname("/"), "explorer");
-  assert.equal(routeFromPathname("/foo/bar"), "explorer");
+  assert.equal(routeFromPathname("/f"), "explorer");
+  assert.equal(routeFromPathname("/f/docs/readme"), "explorer");
   assert.equal(routeFromPathname("/settings"), "settings");
   assert.equal(routeFromPathname("/settings/"), "settings");
 });
