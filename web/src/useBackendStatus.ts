@@ -11,7 +11,7 @@ export function backendStatusLabel(status: BackendStatus): string {
     case "connecting":
       return "Connecting…";
     case "offline":
-      return "Offline";
+      return "Connection lost";
   }
 }
 

@@ -15,10 +15,12 @@ export default function BackendStatus({
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
   const label = backendStatusMessage(locale, status);
-  const detail =
+  const hoverTitle =
     status === "connected" && kernelVersion
       ? t("backend.kernelVersion", { version: kernelVersion })
-      : label;
+      : status === "offline"
+        ? t("backend.offlineHint")
+        : undefined;
 
   return (
     <div
@@ -38,7 +40,7 @@ export default function BackendStatus({
         )}
         aria-hidden="true"
       />
-      <span>{detail}</span>
+      <span title={hoverTitle}>{label}</span>
     </div>
   );
 }

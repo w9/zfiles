@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** drop synthetic `..` parent rows from the file listing; breadcrumb handles up navigation.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). Explorer folder view is bidirectionally bound to the URL via the `/f/...` pathname scheme.
 
 ## TODO List
 
@@ -56,4 +56,17 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Run `pnpm test`
 - [x] Remove synthetic `..` row from `ExplorerApp` listing entries
 - [x] Simplify `selectedRowIndexForPath` and listing sort parent-row handling
+- [x] Run `pnpm test`
+- [x] `explorerUrl` helpers: `/f` pathname ↔ explorer path encode/decode; unit tests
+- [x] `useExplorerNavigation`: push/replace URL on navigate; preserve query; browser back/forward
+- [x] `appRoute` + settings back: recognize `/f/*`; restore explorer URL when leaving settings
+- [x] Run `pnpm test`
+- [x] Status bar: show "Connected" when online; kernel version in hover title only
+- [x] Update e2e smoke test for connected status label
+- [x] Run `pnpm test`
+- [x] Rename offline status label to "Connection lost" (en + zh-CN i18n)
+- [x] Update e2e smoke test for new offline aria label
+- [x] Run `pnpm test`
+- [x] Add hover title for "Connection lost" status (en + zh-CN i18n)
+- [x] Update e2e smoke test for offline hover title
 - [x] Run `pnpm test`

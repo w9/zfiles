@@ -67,7 +67,11 @@ test("explorer lists served files", async ({ page }) => {
 test("status bar shows connected backend status", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("status", { name: /backend connected/i })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText(/kernel v/i);
+  await expect(page.getByRole("status")).toContainText(/connected/i);
+  await expect(page.getByRole("status").locator("span[title]")).toHaveAttribute(
+    "title",
+    /kernel v/i,
+  );
 });
 
 test("theme toggle switches color theme", async ({ page }) => {
@@ -115,9 +119,13 @@ test("header shows offline backend status after server stops", async ({ page }) 
     await page.goto("http://127.0.0.1:9879/");
     await expect(page.getByRole("status", { name: /backend connected/i })).toBeVisible();
     offlineServer.kill("SIGTERM");
-    await expect(page.getByRole("status", { name: /backend offline/i })).toBeVisible({
+    await expect(page.getByRole("status", { name: /backend connection lost/i })).toBeVisible({
       timeout: 10_000,
     });
+    await expect(page.getByRole("status").locator("span[title]")).toHaveAttribute(
+      "title",
+      /can't reach the zfiles server/i,
+    );
   } finally {
     offlineServer.kill("SIGTERM");
   }
