@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "./i18n";
+import type { MessageKey } from "./i18n/messages";
 import { formatSize } from "./listing-format";
 import {
+  countUploadsByStatus,
   formatEtaSeconds,
+  UPLOAD_QUEUE_HEADER_STATUS_ORDER,
   uploadPercent,
   type UploadItemStatus,
   type UploadQueueItem,
@@ -71,6 +74,33 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
   return t("upload.statsBasic", params);
 }
 
+const HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
+  pending: "upload.queue.header.pending",
+  active: "upload.queue.header.active",
+  awaiting_conflict: "upload.queue.header.awaitingConflict",
+  done: "upload.queue.header.done",
+  failed: "upload.queue.header.failed",
+  cancelled: "upload.queue.header.cancelled",
+};
+
+function queueHeaderTitle(
+  items: UploadQueueItem[],
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  const counts = countUploadsByStatus(items);
+  const segments = UPLOAD_QUEUE_HEADER_STATUS_ORDER.flatMap((status) => {
+    const count = counts[status];
+    if (!count) {
+      return [];
+    }
+    return [t(HEADER_STATUS_KEYS[status], { count: String(count) })];
+  });
+  return t("upload.queue.titleWithStatus", {
+    count: String(items.length),
+    statusSummary: segments.join(" · "),
+  });
+}
+
 export default function UploadPanel({ items, onClearFinished, onCancel }: UploadPanelProps) {
   const { t } = useTranslation();
   const finishedCount = items.filter(
@@ -84,13 +114,15 @@ export default function UploadPanel({ items, onClearFinished, onCancel }: Upload
     return null;
   }
 
+  const headerTitle = queueHeaderTitle(items, t);
+
   return (
     <section
       className="mt-4 rounded-xl border bg-card"
-      aria-label={t("upload.queue.title")}
+      aria-label={headerTitle}
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <h2 className="text-sm font-medium">{t("upload.queue.title", { count: String(items.length) })}</h2>
+        <h2 className="text-sm font-medium">{headerTitle}</h2>
         {finishedCount > 0 ? (
           <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
             {t("upload.clearFinished")}

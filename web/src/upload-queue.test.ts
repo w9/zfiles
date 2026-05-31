@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   applyProgressUpdate,
+  countUploadsByStatus,
   createQueueItem,
   formatEtaSeconds,
   isUploadAbortError,
@@ -61,4 +62,21 @@ test("formatEtaSeconds uses seconds, minutes, and hours", () => {
   assert.equal(formatEtaSeconds(90), "2m");
   assert.equal(formatEtaSeconds(7200), "2h");
   assert.equal(formatEtaSeconds(null), null);
+});
+
+test("countUploadsByStatus tallies each status", () => {
+  const file = new File(["x"], "a.txt");
+  const items = [
+    createQueueItem(file, "a.txt"),
+    { ...createQueueItem(file, "b.txt"), status: "active" as const },
+    { ...createQueueItem(file, "c.txt"), status: "done" as const },
+    { ...createQueueItem(file, "d.txt"), status: "done" as const },
+    { ...createQueueItem(file, "e.txt"), status: "failed" as const },
+  ];
+  assert.deepEqual(countUploadsByStatus(items), {
+    pending: 1,
+    active: 1,
+    done: 2,
+    failed: 1,
+  });
 });

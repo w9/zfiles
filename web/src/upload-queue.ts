@@ -79,6 +79,24 @@ export function uploadPercent(item: UploadQueueItem): number {
   return Math.min(100, Math.round((item.offset / item.total) * 100));
 }
 
+/** Display order for upload status segments in the panel header. */
+export const UPLOAD_QUEUE_HEADER_STATUS_ORDER: UploadItemStatus[] = [
+  "active",
+  "awaiting_conflict",
+  "pending",
+  "done",
+  "failed",
+  "cancelled",
+];
+
+export function countUploadsByStatus(items: UploadQueueItem[]): Partial<Record<UploadItemStatus, number>> {
+  const counts: Partial<Record<UploadItemStatus, number>> = {};
+  for (const item of items) {
+    counts[item.status] = (counts[item.status] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export function applyProgressUpdate(
   item: UploadQueueItem,
   offset: number,
