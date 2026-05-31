@@ -519,7 +519,7 @@ export default function ExplorerApp() {
         }}
       />
 
-      <section className="mt-4 overflow-hidden rounded-xl border bg-card">
+      <section className="mt-4 overflow-hidden rounded-xl bg-card">
         <ExplorerBreadcrumb
           currentPath={currentPath}
           rootAriaLabel={t("breadcrumb.root")}

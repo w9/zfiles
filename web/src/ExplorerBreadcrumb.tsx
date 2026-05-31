@@ -98,7 +98,10 @@ export default function ExplorerBreadcrumb({
 
   return (
     <div
-      className={cn("shrink-0 px-3 py-2", !editing && "cursor-text")}
+      className={cn(
+        "flex h-9 shrink-0 items-center px-3",
+        !editing && "cursor-text",
+      )}
       onClick={handleRegionClick}
     >
       {editing ? (
@@ -106,14 +109,14 @@ export default function ExplorerBreadcrumb({
           ref={inputRef}
           aria-label={addressBarLabel}
           value={draft}
-          className="h-auto rounded-none border-0 p-0 text-sm shadow-none focus-visible:ring-0"
+          className="h-full w-full rounded-none border-0 p-0 text-sm leading-5 shadow-none focus-visible:ring-0"
           onBlur={cancelEditing}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleInputKeyDown}
         />
       ) : (
-        <Breadcrumb aria-label={ariaLabel}>
-          <BreadcrumbList>
+        <Breadcrumb aria-label={ariaLabel} className="min-w-0 flex-1 overflow-hidden">
+          <BreadcrumbList className="flex-nowrap">
             {parts.map((part, index) => {
               const path = parts.slice(1, index + 1).join("/");
               const isRoot = index === 0;

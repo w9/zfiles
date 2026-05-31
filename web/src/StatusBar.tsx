@@ -27,7 +27,7 @@ export default function StatusBar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-3 py-2",
+        "flex h-9 shrink-0 items-center justify-between gap-3 overflow-hidden rounded-xl bg-card px-3",
         className,
       )}
       role="contentinfo"

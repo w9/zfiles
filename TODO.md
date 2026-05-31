@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** flatten editable address bar styling so edit mode does not grow the breadcrumb card.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** remove borders from breadcrumb and status bar cards.
 
 ## TODO List
 
@@ -32,4 +32,10 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Upload panel header: total + status summary segments; i18n en + zh-CN
 - [x] Run `pnpm test`
 - [x] Address bar input: remove border/padding; match breadcrumb line height in `ExplorerBreadcrumb`
+- [x] Run `pnpm test`
+- [x] Fixed-height address bar row in `ExplorerBreadcrumb` (view + edit modes)
+- [x] Run `pnpm test`
+- [x] Status bar: fixed `h-9` row to match breadcrumb address bar
+- [x] Run `pnpm test`
+- [x] Remove borders from breadcrumb card (`ExplorerApp`) and `StatusBar`
 - [x] Run `pnpm test`
