@@ -1,52 +1,9 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** upload filename conflict prompt (Replace / Keep Both / Skip + apply-to-all). **Next:** optional parallel uploads or folder upload — defer until requested.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** flatten editable address bar styling so edit mode does not grow the breadcrumb card.
 
 ## TODO List
 
-- [x] Run `pnpm test`
-- [x] Upload queue cards: drop dest path subline and status badges
-- [x] Add `.cargo/config.toml` alias: `dev-frontend` → `run --features dev-frontend -- --dev-frontend`
-- [x] Document alias in README Frontend HMR section
-- [x] Run `cargo test`
-- [x] Drop serve-root `folder-root` fallback; always use generic `folder.svg` for unmatched dirs
-- [x] Remove unused `atListingRoot` / `listingAtRoot` props from icon resolution and listings
-- [x] Update file icon unit tests; run `pnpm test`
-- [x] Reduce `FileIcon` sm/lg sizes (list + grid) by one Tailwind step
-- [x] Run `pnpm test`
-- [x] Remove Type column from list view; update grid layout and column labels
-- [x] Add `formatRelativeModified` with `Intl.RelativeTimeFormat` (locale-aware); wire Modified column
-- [x] Preview pane: show human-readable file size via `formatSize`
-- [x] Unit tests for relative modified formatting; run `pnpm test`
-- [x] Add `formatModifiedAbsolute` for locale-specific datetime strings
-- [x] Modified column cells: `title` tooltip with absolute time; unit tests; run `pnpm test`
-- [x] `modifiedTimeFormat` preference module (localStorage + provider hook)
-- [x] Lightweight `/settings` client routing (`AppShell`); wire local + cloud entry points
-- [x] Settings page UI (modified time toggle, back link, i18n en + zh-CN)
-- [x] Listing: respect modified-time format; tooltip only when showing relative
-- [x] Unit tests; run `pnpm test`
-- [x] Fix app routing with shared `AppRouteProvider` (back button)
-- [x] Add `navigation.open-settings` action + Navigation menu item (en + zh-CN)
-- [x] Settings page toggle + i18n; unit tests; run `pnpm test`
-- [x] Settings default for dot entries; i18n; unit tests; run `pnpm test`
-- [x] Lower opacity for visible dot entries in table and grid listings
-- [x] Unify dot-entry visibility into single persisted preference; update provider, settings, tests
-- [x] Resolve `follow_symlinks_outside_root` from bind address (on for loopback by default); add `--no-follow-symlinks-outside-root`
-- [x] Wire resolved policy into `transport::serve`; unit tests for loopback vs public defaults
-- [x] Update README symlink section; run `cargo test`
-- [x] Replace `--listen` with `--host` + `--port` on `ServeArgs`; resolve bind address from both
-- [x] Show CLI defaults in `--help` (host, port, path, booleans); update daemon start forwarding
-- [x] Update tests, README, and design docs; run `cargo test`
-- [x] Add `.understand-anything/intermediate/`, `tmp/`, and `diff-overlay.json` to `.gitignore`
-- [x] Add AGENTS.md rule: run `cargo fmt` before any git commit
-- [x] Breadcrumb root segment: Home icon with accessible label (en + zh-CN)
-- [x] Breadcrumb region: click empty area → editable address bar; Enter navigates, Escape cancels
-- [x] `normalizeExplorerPath` helper + unit tests; wire `ExplorerApp`
-- [x] Run `pnpm test`
-- [x] Kernel: add `is_symlink` to `FileEntry`; detect in `LocalFs::read_dir`; unit test
-- [x] Frontend: `is_symlink` on `FileEntry`; plumb `isSymlink` through `ListingEntry` to listings
-- [x] `FileIcon`: relative wrapper + link badge when `isSymlink` (sm/lg sizes)
-- [x] i18n title on symlink badge (en + zh-CN)
 - [x] Unit tests; run `pnpm test` and `cargo test --lib`
 - [x] Symlink badge: use `CornerUpRight` arrow instead of chain link icon
 - [x] Symlink badge: move to top-right corner of file icon
@@ -71,3 +28,8 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Upload queue: pause on conflict, apply resolution (incl. apply-to-all ref)
 - [x] `UploadConflictDialog` + i18n (en + zh-CN); wire into `ExplorerApp`
 - [x] Upload panel status for awaiting conflict; unit tests; run `pnpm test`
+- [x] `countUploadsByStatus` helper + unit tests in `upload-queue`
+- [x] Upload panel header: total + status summary segments; i18n en + zh-CN
+- [x] Run `pnpm test`
+- [x] Address bar input: remove border/padding; match breadcrumb line height in `ExplorerBreadcrumb`
+- [x] Run `pnpm test`

@@ -106,7 +106,7 @@ export default function ExplorerBreadcrumb({
           ref={inputRef}
           aria-label={addressBarLabel}
           value={draft}
-          className="h-8"
+          className="h-auto rounded-none border-0 p-0 text-sm shadow-none focus-visible:ring-0"
           onBlur={cancelEditing}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleInputKeyDown}
