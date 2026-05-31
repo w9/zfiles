@@ -7,7 +7,6 @@ import {
   pushNavigationPath,
   type NavigationStacks,
 } from "./navigationHistory";
-import { parentExplorerPath } from "./path";
 
 type LoadListing = (path: string) => Promise<boolean>;
 
@@ -63,14 +62,6 @@ export function useExplorerNavigation(loadListing: LoadListing) {
     }
   }, [loadListing, syncStacks]);
 
-  const goUp = useCallback(async () => {
-    const current = currentPathRef.current;
-    if (!current) {
-      return;
-    }
-    await navigateTo(parentExplorerPath(current));
-  }, [navigateTo]);
-
   const trackCurrentPath = useCallback((path: string) => {
     currentPathRef.current = path;
   }, []);
@@ -79,7 +70,6 @@ export function useExplorerNavigation(loadListing: LoadListing) {
     navigateTo,
     goBack,
     goForward,
-    goUp,
     canGoBack,
     canGoForward,
     trackCurrentPath,

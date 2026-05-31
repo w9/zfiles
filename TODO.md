@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** keep back/up/forward buttons outside the address bar click-to-edit region.
+Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). **This cycle:** drop synthetic `..` parent rows from the file listing; breadcrumb handles up navigation.
 
 ## TODO List
 
@@ -46,4 +46,14 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Run `pnpm test`
 - [x] Run `pnpm test`
 - [x] Move click-to-edit handler off nav buttons onto path region only in `ExplorerBreadcrumb`
+- [x] Run `pnpm test`
+- [x] File view card: remove outer border; add `rounded-xl` to match breadcrumb/status bar
+- [x] Run `pnpm test`
+- [x] Explorer chrome: `mt-1` between address bar, file view, and status bar
+- [x] Run `pnpm test`
+- [x] Remove up button and related props/i18n from `ExplorerBreadcrumb`
+- [x] Drop unused `goUp` from `useExplorerNavigation` and `ExplorerApp`
+- [x] Run `pnpm test`
+- [x] Remove synthetic `..` row from `ExplorerApp` listing entries
+- [x] Simplify `selectedRowIndexForPath` and listing sort parent-row handling
 - [x] Run `pnpm test`

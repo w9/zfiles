@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowUp, Home } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -22,12 +22,10 @@ type ExplorerBreadcrumbProps = {
   addressBarPlaceholder: string;
   backLabel: string;
   forwardLabel: string;
-  upLabel: string;
   canGoBack: boolean;
   canGoForward: boolean;
   onBack: () => void;
   onForward: () => void;
-  onUp: () => void;
   onNavigate: (path: string) => void;
 };
 
@@ -39,12 +37,10 @@ export default function ExplorerBreadcrumb({
   addressBarPlaceholder,
   backLabel,
   forwardLabel,
-  upLabel,
   canGoBack,
   canGoForward,
   onBack,
   onForward,
-  onUp,
   onNavigate,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
@@ -128,17 +124,6 @@ export default function ExplorerBreadcrumb({
           onClick={onBack}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0"
-          aria-label={upLabel}
-          disabled={!currentPath}
-          onClick={onUp}
-        >
-          <ArrowUp className="size-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"

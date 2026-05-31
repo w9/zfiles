@@ -12,12 +12,6 @@ export function compareListingEntries(
   order: ListingSortOrder,
   tieBreaker: (left: ListingEntry, right: ListingEntry) => number,
 ): number {
-  if (left.key === "..") {
-    return -1;
-  }
-  if (right.key === "..") {
-    return 1;
-  }
   if (foldersFirstEnabled(order) && left.isDir !== right.isDir) {
     return left.isDir ? -1 : 1;
   }

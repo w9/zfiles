@@ -106,7 +106,7 @@ export default function ExplorerApp() {
       setCurrentPath(path);
       const restoredIndex =
         previousPath != null
-          ? selectedRowIndexForPath(path, data, previousPath)
+          ? selectedRowIndexForPath(data, previousPath)
           : null;
       if (restoredIndex != null) {
         setSelectedIndex(restoredIndex);
@@ -232,7 +232,6 @@ export default function ExplorerApp() {
     navigateTo,
     goBack,
     goForward,
-    goUp,
     canGoBack,
     canGoForward,
     trackCurrentPath,
@@ -286,7 +285,7 @@ export default function ExplorerApp() {
       return selected.filter(isImagePath);
     }
     return listingEntriesRef.current
-      .filter((entry) => entry.key !== ".." && !entry.isDir && isImagePath(entry.path))
+      .filter((entry) => !entry.isDir && isImagePath(entry.path))
       .map((entry) => entry.path);
   }, []);
 
@@ -307,22 +306,6 @@ export default function ExplorerApp() {
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
     const rows: ListingEntry[] = [];
-    if (currentPath) {
-      rows.push({
-        key: "..",
-        name: "..",
-        path: "",
-        isDir: true,
-        onSelect: (_event: React.MouseEvent) => {
-          setSelectedIndex(0);
-          setSelectedPath(null);
-        },
-        onActivate: () => {
-          const parent = currentPath.split("/").slice(0, -1).join("/");
-          navigateTo(parent);
-        },
-      });
-    }
 
     for (const entry of visibleEntries) {
       const currentIndex = rows.length;
@@ -343,7 +326,7 @@ export default function ExplorerApp() {
               const next = new Set<string>();
               for (let i = start; i <= end; i += 1) {
                 const row = rows[i];
-                if (row?.path && row.key !== "..") {
+                if (row?.path) {
                   next.add(row.path);
                 }
               }
@@ -370,7 +353,7 @@ export default function ExplorerApp() {
       });
     }
     return rows;
-  }, [visibleEntries, currentPath, navigateTo, backend]);
+  }, [visibleEntries, navigateTo, backend]);
 
   useEffect(() => {
     listingEntriesRef.current = listingEntries;
@@ -398,7 +381,7 @@ export default function ExplorerApp() {
       runBulkAction,
       getListingPathAt: (index: number) => {
         const row = listingEntriesRef.current[index];
-        return row?.path && row.key !== ".." ? row.path : null;
+        return row?.path ?? null;
       },
       openSettings: () => navigate("settings"),
       toggleShowDotEntries,
@@ -543,17 +526,15 @@ export default function ExplorerApp() {
           addressBarPlaceholder={t("breadcrumb.addressBarPlaceholder")}
           backLabel={t("breadcrumb.back")}
           forwardLabel={t("breadcrumb.forward")}
-          upLabel={t("breadcrumb.up")}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           onBack={() => void goBack()}
           onForward={() => void goForward()}
-          onUp={() => void goUp()}
           onNavigate={(path) => void navigateTo(path)}
         />
       </section>
 
-      <section className="mt-4 flex flex-col overflow-hidden border bg-card">
+      <section className="mt-1 flex flex-col overflow-hidden rounded-xl bg-card">
         <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div className="h-full min-h-0 min-w-0 overflow-hidden">
             {listingViewMode === "grid" ? (
@@ -607,7 +588,7 @@ export default function ExplorerApp() {
         </div>
       </section>
 
-      <section className="mt-4">
+      <section className="mt-1">
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}

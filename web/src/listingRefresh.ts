@@ -15,7 +15,6 @@ export function shouldRefreshListing(changedPath: string, listingPath: string): 
 }
 
 export function selectedRowIndexForPath(
-  listingPath: string,
   entries: Array<{ path: string }>,
   selectedPath: string,
 ): number | null {
@@ -23,5 +22,5 @@ export function selectedRowIndexForPath(
   if (entryIndex < 0) {
     return null;
   }
-  return listingPath ? entryIndex + 1 : entryIndex;
+  return entryIndex;
 }

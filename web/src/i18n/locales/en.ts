@@ -8,7 +8,6 @@ export const en = {
   "breadcrumb.addressBarPlaceholder": "Enter path…",
   "breadcrumb.back": "Back",
   "breadcrumb.forward": "Forward",
-  "breadcrumb.up": "Go up",
   "theme.group": "Color theme",
   "theme.light": "Light",
   "theme.dark": "Dark",

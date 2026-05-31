@@ -21,8 +21,8 @@ test("shouldRefreshListing refreshes nested changes for the open directory", () 
   assert.equal(shouldRefreshListing("README.md", "web"), false);
 });
 
-test("selectedRowIndexForPath accounts for parent row in subdirectories", () => {
+test("selectedRowIndexForPath returns the matching row index", () => {
   const entries = [{ path: "src/App.tsx" }, { path: "package.json" }];
-  assert.equal(selectedRowIndexForPath("", entries, "package.json"), 1);
-  assert.equal(selectedRowIndexForPath("web", entries, "package.json"), 2);
+  assert.equal(selectedRowIndexForPath(entries, "package.json"), 1);
+  assert.equal(selectedRowIndexForPath(entries, "missing"), null);
 });

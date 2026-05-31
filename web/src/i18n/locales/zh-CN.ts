@@ -8,7 +8,6 @@ export const zhCN: Record<MessageKey, string> = {
   "breadcrumb.addressBarPlaceholder": "输入路径…",
   "breadcrumb.back": "后退",
   "breadcrumb.forward": "前进",
-  "breadcrumb.up": "返回上级",
   "theme.group": "颜色主题",
   "theme.light": "浅色",
   "theme.dark": "深色",

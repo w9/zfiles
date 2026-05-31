@@ -49,11 +49,11 @@ test("compareFileEntries sorts names case-insensitively within a group", () => {
   );
 });
 
-test("compareListingEntries keeps parent row first", () => {
-  const parent = listing("..", true);
+test("compareListingEntries sorts folders first when configured", () => {
   const folder = listing("docs", true);
+  const file = listing("readme.md", false);
   assert.equal(
-    compareListingEntries(parent, folder, "folders-first", () => 0),
+    compareListingEntries(folder, file, "folders-first", () => 0),
     -1,
   );
 });
