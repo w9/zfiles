@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -42,18 +42,27 @@ const DEFAULT_COLUMN_LAYOUT: Layout = {
 };
 
 const LISTING_COLUMN_IDS = ["name", "size", "modified"] as const;
-const RESIZE_HANDLE_COUNT = LISTING_COLUMN_IDS.length - 1;
-const RESIZE_HANDLE_WIDTH_PX = 1;
+
+const LISTING_TEXT_CLASS = "text-[14px] leading-5";
+
+const LISTING_HEADER_TEXT_CLASS = "text-[12px] leading-4";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
-const CELL_TEXT = "block min-w-0 truncate";
+const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
 
-const BODY_COLUMN_DIVIDER_CLASS = "border-r border-transparent transition-colors";
+const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent transition-colors";
 
 const BODY_SCROLL_PEER_HOVER_CLASS =
-  "peer-hover/listing-header:[&_[role=gridcell]]:border-border";
+  "peer-hover/listing-header:[&_[data-listing-gutter]]:border-border";
+
+const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
+
+const LISTING_PANEL_GROUP_CLASS = "h-10 max-h-10 min-h-0 w-full overflow-hidden";
+
+const LISTING_PANEL_CLASS = "!h-10 !max-h-10 min-h-0 min-w-0 overflow-hidden";
 
 const COLUMN_RESIZE_HANDLE_CLASS = cn(
+  "h-10 max-h-10 min-h-0 shrink-0 self-center",
   "z-10 bg-transparent opacity-0 transition-opacity",
   "group-hover/listing-header:bg-border group-hover/listing-header:opacity-100",
   "[&>div]:border-transparent [&>div]:bg-transparent [&>div]:opacity-0",
@@ -61,14 +70,38 @@ const COLUMN_RESIZE_HANDLE_CLASS = cn(
 );
 
 function layoutToGridTemplateColumns(layout: Layout, containerWidth: number): string {
-  const available =
-    containerWidth - RESIZE_HANDLE_COUNT * RESIZE_HANDLE_WIDTH_PX;
+  const separatorCount = LISTING_COLUMN_IDS.length - 1;
+  const available = containerWidth - separatorCount;
   if (available <= 0) {
-    return "minmax(0, 2fr) 6rem 9rem";
+    return "minmax(0, 2fr) 1px 6rem 1px 9rem";
   }
 
-  const widths = LISTING_COLUMN_IDS.map((id) => ((layout[id] ?? 0) / 100) * available);
-  return widths.map((px) => `${px}px`).join(" ");
+  const tracks: string[] = [];
+  LISTING_COLUMN_IDS.forEach((id, index) => {
+    tracks.push(`${((layout[id] ?? 0) / 100) * available}px`);
+    if (index < separatorCount) {
+      tracks.push("1px");
+    }
+  });
+  return tracks.join(" ");
+}
+
+function measureHeaderGridTemplate(header: HTMLElement): string | null {
+  const panels = Array.from(header.querySelectorAll<HTMLElement>("[data-panel]"));
+  const separators = Array.from(header.querySelectorAll<HTMLElement>("[data-separator]"));
+  if (panels.length === 0) {
+    return null;
+  }
+
+  const tracks: string[] = [];
+  panels.forEach((panel, index) => {
+    tracks.push(`${panel.getBoundingClientRect().width}px`);
+    const separator = separators[index];
+    if (separator) {
+      tracks.push(`${separator.getBoundingClientRect().width}px`);
+    }
+  });
+  return tracks.join(" ");
 }
 
 export default function VirtualListing({
@@ -83,7 +116,9 @@ export default function VirtualListing({
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
   const [columnLayout, setColumnLayout] = useState<Layout>(DEFAULT_COLUMN_LAYOUT);
   const headerRef = useRef<HTMLDivElement | null>(null);
-  const [headerWidth, setHeaderWidth] = useState(0);
+  const [columnGridTemplate, setColumnGridTemplate] = useState(() =>
+    layoutToGridTemplateColumns(DEFAULT_COLUMN_LAYOUT, 0),
+  );
 
   const columns = useMemo(() => createListingColumns(columnLabels), [columnLabels]);
   const table = useReactTable({
@@ -104,34 +139,47 @@ export default function VirtualListing({
     overscan: 12,
   });
 
-  const syncHeaderWidth = useCallback(() => {
-    const width = headerRef.current?.clientWidth ?? 0;
-    setHeaderWidth(width);
-  }, []);
+  const measureColumnGrid = useCallback(() => {
+    const header = headerRef.current;
+    if (!header) {
+      return;
+    }
+
+    const measured = measureHeaderGridTemplate(header);
+    if (measured) {
+      setColumnGridTemplate(measured);
+      return;
+    }
+
+    const width = header.clientWidth;
+    if (width > 0) {
+      setColumnGridTemplate(layoutToGridTemplateColumns(columnLayout, width));
+    }
+  }, [columnLayout]);
 
   useEffect(() => {
-    syncHeaderWidth();
     const element = headerRef.current;
     if (!element) {
       return;
     }
 
-    const observer = new ResizeObserver(() => {
-      syncHeaderWidth();
-    });
+    const scheduleMeasure = () => {
+      requestAnimationFrame(measureColumnGrid);
+    };
+
+    scheduleMeasure();
+    const observer = new ResizeObserver(scheduleMeasure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [syncHeaderWidth]);
+  }, [measureColumnGrid]);
 
-  const columnGridTemplate = useMemo(
-    () => layoutToGridTemplateColumns(columnLayout, headerWidth),
-    [columnLayout, headerWidth],
+  const handleColumnLayoutChange = useCallback(
+    (layout: Layout) => {
+      setColumnLayout(layout);
+      requestAnimationFrame(measureColumnGrid);
+    },
+    [measureColumnGrid],
   );
-
-  const handleColumnLayoutChange = useCallback((layout: Layout) => {
-    setColumnLayout(layout);
-    syncHeaderWidth();
-  }, [syncHeaderWidth]);
 
   useEffect(() => {
     if (selectedIndex >= 0 && selectedIndex < rows.length) {
@@ -145,6 +193,7 @@ export default function VirtualListing({
     <div
       className={cn(
         "flex min-h-[440px] flex-col overflow-hidden rounded-xl border bg-card",
+        LISTING_TEXT_CLASS,
         className,
       )}
       role="grid"
@@ -152,13 +201,16 @@ export default function VirtualListing({
     >
       <div
         ref={headerRef}
-        className="group/listing-header peer/listing-header shrink-0 border-b"
+        className={cn(
+          "group/listing-header peer/listing-header shrink-0 border-b",
+          LISTING_HEADER_ROW_CLASS,
+        )}
         role="row"
       >
         {headerGroup ? (
           <ResizablePanelGroup
             orientation="horizontal"
-            className="min-h-10 w-full"
+            className={LISTING_PANEL_GROUP_CLASS}
             defaultLayout={DEFAULT_COLUMN_LAYOUT}
             onLayoutChange={handleColumnLayoutChange}
           >
@@ -207,9 +259,9 @@ export default function VirtualListing({
                   height: `${item.size}px`,
                 }}
               >
-                {row.getVisibleCells().map((cell, columnIndex, cells) => {
+                {row.getVisibleCells().map((cell, columnIndex) => {
                   const isName = columnIndex === 0;
-                  const showColumnDivider = columnIndex < cells.length - 1;
+                  const gridColumn = columnIndex * 2 + 1;
                   const modifiedTitle =
                     cell.column.id === "modified" &&
                     columnLabels.modifiedTimeFormat === "relative"
@@ -223,6 +275,7 @@ export default function VirtualListing({
                         isDir={entry.isDir}
                         isSymlink={entry.isSymlink}
                         theme={iconTheme}
+                        size="xs"
                       />
                       <span className="min-w-0 truncate">{entry.name}</span>
                     </>
@@ -233,7 +286,10 @@ export default function VirtualListing({
                   const interactive = isName ? (
                     entry.href ? (
                       <a
-                        className="flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden px-2 hover:bg-accent/60"
+                        className={cn(
+                          "flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden px-2 hover:bg-accent/60",
+                          LISTING_TEXT_CLASS,
+                        )}
                         href={entry.href}
                         onClick={(event) => {
                           event.preventDefault();
@@ -249,7 +305,10 @@ export default function VirtualListing({
                     ) : (
                       <button
                         type="button"
-                        className="flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden px-2 text-left hover:bg-accent/60"
+                        className={cn(
+                          "flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden px-2 text-left hover:bg-accent/60",
+                          LISTING_TEXT_CLASS,
+                        )}
                         onClick={entry.onSelect}
                         onDoubleClick={entry.onActivate}
                         onContextMenu={entry.onContextMenu}
@@ -260,7 +319,8 @@ export default function VirtualListing({
                   ) : (
                     <div
                       className={cn(
-                        "flex h-11 items-center overflow-hidden px-2 text-sm",
+                        "flex h-11 items-center overflow-hidden px-2",
+                        LISTING_TEXT_CLASS,
                         columnIndex === 1 && "justify-end text-right",
                       )}
                     >
@@ -271,17 +331,23 @@ export default function VirtualListing({
                   );
 
                   return (
-                    <div
-                      key={cell.id}
-                      role="gridcell"
-                      className={cn(
-                        "p-0",
-                        CELL_CLIP,
-                        showColumnDivider && BODY_COLUMN_DIVIDER_CLASS,
-                      )}
-                    >
-                      {interactive}
-                    </div>
+                    <Fragment key={cell.id}>
+                      {columnIndex > 0 ? (
+                        <div
+                          data-listing-gutter
+                          aria-hidden
+                          className={BODY_COLUMN_GUTTER_CLASS}
+                          style={{ gridColumn: columnIndex * 2 }}
+                        />
+                      ) : null}
+                      <div
+                        role="gridcell"
+                        className={cn("p-0", CELL_CLIP)}
+                        style={{ gridColumn }}
+                      >
+                        {interactive}
+                      </div>
+                    </Fragment>
                   );
                 })}
               </div>
@@ -308,21 +374,19 @@ function ListingHeaderColumn({ header, index, isLast }: ListingHeaderColumnProps
         id={header.column.id}
         defaultSize={`${DEFAULT_COLUMN_LAYOUT[header.column.id]}%`}
         minSize={index === 0 ? 20 : 10}
-        className="min-w-0"
+        className={LISTING_PANEL_CLASS}
       >
         <div
           role="columnheader"
           className={cn(
-            "flex h-10 min-w-0 items-center px-2 text-sm font-medium",
-            CELL_CLIP,
+            "flex h-full w-full min-h-0 min-w-0 items-center overflow-hidden px-2 font-medium",
+            LISTING_HEADER_TEXT_CLASS,
             alignEnd && "justify-end",
           )}
         >
-          <span className={CELL_TEXT}>
-            {header.isPlaceholder
-              ? null
-              : flexRender(header.column.columnDef.header, header.getContext())}
-          </span>
+          {header.isPlaceholder
+            ? null
+            : flexRender(header.column.columnDef.header, header.getContext())}
         </div>
       </ResizablePanel>
       {!isLast ? <ResizableHandle withHandle className={COLUMN_RESIZE_HANDLE_CLASS} /> : null}

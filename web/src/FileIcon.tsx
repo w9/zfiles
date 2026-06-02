@@ -9,23 +9,32 @@ type FileIconProps = {
   isDir: boolean;
   isSymlink?: boolean;
   theme?: FileIconTheme;
-  size?: "sm" | "lg";
+  size?: "xs" | "sm" | "lg";
   className?: string;
 };
 
 const SIZE_CLASS = {
+  xs: "h-4 w-4",
   sm: "h-6 w-6",
   lg: "h-10 w-10",
 } as const;
 
 const BADGE_CLASS = {
+  xs: "h-2.5 w-2.5",
   sm: "h-3 w-3",
   lg: "h-4 w-4",
 } as const;
 
 const BADGE_ICON_CLASS = {
+  xs: "h-1.5 w-1.5",
   sm: "h-2 w-2",
   lg: "h-2.5 w-2.5",
+} as const;
+
+const SIZE_PX = {
+  xs: 16,
+  sm: 24,
+  lg: 40,
 } as const;
 
 export function FileIcon({
@@ -46,8 +55,8 @@ export function FileIcon({
         src={iconUrl}
         alt=""
         loading="lazy"
-        width={size === "lg" ? 40 : 24}
-        height={size === "lg" ? 40 : 24}
+        width={SIZE_PX[size]}
+        height={SIZE_PX[size]}
       />
       {isSymlink ? (
         <span
