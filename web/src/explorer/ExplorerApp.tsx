@@ -460,8 +460,8 @@ export default function ExplorerApp() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-8 py-8">
-      <header className="space-y-4">
+    <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden p-2">
+      <header className="shrink-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MenuBar
             registry={actionSystem.registry}
@@ -533,7 +533,7 @@ export default function ExplorerApp() {
         }}
       />
 
-      <section className="mt-4 overflow-hidden rounded-xl bg-card">
+      <section className="shrink-0 overflow-hidden rounded-xl bg-card">
         <ExplorerBreadcrumb
           currentPath={currentPath}
           rootAriaLabel={t("breadcrumb.root")}
@@ -553,8 +553,8 @@ export default function ExplorerApp() {
         />
       </section>
 
-      <section className="mt-2 flex flex-col overflow-hidden rounded-xl bg-card">
-        <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div className="h-full min-h-0 min-w-0 overflow-hidden">
             {listingViewMode === "grid" ? (
               <GridListing
@@ -607,7 +607,7 @@ export default function ExplorerApp() {
         </div>
       </section>
 
-      <section className="mt-2">
+      <section className="shrink-0">
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}
