@@ -9,7 +9,8 @@ use crate::config::Config;
 #[derive(Debug, Parser)]
 #[command(
     name = "zfiles",
-    about = "Local file server with browser-based explorer"
+    about = "Local file server with browser-based explorer",
+    version
 )]
 pub struct Cli {
     /// Increase logging verbosity (`-v` debug, `-vv` trace). Ignored when `RUST_LOG` is set.
@@ -281,6 +282,15 @@ mod tests {
     fn default_is_serve_mode() {
         let cli = Cli::parse_from(["zfiles"]);
         assert!(cli.is_serve());
+    }
+
+    #[test]
+    fn version_flag_prints_package_version() {
+        use clap::CommandFactory;
+        let err = Cli::command()
+            .try_get_matches_from(["zfiles", "--version"])
+            .unwrap_err();
+        assert_eq!(err.kind(), clap::error::ErrorKind::DisplayVersion);
     }
 
     #[test]

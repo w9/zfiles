@@ -65,6 +65,14 @@ Do not skip steps or reorder them. Planning and TODO updates come first; impleme
 
 **Cycle step 3 vs user commit preferences:** The planning commit (plan + new TODO items only) is **required** by this workflow before implementation, even when the user's general rule is to avoid unprompted commits. Implementation commits (step 4) still follow the user's git instructions — ask before committing code unless they explicitly asked you to commit or finish the cycle.
 
+### Version bump before git commits
+
+Before **any** git commit you create — planning, implementation, or otherwise — bump the **patch** version (the `z` in `x.y.z`) in [Cargo.toml](Cargo.toml) (`[package].version`). Each commit must carry its own patch increment so `zfiles --version` always reflects the latest committed release.
+
+- Edit only the patch segment unless the user explicitly requests a minor or major bump.
+- Include the version bump in the same commit as the other changes — do not commit a standalone version-only commit after the fact.
+- When the user asks you to commit, treat the patch bump as part of the commit workflow (alongside `git status` / `git diff`), not an optional follow-up.
+
 ### Rust checks before git commits
 
 Before **any** git commit you create — planning, implementation, or otherwise — run **`cargo fmt`** and **`cargo clippy -- -D warnings`**. CI runs both checks and fails on unformatted or linted Rust; do not commit a tree that would fail either step.
