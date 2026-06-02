@@ -77,6 +77,7 @@ export default function ExplorerApp() {
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [listCursor, setListCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -227,6 +228,16 @@ export default function ExplorerApp() {
     }),
     [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath, showDotEntries],
   );
+
+  const refreshListing = useCallback(() => {
+    if (refreshing) {
+      return;
+    }
+    setRefreshing(true);
+    void loadListing(currentPathRef.current, { preserveSelection: true })
+      .catch((err: Error) => notifyError(err.message))
+      .finally(() => setRefreshing(false));
+  }, [loadListing, refreshing]);
 
   const loadListingForNavigation = useCallback(
     (path: string) => loadListing(path),
@@ -531,15 +542,18 @@ export default function ExplorerApp() {
           addressBarPlaceholder={t("breadcrumb.addressBarPlaceholder")}
           backLabel={t("breadcrumb.back")}
           forwardLabel={t("breadcrumb.forward")}
+          refreshLabel={t("breadcrumb.refresh")}
+          refreshing={refreshing}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           onBack={() => void goBack()}
           onForward={() => void goForward()}
+          onRefresh={refreshListing}
           onNavigate={(path) => void navigateTo(path)}
         />
       </section>
 
-      <section className="mt-1 flex flex-col overflow-hidden rounded-xl bg-card">
+      <section className="mt-2 flex flex-col overflow-hidden rounded-xl bg-card">
         <div className="grid h-[440px] grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div className="h-full min-h-0 min-w-0 overflow-hidden">
             {listingViewMode === "grid" ? (
@@ -593,7 +607,7 @@ export default function ExplorerApp() {
         </div>
       </section>
 
-      <section className="mt-1">
+      <section className="mt-2">
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}

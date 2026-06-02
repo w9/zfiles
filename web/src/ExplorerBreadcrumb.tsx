@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Home } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, RefreshCw } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -22,10 +22,13 @@ type ExplorerBreadcrumbProps = {
   addressBarPlaceholder: string;
   backLabel: string;
   forwardLabel: string;
+  refreshLabel: string;
+  refreshing: boolean;
   canGoBack: boolean;
   canGoForward: boolean;
   onBack: () => void;
   onForward: () => void;
+  onRefresh: () => void;
   onNavigate: (path: string) => void;
 };
 
@@ -37,10 +40,13 @@ export default function ExplorerBreadcrumb({
   addressBarPlaceholder,
   backLabel,
   forwardLabel,
+  refreshLabel,
+  refreshing,
   canGoBack,
   canGoForward,
   onBack,
   onForward,
+  onRefresh,
   onNavigate,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
@@ -136,6 +142,20 @@ export default function ExplorerBreadcrumb({
         >
           <ArrowRight className="size-4" aria-hidden="true" />
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label={refreshLabel}
+          disabled={refreshing}
+          onClick={onRefresh}
+        >
+          <RefreshCw
+            className={cn("size-4", refreshing && "animate-spin")}
+            aria-hidden="true"
+          />
+        </Button>
       </div>
       <div
         className={cn("min-w-0 flex-1", !editing && "cursor-text")}
@@ -162,7 +182,7 @@ export default function ExplorerBreadcrumb({
                 return (
                   <span key={`${part}-${index}`} className="contents">
                     {index > 0 ? <BreadcrumbSeparator /> : null}
-                    <BreadcrumbItem>
+                    <BreadcrumbItem className={isRoot ? "ml-1" : undefined}>
                       {isLast ? (
                         <BreadcrumbPage>
                           {isRoot ? (
