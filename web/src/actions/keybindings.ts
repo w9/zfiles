@@ -82,6 +82,7 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     { key: "Enter", command: "navigation.open", when: "focus.pane == 'file-list'" },
     { key: "Backspace", command: "navigation.up", when: "focus.pane == 'file-list'" },
     { key: "Space", command: "selection.toggle", when: "focus.pane == 'file-list'" },
+    { key: "Escape", command: "selection.clear", when: "selection.count > 0" },
   ];
 }
 

@@ -37,7 +37,7 @@ import {
   type ListingViewMode,
 } from "../listingView";
 import {
-  selectedRowIndexForPath,
+  restoreSelectionFromListing,
   shouldRefreshListing,
 } from "../listingRefresh";
 import { notifyApiError, notifyError } from "../notifyError";
@@ -111,19 +111,31 @@ export default function ExplorerApp() {
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
+    const previousPaths = options?.preserveSelection
+      ? selectedPathsRef.current.size > 0
+        ? new Set(selectedPathsRef.current)
+        : previousPath
+          ? new Set([previousPath])
+          : new Set<string>()
+      : null;
     try {
       const { entries: data, nextCursor } = await backend.list(path);
       setEntries(data);
       setListCursor(nextCursor);
       setCurrentPath(path);
-      const restoredIndex =
-        previousPath != null
-          ? selectedRowIndexForPath(data, previousPath)
+      const restored =
+        previousPaths != null
+          ? restoreSelectionFromListing(data, previousPaths, previousPath)
           : null;
-      if (restoredIndex != null) {
-        setSelectedIndex(restoredIndex);
-        setSelectedPath(previousPath);
-        setSelectedPaths(previousPath ? new Set([previousPath]) : new Set());
+      if (restored) {
+        setSelectedIndex(restored.index);
+        setSelectedPath(restored.focusPath);
+        setSelectedPaths(restored.paths);
+        selectionAnchorRef.current = restored.index;
+      } else if (previousPaths != null && previousPaths.size > 0) {
+        setSelectedIndex(0);
+        setSelectedPath(null);
+        setSelectedPaths(new Set());
       } else {
         setSelectedIndex(0);
         setSelectedPath(null);
@@ -344,6 +356,7 @@ export default function ExplorerApp() {
       size: entry.is_dir ? undefined : entry.size,
       modified: entry.modified,
       onSelect: (event, displayIndex) => {
+        setFocusPane("file-list");
         const rows = listingEntriesRef.current;
         let nextSelectedPath: string | null = entry.path;
 
@@ -439,9 +452,7 @@ export default function ExplorerApp() {
       const entry = listingEntriesRef.current[next];
       if (entry?.path) {
         setSelectedPaths(new Set([entry.path]));
-        if (!entry.isDir) {
-          setSelectedPath(entry.path);
-        }
+        setSelectedPath(entry.path);
       }
       return next;
     });
@@ -532,6 +543,13 @@ export default function ExplorerApp() {
       if (target.closest('[role="menu"]')) {
         return true;
       }
+      if (
+        target.closest(
+          "button, a, input, textarea, select, [role='button'], [role='menuitem']",
+        )
+      ) {
+        return true;
+      }
       return false;
     };
 
@@ -548,44 +566,15 @@ export default function ExplorerApp() {
       clearSelection();
     };
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-      if (selectedPathsRef.current.size === 0) {
-        return;
-      }
-      if (blockSelectionClearRef.current) {
-        return;
-      }
-      const target = event.target;
-      if (target instanceof HTMLElement) {
-        if (
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable
-        ) {
-          return;
-        }
-      }
-      if (shouldIgnoreTarget(event.target)) {
-        return;
-      }
-      event.preventDefault();
-      clearSelection();
-    };
-
     document.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
     };
   }, [clearSelection]);
 
   useEffect(() => {
     const selected = activeListingEntries[selectedIndex];
-    if (selected && !selected.isDir) {
+    if (selected?.path) {
       setSelectedPath(selected.path);
     }
   }, [selectedIndex, activeListingEntries]);
@@ -701,11 +690,15 @@ export default function ExplorerApp() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
-          <div className="h-full min-h-0 min-w-0 overflow-hidden">
+          <div
+            className="h-full min-h-0 min-w-0 overflow-hidden"
+            onMouseDown={() => setFocusPane("file-list")}
+          >
             {listingViewMode === "grid" ? (
               <GridListing
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
+                focusedPath={selectedPath}
                 multiSelectedPaths={selectedPaths}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
@@ -715,6 +708,7 @@ export default function ExplorerApp() {
               <VirtualListing
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
+                focusedPath={selectedPath}
                 multiSelectedPaths={selectedPaths}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}

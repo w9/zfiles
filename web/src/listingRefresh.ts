@@ -24,3 +24,26 @@ export function selectedRowIndexForPath(
   }
   return entryIndex;
 }
+
+export function restoreSelectionFromListing(
+  entries: Array<{ path: string }>,
+  previousPaths: Set<string>,
+  focusPath: string | null,
+): { paths: Set<string>; focusPath: string; index: number } | null {
+  const paths = new Set<string>();
+  for (const path of previousPaths) {
+    if (entries.some((entry) => entry.path === path)) {
+      paths.add(path);
+    }
+  }
+  if (paths.size === 0) {
+    return null;
+  }
+  const nextFocusPath =
+    focusPath && paths.has(focusPath) ? focusPath : (paths.values().next().value as string);
+  const index = selectedRowIndexForPath(entries, nextFocusPath);
+  if (index == null) {
+    return null;
+  }
+  return { paths, focusPath: nextFocusPath, index };
+}

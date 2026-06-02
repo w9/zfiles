@@ -122,8 +122,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       when: "selection.count > 0",
       whenFailureMessageKey: "actions.whenFailure.selectionRequired",
       contexts: ["file-list"],
-      destructive: true,
-      confirmMessageKey: "actions.selection.clear.confirm",
+      defaultKeybinding: "Escape",
       icon: "selection.clear",
       handler: async () => {
         getDeps().clearSelection();
@@ -148,7 +147,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       id: "file.delete",
       nameKey: "actions.file.delete.name",
       categoryKey: "actions.file.category",
-      when: "focus.pane == 'file-list' && server.read-only == false",
+      when: "(focus.pane == 'file-list' || selection.count > 0) && server.read-only == false",
       whenFailureMessageKey: "actions.whenFailure.readOnly",
       contexts: ["file-list", "context-menu"],
       destructive: true,

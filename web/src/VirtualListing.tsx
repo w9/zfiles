@@ -17,6 +17,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
@@ -29,6 +30,7 @@ export type { ListingEntry } from "@/listing-types";
 type VirtualListingProps = {
   entries: ListingEntry[];
   selectedIndex: number;
+  focusedPath?: string | null;
   multiSelectedPaths?: Set<string>;
   ariaLabel: string;
   columnLabels: ListingColumnLabels;
@@ -59,12 +61,13 @@ const BODY_SCROLL_PEER_HOVER_CLASS =
   "peer-hover/listing-header:[&_[data-listing-gutter]]:border-border";
 
 const LISTING_ROW_CLASS = cn(
-  "absolute left-0 grid w-full cursor-default border-b transition-colors",
+  "absolute left-0 grid w-full cursor-default select-none border-b transition-colors",
   "hover:bg-accent/60",
   "outline-none focus:outline-none focus-visible:outline-none",
 );
 
 const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
+const LISTING_ROW_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
 
@@ -118,6 +121,7 @@ function measureHeaderGridTemplate(header: HTMLElement): string | null {
 export default function VirtualListing({
   entries,
   selectedIndex,
+  focusedPath,
   multiSelectedPaths,
   ariaLabel,
   columnLabels,
@@ -243,9 +247,10 @@ export default function VirtualListing({
         ) : null}
       </div>
 
-      <div
-        ref={parentRef}
-        className={cn("min-h-0 flex-1 overflow-auto", BODY_SCROLL_PEER_HOVER_CLASS)}
+      <ScrollArea
+        viewportRef={parentRef}
+        className={cn("min-h-0 flex-1", BODY_SCROLL_PEER_HOVER_CLASS)}
+        viewportClassName="[&>div]:!block"
       >
         <div
           className="relative w-full"
@@ -256,6 +261,7 @@ export default function VirtualListing({
             const row = rows[item.index];
             const entry = row.original;
             const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
+            const isFocused = focusedPath != null && entry.path === focusedPath;
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
 
             return (
@@ -267,12 +273,20 @@ export default function VirtualListing({
                 className={cn(
                   LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
-                  isSelected && LISTING_ROW_SELECTED_CLASS,
+                  isSelected &&
+                    (isFocused
+                      ? LISTING_ROW_FOCUS_SELECTED_CLASS
+                      : LISTING_ROW_SELECTED_CLASS),
                 )}
                 style={{
                   gridTemplateColumns: columnGridTemplate,
                   transform: `translateY(${item.start}px)`,
                   height: `${item.size}px`,
+                }}
+                onMouseDown={(event) => {
+                  if (event.shiftKey) {
+                    event.preventDefault();
+                  }
                 }}
                 onClick={(event) => entry.onSelect(event, item.index)}
                 onDoubleClick={() => {
@@ -347,7 +361,7 @@ export default function VirtualListing({
             );
           })}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 }

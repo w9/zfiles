@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 type GridListingProps = {
   entries: ListingEntry[];
   selectedIndex: number;
+  focusedPath?: string | null;
   multiSelectedPaths?: Set<string>;
   ariaLabel: string;
   iconTheme?: FileIconTheme;
@@ -19,11 +20,13 @@ type GridListingProps = {
 const GRID_COLUMNS = 4;
 const ROW_HEIGHT = 168;
 
-const GRID_ITEM_SELECTED_CLASS = "bg-primary/12";
+const GRID_ITEM_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
+const GRID_ITEM_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
 
 export default function GridListing({
   entries,
   selectedIndex,
+  focusedPath,
   multiSelectedPaths,
   ariaLabel,
   iconTheme = "dark",
@@ -73,6 +76,7 @@ export default function GridListing({
                 {rowEntries.map((entry, columnIndex) => {
                   const index = startIndex + columnIndex;
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
+                  const isFocused = focusedPath != null && entry.path === focusedPath;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   return (
                     <button
@@ -80,10 +84,18 @@ export default function GridListing({
                       type="button"
                       data-listing-entry
                       className={cn(
-                        "flex h-full flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
+                        "flex h-full select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                         dimmed && "opacity-70",
-                        isSelected && GRID_ITEM_SELECTED_CLASS,
+                        isSelected &&
+                          (isFocused
+                            ? GRID_ITEM_FOCUS_SELECTED_CLASS
+                            : GRID_ITEM_SELECTED_CLASS),
                       )}
+                      onMouseDown={(event) => {
+                        if (event.shiftKey) {
+                          event.preventDefault();
+                        }
+                      }}
                       onClick={(event) => entry.onSelect(event, index)}
                       onDoubleClick={entry.onActivate}
                       onContextMenu={entry.onContextMenu}

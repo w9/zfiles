@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  restoreSelectionFromListing,
   selectedRowIndexForPath,
   shouldRefreshListing,
 } from "./listingRefresh";
@@ -25,4 +26,16 @@ test("selectedRowIndexForPath returns the matching row index", () => {
   const entries = [{ path: "src/App.tsx" }, { path: "package.json" }];
   assert.equal(selectedRowIndexForPath(entries, "package.json"), 1);
   assert.equal(selectedRowIndexForPath(entries, "missing"), null);
+});
+
+test("restoreSelectionFromListing keeps all paths that still exist", () => {
+  const entries = [{ path: "a" }, { path: "b" }, { path: "c" }];
+  const restored = restoreSelectionFromListing(
+    entries,
+    new Set(["a", "b", "missing"]),
+    "b",
+  );
+  assert.deepEqual(restored?.paths, new Set(["a", "b"]));
+  assert.equal(restored?.focusPath, "b");
+  assert.equal(restored?.index, 1);
 });
