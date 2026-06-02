@@ -5,6 +5,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type Header,
+  type OnChangeFn,
   type SortingState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -33,6 +34,8 @@ type VirtualListingProps = {
   columnLabels: ListingColumnLabels;
   iconTheme?: FileIconTheme;
   className?: string;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
 };
 
 const DEFAULT_COLUMN_LAYOUT: Layout = {
@@ -54,6 +57,14 @@ const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent transition-colors"
 
 const BODY_SCROLL_PEER_HOVER_CLASS =
   "peer-hover/listing-header:[&_[data-listing-gutter]]:border-border";
+
+const LISTING_ROW_CLASS = cn(
+  "absolute left-0 grid w-full cursor-default border-b transition-colors",
+  "hover:bg-accent/60",
+  "outline-none focus:outline-none focus-visible:outline-none",
+);
+
+const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
 
@@ -112,8 +123,14 @@ export default function VirtualListing({
   columnLabels,
   iconTheme = "dark",
   className,
+  sorting: sortingProp,
+  onSortingChange,
 }: VirtualListingProps) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
+  const [internalSorting, setInternalSorting] = useState<SortingState>([
+    { id: "name", desc: false },
+  ]);
+  const sorting = sortingProp ?? internalSorting;
+  const setSorting = onSortingChange ?? setInternalSorting;
   const [columnLayout, setColumnLayout] = useState<Layout>(DEFAULT_COLUMN_LAYOUT);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [columnGridTemplate, setColumnGridTemplate] = useState(() =>
@@ -238,29 +255,36 @@ export default function VirtualListing({
           {virtualizer.getVirtualItems().map((item) => {
             const row = rows[item.index];
             const entry = row.original;
-            const selected = item.index === selectedIndex;
-            const multiSelected = multiSelectedPaths?.has(entry.path) ?? false;
+            const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
 
             return (
               <div
                 key={entry.key}
                 role="row"
-                data-state={selected ? "selected" : undefined}
+                data-listing-entry
+                data-state={isSelected ? "selected" : undefined}
                 className={cn(
-                  "absolute left-0 grid w-full border-b",
+                  LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
-                  selected && "bg-accent",
-                  multiSelected && "ring-1 ring-inset ring-primary/40",
+                  isSelected && LISTING_ROW_SELECTED_CLASS,
                 )}
                 style={{
                   gridTemplateColumns: columnGridTemplate,
                   transform: `translateY(${item.start}px)`,
                   height: `${item.size}px`,
                 }}
+                onClick={(event) => entry.onSelect(event, item.index)}
+                onDoubleClick={() => {
+                  if (entry.href) {
+                    window.location.href = entry.href;
+                    return;
+                  }
+                  entry.onActivate();
+                }}
+                onContextMenu={entry.onContextMenu}
               >
                 {row.getVisibleCells().map((cell, columnIndex) => {
-                  const isName = columnIndex === 0;
                   const gridColumn = columnIndex * 2 + 1;
                   const modifiedTitle =
                     cell.column.id === "modified" &&
@@ -268,6 +292,7 @@ export default function VirtualListing({
                       ? formatModifiedAbsolute(entry.modified, columnLabels.locale) ??
                         undefined
                       : undefined;
+                  const isName = columnIndex === 0;
                   const content = isName ? (
                     <>
                       <FileIcon
@@ -281,53 +306,6 @@ export default function VirtualListing({
                     </>
                   ) : (
                     flexRender(cell.column.columnDef.cell, cell.getContext())
-                  );
-
-                  const interactive = isName ? (
-                    entry.href ? (
-                      <a
-                        className={cn(
-                          "flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden px-2 hover:bg-accent/60",
-                          LISTING_TEXT_CLASS,
-                        )}
-                        href={entry.href}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          entry.onSelect(event);
-                        }}
-                        onDoubleClick={() => {
-                          window.location.href = entry.href!;
-                        }}
-                        onContextMenu={entry.onContextMenu}
-                      >
-                        {content}
-                      </a>
-                    ) : (
-                      <button
-                        type="button"
-                        className={cn(
-                          "flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden px-2 text-left hover:bg-accent/60",
-                          LISTING_TEXT_CLASS,
-                        )}
-                        onClick={entry.onSelect}
-                        onDoubleClick={entry.onActivate}
-                        onContextMenu={entry.onContextMenu}
-                      >
-                        {content}
-                      </button>
-                    )
-                  ) : (
-                    <div
-                      className={cn(
-                        "flex h-11 items-center overflow-hidden px-2",
-                        LISTING_TEXT_CLASS,
-                        columnIndex === 1 && "justify-end text-right",
-                      )}
-                    >
-                      <span className={CELL_TEXT} title={modifiedTitle}>
-                        {content}
-                      </span>
-                    </div>
                   );
 
                   return (
@@ -345,7 +323,22 @@ export default function VirtualListing({
                         className={cn("p-0", CELL_CLIP)}
                         style={{ gridColumn }}
                       >
-                        {interactive}
+                        <div
+                          className={cn(
+                            "flex h-11 min-w-0 items-center overflow-hidden px-2",
+                            LISTING_TEXT_CLASS,
+                            isName && "w-full gap-2",
+                            columnIndex === 1 && "justify-end text-right",
+                          )}
+                        >
+                          {isName ? (
+                            content
+                          ) : (
+                            <span className={CELL_TEXT} title={modifiedTitle}>
+                              {content}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </Fragment>
                   );

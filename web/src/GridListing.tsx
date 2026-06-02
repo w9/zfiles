@@ -19,6 +19,8 @@ type GridListingProps = {
 const GRID_COLUMNS = 4;
 const ROW_HEIGHT = 168;
 
+const GRID_ITEM_SELECTED_CLASS = "bg-primary/12";
+
 export default function GridListing({
   entries,
   selectedIndex,
@@ -70,20 +72,19 @@ export default function GridListing({
               >
                 {rowEntries.map((entry, columnIndex) => {
                   const index = startIndex + columnIndex;
-                  const selected = index === selectedIndex;
-                  const multiSelected = multiSelectedPaths?.has(entry.path) ?? false;
+                  const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   return (
                     <button
                       key={entry.key}
                       type="button"
+                      data-listing-entry
                       className={cn(
-                        "flex h-full flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40",
+                        "flex h-full flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                         dimmed && "opacity-70",
-                        selected && "border-primary bg-accent",
-                        multiSelected && "ring-2 ring-primary/40",
+                        isSelected && GRID_ITEM_SELECTED_CLASS,
                       )}
-                      onClick={(event) => entry.onSelect(event)}
+                      onClick={(event) => entry.onSelect(event, index)}
                       onDoubleClick={entry.onActivate}
                       onContextMenu={entry.onContextMenu}
                     >

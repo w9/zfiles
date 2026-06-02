@@ -9,7 +9,7 @@ export type ListingEntry = {
   isSymlink?: boolean;
   size?: number;
   modified?: unknown;
-  onSelect: (event: React.MouseEvent) => void;
+  onSelect: (event: React.MouseEvent, displayIndex: number) => void;
   onActivate: () => void;
   onContextMenu?: (event: React.MouseEvent) => void;
   href?: string;

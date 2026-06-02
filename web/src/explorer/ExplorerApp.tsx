@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { SortingState } from "@tanstack/react-table";
 
 import { Settings } from "lucide-react";
 
@@ -52,6 +53,8 @@ import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { filterDotEntries } from "../listingFilter";
 import { sortFileEntries } from "../listingSort";
+import type { ListingColumnLabels } from "../listing-types";
+import { useListingDisplayOrder } from "../useListingDisplayOrder";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 
@@ -88,6 +91,9 @@ export default function ExplorerApp() {
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readListingViewMode(),
   );
+  const [columnSorting, setColumnSorting] = useState<SortingState>([
+    { id: "name", desc: false },
+  ]);
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
@@ -117,7 +123,7 @@ export default function ExplorerApp() {
       if (restoredIndex != null) {
         setSelectedIndex(restoredIndex);
         setSelectedPath(previousPath);
-        setSelectedPaths(new Set());
+        setSelectedPaths(previousPath ? new Set([previousPath]) : new Set());
       } else {
         setSelectedIndex(0);
         setSelectedPath(null);
@@ -286,8 +292,16 @@ export default function ExplorerApp() {
       } else {
         next.add(path);
       }
+      if (next.size === 0) {
+        setSelectedPath(null);
+      }
       return next;
     });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedPaths(new Set());
+    setSelectedPath(null);
   }, []);
 
   const actionLabel = useCallback(
@@ -321,59 +335,117 @@ export default function ExplorerApp() {
   );
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
-    const rows: ListingEntry[] = [];
+    return visibleEntries.map((entry) => ({
+      key: entry.path,
+      name: entry.name,
+      path: entry.path,
+      isDir: entry.is_dir,
+      isSymlink: entry.is_symlink,
+      size: entry.is_dir ? undefined : entry.size,
+      modified: entry.modified,
+      onSelect: (event, displayIndex) => {
+        const rows = listingEntriesRef.current;
+        let nextSelectedPath: string | null = entry.path;
 
-    for (const entry of visibleEntries) {
-      const currentIndex = rows.length;
-      rows.push({
-        key: entry.path,
-        name: entry.name,
-        path: entry.path,
-        isDir: entry.is_dir,
-        isSymlink: entry.is_symlink,
-        size: entry.is_dir ? undefined : entry.size,
-        modified: entry.modified,
-        onSelect: (event) => {
-          if (event.shiftKey) {
-            const anchor = selectionAnchorRef.current;
-            const start = Math.min(anchor, currentIndex);
-            const end = Math.max(anchor, currentIndex);
-            setSelectedPaths(() => {
-              const next = new Set<string>();
-              for (let i = start; i <= end; i += 1) {
-                const row = rows[i];
-                if (row?.path) {
-                  next.add(row.path);
-                }
+        if (event.shiftKey) {
+          const anchor = selectionAnchorRef.current;
+          const start = Math.min(anchor, displayIndex);
+          const end = Math.max(anchor, displayIndex);
+          setSelectedPaths(() => {
+            const next = new Set<string>();
+            for (let i = start; i <= end; i += 1) {
+              const row = rows[i];
+              if (row?.path) {
+                next.add(row.path);
               }
-              return next;
-            });
+            }
+            return next;
+          });
+        } else if (event.metaKey || event.ctrlKey) {
+          const next = new Set(selectedPathsRef.current);
+          const removing = next.has(entry.path);
+          if (removing) {
+            next.delete(entry.path);
           } else {
-            selectionAnchorRef.current = currentIndex;
+            next.add(entry.path);
           }
-          setSelectedIndex(currentIndex);
+          setSelectedPaths(next);
+          if (next.size === 0) {
+            nextSelectedPath = null;
+          } else if (removing) {
+            nextSelectedPath = next.values().next().value ?? null;
+          }
+          selectionAnchorRef.current = displayIndex;
+        } else {
+          setSelectedPaths(new Set([entry.path]));
+          selectionAnchorRef.current = displayIndex;
+        }
+
+        setSelectedIndex(displayIndex);
+        setSelectedPath(nextSelectedPath);
+      },
+      onActivate: () => {
+        if (entry.is_dir) {
+          navigateTo(entry.path);
+        } else {
           setSelectedPath(entry.path);
-        },
-        onActivate: () => {
-          if (entry.is_dir) {
-            navigateTo(entry.path);
-          } else {
-            setSelectedPath(entry.path);
-          }
-        },
-        onContextMenu: (event) => void openContextMenuRef.current(event, entry.path),
-        href:
-          entry.is_dir || backend.mode === "s3"
-            ? undefined
-            : backend.downloadUrl(entry.path) as string,
-      });
-    }
-    return rows;
+        }
+      },
+      onContextMenu: (event) => void openContextMenuRef.current(event, entry.path),
+      href:
+        entry.is_dir || backend.mode === "s3"
+          ? undefined
+          : backend.downloadUrl(entry.path) as string,
+    }));
   }, [visibleEntries, navigateTo, backend]);
 
+  const listingColumnLabels = useMemo(
+    (): ListingColumnLabels => ({
+      name: t("listing.column.name"),
+      size: t("listing.column.size"),
+      modified: t("listing.column.modified"),
+      locale: locale === "zh-CN" ? "zh-CN" : "en",
+      modifiedTimeFormat,
+      listingSortOrder,
+    }),
+    [t, locale, modifiedTimeFormat, listingSortOrder],
+  );
+
+  const displayOrderedEntries = useListingDisplayOrder(
+    listingEntries,
+    listingColumnLabels,
+    columnSorting,
+  );
+
+  const activeListingEntries =
+    listingViewMode === "table" ? displayOrderedEntries : listingEntries;
+
   useEffect(() => {
-    listingEntriesRef.current = listingEntries;
-  }, [listingEntries]);
+    listingEntriesRef.current = activeListingEntries;
+    const path = selectedPathRef.current;
+    if (!path) {
+      return;
+    }
+    const nextIndex = activeListingEntries.findIndex((entry) => entry.path === path);
+    if (nextIndex >= 0 && nextIndex !== selectedIndexRef.current) {
+      setSelectedIndex(nextIndex);
+      selectionAnchorRef.current = nextIndex;
+    }
+  }, [activeListingEntries]);
+
+  const moveSelectedIndex = useCallback((updater: number | ((index: number) => number)) => {
+    setSelectedIndex((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      const entry = listingEntriesRef.current[next];
+      if (entry?.path) {
+        setSelectedPaths(new Set([entry.path]));
+        if (!entry.isDir) {
+          setSelectedPath(entry.path);
+        }
+      }
+      return next;
+    });
+  }, []);
 
   const activateSelected = useCallback(() => {
     const selected = listingEntriesRef.current[selectedIndexRef.current];
@@ -389,11 +461,11 @@ export default function ExplorerApp() {
       getSelectedIndex: () => selectedIndexRef.current,
       getSelectedPaths: () => Array.from(selectedPathsRef.current),
       getCurrentPath: () => currentPathRef.current,
-      setSelectedIndex,
+      setSelectedIndex: moveSelectedIndex,
       activateSelected,
       navigateTo,
       toggleMultiSelect,
-      clearSelection: () => setSelectedPaths(new Set()),
+      clearSelection,
       runBulkAction,
       getListingPathAt: (index: number) => {
         const row = listingEntriesRef.current[index];
@@ -411,6 +483,7 @@ export default function ExplorerApp() {
           setSelectedIndex(index);
         }
         setSelectedPath(path);
+        setSelectedPaths(new Set([path]));
         setFocusPane("preview");
       },
       openSlideshow,
@@ -437,12 +510,85 @@ export default function ExplorerApp() {
   );
   openContextMenuRef.current = openContextMenu;
 
+  const blockSelectionClearRef = useRef(false);
+  blockSelectionClearRef.current =
+    actionSystem.paletteOpen ||
+    actionSystem.confirmState != null ||
+    contextMenu != null ||
+    slideshowOpen ||
+    uploadConflictItem != null;
+
   useEffect(() => {
-    const selected = listingEntries[selectedIndex];
+    const shouldIgnoreTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) {
+        return true;
+      }
+      if (target.closest("[data-listing-entry]")) {
+        return true;
+      }
+      if (target.closest('[role="dialog"]')) {
+        return true;
+      }
+      if (target.closest('[role="menu"]')) {
+        return true;
+      }
+      return false;
+    };
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (selectedPathsRef.current.size === 0) {
+        return;
+      }
+      if (blockSelectionClearRef.current) {
+        return;
+      }
+      if (shouldIgnoreTarget(event.target)) {
+        return;
+      }
+      clearSelection();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      if (selectedPathsRef.current.size === 0) {
+        return;
+      }
+      if (blockSelectionClearRef.current) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+      if (shouldIgnoreTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      clearSelection();
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [clearSelection]);
+
+  useEffect(() => {
+    const selected = activeListingEntries[selectedIndex];
     if (selected && !selected.isDir) {
       setSelectedPath(selected.path);
     }
-  }, [selectedIndex, listingEntries]);
+  }, [selectedIndex, activeListingEntries]);
 
   const onUpload = useCallback(
     (files: FileList | null) => {
@@ -573,14 +719,9 @@ export default function ExplorerApp() {
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
-                columnLabels={{
-                  name: t("listing.column.name"),
-                  size: t("listing.column.size"),
-                  modified: t("listing.column.modified"),
-                  locale: locale === "zh-CN" ? "zh-CN" : "en",
-                  modifiedTimeFormat,
-                  listingSortOrder,
-                }}
+                columnLabels={listingColumnLabels}
+                sorting={columnSorting}
+                onSortingChange={setColumnSorting}
               />
             )}
             {listCursor ? (

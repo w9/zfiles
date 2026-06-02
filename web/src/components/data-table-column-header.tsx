@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import type { Column } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,9 +31,9 @@ export function DataTableColumnHeader<TData, TValue>({
       >
         <span className="truncate">{title}</span>
         {column.getIsSorted() === "desc" ? (
-          <ArrowDown className="size-4 shrink-0" />
+          <ChevronDown className="size-4 shrink-0" />
         ) : column.getIsSorted() === "asc" ? (
-          <ArrowUp className="size-4 shrink-0" />
+          <ChevronUp className="size-4 shrink-0" />
         ) : (
           <ChevronsUpDown className="size-4 shrink-0" />
         )}
