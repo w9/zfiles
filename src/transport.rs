@@ -122,9 +122,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
 
     let share_token = if serve.token {
         let token = auth::generate_token();
-        if let Some(expires_at) = expires_at {
-            state_store.create_session(&token, expires_at)?;
-        }
         Some(token)
     } else {
         None

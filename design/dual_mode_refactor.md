@@ -53,7 +53,7 @@ Plugins and filename search are **removed from the project**, not deferred. They
 
 ### Security and privacy (local mode)
 
-- Existing bearer-token / session-cookie auth model is preserved for LAN shares (`--token`, `--read-only`, `--expire`).
+- Existing bearer-token / HttpOnly cookie auth model is preserved for LAN shares (`--token`, `--read-only`, `--expire`); expiry is in-memory only.
 - Local mode never sends filesystem credentials to `zfiles.com`.
 
 ### Cross-origin boundary

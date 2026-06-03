@@ -1,3 +1,10 @@
+//! LAN share authentication for `--token` mode.
+//!
+//! One bearer token lives in [`AuthConfig`] for the process lifetime. Clients may
+//! send it via `Authorization: Bearer`, `?token=` (bootstrap), or the HttpOnly
+//! [`AUTH_COOKIE_NAME`] cookie set on the bootstrap response. Expiry (`--expire`)
+//! is enforced only in memory.
+
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::{Method, Request, StatusCode};
@@ -6,7 +13,7 @@ use axum::response::{IntoResponse, Response};
 
 use crate::transport::AppState;
 
-pub const SESSION_COOKIE_NAME: &str = "zfiles_session";
+pub const AUTH_COOKIE_NAME: &str = "zfiles_session";
 
 #[derive(Clone, Debug)]
 pub struct AuthConfig {
@@ -30,6 +37,15 @@ impl AuthConfig {
             token: Some(token),
             expires_at,
         }
+    }
+
+    pub fn is_expired(&self, now: i64) -> bool {
+        self.expires_at.is_some_and(|expires_at| now >= expires_at)
+    }
+
+    pub fn cookie_max_age_secs(&self, now: i64) -> Option<u64> {
+        self.expires_at
+            .map(|expires_at| (expires_at - now).max(0) as u64)
     }
 }
 
@@ -78,9 +94,10 @@ pub async fn middleware(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
 
+    let now = current_unix_time();
     let secure = request_is_secure(&request);
     let query_token = request.uri().query().and_then(token_from_query);
-    let had_session_cookie = token_from_cookie(&request).is_some();
+    let had_auth_cookie = token_from_cookie(&request).is_some();
 
     let Some(provided) = token_from_authorization(&request)
         .or_else(|| query_token.clone())
@@ -90,28 +107,19 @@ pub async fn middleware(
     };
 
     if !constant_time_eq(provided.as_bytes(), expected.as_bytes()) {
-        return unauthorized_response(secure, had_session_cookie);
+        return unauthorized_response(secure, had_auth_cookie);
     }
 
-    if let Some(expires_at) = auth.expires_at {
-        let now = current_unix_time();
-        if now >= expires_at {
-            return unauthorized_response(secure, had_session_cookie);
-        }
-
-        if !state.state.session_valid(&provided).unwrap_or(false) {
-            return unauthorized_response(secure, had_session_cookie);
-        }
+    if auth.is_expired(now) {
+        return unauthorized_response(secure, had_auth_cookie);
     }
 
     let bootstrap = query_token.is_some();
-    let max_age = auth
-        .expires_at
-        .map(|expires_at| (expires_at - current_unix_time()).max(0) as u64);
+    let max_age = auth.cookie_max_age_secs(now);
 
     let mut response = next.run(request).await;
     if bootstrap {
-        append_session_cookie(&mut response, expected, secure, max_age);
+        set_auth_cookie(&mut response, expected, secure, max_age);
     }
     response
 }
@@ -130,7 +138,7 @@ fn token_from_cookie(request: &Request<Body>) -> Option<String> {
         .headers()
         .get(axum::http::header::COOKIE)
         .and_then(|value| value.to_str().ok())
-        .and_then(|header| cookie_value(header, SESSION_COOKIE_NAME))
+        .and_then(|header| cookie_value(header, AUTH_COOKIE_NAME))
 }
 
 pub fn cookie_value(header: &str, name: &str) -> Option<String> {
@@ -141,20 +149,20 @@ pub fn cookie_value(header: &str, name: &str) -> Option<String> {
     })
 }
 
-fn append_session_cookie(response: &mut Response, token: &str, secure: bool, max_age: Option<u64>) {
-    if let Ok(cookie) = session_cookie_header(token, secure, max_age) {
+fn set_auth_cookie(response: &mut Response, token: &str, secure: bool, max_age: Option<u64>) {
+    if let Ok(cookie) = auth_cookie_header(token, secure, max_age) {
         response
             .headers_mut()
             .append(axum::http::header::SET_COOKIE, cookie);
     }
 }
 
-fn session_cookie_header(
+fn auth_cookie_header(
     token: &str,
     secure: bool,
     max_age: Option<u64>,
 ) -> Result<axum::http::HeaderValue, axum::http::header::InvalidHeaderValue> {
-    let mut value = format!("{SESSION_COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax");
+    let mut value = format!("{AUTH_COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax");
     if secure {
         value.push_str("; Secure");
     }
@@ -164,8 +172,8 @@ fn session_cookie_header(
     axum::http::HeaderValue::from_str(&value)
 }
 
-fn clear_session_cookie_header(secure: bool) -> axum::http::HeaderValue {
-    let mut value = format!("{SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+fn clear_auth_cookie_header(secure: bool) -> axum::http::HeaderValue {
+    let mut value = format!("{AUTH_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
     if secure {
         value.push_str("; Secure");
     }
@@ -177,7 +185,7 @@ fn unauthorized_response(secure: bool, clear_cookie: bool) -> Response {
     if clear_cookie {
         response.headers_mut().append(
             axum::http::header::SET_COOKIE,
-            clear_session_cookie_header(secure),
+            clear_auth_cookie_header(secure),
         );
     }
     response
@@ -239,10 +247,10 @@ mod tests {
     #[test]
     fn cookie_value_parses_named_cookie() {
         assert_eq!(
-            cookie_value("zfiles_session=abc123; other=1", SESSION_COOKIE_NAME),
+            cookie_value("zfiles_session=abc123; other=1", AUTH_COOKIE_NAME),
             Some("abc123".into())
         );
-        assert_eq!(cookie_value("other=1", SESSION_COOKIE_NAME), None);
+        assert_eq!(cookie_value("other=1", AUTH_COOKIE_NAME), None);
     }
 
     #[test]
@@ -270,5 +278,14 @@ mod tests {
         assert!(is_public_path("/assets/index.js"));
         assert!(is_public_path("/file-icons/file.svg"));
         assert!(!is_public_path("/api/list"));
+    }
+
+    #[test]
+    fn auth_config_expiry_helpers() {
+        let auth = AuthConfig::with_token("t".into(), Some(100));
+        assert!(!auth.is_expired(99));
+        assert!(auth.is_expired(100));
+        assert_eq!(auth.cookie_max_age_secs(40), Some(60));
+        assert_eq!(AuthConfig::disabled().cookie_max_age_secs(0), None);
     }
 }

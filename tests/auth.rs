@@ -34,11 +34,6 @@ fn test_server_with_token(
     expires_at: Option<i64>,
 ) -> TestServer {
     let state_store = Arc::new(StateStore::new(root.to_path_buf()));
-    if let Some(expires_at) = expires_at {
-        state_store
-            .create_session(token, expires_at)
-            .expect("session row");
-    }
     let state = AppState::new(
         Arc::new(LocalFs::new(root.to_path_buf())),
         AuthConfig::with_token(token.to_string(), expires_at),
@@ -92,7 +87,7 @@ async fn tokenized_server_rejects_api_without_credentials() {
 }
 
 #[tokio::test]
-async fn tokenized_server_accepts_bearer_token_without_expiry_session() {
+async fn tokenized_server_accepts_bearer_token() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let server = test_server_with_token(dir.path(), "a1b2c3d4e5f6789012345678abcdef01", None);
@@ -105,7 +100,7 @@ async fn tokenized_server_accepts_bearer_token_without_expiry_session() {
 }
 
 #[tokio::test]
-async fn tokenized_server_accepts_token_query_without_expiry_session() {
+async fn tokenized_server_accepts_token_query() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let server = test_server_with_token(dir.path(), "a1b2c3d4e5f6789012345678abcdef01", None);
@@ -117,7 +112,7 @@ async fn tokenized_server_accepts_token_query_without_expiry_session() {
 }
 
 #[tokio::test]
-async fn bootstrap_sets_session_cookie_on_tokenized_root() {
+async fn bootstrap_sets_auth_cookie_on_tokenized_root() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let token = "a1b2c3d4e5f6789012345678abcdef01";
@@ -133,7 +128,7 @@ async fn bootstrap_sets_session_cookie_on_tokenized_root() {
 }
 
 #[tokio::test]
-async fn tokenized_server_accepts_session_cookie() {
+async fn tokenized_server_accepts_auth_cookie() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let token = "a1b2c3d4e5f6789012345678abcdef01";
@@ -147,7 +142,7 @@ async fn tokenized_server_accepts_session_cookie() {
 }
 
 #[tokio::test]
-async fn session_cookie_authenticates_file_download() {
+async fn auth_cookie_authenticates_file_download() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let token = "a1b2c3d4e5f6789012345678abcdef01";
@@ -162,7 +157,7 @@ async fn session_cookie_authenticates_file_download() {
 }
 
 #[tokio::test]
-async fn expired_session_cookie_is_rejected_and_cleared() {
+async fn expired_auth_cookie_is_rejected_and_cleared() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let token = "b2c3d4e5f6789012345678abcdef0123";
@@ -184,7 +179,7 @@ async fn expired_session_cookie_is_rejected_and_cleared() {
 }
 
 #[tokio::test]
-async fn expiring_token_requires_session_row() {
+async fn expiring_share_accepts_bearer_before_expiry() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();
     let future = std::time::SystemTime::now()

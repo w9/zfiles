@@ -86,7 +86,7 @@ The deliverable for local use is one file: `zfiles`. The React frontend (built b
 Static linking strategy:
 
 - Rust standard library statically links by default.
-- SQLite via `rusqlite` `bundled` feature (tus upload state, session tokens).
+- SQLite via `rusqlite` `bundled` feature (tus upload state).
 - TLS (when added) uses `rustls`.
 - Linux delivery targets `x86_64-unknown-linux-musl` for true static linking where applicable.
 
@@ -181,8 +181,8 @@ The binary is one OS process. Cross-module dependencies are explicit and minimal
 |--------|----------------|
 | `transport` | axum server: embedded React assets, REST API, tus upload, Range download, WebSocket events |
 | `fs` | `Fs` trait: directory listing, stat, read, write, delete; `LocalFs` via `tokio::fs` |
-| `state` | Per-serve-root XDG state: `state.db` (tus uploads, session tokens), config accessors |
-| `auth` | Bearer token + session cookie middleware; read-only enforcement |
+| `state` | Per-serve-root XDG state: `state.db` (tus uploads), config accessors |
+| `auth` | In-memory bearer token, HttpOnly auth cookie, optional expiry; read-only enforcement |
 | `watch` | Filesystem watch → `filesystem_changed` on WebSocket |
 | `cli` | `clap` entry point: serve, init, config, status, upload, etc. |
 

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl. cancel). Explorer folder view is bidirectionally bound to the URL via the `/f/...` pathname scheme.
+Dual-mode refactor is **complete**. Next cleanup: LAN share auth uses a single in-memory token and HttpOnly cookie only — drop redundant SQLite `sessions` rows and clarify cookie/bootstrap naming. `state.db` remains for tus uploads only.
 
 ## TODO List
 
@@ -70,3 +70,9 @@ Dual-mode refactor is **complete**. Upload queue + progress panel shipped (incl.
 - [x] Add hover title for "Connection lost" status (en + zh-CN i18n)
 - [x] Update e2e smoke test for offline hover title
 - [x] Run `pnpm test`
+- [x] Remove SQLite `sessions` table and `create_session` / `session_valid` from `state.rs`
+- [x] Rewrite `auth.rs`: in-memory expiry only; rename cookie helpers (`AUTH_COOKIE_NAME`, etc.)
+- [x] Drop `create_session` from `transport.rs`; update `tests/auth.rs`
+- [x] Rename `bootstrapSessionFromUrl` → `stripShareTokenFromUrl` in `web/src/api.ts`
+- [x] Update design docs: `state.db` is tus-only (no session tokens)
+- [x] Run `cargo test` and `cargo clippy -- -D warnings`

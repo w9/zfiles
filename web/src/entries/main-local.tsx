@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import { bootstrapSessionFromUrl } from "../api";
+import { stripShareTokenFromUrl } from "../api";
 import AppShell from "../AppShell";
 import { ExplorerBackendProvider } from "../backend";
 import { I18nProvider } from "../i18n";
@@ -12,7 +12,7 @@ import { AppRouteProvider } from "../routing/AppRouteProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "../index.css";
 
-bootstrapSessionFromUrl();
+stripShareTokenFromUrl();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

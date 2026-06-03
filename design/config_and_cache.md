@@ -38,7 +38,7 @@ When `HOME` is unset, the kernel falls back to relative `.config` and `.cache` u
   folders/
     <serve-id>/               One entry per absolute serve root
       config.toml             Per-folder overrides (read_only, ui.*, …)
-      state.db                SQLite WAL — tus uploads, session tokens
+      state.db                SQLite WAL — tus upload offsets
       uploads/                In-progress tus spool files
       logs/                   Kernel log output for this serve root
 ```
@@ -82,7 +82,7 @@ Global keys cover daemon-wide and default UI behavior. Folder keys cover `server
 
 The `state` module owns everything under `folders/<serve-id>/` except `config.toml`:
 
-- **`state.db`** — tus upload offsets and auth session rows. Opened lazily on first upload or token use.
+- **`state.db`** — tus upload offsets. Opened lazily on first upload.
 - **`uploads/`** — spool files named by upload uuid. Created lazily.
 - **`logs/`** — per-folder kernel logs when file logging is enabled.
 

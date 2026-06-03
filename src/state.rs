@@ -78,10 +78,6 @@ impl StateStore {
                     offset INTEGER NOT NULL DEFAULT 0,
                     created_at INTEGER NOT NULL
                 );
-                CREATE TABLE IF NOT EXISTS sessions (
-                    token TEXT PRIMARY KEY,
-                    expires_at INTEGER NOT NULL
-                );
                 ",
             )?;
             *slot = Some(conn);
@@ -217,30 +213,6 @@ impl StateStore {
         self.state_dir().join("uploads").join(id)
     }
 
-    pub fn create_session(&self, token: &str, expires_at: i64) -> Result<()> {
-        self.with_db(|conn| {
-            conn.execute(
-                "INSERT OR REPLACE INTO sessions (token, expires_at) VALUES (?1, ?2)",
-                params![token, expires_at],
-            )?;
-            Ok(())
-        })
-    }
-
-    pub fn session_valid(&self, token: &str) -> Result<bool> {
-        self.with_db(|conn| {
-            let mut stmt = conn.prepare("SELECT expires_at FROM sessions WHERE token = ?1")?;
-            let mut rows = stmt.query(params![token])?;
-            if let Some(row) = rows.next()? {
-                let expires_at: i64 = row.get(0)?;
-                let now = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map_or(0, |duration| duration.as_secs() as i64);
-                return Ok(expires_at > now);
-            }
-            Ok(true)
-        })
-    }
 }
 
 #[cfg(test)]
@@ -286,23 +258,4 @@ mod tests {
         });
     }
 
-    #[test]
-    fn session_expiry_is_enforced() {
-        let dir = tempdir().unwrap();
-        xdg::with_test_homes(dir.path().to_path_buf(), || {
-            let root = dir.path().canonicalize().unwrap();
-            let store = StateStore::new(root);
-            let expired = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |duration| duration.as_secs() as i64)
-                - 60;
-
-            store.create_session("expired-token", expired).unwrap();
-            assert!(!store.session_valid("expired-token").unwrap());
-
-            let future = expired + 7200;
-            store.create_session("valid-token", future).unwrap();
-            assert!(store.session_valid("valid-token").unwrap());
-        });
-    }
 }
