@@ -1,6 +1,5 @@
 use std::fs;
 
-use axum_test::TestServer;
 use tempfile::tempdir;
 use zfiles::config::Config;
 use zfiles::daemon::pid_file;
