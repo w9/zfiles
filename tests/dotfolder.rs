@@ -15,8 +15,16 @@ fn xdg_state_dir_stores_state_outside_serve_root() {
         assert!(store.state_dir().starts_with(xdg::config_home()));
         assert!(!store.state_dir().starts_with(&root));
 
-        store.create_upload("file.txt".into(), None).unwrap();
-        assert!(store.state_dir().join("state.db").exists());
+        let record = store.create_upload("file.txt".into(), Some(0)).unwrap();
+        let meta = store
+            .state_dir()
+            .join("uploads")
+            .join(format!("{}.meta.json", record.id));
+        assert!(meta.is_file(), "expected sidecar meta at {}", meta.display());
+        assert!(
+            !store.state_dir().join("state.db").exists(),
+            "state.db should not be created"
+        );
     });
 }
 

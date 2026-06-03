@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn ignores_dotfolder_and_cursor_paths() {
         assert!(is_ignored_watch_path(".cursor/debug.log"));
-        assert!(is_ignored_watch_path(".zfiles/state.db"));
+        assert!(is_ignored_watch_path(".zfiles/uploads/abc.meta.json"));
         assert!(is_ignored_watch_path("target/debug/deps/foo"));
         assert!(is_ignored_watch_path("web/node_modules/.vite/deps/foo"));
         assert!(!is_ignored_watch_path("README.md"));

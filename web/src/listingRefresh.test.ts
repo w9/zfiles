@@ -9,7 +9,7 @@ import {
 
 test("shouldRefreshListing ignores dotfolder and editor metadata paths", () => {
   assert.equal(shouldRefreshListing(".cursor/debug.log", ""), false);
-  assert.equal(shouldRefreshListing(".zfiles/state.db", ""), false);
+  assert.equal(shouldRefreshListing(".zfiles/uploads/id.meta.json", ""), false);
 });
 
 test("shouldRefreshListing refreshes top-level changes at listing root", () => {

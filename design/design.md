@@ -63,7 +63,7 @@ Target time-to-first-byte on a modern x86_64 Linux machine: well under 50 ms in 
 
 Target throughput: 110+ MB/s sustained on a single connection from local SSD over gigabit.
 
-**Local uploads** use the tus.io protocol. The client issues a Creation request; the server allocates state in `state.db` and returns an Upload URL. PATCH with `Content-Range` appends to a spool file under XDG state (see [config_and_cache.md](config_and_cache.md)). Completion is atomic: `fsync` + `rename(2)` into the served tree (same-filesystem constraint; warn at startup on cross-mount).
+**Local uploads** use the tus.io protocol. The client issues a Creation request; the server allocates a spool file and JSON sidecar under `uploads/` and returns an Upload URL. PATCH with `Content-Range` appends to a spool file under XDG state (see [config_and_cache.md](config_and_cache.md)). Completion is atomic: `fsync` + `rename(2)` into the served tree (same-filesystem constraint; warn at startup on cross-mount).
 
 **Cloud uploads** use S3 multipart upload via `@aws-sdk/lib-storage` in the browser. **Cloud downloads** use Range GET on `GetObject`. CORS must be configured on the bucket; see [docs/cors.md](../docs/cors.md).
 
@@ -86,7 +86,7 @@ The deliverable for local use is one file: `zfiles`. The React frontend (built b
 Static linking strategy:
 
 - Rust standard library statically links by default.
-- SQLite via `rusqlite` `bundled` feature (tus upload state).
+- Tus upload metadata in per-upload JSON sidecars under `uploads/`; offset from spool file size.
 - TLS (when added) uses `rustls`.
 - Linux delivery targets `x86_64-unknown-linux-musl` for true static linking where applicable.
 
@@ -181,7 +181,7 @@ The binary is one OS process. Cross-module dependencies are explicit and minimal
 |--------|----------------|
 | `transport` | axum server: embedded React assets, REST API, tus upload, Range download, WebSocket events |
 | `fs` | `Fs` trait: directory listing, stat, read, write, delete; `LocalFs` via `tokio::fs` |
-| `state` | Per-serve-root XDG state: `state.db` (tus uploads), config accessors |
+| `state` | Per-serve-root XDG state: tus upload spools and sidecars, config accessors |
 | `auth` | In-memory bearer token, HttpOnly auth cookie, optional expiry; read-only enforcement |
 | `watch` | Filesystem watch → `filesystem_changed` on WebSocket |
 | `cli` | `clap` entry point: serve, init, config, status, upload, etc. |
@@ -231,13 +231,13 @@ After connect, explorer navigation may update the URL for bucket/prefix only.
 
 Kernel configuration and durable per-serve-root state live under XDG paths. The served directory is never modified for zfiles housekeeping.
 
-Layout and resolution: [config_and_cache.md](config_and_cache.md). Tus spool and `state.db` remain under per-folder state directories.
+Layout and resolution: [config_and_cache.md](config_and_cache.md). Tus spools and sidecars remain under per-folder state directories.
 
 ### Failure modes
 
 **Local**
 
-- Network interruptions: tus resume on upload; Range resume on download; upload state survives kernel restart via `state.db`.
+- Network interruptions: tus resume on upload; Range resume on download; upload state survives kernel restart via spool and sidecar files.
 - Read-only serve root: uploads and delete rejected; `/api/health` reports `read_only`.
 - Cross-mount spool: documented constraint; startup warning.
 
@@ -332,7 +332,7 @@ zfiles is built test-first. Tests are written before behavior in kernel and fron
 
 **Unit tests (frontend)** — Vitest: `KernelBackend` and `S3Backend` mapping, boot URL param parsing, credential storage rules, action context keys without plugin/search gates, listing formatters.
 
-**Module integration tests (Rust)** — `tempfile` for filesystem, in-memory or file SQLite for state, real router tests for list/upload/delete/auth.
+**Module integration tests (Rust)** — `tempfile` for filesystem, tus sidecar state on disk, real router tests for list/upload/delete/auth.
 
 **Binary integration tests** — HTTP against assembled router: Range download correctness, tus conformance, auth cookie bootstrap, removed routes return 404, no subprocess spawn on startup.
 

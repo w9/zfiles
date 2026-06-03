@@ -87,7 +87,7 @@ Kernel settings and durable state live under **`~/.config/zfiles/`**. The served
 ```
 ~/.config/zfiles/
   config.toml              Global defaults
-  folders/<serve-id>/      Per serve-root config, state.db, upload spools
+  folders/<serve-id>/      Per serve-root config, tus upload spools and sidecars
 ```
 
 Each absolute serve root gets a stable id (hash of the canonical path). Use `zfiles status` to see the id and paths for a folder.

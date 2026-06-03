@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Next cleanup: LAN share auth uses a single in-memory token and HttpOnly cookie only — drop redundant SQLite `sessions` rows and clarify cookie/bootstrap naming. `state.db` remains for tus uploads only.
+Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token and HttpOnly cookie only. Tus upload state uses spool files and JSON sidecars under `uploads/` (no SQLite).
 
 ## TODO List
 

@@ -19,7 +19,7 @@ When `HOME` is unset, the kernel falls back to relative `.config` and `.cache` u
 
 1. **No in-tree metadata.** The served directory is never modified for zfiles housekeeping. There is no `.zfiles/`, no bootstrap config, and no dot-folder relocation knob — paths are always derived from XDG locations and a stable serve-root identifier.
 
-2. **Config vs cache.** Config holds settings and data that must survive cache eviction. If in doubt, treat kernel-owned upload spools and SQLite state as config, not cache.
+2. **Config vs cache.** Config holds settings and data that must survive cache eviction. If in doubt, treat kernel-owned upload spools and sidecars as config, not cache.
 
 3. **Lazy creation.** Directories are created on first write, not at startup. Cold start stays instant; read-only browsing of an arbitrary folder touches nothing outside memory.
 
@@ -38,8 +38,7 @@ When `HOME` is unset, the kernel falls back to relative `.config` and `.cache` u
   folders/
     <serve-id>/               One entry per absolute serve root
       config.toml             Per-folder overrides (read_only, ui.*, …)
-      state.db                SQLite WAL — tus upload offsets
-      uploads/                In-progress tus spool files
+      uploads/                In-progress tus spool files and <id>.meta.json sidecars
       logs/                   Kernel log output for this serve root
 ```
 
@@ -82,8 +81,7 @@ Global keys cover daemon-wide and default UI behavior. Folder keys cover `server
 
 The `state` module owns everything under `folders/<serve-id>/` except `config.toml`:
 
-- **`state.db`** — tus upload offsets. Opened lazily on first upload.
-- **`uploads/`** — spool files named by upload uuid. Created lazily.
+- **`uploads/`** — spool files named by upload uuid plus `<id>.meta.json` sidecars (path and length). Offset is derived from spool size. Created lazily.
 - **`logs/`** — per-folder kernel logs when file logging is enabled.
 
 Read-only mode is inferred when the serve root is not writable (same as today), combined with explicit `server.read_only` in config or `--read-only` on the CLI. Uploads are rejected; listing and download continue.
@@ -122,7 +120,7 @@ A future `zfiles migrate` command (out of scope for the design doc itself) may:
 
 1. Detect `<serve-root>/.zfiles/`
 2. Copy `config.toml` → `folders/<serve-id>/config.toml`
-3. Move `state.db` and `uploads/` into the XDG locations
+3. Move `uploads/` into the XDG locations
 4. Leave a short `MIGRATED` note or remove the old tree after confirmation
 
 Until migration exists, users with existing in-tree state move files manually or re-create config.
