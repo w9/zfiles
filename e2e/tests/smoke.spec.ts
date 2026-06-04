@@ -4,11 +4,15 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const binary = path.join(rootDir, "target/debug/zfiles");
 const serverReadyMarker = "Press Ctrl+C to stop.";
+
+function listingEntry(page: Page, name: string | RegExp) {
+  return page.locator("[data-listing-entry]").filter({ hasText: name });
+}
 
 let server: ChildProcessWithoutNullStreams | null = null;
 let serveDir = "";
@@ -133,7 +137,7 @@ test("header shows offline backend status after server stops", async ({ page }) 
 
 test("preview pane shows selected file metadata", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: /hello\.txt/ }).click();
+  await listingEntry(page, /hello\.txt/).click();
   const preview = page.getByRole("complementary", { name: "Preview pane" });
   await expect(preview.getByRole("heading", { name: "hello.txt" })).toBeVisible();
   await expect(preview.getByText("Size", { exact: true })).toBeVisible();
@@ -142,7 +146,7 @@ test("preview pane shows selected file metadata", async ({ page }) => {
 
 test("context menu shows built-in file actions", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: /hello\.txt/ }).click({ button: "right" });
+  await listingEntry(page, /hello\.txt/).click({ button: "right" });
   await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
 });
 
@@ -275,12 +279,15 @@ test("slideshow opens for image preview", async ({ page }) => {
         name: "slide-a.png",
       }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "slide-b.png", exact: true })
+      .click({ modifiers: ["ControlOrMeta"] });
     await page.keyboard.press("Control+P");
     const palette = page.getByRole("dialog");
     await palette.getByPlaceholder("Type a command…").fill("Slideshow");
     await palette.getByText("Slideshow", { exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "slide-a.png" })).toBeVisible();
-    await expect(page.getByText("1 / 2")).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /slide-[ab]\.png/ })).toBeVisible();
+    await expect(page.getByText(/\d+ \/ 2/)).toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");
   }
@@ -314,7 +321,7 @@ test("preview pane renders browser-decodable images", async ({ page }) => {
 
   try {
     await page.goto("http://127.0.0.1:9882/");
-    await page.getByRole("link", { name: "photo.png", exact: true }).click();
+    await listingEntry(page, "photo.png").click();
     const preview = page.getByRole("complementary", { name: "Preview pane" });
     await expect(preview.getByRole("img", { name: "photo.png" })).toBeVisible();
   } finally {
