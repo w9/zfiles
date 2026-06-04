@@ -2,6 +2,8 @@
 
 Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token and HttpOnly cookie only. Tus upload state uses spool files and JSON sidecars under `uploads/` (no SQLite). Outbound HTTP (tus CLI, Vite dev proxy) is **plain HTTP only**; production TLS is at the reverse proxy.
 
+Fix nightly CI: the `perf` job must build `web/dist/` before `cargo test --test perf` (RustEmbed requires embedded frontend assets at compile time).
+
 ## TODO List (drop rustls — current cycle)
 
 - [x] `Cargo.toml`: `reqwest` + `tokio-tungstenite` without TLS features; refresh lockfile
@@ -84,3 +86,8 @@ Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token
 - [x] Rename `bootstrapSessionFromUrl` → `stripShareTokenFromUrl` in `web/src/api.ts`
 - [x] Update design docs: `state.db` is tus-only (no session tokens)
 - [x] Run `cargo test` and `cargo clippy -- -D warnings`
+
+## TODO List (fix nightly perf — current cycle)
+
+- [x] `nightly.yml`: add Node/pnpm setup and `web` build before `cargo test --test perf`
+- [x] Run `cargo test`
