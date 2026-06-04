@@ -55,13 +55,13 @@ const LISTING_HEADER_TEXT_CLASS = "text-[12px] leading-4";
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
 
-const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent transition-colors";
+const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent";
 
 const BODY_SCROLL_PEER_HOVER_CLASS =
   "peer-hover/listing-header:[&_[data-listing-gutter]]:border-border";
 
 const LISTING_ROW_CLASS = cn(
-  "absolute left-0 grid w-full cursor-default select-none border-b transition-colors",
+  "absolute left-0 grid w-full cursor-default select-none border-b",
   "hover:bg-accent/60",
   "outline-none focus:outline-none focus-visible:outline-none",
 );
