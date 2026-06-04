@@ -14,6 +14,17 @@ pnpm build:cloud
 
 Deploy everything under `web/dist-cloud/` to any static host (S3 website, R2 public bucket, nginx, GitHub Pages, etc.). The cloud entry is emitted as `index.html`, so most hosts serve it at `/` automatically.
 
+### Subpath hosting (e.g. GitHub Pages `/repo/`)
+
+Set Vite `base` when building so asset URLs resolve correctly, then redeploy:
+
+```bash
+cd web
+pnpm build:cloud -- --base=/your-repo/
+```
+
+Explorer and settings routes (`/f/...`, `/settings`) are prefixed with that base automatically via `import.meta.env.BASE_URL`. Configure your static host to serve `index.html` for all paths under that prefix (SPA fallback).
+
 Before sharing the URL with users, configure [bucket CORS](cors.md) for your SPA origin.
 
 ## Connect flow

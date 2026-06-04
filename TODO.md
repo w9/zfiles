@@ -1,10 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token and HttpOnly cookie only. Tus upload state uses spool files and JSON sidecars under `uploads/` (no SQLite). Outbound HTTP (tus CLI, Vite dev proxy) is **plain HTTP only**; production TLS is at the reverse proxy.
-
-Fix nightly CI: the `perf` job must build `web/dist/` before `cargo test --test perf` (RustEmbed requires embedded frontend assets at compile time).
-
-Update e2e smoke tests for div-based table rows (no file-name links) and multi-select slideshow behavior.
+Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL` for subpath deploys and consistent dev/prod URLs. Next: nightly perf job `web/dist` build, e2e smoke upkeep.
 
 ## TODO List (drop rustls — current cycle)
 
@@ -96,6 +92,13 @@ Update e2e smoke tests for div-based table rows (no file-name links) and multi-s
 
 ## TODO List (fix e2e smoke — current cycle)
 
-- [ ] `smoke.spec.ts`: use `[data-listing-entry]` clicks instead of file-name links in table view
-- [ ] `smoke.spec.ts`: fix slideshow counter assertion for multi-select image paths
-- [ ] Run `cargo test`
+- [x] `smoke.spec.ts`: use `[data-listing-entry]` clicks instead of file-name links in table view
+- [x] `smoke.spec.ts`: fix slideshow counter assertion for multi-select image paths
+- [x] Run `cargo test`
+
+## TODO List (app URL base — current cycle)
+
+- [x] `appBase.ts`: normalize `BASE_URL`, strip/apply base on pathnames; unit tests
+- [x] `explorerUrl.ts` + `appRoute.ts`: route parsing/building through app base
+- [x] `vite.cloud.config.ts`: dev SPA fallback at `/` for cloud entry (match production root)
+- [x] `appRoute.test.ts` + `explorerUrl.test.ts`: subpath (`/repo/`) cases; run `pnpm test`

@@ -5,8 +5,11 @@ import {
   EXPLORER_URL_PREFIX,
   explorerHrefForPath,
   explorerPathFromPathname,
+  explorerRoutePathname,
   isExplorerPathname,
 } from "./explorerUrl";
+
+const REPO = "/repo";
 
 test("explorerHrefForPath maps root and nested paths under /f", () => {
   assert.equal(explorerHrefForPath(""), "/");
@@ -59,4 +62,15 @@ test("explorer path round-trips through URL encoding", () => {
   for (const path of paths) {
     assert.equal(explorerPathFromPathname(explorerHrefForPath(path)), path);
   }
+});
+
+test("explorerRoutePathname returns internal paths without app base", () => {
+  assert.equal(explorerRoutePathname("docs"), `${EXPLORER_URL_PREFIX}/docs`);
+});
+
+test("explorer URLs respect app base subpath", () => {
+  assert.equal(explorerHrefForPath("docs", REPO), `${REPO}/f/docs`);
+  assert.equal(explorerPathFromPathname(`${REPO}/f/docs`, REPO), "docs");
+  assert.equal(isExplorerPathname(`${REPO}/f`, REPO), true);
+  assert.equal(isExplorerPathname(`${REPO}/settings`, REPO), false);
 });

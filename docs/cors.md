@@ -19,7 +19,7 @@ Allowed methods on the bucket CORS rule: **`GET`, `PUT`, `POST`, `DELETE`, `HEAD
 
 ## Recommended CORS rule
 
-Replace the origin with your deployed SPA origin(s). For local development with `pnpm dev:cloud`, include `http://localhost:5173` (or whichever port Vite uses).
+Replace the origin with your deployed SPA origin(s). For local development with `pnpm dev:cloud`, include `http://localhost:5174` (cloud dev server; local kernel UI uses `pnpm dev` on port 5173).
 
 ```json
 [

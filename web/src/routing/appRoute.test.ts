@@ -15,3 +15,11 @@ test("pathnameForRoute returns canonical paths", () => {
   assert.equal(pathnameForRoute("explorer"), "/");
   assert.equal(pathnameForRoute("settings"), "/settings");
 });
+
+test("app routes respect base subpath", () => {
+  const base = "/repo";
+  assert.equal(routeFromPathname(`${base}/settings`, base), "settings");
+  assert.equal(routeFromPathname(`${base}/f/docs`, base), "explorer");
+  assert.equal(pathnameForRoute("settings", base), `${base}/settings`);
+  assert.equal(pathnameForRoute("explorer", base), `${base}/`);
+});

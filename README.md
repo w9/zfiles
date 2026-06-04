@@ -198,6 +198,8 @@ Cloud builds omit kernel-only boot code; local builds omit the AWS SDK. Interact
 cd web && pnpm dev:cloud
 ```
 
+Opens **http://localhost:5174/** (cloud entry). Local kernel HMR stays on **http://localhost:5173/** via `pnpm dev` — do not use 5173 for cloud work.
+
 Open the connect dialog, paste temporary bucket credentials, and browse. Non-secret URL params (`provider`, `bucket`, `region`, `endpoint`, `prefix`, `readonly`) pre-fill the form. Credentials stay in `sessionStorage` for the tab lifetime only.
 
 Documentation:

@@ -1,3 +1,5 @@
+import { appBasePath, stripAppBasePath, withAppBasePath } from "@/routing/appBase";
+
 /** Top-level URL segment that prefixes explorer folder paths. */
 export const EXPLORER_URL_PREFIX = "/f";
 
@@ -17,8 +19,8 @@ function decodePathSegments(encoded: string): string {
 }
 
 /** Whether the pathname is an explorer view (root, `/f`, or `/f/...`). */
-export function isExplorerPathname(pathname: string): boolean {
-  const normalized = normalizePathname(pathname);
+export function isExplorerPathname(pathname: string, base?: string): boolean {
+  const normalized = normalizePathname(stripAppBasePath(pathname, base ?? appBasePath()));
   return (
     normalized === "/" ||
     normalized === EXPLORER_URL_PREFIX ||
@@ -26,9 +28,9 @@ export function isExplorerPathname(pathname: string): boolean {
   );
 }
 
-/** Decode an explorer folder path from a URL pathname. */
-export function explorerPathFromPathname(pathname: string): string {
-  const normalized = normalizePathname(pathname);
+/** Decode an explorer folder path from a URL pathname (may include app base). */
+export function explorerPathFromPathname(pathname: string, base?: string): string {
+  const normalized = normalizePathname(stripAppBasePath(pathname, base ?? appBasePath()));
   if (normalized === "/" || normalized === EXPLORER_URL_PREFIX) {
     return "";
   }
@@ -42,13 +44,18 @@ export function explorerPathFromPathname(pathname: string): string {
   return decodePathSegments(encoded);
 }
 
-/** Canonical pathname for an explorer folder path (root → `/`). */
-export function explorerHrefForPath(path: string): string {
+/** Internal route pathname for an explorer folder path (root → `/`). */
+export function explorerRoutePathname(path: string): string {
   const normalized = path.replace(/^\/+|\/+$/g, "");
   if (!normalized) {
     return "/";
   }
   return `${EXPLORER_URL_PREFIX}/${encodePathSegments(normalized)}`;
+}
+
+/** Full pathname for an explorer folder path, including app base when set. */
+export function explorerHrefForPath(path: string, base?: string): string {
+  return withAppBasePath(explorerRoutePathname(path), base ?? appBasePath());
 }
 
 /** Full href for history updates, preserving the current query string and hash. */
