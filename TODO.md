@@ -4,6 +4,8 @@ Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token
 
 Fix nightly CI: the `perf` job must build `web/dist/` before `cargo test --test perf` (RustEmbed requires embedded frontend assets at compile time).
 
+Update e2e smoke tests for div-based table rows (no file-name links) and multi-select slideshow behavior.
+
 ## TODO List (drop rustls — current cycle)
 
 - [x] `Cargo.toml`: `reqwest` + `tokio-tungstenite` without TLS features; refresh lockfile
@@ -91,3 +93,9 @@ Fix nightly CI: the `perf` job must build `web/dist/` before `cargo test --test 
 
 - [x] `nightly.yml`: add Node/pnpm setup and `web` build before `cargo test --test perf`
 - [x] Run `cargo test`
+
+## TODO List (fix e2e smoke — current cycle)
+
+- [ ] `smoke.spec.ts`: use `[data-listing-entry]` clicks instead of file-name links in table view
+- [ ] `smoke.spec.ts`: fix slideshow counter assertion for multi-select image paths
+- [ ] Run `cargo test`
