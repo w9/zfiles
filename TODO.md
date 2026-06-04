@@ -1,6 +1,14 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token and HttpOnly cookie only. Tus upload state uses spool files and JSON sidecars under `uploads/` (no SQLite).
+Dual-mode refactor is **complete**. LAN share auth uses a single in-memory token and HttpOnly cookie only. Tus upload state uses spool files and JSON sidecars under `uploads/` (no SQLite). Outbound HTTP (tus CLI, Vite dev proxy) is **plain HTTP only**; production TLS is at the reverse proxy.
+
+## TODO List (drop rustls — current cycle)
+
+- [x] `Cargo.toml`: `reqwest` + `tokio-tungstenite` without TLS features; refresh lockfile
+- [x] `vite_proxy.rs`: HTTP/WS only; tests for rejected `https` Vite URL
+- [x] `upload.rs`: `resolve_location` HTTP only; reject `https://` server URLs
+- [x] `design/design.md`: document plain-HTTP clients vs future listener TLS
+- [x] `cargo test` and `cargo clippy -- -D warnings`
 
 ## TODO List
 

@@ -53,8 +53,8 @@ impl ViteDevProxy {
     pub fn new(vite_url: &str) -> anyhow::Result<Self> {
         let mut base = reqwest::Url::parse(vite_url)
             .with_context(|| format!("invalid Vite dev URL {vite_url:?}"))?;
-        if !base.scheme().starts_with("http") {
-            anyhow::bail!("Vite dev URL must use http or https, got {}", base.scheme());
+        if base.scheme() != "http" {
+            anyhow::bail!("Vite dev URL must use http, got {}", base.scheme());
         }
         if base.path() != "/" {
             base.set_path("/");
@@ -83,10 +83,7 @@ impl ViteDevProxy {
 
     pub fn websocket_url(&self, request_uri: &Uri) -> anyhow::Result<String> {
         let mut target = self.target_uri(request_uri)?;
-        match target.scheme() {
-            "https" => target.set_scheme("wss").ok(),
-            _ => target.set_scheme("ws").ok(),
-        };
+        target.set_scheme("ws").ok();
         Ok(target.to_string())
     }
 
@@ -326,6 +323,7 @@ mod tests {
     #[test]
     fn rejects_non_http_vite_url() {
         assert!(ViteDevProxy::new("ws://127.0.0.1:5173").is_err());
+        assert!(ViteDevProxy::new("https://127.0.0.1:5173").is_err());
     }
 
     #[test]

@@ -87,7 +87,8 @@ Static linking strategy:
 
 - Rust standard library statically links by default.
 - Tus upload metadata in per-upload JSON sidecars under `uploads/`; offset from spool file size.
-- TLS (when added) uses `rustls`.
+- Outbound HTTP clients (tus CLI, Vite dev proxy) use plain HTTP only; production TLS terminates at a reverse proxy.
+- TLS on the kernel listener (when added) is expected to use `rustls`.
 - Linux delivery targets `x86_64-unknown-linux-musl` for true static linking where applicable.
 
 Removing the plugin embed and supervisor reduces binary size; budget remains under 20 MB stripped.

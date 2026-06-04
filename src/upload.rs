@@ -21,6 +21,9 @@ pub struct UploadOptions<'a> {
 }
 
 pub async fn upload_file(options: UploadOptions<'_>) -> Result<()> {
+    if options.server.starts_with("https://") {
+        bail!("upload server URL must use http (TLS terminates at your reverse proxy)");
+    }
     let metadata = tokio::fs::metadata(options.file)
         .await
         .with_context(|| format!("stat {}", options.file.display()))?;
@@ -136,12 +139,12 @@ async fn create_upload(
         bail!("upload create failed: HTTP {}", create.status());
     }
 
-    create
+    let location_header = create
         .headers()
         .get(LOCATION)
         .and_then(|value| value.to_str().ok())
-        .map(|value| resolve_location(server, value))
-        .context("upload create missing location header")
+        .context("upload create missing location header")?;
+    resolve_location(server, location_header)
 }
 
 async fn head_offset(client: &reqwest::Client, location: &str, token: Option<&str>) -> Result<u64> {
@@ -204,11 +207,14 @@ fn auth_headers(token: Option<&str>) -> HeaderMap {
     headers
 }
 
-fn resolve_location(server: &str, location: &str) -> String {
-    if location.starts_with("http://") || location.starts_with("https://") {
-        return location.to_string();
+fn resolve_location(server: &str, location: &str) -> Result<String> {
+    if location.starts_with("https://") {
+        bail!("upload location must use http");
     }
-    format!("{}{}", server.trim_end_matches('/'), location)
+    if location.starts_with("http://") {
+        return Ok(location.to_string());
+    }
+    Ok(format!("{}{}", server.trim_end_matches('/'), location))
 }
 
 #[cfg(test)]
@@ -218,8 +224,13 @@ mod tests {
     #[test]
     fn resolve_relative_location() {
         assert_eq!(
-            resolve_location("http://localhost:8080", "/api/upload/abc"),
+            resolve_location("http://localhost:8080", "/api/upload/abc").unwrap(),
             "http://localhost:8080/api/upload/abc"
         );
+    }
+
+    #[test]
+    fn resolve_rejects_https_location() {
+        assert!(resolve_location("http://localhost:8080", "https://evil/upload").is_err());
     }
 }
