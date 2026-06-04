@@ -158,6 +158,7 @@ cargo build -p zfiles
 cd web && pnpm build:cloud
 # Serve locally: pnpm preview:cloud — open / (emitted as index.html)
 # Deploy the contents of web/dist-cloud/ to any static host (S3, R2, nginx, …)
+# Cloudflare Workers (static assets): from web/, run `pnpm build:cloud && wrangler deploy` (see wrangler.jsonc)
 
 # Install to ~/.cargo/bin
 ./scripts/install-local.sh
