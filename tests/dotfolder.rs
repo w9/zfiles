@@ -20,7 +20,11 @@ fn xdg_state_dir_stores_state_outside_serve_root() {
             .state_dir()
             .join("uploads")
             .join(format!("{}.meta.json", record.id));
-        assert!(meta.is_file(), "expected sidecar meta at {}", meta.display());
+        assert!(
+            meta.is_file(),
+            "expected sidecar meta at {}",
+            meta.display()
+        );
         assert!(
             !store.state_dir().join("state.db").exists(),
             "state.db should not be created"

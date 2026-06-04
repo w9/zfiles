@@ -109,13 +109,8 @@ impl StateStore {
             file.write_all(&payload)?;
             file.sync_all()?;
         }
-        std::fs::rename(&tmp, path).with_context(|| {
-            format!(
-                "rename upload meta {} to {}",
-                tmp.display(),
-                path.display()
-            )
-        })
+        std::fs::rename(&tmp, path)
+            .with_context(|| format!("rename upload meta {} to {}", tmp.display(), path.display()))
     }
 
     fn load_record(&self, id: &str) -> Result<Option<UploadRecord>> {
@@ -183,10 +178,7 @@ impl StateStore {
             file.write_all(data)?;
 
             let offset = Self::spool_offset(&spool)?;
-            Ok(UploadRecord {
-                offset,
-                ..record
-            })
+            Ok(UploadRecord { offset, ..record })
         })
     }
 
@@ -206,9 +198,8 @@ impl StateStore {
             let meta_path = self.upload_meta_path(id);
             let target = fs.resolve_write(Path::new(&record.relative_path))?;
             if let Some(parent) = target.parent() {
-                std::fs::create_dir_all(parent).with_context(|| {
-                    format!("create parent directory {}", parent.display())
-                })?;
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("create parent directory {}", parent.display()))?;
             }
 
             crate::mount::warn_if_cross_mount(
@@ -254,10 +245,7 @@ mod tests {
         std::fs::create_dir_all(&serve_root).unwrap();
         let serve_root = serve_root.canonicalize().unwrap();
         let state_dir = dir.path().join(".state");
-        (
-            dir,
-            StateStore::with_state_dir(serve_root, state_dir),
-        )
+        (dir, StateStore::with_state_dir(serve_root, state_dir))
     }
 
     fn read_meta(store: &StateStore, id: &str) -> Value {
@@ -422,11 +410,7 @@ mod tests {
         store.ensure_state_dir().unwrap();
         let id = "00000000-0000-4000-8000-000000000001";
         let meta = upload_meta_path(&store, id);
-        std::fs::write(
-            &meta,
-            r#"{"relative_path":"x.txt","size":1}"#,
-        )
-        .unwrap();
+        std::fs::write(&meta, r#"{"relative_path":"x.txt","size":1}"#).unwrap();
 
         assert!(store.get_upload(id).unwrap().is_none());
     }
@@ -454,10 +438,7 @@ mod tests {
 
         store.append_upload(&record.id, b"ok").unwrap();
         let target = store.finalize_upload(&record.id, &fs).unwrap();
-        assert_eq!(
-            target,
-            store.serve_root().join("nested/dir/file.txt")
-        );
+        assert_eq!(target, store.serve_root().join("nested/dir/file.txt"));
         assert_eq!(std::fs::read_to_string(target).unwrap(), "ok");
     }
 
@@ -486,5 +467,4 @@ mod tests {
         assert!(store.get_upload(&a.id).unwrap().is_none());
         assert!(store.get_upload(&b.id).unwrap().is_none());
     }
-
 }

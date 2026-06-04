@@ -18,7 +18,10 @@ fn test_server(root: &Path, state_dir: &Path) -> TestServer {
         Arc::new(LocalFs::new(root.clone())),
         AuthConfig::disabled(),
         false,
-        Arc::new(StateStore::with_state_dir(root.clone(), state_dir.to_path_buf())),
+        Arc::new(StateStore::with_state_dir(
+            root.clone(),
+            state_dir.to_path_buf(),
+        )),
         EventBus::new(),
     );
     TestServer::new(router(state)).expect("test server")
@@ -56,11 +59,19 @@ async fn head_returns_upload_offset_and_length_after_partial_patch() {
     let head = server.method(Method::HEAD, &location).await;
     head.assert_status(StatusCode::OK);
     assert_eq!(
-        head.headers().get("Upload-Offset").unwrap().to_str().unwrap(),
+        head.headers()
+            .get("Upload-Offset")
+            .unwrap()
+            .to_str()
+            .unwrap(),
         "3"
     );
     assert_eq!(
-        head.headers().get("Upload-Length").unwrap().to_str().unwrap(),
+        head.headers()
+            .get("Upload-Length")
+            .unwrap()
+            .to_str()
+            .unwrap(),
         "6"
     );
 }
