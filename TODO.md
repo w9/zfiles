@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL` for subpath deploys. Cloud connect shell polish (disconnect control). Next: nightly perf job `web/dist` build, e2e smoke upkeep. Listing row hover/selection is instant (no color transition).
+Dual-mode refactor is **complete**. This cycle adds **file operations** (new folder, inline rename, copy/cut/paste) on local kernel and S3: extended `POST /api/actions`, clipboard + paste destination/conflict/batch settings, inline listing editor, cut status on the status bar. Afterward: nightly perf job `web/dist` build, e2e smoke upkeep.
 
 ## TODO List
 
@@ -29,3 +29,8 @@ Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL
 - [x] Run `cargo test` and `cargo clippy -- -D warnings`
 - [x] `VirtualListing.tsx`: remove `transition-colors` from row and body gutter classes
 - [x] Run `pnpm test`
+- [ ] Local kernel: `LocalFs` mkdir/rename/copy/move + extended `POST /api/actions` + integration tests
+- [ ] `S3Backend`: mkdir, rename, copy, move via AWS SDK; extend `runAction` payload
+- [ ] Web: clipboard, copy/cut/paste actions, paste destination + conflict dialogs, batch/paste settings
+- [ ] Web: inline name editor (new folder + F2 rename) in list/grid; primary selection + focused row ops
+- [ ] i18n (en + zh-CN), status bar cut hint, README API table; `cargo test` + `pnpm test`
