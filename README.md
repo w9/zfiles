@@ -9,6 +9,20 @@ Dual-mode file explorer: browse **local folders** via a single Rust binary, or *
 
 See [design/design.md](design/design.md) for architecture, [design/dual_mode_refactor.md](design/dual_mode_refactor.md) for the migration plan, and [TODO.md](TODO.md) for current work.
 
+## Linux binaries
+
+Static musl builds for **x86_64** and **aarch64** are attached to [GitHub Releases](https://github.com/w9/zfiles/releases):
+
+| Asset | Architecture |
+|-------|----------------|
+| `zfiles-linux-x86_64` | Intel/AMD 64-bit |
+| `zfiles-linux-aarch64` | ARM64 |
+
+```bash
+chmod +x zfiles-linux-x86_64
+./zfiles-linux-x86_64 ~/Downloads
+```
+
 ## Quick start
 
 ```bash

@@ -14,14 +14,26 @@ permissions:
   contents: write
 
 jobs:
-  linux-amd64:
-    runs-on: ubuntu-latest
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            asset: zfiles-linux-x86_64
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            asset: zfiles-linux-aarch64
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -39,19 +51,27 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
+      - name: install musl tools
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
       - uses: Swatinem/rust-cache@v2
 
       - name: build release binary
-        run: cargo build --release
+        env:
+          # Native runner + rustc self-contained musl; avoid musl-cross gcc names in .cargo/config.toml.
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: cc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: cc
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: package binary
         run: |
-          strip target/release/zfiles
-          cp target/release/zfiles zfiles-linux-amd64
-          chmod +x zfiles-linux-amd64
+          BIN=target/${{ matrix.target }}/release/zfiles
+          strip "$BIN"
+          cp "$BIN" "${{ matrix.asset }}"
+          chmod +x "${{ matrix.asset }}"
 
       - name: upload release asset
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: gh release upload "$TAG" zfiles-linux-amd64 --clobber
+        run: gh release upload "$TAG" "${{ matrix.asset }}" --clobber
