@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL` for subpath deploys and consistent dev/prod URLs. Next: nightly perf job `web/dist` build, e2e smoke upkeep.
+Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL` for subpath deploys. Cloud connect shell polish (disconnect control). Next: nightly perf job `web/dist` build, e2e smoke upkeep.
 
 ## TODO List (drop rustls — current cycle)
 
@@ -102,3 +102,14 @@ Dual-mode refactor is **complete**. Frontend routing now respects Vite `BASE_URL
 - [x] `explorerUrl.ts` + `appRoute.ts`: route parsing/building through app base
 - [x] `vite.cloud.config.ts`: dev SPA fallback at `/` for cloud entry (match production root)
 - [x] `appRoute.test.ts` + `explorerUrl.test.ts`: subpath (`/repo/`) cases; run `pnpm test`
+
+## TODO List (cloud disconnect icon — current cycle)
+
+- [x] `CloudApp.tsx`: top-left icon button + tooltip for disconnect (reuse `connect.disconnect` i18n)
+- [x] Run `pnpm test`
+
+## TODO List (cloud disconnect toolbar — current cycle)
+
+- [x] `DisconnectButton` + `CloudDisconnectProvider`; wire into `ActionToolbar` trailing slot
+- [x] Remove floating disconnect overlay from `CloudApp.tsx`
+- [x] Run `pnpm test`

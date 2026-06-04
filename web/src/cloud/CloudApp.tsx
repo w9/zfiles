@@ -3,9 +3,9 @@ import { useCallback, useMemo, useState } from "react";
 import AppShell from "@/AppShell";
 import { ExplorerBackendProvider } from "@/backend";
 import { createS3Backend, type S3Backend } from "@/backend/s3Backend";
-import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider, useTranslation } from "@/i18n";
+import { I18nProvider } from "@/i18n";
+import { CloudDisconnectProvider } from "./CloudDisconnectContext";
 import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvider";
 import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
 import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
@@ -26,19 +26,12 @@ function ConnectedCloudShell({
   backend: S3Backend;
   onDisconnect: () => void;
 }) {
-  const { t } = useTranslation();
-
   return (
-    <ExplorerBackendProvider backend={backend}>
-      <div className="relative min-h-screen">
-        <div className="absolute right-4 top-4 z-20">
-          <Button type="button" variant="outline" size="sm" onClick={onDisconnect}>
-            {t("connect.disconnect")}
-          </Button>
-        </div>
+    <CloudDisconnectProvider onDisconnect={onDisconnect}>
+      <ExplorerBackendProvider backend={backend}>
         <AppShell />
-      </div>
-    </ExplorerBackendProvider>
+      </ExplorerBackendProvider>
+    </CloudDisconnectProvider>
   );
 }
 

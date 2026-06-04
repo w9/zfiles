@@ -55,6 +55,8 @@ import { filterDotEntries } from "../listingFilter";
 import { sortFileEntries } from "../listingSort";
 import type { ListingColumnLabels } from "../listing-types";
 import { useListingDisplayOrder } from "../useListingDisplayOrder";
+import DisconnectButton from "../cloud/DisconnectButton";
+import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 
@@ -67,6 +69,7 @@ type ContextMenuState = {
 
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
+  const onCloudDisconnect = useCloudDisconnect();
   const { t, locale } = useTranslation();
   const { navigate } = useAppRoute();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
@@ -638,6 +641,9 @@ export default function ExplorerApp() {
               invoke={(id) => void actionSystem.invoke(id)}
               ariaLabel={t("actions.toolbar.label")}
             />
+            {onCloudDisconnect ? (
+              <DisconnectButton onClick={onCloudDisconnect} />
+            ) : null}
           </div>
         </div>
       </header>
