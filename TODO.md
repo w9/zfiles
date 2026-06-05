@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. This cycle adds **file operations** (new folder, inline rename, copy/cut/paste) on local kernel and S3: extended `POST /api/actions`, clipboard + paste destination/conflict/batch settings, inline listing editor, cut status on the status bar. Afterward: nightly perf job `web/dist` build, e2e smoke upkeep.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done** (client-side name filter with case/whole/regex toggles). **Next:** nightly perf job `web/dist` build, e2e smoke upkeep.
 
 ## TODO List
 
@@ -36,3 +36,7 @@ Dual-mode refactor is **complete**. This cycle adds **file operations** (new fol
 - [x] i18n (en + zh-CN), status bar cut hint, README API table; `cargo test` + `pnpm test`
 - [x] Context menu: right-click outside selection selects that row only before opening menu
 - [x] Context menu: right-click empty listing area shows folder actions (new folder, paste, …)
+- [x] `input-group` + `textarea` shadcn components; `quickFilter.ts` with case/whole/regex + tests
+- [x] `ExplorerBreadcrumb`: Input Group filter at right with match toggles; i18n (en + zh-CN)
+- [x] `ExplorerApp`: loaded-only filter, dot reveal while filtered, navigate clear, selection prune, Mod+F, overlay
+- [x] `pnpm test`

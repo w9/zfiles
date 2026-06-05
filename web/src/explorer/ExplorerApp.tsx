@@ -52,6 +52,12 @@ import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { filterDotEntries } from "../listingFilter";
+import {
+  defaultQuickFilterOptions,
+  filterEntriesByQuickFilter,
+  normalizeQuickFilterQuery,
+  type QuickFilterOptions,
+} from "../quickFilter";
 import { sortFileEntries } from "../listingSort";
 import type { ListingColumnLabels } from "../listing-types";
 import { useListingDisplayOrder } from "../useListingDisplayOrder";
@@ -113,6 +119,11 @@ export default function ExplorerApp() {
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState("");
+  const [quickFilterOptions, setQuickFilterOptions] = useState<QuickFilterOptions>(
+    defaultQuickFilterOptions,
+  );
+  const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
   const listingEntriesRef = useRef<ListingEntry[]>([]);
@@ -395,17 +406,87 @@ export default function ExplorerApp() {
     setSlideshowOpen(true);
   }, []);
 
-  const visibleEntries = useMemo(
+  const quickFilterActive = normalizeQuickFilterQuery(quickFilter).length > 0;
+
+  const visibleEntries = useMemo(() => {
+    const sorted = sortFileEntries(entries, listingSortOrder);
+    if (quickFilterActive) {
+      return sorted;
+    }
+    return filterDotEntries(sorted, showDotEntries);
+  }, [entries, listingSortOrder, quickFilterActive, showDotEntries]);
+
+  const quickFilteredEntries = useMemo(
     () =>
-      sortFileEntries(
-        filterDotEntries(entries, showDotEntries),
-        listingSortOrder,
-      ),
-    [entries, listingSortOrder, showDotEntries],
+      filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
+    [visibleEntries, quickFilter, quickFilterOptions],
   );
+  const quickFilterEmpty =
+    quickFilterActive &&
+    quickFilteredEntries.length === 0 &&
+    visibleEntries.length > 0;
+
+  useEffect(() => {
+    setQuickFilter("");
+  }, [currentPath]);
+
+  useEffect(() => {
+    if (!quickFilterActive) {
+      return;
+    }
+    const visiblePaths = new Set(quickFilteredEntries.map((entry) => entry.path));
+    setSelectedPaths((prev) => {
+      const next = new Set([...prev].filter((path) => visiblePaths.has(path)));
+      if (next.size === prev.size) {
+        return prev;
+      }
+      return next;
+    });
+    const primary = selectedPathRef.current;
+    if (primary && !visiblePaths.has(primary)) {
+      const fallback = quickFilteredEntries[0]?.path ?? null;
+      setSelectedPath(fallback);
+      const fallbackIndex = quickFilteredEntries.findIndex(
+        (entry) => entry.path === fallback,
+      );
+      if (fallbackIndex >= 0) {
+        setSelectedIndex(fallbackIndex);
+        selectionAnchorRef.current = fallbackIndex;
+      } else {
+        setSelectedIndex(0);
+        selectionAnchorRef.current = 0;
+      }
+    }
+  }, [quickFilterActive, quickFilteredEntries]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const isMac =
+        typeof navigator !== "undefined" &&
+        navigator.platform.toLowerCase().includes("mac");
+      const mod = (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+      if (!mod || event.key.toLowerCase() !== "f") {
+        return;
+      }
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, [contenteditable='true']"))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      const input = quickFilterInputRef.current;
+      input?.focus();
+      input?.select();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const listingEntries = useMemo<ListingEntry[]>(() => {
-    return visibleEntries.map((entry) => ({
+    return quickFilteredEntries.map((entry) => ({
       key: entry.path,
       name: entry.name,
       path: entry.path,
@@ -471,7 +552,7 @@ export default function ExplorerApp() {
           ? undefined
           : backend.downloadUrl(entry.path) as string,
     }));
-  }, [visibleEntries, navigateTo, backend]);
+  }, [quickFilteredEntries, navigateTo, backend]);
 
   const listingColumnLabels = useMemo(
     (): ListingColumnLabels => ({
@@ -795,13 +876,23 @@ export default function ExplorerApp() {
           onForward={() => void goForward()}
           onRefresh={refreshListing}
           onNavigate={(path) => void navigateTo(path)}
+          quickFilterLabel={t("quickFilter.label")}
+          quickFilterPlaceholder={t("quickFilter.placeholder")}
+          quickFilterCaseSensitiveLabel={t("quickFilter.caseSensitive")}
+          quickFilterWholeWordLabel={t("quickFilter.wholeWord")}
+          quickFilterRegexLabel={t("quickFilter.regex")}
+          quickFilterValue={quickFilter}
+          quickFilterOptions={quickFilterOptions}
+          onQuickFilterChange={setQuickFilter}
+          onQuickFilterOptionsChange={setQuickFilterOptions}
+          quickFilterInputRef={quickFilterInputRef}
         />
       </section>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div
-            className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
+            className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
             onMouseDown={() => setFocusPane("file-list")}
             onContextMenu={(event) => {
               if (
@@ -813,6 +904,14 @@ export default function ExplorerApp() {
               void openContextMenuRef.current(event, null);
             }}
           >
+            {quickFilterEmpty ? (
+              <p
+                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground"
+                role="status"
+              >
+                {t("quickFilter.empty")}
+              </p>
+            ) : null}
             {listingViewMode === "grid" ? (
               <GridListing
                 entries={listingEntries}
