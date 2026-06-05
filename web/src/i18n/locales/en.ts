@@ -14,6 +14,7 @@ export const en = {
   "quickFilter.caseSensitive": "Match case",
   "quickFilter.wholeWord": "Match whole name",
   "quickFilter.regex": "Use regular expression",
+  "quickFilter.clear": "Clear filter",
   "quickFilter.empty": "No files match the filter",
   "theme.group": "Color theme",
   "theme.light": "Light",

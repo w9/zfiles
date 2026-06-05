@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Regex,
   WholeWord,
+  X,
 } from "lucide-react";
 
 import {
@@ -50,6 +51,7 @@ type ExplorerBreadcrumbProps = {
   quickFilterCaseSensitiveLabel: string;
   quickFilterWholeWordLabel: string;
   quickFilterRegexLabel: string;
+  quickFilterClearLabel: string;
   quickFilterValue: string;
   quickFilterOptions: QuickFilterOptions;
   onQuickFilterChange: (value: string) => void;
@@ -78,6 +80,7 @@ export default function ExplorerBreadcrumb({
   quickFilterCaseSensitiveLabel,
   quickFilterWholeWordLabel,
   quickFilterRegexLabel,
+  quickFilterClearLabel,
   quickFilterValue,
   quickFilterOptions,
   onQuickFilterChange,
@@ -273,12 +276,12 @@ export default function ExplorerBreadcrumb({
         )}
       </div>
       <InputGroup
-        className="h-7 min-w-0 shrink-0 sm:w-52 md:w-60"
+        className="h-7 min-w-0 shrink-0 rounded-lg pr-1 sm:w-52 md:w-60"
         onClick={(event) => event.stopPropagation()}
       >
         <InputGroupInput
           ref={quickFilterInputRef}
-          type="search"
+          type="text"
           aria-label={quickFilterLabel}
           placeholder={quickFilterPlaceholder}
           value={quickFilterValue}
@@ -293,6 +296,18 @@ export default function ExplorerBreadcrumb({
           }}
         />
         <InputGroupAddon align="inline-end" className="gap-0 pr-1">
+          {quickFilterValue.length > 0 ? (
+            <InputGroupButton
+              size="icon-xs"
+              aria-label={quickFilterClearLabel}
+              onClick={() => {
+                onQuickFilterChange("");
+                quickFilterInputRef?.current?.focus();
+              }}
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </InputGroupButton>
+          ) : null}
           <InputGroupButton
             size="icon-xs"
             aria-label={quickFilterCaseSensitiveLabel}

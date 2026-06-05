@@ -40,3 +40,9 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done** 
 - [x] `ExplorerBreadcrumb`: Input Group filter at right with match toggles; i18n (en + zh-CN)
 - [x] `ExplorerApp`: loaded-only filter, dot reveal while filtered, navigate clear, selection prune, Mod+F, overlay
 - [x] `pnpm test`
+- [x] `ExplorerBreadcrumb`: add right padding on quick-filter `InputGroup` so toggle buttons stay inside the border
+- [x] Run `pnpm test`
+- [x] `ExplorerBreadcrumb`: use `rounded-lg` on quick-filter `InputGroup`
+- [x] Run `pnpm test`
+- [x] Quick filter: Lucide `X` clear button instead of native search cancel; i18n (en + zh-CN)
+- [x] Run `pnpm test`

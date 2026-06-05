@@ -14,6 +14,7 @@ export const zhCN: Record<MessageKey, string> = {
   "quickFilter.caseSensitive": "区分大小写",
   "quickFilter.wholeWord": "完整匹配名称",
   "quickFilter.regex": "使用正则表达式",
+  "quickFilter.clear": "清除筛选",
   "quickFilter.empty": "没有匹配筛选条件的文件",
   "theme.group": "颜色主题",
   "theme.light": "浅色",

@@ -881,6 +881,7 @@ export default function ExplorerApp() {
           quickFilterCaseSensitiveLabel={t("quickFilter.caseSensitive")}
           quickFilterWholeWordLabel={t("quickFilter.wholeWord")}
           quickFilterRegexLabel={t("quickFilter.regex")}
+          quickFilterClearLabel={t("quickFilter.clear")}
           quickFilterValue={quickFilter}
           quickFilterOptions={quickFilterOptions}
           onQuickFilterChange={setQuickFilter}
