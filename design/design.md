@@ -37,7 +37,7 @@ zfiles is engineered around these goals. Module boundaries and frontend/backend 
 - **Always-instant cold start (local).** Under 100 ms from process spawn to first HTTP response, no matter how large the served directory is. Nothing in the startup path blocks on directory size or cache state.
 - **Saturate the wire (local).** Single-connection downloads and uploads hit gigabit Ethernet throughput where hardware allows. Both transfer paths resume from interruption (Range + tus).
 - **Small focused kernel (local).** The Rust binary serves filesystem primitives, auth, tus upload, static assets, and filesystem watch — not format interpretation, thumbnails, search, or extensibility hooks.
-- **Static cloud deployment.** The hosted SPA is static files only. Bucket credentials are user-supplied and ephemeral. URL params carry **non-secrets** only (bucket, prefix, provider, endpoint, region, read-only flag).
+- **Static cloud deployment.** The hosted SPA is static files only. Bucket credentials are user-supplied and ephemeral. URL params may pre-fill the connect form (including optional credential injection); credential params are stripped from the address bar immediately after read.
 - **Single static binary (local).** One file, with the React frontend baked in. Drop it on a Linux machine and run it.
 - **Cross-platform forward compatibility (local kernel).** v1 ships Linux only, but filesystem operations go through an `Fs` trait so macOS and Windows ports don't rewrite the center.
 
@@ -220,13 +220,25 @@ The React UI is compiled by Vite. **Local:** output embedded in the binary; dev 
 
 ### Cloud boot and URL params
 
-Allowed query params (non-secret): `provider` (`aws` / `r2`), `bucket`, `endpoint`, `region`, `prefix`, `readonly`.
+Query params pre-fill the connect dialog (and auto-connect when bucket plus access key and secret are present):
 
-Forbidden in URLs: access keys, secret keys, session tokens.
+| Param | Aliases | Purpose |
+|-------|---------|---------|
+| `provider` | — | `aws` or `r2` |
+| `bucket` | — | Bucket name |
+| `endpoint` | — | Custom endpoint (R2) |
+| `region` | — | AWS region |
+| `prefix` | — | Root prefix inside the bucket |
+| `readonly` | `read_only` | Read-only mode |
+| `accessKeyId` | `access_key_id` | Access key ID |
+| `secretAccessKey` | `secret_access_key` | Secret access key |
+| `sessionToken` | `session_token` | Session token (optional) |
+
+Credential params are **removed from the address bar** as soon as they are read (`history.replaceState`), so they do not linger in bookmarks or visible history. They may still appear briefly in static-host access logs on the initial page load, in Referer headers if the user navigates away before strip, and in shared links — use **short-lived** scoped credentials only. Prefer the connect dialog for manual entry when sharing a screen.
 
 Connect flow, credential scoping, and disconnect: [docs/cloud-connect.md](../docs/cloud-connect.md).
 
-After connect, explorer navigation may update the URL for bucket/prefix only.
+After connect, explorer navigation may update the URL for bucket/prefix only (never credentials).
 
 ### Config, state, and cache (local)
 
@@ -315,11 +327,13 @@ zfiles daemon start --config ~/.config/zfiles/daemon.toml
 
 ### Cloud mode
 
-No CLI. User opens the hosted SPA (or self-hosted static build), connects with temporary bucket credentials, and browses. Example bookmark (non-secret params only):
+No CLI. User opens the hosted SPA (or self-hosted static build), connects with temporary bucket credentials, and browses. Example bookmark (connection settings; paste keys in the dialog):
 
 ```
 https://zfiles.com/?provider=r2&bucket=my-data&prefix=photos/
 ```
+
+Optional credential params (`accessKeyId`, `secretAccessKey`, `sessionToken`) auto-connect when present; see [Cloud boot and URL params](#cloud-boot-and-url-params).
 
 ---
 

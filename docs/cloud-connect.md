@@ -29,14 +29,14 @@ Before sharing the URL with users, configure [bucket CORS](cors.md) for your SPA
 
 ## Connect flow
 
-1. User opens the hosted SPA (optionally with [URL params](#url-parameters-non-secrets-only) that pre-fill the form).
+1. User opens the hosted SPA (optionally with [URL params](#url-parameters) that pre-fill the form).
 2. The **connect dialog** appears until a session is established.
 3. User selects provider (**Amazon S3** or **Cloudflare R2**), bucket, region, endpoint (required for R2), optional prefix, and temporary credentials.
 4. User clicks **Connect**. zfiles runs `HeadBucket` to verify credentials and bucket access.
 5. On success, credentials and connection settings are stored in **`sessionStorage`** (tab-scoped). The explorer loads.
 6. **Disconnect** (header button) clears `sessionStorage` and returns to the connect dialog.
 
-Credentials are **not** written to `localStorage`, URL query strings, or any server log — the static host only serves HTML/JS/CSS.
+Credentials are **not** written to `localStorage`. After a successful connect they live in `sessionStorage` only. Credential URL params are stripped from the address bar immediately after read, but the **initial** page request may still log the full query string on the static host — use short-lived scoped credentials for deep links.
 
 ### Session lifetime
 
@@ -45,26 +45,35 @@ Credentials are **not** written to `localStorage`, URL query strings, or any ser
 - Closing the tab clears the session; the user must connect again.
 - Expired or revoked credentials show API errors; use Disconnect and reconnect with fresh credentials.
 
-## URL parameters (non-secrets only)
+## URL parameters
 
-These query params pre-fill the connect form. They must **never** carry secrets.
+These query params pre-fill the connect form. When `bucket`, `accessKeyId` (or `access_key_id`), and `secretAccessKey` (or `secret_access_key`) are all present, zfiles **auto-connects** after validating credentials.
 
-| Param | Example | Purpose |
-|-------|---------|---------|
-| `provider` | `aws`, `r2` | Provider preset |
-| `bucket` | `my-data` | Bucket name |
-| `region` | `us-east-1`, `auto` | AWS region (R2 often uses `auto`) |
-| `endpoint` | `https://…r2.cloudflarestorage.com` | Custom endpoint (R2) |
-| `prefix` | `projects/demo/` | Root prefix inside the bucket |
-| `readonly` | `1`, `true` | Read-only mode (no upload/delete) |
+| Param | Aliases | Example | Purpose |
+|-------|---------|---------|---------|
+| `provider` | — | `aws`, `r2` | Provider preset |
+| `bucket` | — | `my-data` | Bucket name |
+| `region` | — | `us-east-1`, `auto` | AWS region (R2 often uses `auto`) |
+| `endpoint` | — | `https://…r2.cloudflarestorage.com` | Custom endpoint (R2) |
+| `prefix` | — | `projects/demo/` | Root prefix inside the bucket |
+| `readonly` | `read_only` | `1`, `true` | Read-only mode (no upload/delete) |
+| `accessKeyId` | `access_key_id` | `AKIA…` | Access key ID |
+| `secretAccessKey` | `secret_access_key` | (secret) | Secret access key |
+| `sessionToken` | `session_token` | (token) | Session token (optional) |
 
-Example bookmark:
+Example bookmark (connection settings only — user still pastes keys in the dialog):
 
 ```
 https://files.example.com/?provider=r2&bucket=photos&prefix=2024/&readonly=1
 ```
 
-The user still pastes access keys in the dialog every session.
+Example deep link (auto-connect; use short-lived credentials):
+
+```
+https://files.example.com/?provider=aws&bucket=my-data&region=us-east-1&accessKeyId=AKIA…&secretAccessKey=…&sessionToken=…
+```
+
+Credential params are removed from the address bar as soon as they are read. Avoid sharing deep links in chat or email; prefer IAM roles or fresh tokens with tight expiry.
 
 ## Credential recommendations
 

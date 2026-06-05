@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done** (client-side name filter with case/whole/regex toggles). **Next:** nightly perf job `web/dist` build, e2e smoke upkeep.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (cloud credential URL params) is complete.
 
 ## TODO List
 
@@ -46,3 +46,13 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done** 
 - [x] Run `pnpm test`
 - [x] Quick filter: Lucide `X` clear button instead of native search cancel; i18n (en + zh-CN)
 - [x] Run `pnpm test`
+- [x] `ExplorerBreadcrumb`: reduce address bar row horizontal padding to `px-1`
+- [x] Run `pnpm test`
+- [x] `bootParams`: parse credential URL params (`accessKeyId`, `secretAccessKey`, `sessionToken` + snake_case aliases)
+- [x] `stripCredentialParamsFromUrl`: remove credential params from address bar after read; wire in `CloudApp`
+- [x] `ConnectDialog`: pre-fill credential fields from boot params; auto-connect when required params present
+- [x] Tests: boot param parsing and credential URL stripping
+- [x] Design docs + `docs/cloud-connect.md`: document credential URL params and security warnings
+- [x] Run `pnpm test`
+- [x] Fix duplicate `clipboard.count` in `contextKeys.ts` (cloud build TS2300)
+- [x] Run `pnpm build:cloud`

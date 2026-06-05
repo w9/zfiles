@@ -200,7 +200,7 @@ cd web && pnpm dev:cloud
 
 Opens **http://localhost:5174/** (cloud entry). Local kernel HMR stays on **http://localhost:5173/** via `pnpm dev` — do not use 5173 for cloud work.
 
-Open the connect dialog, paste temporary bucket credentials, and browse. Non-secret URL params (`provider`, `bucket`, `region`, `endpoint`, `prefix`, `readonly`) pre-fill the form. Credentials stay in `sessionStorage` for the tab lifetime only.
+Open the connect dialog, paste temporary bucket credentials, and browse. URL params (`provider`, `bucket`, `region`, `endpoint`, `prefix`, `readonly`, and optionally `accessKeyId`, `secretAccessKey`, `sessionToken`) pre-fill the form; credential params are stripped from the address bar after read. Credentials stay in `sessionStorage` for the tab lifetime only.
 
 Documentation:
 

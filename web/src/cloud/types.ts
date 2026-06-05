@@ -23,6 +23,19 @@ export type S3BootParams = {
   endpoint?: string;
   prefix?: string;
   readOnly?: boolean;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
 };
+
+/** Query param names removed from the address bar after credentials are read. */
+export const S3_CREDENTIAL_URL_PARAM_NAMES = [
+  "accessKeyId",
+  "access_key_id",
+  "secretAccessKey",
+  "secret_access_key",
+  "sessionToken",
+  "session_token",
+] as const;
 
 export const S3_SESSION_STORAGE_KEY = "zfiles-s3-session";

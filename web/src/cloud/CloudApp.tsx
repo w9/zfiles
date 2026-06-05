@@ -11,7 +11,7 @@ import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
 import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
-import { readBootParamsFromUrl } from "./bootParams";
+import { readBootParamsFromUrl, stripCredentialParamsFromUrl } from "./bootParams";
 import { clearSessionConfig, loadSessionConfig } from "./credentials";
 
 function backendFromSession(): S3Backend | null {
@@ -36,7 +36,11 @@ function ConnectedCloudShell({
 }
 
 export default function CloudApp() {
-  const bootParams = useMemo(() => readBootParamsFromUrl(), []);
+  const bootParams = useMemo(() => {
+    const params = readBootParamsFromUrl();
+    stripCredentialParamsFromUrl();
+    return params;
+  }, []);
   const [backend, setBackend] = useState<S3Backend | null>(() => backendFromSession());
 
   const onDisconnect = useCallback(() => {

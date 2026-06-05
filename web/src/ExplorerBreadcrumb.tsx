@@ -166,7 +166,7 @@ export default function ExplorerBreadcrumb({
   );
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1 px-3">
+    <div className="flex h-9 shrink-0 items-center gap-1 px-1">
       <div className="flex shrink-0 items-center gap-0.5">
         <Button
           type="button"

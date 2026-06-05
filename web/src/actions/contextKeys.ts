@@ -9,7 +9,6 @@ export type ContextKeys = {
   "preview.is-image": boolean;
   "preview.path": string;
   "listing.show-dot-entries": boolean;
-  "clipboard.count": number;
 };
 
 export function defaultContextKeys(): ContextKeys {

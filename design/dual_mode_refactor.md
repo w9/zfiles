@@ -21,7 +21,7 @@ Plugins and filename search are **removed from the project**, not deferred. They
 
 2. **Local mode stays embedded.** The CLI continues to ship a single static binary with the frontend baked in via `rust-embed`. `zfiles ~/projects` opens `http://127.0.0.1:<port>/` — same origin, no cross-origin calls to `zfiles.com`, no dependency on the public website for local use.
 
-3. **Cloud mode is a static SPA tool.** Like other open-source browser utilities (JSON formatters, password generators), the hosted site runs entirely in the client. Users paste **temporary** credentials into a connect dialog. Credentials never appear in URL params, never touch server-side logs, and live only in `sessionStorage` for the tab lifetime.
+3. **Cloud mode is a static SPA tool.** Like other open-source browser utilities (JSON formatters, password generators), the hosted site runs entirely in the client. Users paste **temporary** credentials into a connect dialog, or supply them via URL params for one-click deep links. Credential URL params are stripped from the address bar immediately after read; they may still appear in static-host access logs on the initial request. Credentials live in `sessionStorage` for the tab lifetime.
 
 4. **Shrink the kernel.** Remove the plugin supervisor, JSON-RPC subprocess protocol, plugin routes, search endpoint, thumbnail/preview plugin pipeline, and bundled-plugin build. The kernel becomes a focused local HTTP server: list, stat, read (Range), write (tus upload), delete, auth, filesystem watch, and static asset serving.
 
@@ -39,7 +39,7 @@ Plugins and filename search are **removed from the project**, not deferred. They
 | C2 | **No UI divergence.** Local and cloud modes differ only by backend adapter and boot config — not by parallel component trees or `#ifdef`-style forks. |
 | C3 | **Local mode: embedded binary.** SPA assets ship inside the Rust binary; the CLI serves them on localhost. Do not require `zfiles.com` or network access for local browsing. |
 | C4 | **Cloud mode: no backend for secrets.** The hosted site is static files only. Bucket credentials are pasted in the browser and stored in `sessionStorage`. No analytics, error reporters, or third-party scripts may capture credential fields. |
-| C5 | **URL params: non-secrets only.** Allowed: provider (`aws` / `r2`), bucket name, endpoint, region, prefix path, read-only flag. Forbidden: access keys, secret keys, session tokens. |
+| C5 | **URL params pre-fill connect.** Allowed: provider (`aws` / `r2`), bucket, endpoint, region, prefix, read-only flag, access key ID, secret access key, optional session token (camelCase or snake_case aliases). Credential params are stripped from the URL after read; use short-lived scoped credentials only. |
 | C6 | **Remove plugins.** Delete the plugin supervisor, manifests, bundled plugins, plugin routes, viewer/thumbnail/search/action plugin integration, and plugin-related CLI subcommands. |
 | C7 | **Remove search.** Delete the search box, `/api/search`, searcher plugin support, and `zfiles search` CLI. |
 | C8 | **Do not break local-first SLAs where they still apply.** Local mode retains instant cold start, resumable tus upload, and Range download for the served directory. |
@@ -248,7 +248,7 @@ Work proceeds in ordered phases. Each phase should leave the tree in a buildable
 - [x] Add `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` to the web package.
 - [x] Implement `S3Backend` with paginated listing, multipart upload, delete, HeadObject stat, presigned or direct GetObject download.
 - [x] Build connect dialog: provider preset (AWS / R2), endpoint, region, bucket, credential fields, test connection, disconnect.
-- [x] Parse non-secret boot params from URL (`provider`, `bucket`, `prefix`, `endpoint`, `region`, `readonly`).
+- [x] Parse boot params from URL (`provider`, `bucket`, `prefix`, `endpoint`, `region`, `readonly`, optional credentials).
 - [x] Store credentials in `sessionStorage` after successful connect.
 - [x] Add boot mode detection: local (default when served from kernel) vs cloud (static host build flag or empty `/api/health`).
 
@@ -287,7 +287,7 @@ Tests prove the refactor succeeded. The bar is: **both modes work end-to-end; no
 |------|--------------|
 | `KernelBackend` | Maps list/stat/upload/delete to correct `/api/*` calls; parses kernel JSON shapes |
 | `S3Backend` | Prefix/delimiter listing logic, cursor pagination merge, path ↔ key conversion, error mapping |
-| Boot config | URL param parsing accepts allowed keys only; rejects unknown secret-like params in docs/tests |
+| Boot config | URL param parsing for connection + credential fields; credential params stripped from URL after read |
 | Credential storage | Connect writes to `sessionStorage`; disconnect clears it; nothing written to `localStorage` |
 | Preview | Image path detection routes to client preview; unknown extension shows fallback |
 | Action system | Built-in actions invoke backend methods; no `searcher.ready` / `plugin.*` context keys remain |
@@ -337,7 +337,7 @@ Before calling the refactor complete, a human (or scripted browser walkthrough) 
 **Cloud mode**
 - [ ] Static build hosted locally (`pnpm preview`) connects to R2 or MinIO with pasted temp creds.
 - [ ] CORS misconfiguration shows a clear, actionable error pointing at documentation.
-- [ ] URL with `?bucket=foo&prefix=bar/` pre-fills connect form but still requires credential paste.
+- [ ] URL with `?bucket=foo&prefix=bar/` pre-fills connect form; credential params auto-connect when bucket + keys are present.
 - [ ] Reload after connect requires re-paste (sessionStorage) or re-connect flow.
 
 **Both modes**

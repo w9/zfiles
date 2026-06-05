@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,9 +42,9 @@ function initialForm(bootParams: S3BootParams): FormState {
     region: bootParams.region ?? "us-east-1",
     endpoint: bootParams.endpoint ?? "",
     prefix: bootParams.prefix ?? "",
-    accessKeyId: "",
-    secretAccessKey: "",
-    sessionToken: "",
+    accessKeyId: bootParams.accessKeyId ?? "",
+    secretAccessKey: bootParams.secretAccessKey ?? "",
+    sessionToken: bootParams.sessionToken ?? "",
     readOnly: bootParams.readOnly ?? false,
   };
 }
@@ -78,9 +78,22 @@ export default function ConnectDialog({
   const [form, setForm] = useState<FormState>(() => initialForm(resolvedBoot));
   const [error, setError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const autoConnectAttempted = useRef(false);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const connectWithConfig = async (config: S3ConnectionConfig) => {
+    if (!config.bucket || !config.credentials.accessKeyId || !config.credentials.secretAccessKey) {
+      throw new Error(t("connect.error.required"));
+    }
+    if (config.provider === "r2" && !config.endpoint) {
+      throw new Error(t("connect.error.endpointRequired"));
+    }
+    await validateS3Connection(config);
+    saveSessionConfig(config);
+    onConnected(createS3Backend(config));
   };
 
   const onSubmit = async (event: React.FormEvent) => {
@@ -88,22 +101,37 @@ export default function ConnectDialog({
     setError(null);
     setConnecting(true);
     try {
-      const config = toConfig(form);
-      if (!config.bucket || !config.credentials.accessKeyId || !config.credentials.secretAccessKey) {
-        throw new Error(t("connect.error.required"));
-      }
-      if (config.provider === "r2" && !config.endpoint) {
-        throw new Error(t("connect.error.endpointRequired"));
-      }
-      await validateS3Connection(config);
-      saveSessionConfig(config);
-      onConnected(createS3Backend(config));
+      await connectWithConfig(toConfig(form));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setConnecting(false);
     }
   };
+
+  useEffect(() => {
+    if (autoConnectAttempted.current) {
+      return;
+    }
+    if (!resolvedBoot.accessKeyId || !resolvedBoot.secretAccessKey || !resolvedBoot.bucket) {
+      return;
+    }
+    const config = toConfig(initialForm(resolvedBoot));
+    if (config.provider === "r2" && !config.endpoint) {
+      return;
+    }
+    autoConnectAttempted.current = true;
+    setError(null);
+    setConnecting(true);
+    void connectWithConfig(config)
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : String(err));
+        autoConnectAttempted.current = false;
+      })
+      .finally(() => {
+        setConnecting(false);
+      });
+  }, [resolvedBoot]);
 
   return (
     <Dialog open={open}>
