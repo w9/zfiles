@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** centered empty-folder message in the file list when a directory has no visible entries.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** fix listing overlay when an empty folder has an active quick filter.
 
 ## TODO List
 
@@ -56,7 +56,10 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] Fix duplicate `clipboard.count` in `contextKeys.ts` (cloud build TS2300)
 - [x] Run `pnpm build:cloud`
-- [ ] `listingEmpty` helper: visible entries empty, not during initial load, not when quick filter active
-- [ ] `ExplorerApp`: centered empty-state overlay (reuse quick-filter empty layout)
-- [ ] i18n `listing.empty` (en + zh-CN)
+- [x] `listingEmpty` helper: visible entries empty, not during initial load, not when quick filter active
+- [x] `ExplorerApp`: centered empty-state overlay (reuse quick-filter empty layout)
+- [x] i18n `listing.empty` (en + zh-CN)
+- [x] Run `pnpm test`
+- [ ] `listingOverlayState`: show folder-empty message when filter active on empty folder
+- [ ] `ExplorerApp`: use unified overlay helper instead of separate empty flags
 - [ ] Run `pnpm test`
