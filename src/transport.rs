@@ -230,34 +230,156 @@ struct RunActionBody {
     #[serde(default)]
     paths: Vec<String>,
     action_id: String,
+    #[serde(default)]
+    dest_dir: Option<String>,
+    #[serde(default)]
+    new_name: Option<String>,
+    #[serde(default)]
+    overwrite: bool,
 }
 
 const KERNEL_ACTION_DELETE: &str = "file.delete";
+const KERNEL_ACTION_MKDIR: &str = "file.mkdir";
+const KERNEL_ACTION_RENAME: &str = "file.rename";
+const KERNEL_ACTION_COPY: &str = "file.copy";
+const KERNEL_ACTION_MOVE: &str = "file.move";
 
 async fn run_action(
     State(state): State<AppState>,
     Json(body): Json<RunActionBody>,
 ) -> Result<StatusCode, AppError> {
     let mut targets = body.paths;
-    if let Some(path) = body.path {
-        targets.push(path);
+    if let Some(path) = &body.path {
+        targets.push(path.clone());
     }
-    if targets.is_empty() {
-        return Err(AppError(anyhow::anyhow!("path or paths is required")));
-    }
-    if body.action_id == KERNEL_ACTION_DELETE {
-        for path in targets {
-            state.fs.delete_path(std::path::Path::new(&path)).await?;
-            state.events.publish(KernelEvent::FilesystemChanged {
-                path: parent_listing_path(&path),
-            });
+
+    match body.action_id.as_str() {
+        KERNEL_ACTION_DELETE => {
+            if targets.is_empty() {
+                return Err(AppError(anyhow::anyhow!("path or paths is required")));
+            }
+            let mut parents = std::collections::HashSet::new();
+            for path in targets {
+                state.fs.delete_path(std::path::Path::new(&path)).await?;
+                parents.insert(parent_listing_path(&path));
+            }
+            for parent in parents {
+                state
+                    .events
+                    .publish(KernelEvent::FilesystemChanged { path: parent });
+            }
+            Ok(StatusCode::NO_CONTENT)
         }
-        return Ok(StatusCode::NO_CONTENT);
+        KERNEL_ACTION_MKDIR => {
+            let parent = targets
+                .first()
+                .map(String::as_str)
+                .or(body.path.as_deref())
+                .unwrap_or_default();
+            let name = body
+                .new_name
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("new_name is required"))?;
+            let created = state
+                .fs
+                .create_dir(std::path::Path::new(parent), name)
+                .await?;
+            state.events.publish(KernelEvent::FilesystemChanged {
+                path: parent_listing_path(&created),
+            });
+            Ok(StatusCode::NO_CONTENT)
+        }
+        KERNEL_ACTION_RENAME => {
+            let path = targets
+                .first()
+                .or(body.path.as_ref())
+                .ok_or_else(|| anyhow::anyhow!("path is required"))?
+                .as_str();
+            let new_name = body
+                .new_name
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("new_name is required"))?;
+            let renamed = state
+                .fs
+                .rename_path(std::path::Path::new(path), new_name, body.overwrite)
+                .await?;
+            state.events.publish(KernelEvent::FilesystemChanged {
+                path: parent_listing_path(&renamed),
+            });
+            if parent_listing_path(path) != parent_listing_path(&renamed) {
+                state.events.publish(KernelEvent::FilesystemChanged {
+                    path: parent_listing_path(path),
+                });
+            }
+            Ok(StatusCode::NO_CONTENT)
+        }
+        KERNEL_ACTION_COPY => {
+            if targets.is_empty() {
+                return Err(AppError(anyhow::anyhow!("paths is required")));
+            }
+            let dest_dir = body
+                .dest_dir
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("dest_dir is required"))?;
+            let mut parents = std::collections::HashSet::new();
+            parents.insert(dest_dir.to_string());
+            let dest_name = body.new_name.as_deref().filter(|_| targets.len() == 1);
+            for source in targets {
+                let created = state
+                    .fs
+                    .copy_into_dir(
+                        std::path::Path::new(&source),
+                        std::path::Path::new(dest_dir),
+                        dest_name,
+                        body.overwrite,
+                    )
+                    .await?;
+                parents.insert(parent_listing_path(&created));
+                parents.insert(parent_listing_path(&source));
+            }
+            for parent in parents {
+                state
+                    .events
+                    .publish(KernelEvent::FilesystemChanged { path: parent });
+            }
+            Ok(StatusCode::NO_CONTENT)
+        }
+        KERNEL_ACTION_MOVE => {
+            if targets.is_empty() {
+                return Err(AppError(anyhow::anyhow!("paths is required")));
+            }
+            let dest_dir = body
+                .dest_dir
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("dest_dir is required"))?;
+            let mut parents = std::collections::HashSet::new();
+            parents.insert(dest_dir.to_string());
+            let dest_name = body.new_name.as_deref().filter(|_| targets.len() == 1);
+            for source in targets {
+                let moved = state
+                    .fs
+                    .move_into_dir(
+                        std::path::Path::new(&source),
+                        std::path::Path::new(dest_dir),
+                        dest_name,
+                        body.overwrite,
+                    )
+                    .await?;
+                parents.insert(parent_listing_path(&moved));
+                parents.insert(parent_listing_path(&source));
+            }
+            for parent in parents {
+                state
+                    .events
+                    .publish(KernelEvent::FilesystemChanged { path: parent });
+            }
+            Ok(StatusCode::NO_CONTENT)
+        }
+        _ => Err(AppError(anyhow::anyhow!(
+            "unknown action: {}",
+            body.action_id
+        ))),
     }
-    Err(AppError(anyhow::anyhow!(
-        "unknown action: {}",
-        body.action_id
-    )))
 }
 
 fn parent_listing_path(relative: &str) -> String {

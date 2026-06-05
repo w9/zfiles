@@ -29,8 +29,10 @@ Dual-mode refactor is **complete**. This cycle adds **file operations** (new fol
 - [x] Run `cargo test` and `cargo clippy -- -D warnings`
 - [x] `VirtualListing.tsx`: remove `transition-colors` from row and body gutter classes
 - [x] Run `pnpm test`
-- [ ] Local kernel: `LocalFs` mkdir/rename/copy/move + extended `POST /api/actions` + integration tests
-- [ ] `S3Backend`: mkdir, rename, copy, move via AWS SDK; extend `runAction` payload
-- [ ] Web: clipboard, copy/cut/paste actions, paste destination + conflict dialogs, batch/paste settings
-- [ ] Web: inline name editor (new folder + F2 rename) in list/grid; primary selection + focused row ops
-- [ ] i18n (en + zh-CN), status bar cut hint, README API table; `cargo test` + `pnpm test`
+- [x] Local kernel: `LocalFs` mkdir/rename/copy/move + extended `POST /api/actions` + integration tests
+- [x] `S3Backend`: mkdir, rename, copy, move via AWS SDK; extend `runAction` payload
+- [x] Web: clipboard, copy/cut/paste actions, paste destination + conflict dialogs, batch/paste settings
+- [x] Web: inline name editor (new folder + F2 rename) in list/grid; primary selection + focused row ops
+- [x] i18n (en + zh-CN), status bar cut hint, README API table; `cargo test` + `pnpm test`
+- [x] Context menu: right-click outside selection selects that row only before opening menu
+- [x] Context menu: right-click empty listing area shows folder actions (new folder, paste, …)

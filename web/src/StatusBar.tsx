@@ -7,6 +7,7 @@ type StatusBarProps = {
   backendStatus: BackendStatusValue;
   kernelVersion?: string | null;
   selectedCount?: number;
+  cutStatusText?: string | null;
   className?: string;
 };
 
@@ -14,6 +15,7 @@ export default function StatusBar({
   backendStatus,
   kernelVersion,
   selectedCount = 0,
+  cutStatusText = null,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
@@ -34,9 +36,14 @@ export default function StatusBar({
       aria-label={t("statusBar.label")}
     >
       <BackendStatus status={backendStatus} kernelVersion={kernelVersion} compact />
-      {selectionLabel ? (
-        <p className="text-xs text-muted-foreground">{selectionLabel}</p>
-      ) : null}
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+        {cutStatusText ? (
+          <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
+        ) : null}
+        {selectionLabel ? (
+          <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
@@ -7,6 +6,8 @@ import {
   S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
+import { runS3FileAction } from "./s3FileOperations";
+import type { RunActionParams } from "./runActionParams";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -229,22 +230,16 @@ export class S3Backend implements ExplorerBackend {
     }
   }
 
-  async runAction(actionId: string, paths: string[]): Promise<void> {
-    if (actionId !== "file.delete") {
-      throw new Error(`unknown action: ${actionId}`);
-    }
+  async runAction(params: RunActionParams): Promise<void> {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
     }
-    for (const path of paths) {
-      const key = keyForExplorerPath(this.config.prefix, path);
-      await this.client.send(
-        new DeleteObjectCommand({
-          Bucket: this.config.bucket,
-          Key: key,
-        }),
-      );
-    }
+    await runS3FileAction(
+      this.client,
+      this.config.bucket,
+      this.config.prefix,
+      params,
+    );
   }
 
   async fetchHealth(): Promise<HealthInfo | null> {

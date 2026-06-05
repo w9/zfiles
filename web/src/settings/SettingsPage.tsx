@@ -12,7 +12,18 @@ import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
 import type { ModifiedTimeFormat } from "@/settings/modifiedTimeFormat";
 import type { ListingSortOrder } from "@/settings/listingSortOrder";
 import type { ShowDotEntriesVisibility } from "@/settings/showDotEntries";
+import {
+  readStoredPasteBatchOnError,
+  storePasteBatchOnError,
+  type PasteBatchOnError,
+} from "@/settings/pasteBatchOnError";
+import {
+  readStoredPasteDestination,
+  storePasteDestination,
+  type PasteDestinationWhenFolderSelected,
+} from "@/settings/pasteDestination";
 import { useTheme } from "@/useTheme";
+import { useState } from "react";
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -21,6 +32,10 @@ export default function SettingsPage() {
   const { order: listingSortOrder, setOrder: setListingSortOrder } = useListingSortOrder();
   const { visibility, setVisibility } = useShowDotEntries();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
+  const [pasteDestination, setPasteDestination] = useState(
+    readStoredPasteDestination,
+  );
+  const [pasteBatchOnError, setPasteBatchOnError] = useState(readStoredPasteBatchOnError);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-8">
@@ -136,6 +151,78 @@ export default function SettingsPage() {
             </ToggleGroupItem>
             <ToggleGroupItem value="visible" aria-label={t("settings.dotEntries.visible")}>
               {t("settings.dotEntries.visible")}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-xl border bg-card p-6">
+        <h2 className="text-base font-semibold">{t("settings.paste.title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("settings.paste.description")}
+        </p>
+
+        <div className="mt-6 space-y-3">
+          <div>
+            <p className="text-sm font-medium">{t("settings.paste.destination.label")}</p>
+          </div>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={pasteDestination}
+            onValueChange={(value) => {
+              if (!value) {
+                return;
+              }
+              const next = value as PasteDestinationWhenFolderSelected;
+              setPasteDestination(next);
+              storePasteDestination(next);
+            }}
+            aria-label={t("settings.paste.destination.label")}
+          >
+            <ToggleGroupItem value="ask" aria-label={t("settings.paste.destination.ask")}>
+              {t("settings.paste.destination.ask")}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="into_selected_folder"
+              aria-label={t("settings.paste.destination.intoSelected")}
+            >
+              {t("settings.paste.destination.intoSelected")}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="into_current_directory"
+              aria-label={t("settings.paste.destination.intoCurrent")}
+            >
+              {t("settings.paste.destination.intoCurrent")}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <div>
+            <p className="text-sm font-medium">{t("settings.paste.batch.label")}</p>
+          </div>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={pasteBatchOnError}
+            onValueChange={(value) => {
+              if (!value) {
+                return;
+              }
+              const next = value as PasteBatchOnError;
+              setPasteBatchOnError(next);
+              storePasteBatchOnError(next);
+            }}
+            aria-label={t("settings.paste.batch.label")}
+          >
+            <ToggleGroupItem value="stop" aria-label={t("settings.paste.batch.stop")}>
+              {t("settings.paste.batch.stop")}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="continue" aria-label={t("settings.paste.batch.continue")}>
+              {t("settings.paste.batch.continue")}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>

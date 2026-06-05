@@ -113,11 +113,17 @@ export class KernelBackend implements ExplorerBackend {
     }
   }
 
-  async runAction(actionId: string, paths: string[]): Promise<void> {
+  async runAction(params: import("./runActionParams").RunActionParams): Promise<void> {
     const response = await apiFetch("/api/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paths, action_id: actionId }),
+      body: JSON.stringify({
+        paths: params.paths,
+        action_id: params.actionId,
+        dest_dir: params.destDir,
+        new_name: params.newName,
+        overwrite: params.overwrite ?? false,
+      }),
     });
     if (!response.ok) {
       throw new Error(`action failed: HTTP ${response.status}`);

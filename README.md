@@ -213,7 +213,7 @@ Documentation:
 |----------|--------|-------------|
 | `/api/health` | GET | Health check (`read_only`, `follow_symlinks_outside_root`) |
 | `/api/list?path=` | GET | Directory listing |
-| `/api/actions` | POST | Run action on `paths[]` (kernel `file.delete`) |
+| `/api/actions` | POST | Built-in file actions (`file.delete`, `file.mkdir`, `file.rename`, `file.copy`, `file.move`) |
 | `/api/metadata?path=` | GET | File or directory metadata |
 | `/api/file?path=` | GET | Download file (supports `Range`) |
 | `/api/upload` | POST | Create tus upload |

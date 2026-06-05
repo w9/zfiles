@@ -1,8 +1,13 @@
 import {
+  ClipboardPaste,
   Command,
+  Copy,
   Eye,
   FolderOpen,
+  FolderPlus,
   ListFilter,
+  Pencil,
+  Scissors,
   Settings,
   Terminal,
   Trash2,
@@ -16,6 +21,11 @@ const ICONS: Record<string, LucideIcon> = {
   "navigation.open-settings": Settings,
   "selection.copy-paths": ListFilter,
   "selection.clear": Trash2,
+  "file.new-folder": FolderPlus,
+  "file.rename": Pencil,
+  "file.copy": Copy,
+  "file.cut": Scissors,
+  "file.paste": ClipboardPaste,
   "file.delete": Trash2,
 };
 

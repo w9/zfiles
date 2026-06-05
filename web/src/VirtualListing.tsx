@@ -18,6 +18,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import InlineNameInput from "@/explorer/InlineNameInput";
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
@@ -32,6 +33,10 @@ type VirtualListingProps = {
   selectedIndex: number;
   focusedPath?: string | null;
   multiSelectedPaths?: Set<string>;
+  cutPaths?: string[];
+  inlineEditPath?: string | null;
+  onInlineCommit?: (path: string, name: string) => void;
+  onInlineCancel?: (path: string, initialName: string) => void;
   ariaLabel: string;
   columnLabels: ListingColumnLabels;
   iconTheme?: FileIconTheme;
@@ -68,6 +73,7 @@ const LISTING_ROW_CLASS = cn(
 
 const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 const LISTING_ROW_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+const LISTING_ROW_CUT_CLASS = "opacity-45";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
 
@@ -123,6 +129,10 @@ export default function VirtualListing({
   selectedIndex,
   focusedPath,
   multiSelectedPaths,
+  cutPaths = [],
+  inlineEditPath,
+  onInlineCommit,
+  onInlineCancel,
   ariaLabel,
   columnLabels,
   iconTheme = "dark",
@@ -130,6 +140,7 @@ export default function VirtualListing({
   sorting: sortingProp,
   onSortingChange,
 }: VirtualListingProps) {
+  const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -263,6 +274,8 @@ export default function VirtualListing({
             const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
             const isFocused = focusedPath != null && entry.path === focusedPath;
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
+            const isCut = cutPathSet.has(entry.path);
+            const isEditing = inlineEditPath === entry.path;
 
             return (
               <div
@@ -273,6 +286,7 @@ export default function VirtualListing({
                 className={cn(
                   LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
+                  isCut && LISTING_ROW_CUT_CLASS,
                   isSelected &&
                     (isFocused
                       ? LISTING_ROW_FOCUS_SELECTED_CLASS
@@ -316,7 +330,15 @@ export default function VirtualListing({
                         theme={iconTheme}
                         size="xs"
                       />
-                      <span className="min-w-0 truncate">{entry.name}</span>
+                      {isEditing && onInlineCommit && onInlineCancel ? (
+                        <InlineNameInput
+                          initialName={entry.name}
+                          onCommit={(name) => onInlineCommit(entry.path, name)}
+                          onCancel={() => onInlineCancel(entry.path, entry.name)}
+                        />
+                      ) : (
+                        <span className="min-w-0 truncate">{entry.name}</span>
+                      )}
                     </>
                   ) : (
                     flexRender(cell.column.columnDef.cell, cell.getContext())

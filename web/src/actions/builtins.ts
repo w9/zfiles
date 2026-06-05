@@ -137,10 +137,74 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       contexts: ["file-list"],
       handler: async () => {
         const deps = getDeps();
-        const paths = deps.getSelectedPaths();
+        const paths = deps.getOperationTargets();
         if (paths.length > 0) {
           await deps.runBulkAction("copy-path", paths);
         }
+      },
+    },
+    {
+      id: "file.new-folder",
+      nameKey: "actions.file.newFolder.name",
+      categoryKey: "actions.file.category",
+      when: "focus.pane == 'file-list' && server.read-only == false",
+      whenFailureMessageKey: "actions.whenFailure.readOnly",
+      contexts: ["file-list", "context-menu"],
+      icon: "file.new-folder",
+      handler: async () => {
+        await getDeps().createNewFolder();
+      },
+    },
+    {
+      id: "file.rename",
+      nameKey: "actions.file.rename.name",
+      categoryKey: "actions.file.category",
+      when: "focus.pane == 'file-list' && server.read-only == false",
+      whenFailureMessageKey: "actions.whenFailure.readOnly",
+      contexts: ["file-list", "context-menu"],
+      defaultKeybinding: "F2",
+      icon: "file.rename",
+      handler: async () => {
+        getDeps().startRename();
+      },
+    },
+    {
+      id: "file.copy",
+      nameKey: "actions.file.copy.name",
+      categoryKey: "actions.file.category",
+      when: "(focus.pane == 'file-list' || selection.count > 0) && server.read-only == false",
+      whenFailureMessageKey: "actions.whenFailure.readOnly",
+      contexts: ["file-list", "context-menu"],
+      defaultKeybinding: "Mod+C",
+      icon: "file.copy",
+      handler: async () => {
+        getDeps().copySelection();
+      },
+    },
+    {
+      id: "file.cut",
+      nameKey: "actions.file.cut.name",
+      categoryKey: "actions.file.category",
+      when: "(focus.pane == 'file-list' || selection.count > 0) && server.read-only == false",
+      whenFailureMessageKey: "actions.whenFailure.readOnly",
+      contexts: ["file-list", "context-menu"],
+      defaultKeybinding: "Mod+X",
+      icon: "file.cut",
+      handler: async () => {
+        getDeps().cutSelection();
+      },
+    },
+    {
+      id: "file.paste",
+      nameKey: "actions.file.paste.name",
+      categoryKey: "actions.file.category",
+      when: "clipboard.count > 0 && server.read-only == false",
+      whenFailureMessageKey: "actions.whenFailure.readOnly",
+      contexts: ["file-list", "context-menu"],
+      defaultKeybinding: "Mod+V",
+      icon: "file.paste",
+      handler: async () => {
+        await getDeps().pasteFromClipboard();
       },
     },
     {
@@ -156,9 +220,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       icon: "file.delete",
       handler: async () => {
         const deps = getDeps();
-        const selected = deps.getSelectedPaths();
-        const fallback = deps.getListingPathAt(deps.getSelectedIndex());
-        const paths = selected.length > 0 ? selected : fallback ? [fallback] : [];
+        const paths = deps.getOperationTargets();
         if (paths.length === 0) {
           return;
         }

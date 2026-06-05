@@ -5,9 +5,11 @@ export type ContextKeys = {
   "current-path": string;
   "connection.online": boolean;
   "server.read-only": boolean;
+  "clipboard.count": number;
   "preview.is-image": boolean;
   "preview.path": string;
   "listing.show-dot-entries": boolean;
+  "clipboard.count": number;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -21,6 +23,7 @@ export function defaultContextKeys(): ContextKeys {
     "preview.is-image": false,
     "preview.path": "",
     "listing.show-dot-entries": false,
+    "clipboard.count": 0,
   };
 }
 

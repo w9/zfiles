@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { FileIcon } from "@/FileIcon";
+import InlineNameInput from "@/explorer/InlineNameInput";
 import type { FileIconTheme } from "@/fileIcons";
 import { shouldDimDotEntry } from "@/listingFilter";
 import type { ListingEntry } from "@/listing-types";
@@ -12,6 +13,10 @@ type GridListingProps = {
   selectedIndex: number;
   focusedPath?: string | null;
   multiSelectedPaths?: Set<string>;
+  cutPaths?: string[];
+  inlineEditPath?: string | null;
+  onInlineCommit?: (path: string, name: string) => void;
+  onInlineCancel?: (path: string, initialName: string) => void;
   ariaLabel: string;
   iconTheme?: FileIconTheme;
   className?: string;
@@ -22,16 +27,22 @@ const ROW_HEIGHT = 168;
 
 const GRID_ITEM_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+const GRID_ITEM_CUT_CLASS = "opacity-45";
 
 export default function GridListing({
   entries,
   selectedIndex,
   focusedPath,
   multiSelectedPaths,
+  cutPaths = [],
+  inlineEditPath,
+  onInlineCommit,
+  onInlineCancel,
   ariaLabel,
   iconTheme = "dark",
   className,
 }: GridListingProps) {
+  const cutPathSet = new Set(cutPaths);
   const rowCount = Math.ceil(entries.length / GRID_COLUMNS);
   const parentRef = useRef<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
@@ -78,6 +89,8 @@ export default function GridListing({
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   const isFocused = focusedPath != null && entry.path === focusedPath;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
+                  const isCut = cutPathSet.has(entry.path);
+                  const isEditing = inlineEditPath === entry.path;
                   return (
                     <button
                       key={entry.key}
@@ -86,6 +99,7 @@ export default function GridListing({
                       className={cn(
                         "flex h-full select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                         dimmed && "opacity-70",
+                        isCut && GRID_ITEM_CUT_CLASS,
                         isSelected &&
                           (isFocused
                             ? GRID_ITEM_FOCUS_SELECTED_CLASS
@@ -109,8 +123,16 @@ export default function GridListing({
                           size="lg"
                         />
                       </div>
-                      <div className="truncate border-t px-2 py-1.5 text-sm">
-                        {entry.name}
+                      <div className="border-t px-2 py-1.5 text-sm">
+                        {isEditing && onInlineCommit && onInlineCancel ? (
+                          <InlineNameInput
+                            initialName={entry.name}
+                            onCommit={(name) => onInlineCommit(entry.path, name)}
+                            onCancel={() => onInlineCancel(entry.path, entry.name)}
+                          />
+                        ) : (
+                          <span className="block truncate">{entry.name}</span>
+                        )}
                       </div>
                     </button>
                   );

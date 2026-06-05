@@ -59,13 +59,26 @@ import DisconnectButton from "../cloud/DisconnectButton";
 import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
+import { useExplorerFileOps } from "./useExplorerFileOps";
+import PasteDestinationDialog from "./PasteDestinationDialog";
+import PasteConflictDialog from "./PasteConflictDialog";
+import { basename } from "@/fileOperations/paths";
 
 type ContextMenuState = {
   x: number;
   y: number;
-  path: string;
+  path: string | null;
   actions: ContextMenuAction[];
 };
+
+/** Shown on listing background only — hidden when no row is targeted. */
+const CONTEXT_MENU_REQUIRES_ROW = new Set([
+  "file.rename",
+  "file.copy",
+  "file.cut",
+  "file.delete",
+  "selection.copy-paths",
+]);
 
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
@@ -106,7 +119,9 @@ export default function ExplorerApp() {
   const selectedIndexRef = useRef(selectedIndex);
   const selectedPathsRef = useRef(selectedPaths);
   const selectedPathRef = useRef(selectedPath);
-  const openContextMenuRef = useRef<(event: React.MouseEvent, path: string) => void>(() => {});
+  const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
+    () => {},
+  );
   currentPathRef.current = currentPath;
   selectedIndexRef.current = selectedIndex;
   selectedPathsRef.current = selectedPaths;
@@ -235,21 +250,6 @@ export default function ExplorerApp() {
   const backendStatus = useBackendStatus(handleKernelEvent);
   const { mode: themeMode, resolved: resolvedTheme, setMode: setThemeMode } = useTheme();
 
-  const contextKeys = useMemo<ContextKeys>(
-    () => ({
-      "focus.pane": focusPane,
-      "selection.count": selectedPaths.size,
-      "selection.paths": Array.from(selectedPaths),
-      "current-path": currentPath,
-      "connection.online": backendStatus === "connected",
-      "server.read-only": readOnly,
-      "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
-      "preview.path": selectedPath ?? "",
-      "listing.show-dot-entries": showDotEntries,
-    }),
-    [focusPane, selectedPaths, currentPath, backendStatus, readOnly, selectedPath, showDotEntries],
-  );
-
   const refreshListing = useCallback(() => {
     if (refreshing) {
       return;
@@ -278,24 +278,79 @@ export default function ExplorerApp() {
     trackCurrentPath(currentPath);
   }, [currentPath, trackCurrentPath]);
 
+  const getOperationTargets = useCallback(() => {
+    const selected = Array.from(selectedPathsRef.current);
+    if (selected.length > 0) {
+      return selected;
+    }
+    const path =
+      selectedPathRef.current ??
+      listingEntriesRef.current[selectedIndexRef.current]?.path;
+    return path ? [path] : [];
+  }, []);
+
+  const getPrimaryPath = useCallback(() => selectedPathRef.current, []);
+
+  const fileOps = useExplorerFileOps({
+    backend,
+    readOnly,
+    currentPath,
+    entries,
+    getTargets: getOperationTargets,
+    getPrimaryPath,
+    loadListing,
+    t,
+  });
+
+  const contextKeys = useMemo<ContextKeys>(
+    () => ({
+      "focus.pane": focusPane,
+      "selection.count": selectedPaths.size,
+      "selection.paths": Array.from(selectedPaths),
+      "current-path": currentPath,
+      "connection.online": backendStatus === "connected",
+      "server.read-only": readOnly,
+      "clipboard.count": fileOps.clipboard?.paths.length ?? 0,
+      "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
+      "preview.path": selectedPath ?? "",
+      "listing.show-dot-entries": showDotEntries,
+    }),
+    [
+      focusPane,
+      selectedPaths,
+      currentPath,
+      backendStatus,
+      readOnly,
+      selectedPath,
+      showDotEntries,
+      fileOps.clipboard,
+    ],
+  );
+
   const runBulkAction = useCallback(
     async (actionId: string, paths: string[]) => {
+      if (actionId === "copy-path") {
+        try {
+          await navigator.clipboard.writeText(paths.join("\n"));
+        } catch {
+          notifyError(t("error.actionFailed", { status: "failed" }));
+        }
+        return;
+      }
       try {
-        await backend.runAction(actionId, paths);
+        await backend.runAction({ actionId, paths });
       } catch {
         notifyError(t("error.actionFailed", { status: "failed" }));
         return;
       }
-      if (actionId === "copy-path") {
-        await navigator.clipboard.writeText(paths.join("\n"));
-      }
       if (actionId === "file.delete") {
+        fileOps.clearClipboard();
         setSelectedPaths(new Set());
         setSelectedPath(null);
         await loadListing(currentPathRef.current);
       }
     },
-    [backend, t, loadListing],
+    [backend, fileOps, t, loadListing],
   );
 
 
@@ -407,7 +462,10 @@ export default function ExplorerApp() {
           setSelectedPath(entry.path);
         }
       },
-      onContextMenu: (event) => void openContextMenuRef.current(event, entry.path),
+      onContextMenu: (event) => {
+        event.stopPropagation();
+        void openContextMenuRef.current(event, entry.path);
+      },
       href:
         entry.is_dir || backend.mode === "s3"
           ? undefined
@@ -485,6 +543,13 @@ export default function ExplorerApp() {
         const row = listingEntriesRef.current[index];
         return row?.path ?? null;
       },
+      getOperationTargets,
+      getPrimaryPath,
+      copySelection: fileOps.copySelection,
+      cutSelection: fileOps.cutSelection,
+      pasteFromClipboard: fileOps.pasteFromClipboard,
+      createNewFolder: fileOps.createNewFolder,
+      startRename: fileOps.startRename,
       openSettings: () => navigate("settings"),
       toggleShowDotEntries,
     },
@@ -505,20 +570,56 @@ export default function ExplorerApp() {
   );
 
   const openContextMenu = useCallback(
-    async (event: React.MouseEvent, path: string) => {
+    async (event: React.MouseEvent, path: string | null) => {
       event.preventDefault();
-      const actions = actionsForContext(
+      setFocusPane("file-list");
+
+      let menuContextKeys = contextKeys;
+      if (path == null) {
+        setSelectedPaths(new Set());
+        setSelectedPath(null);
+        menuContextKeys = {
+          ...contextKeys,
+          "selection.count": 0,
+          "selection.paths": [],
+        };
+      } else if (!selectedPathsRef.current.has(path)) {
+        const rows = listingEntriesRef.current;
+        const displayIndex = rows.findIndex((row) => row.path === path);
+        setSelectedPaths(new Set([path]));
+        setSelectedPath(path);
+        if (displayIndex >= 0) {
+          setSelectedIndex(displayIndex);
+          selectionAnchorRef.current = displayIndex;
+        }
+        menuContextKeys = {
+          ...contextKeys,
+          "selection.count": 1,
+          "selection.paths": [path],
+        };
+      }
+
+      let actions = actionsForContext(
         actionSystem.registry.list(),
         "context-menu",
-        contextKeys,
-      ).map((action) => ({
+        menuContextKeys,
+      );
+      if (path == null) {
+        actions = actions.filter((action) => !CONTEXT_MENU_REQUIRES_ROW.has(action.id));
+      }
+      const menuActions = actions.map((action) => ({
         id: action.id,
         label: actionLabel(action.nameKey),
       }));
-      if (actions.length === 0) {
+      if (menuActions.length === 0) {
         return;
       }
-      setContextMenu({ x: event.clientX, y: event.clientY, path, actions });
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        path,
+        actions: menuActions,
+      });
     },
     [actionSystem.registry, actionLabel, contextKeys],
   );
@@ -530,7 +631,10 @@ export default function ExplorerApp() {
     actionSystem.confirmState != null ||
     contextMenu != null ||
     slideshowOpen ||
-    uploadConflictItem != null;
+    uploadConflictItem != null ||
+    fileOps.pasteDestOpen ||
+    fileOps.pasteConflict != null ||
+    fileOps.inlineEditPath != null;
 
   useEffect(() => {
     const shouldIgnoreTarget = (target: EventTarget | null) => {
@@ -697,8 +801,17 @@ export default function ExplorerApp() {
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
           <div
-            className="h-full min-h-0 min-w-0 overflow-hidden"
+            className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
             onMouseDown={() => setFocusPane("file-list")}
+            onContextMenu={(event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest("[data-listing-entry]")
+              ) {
+                return;
+              }
+              void openContextMenuRef.current(event, null);
+            }}
           >
             {listingViewMode === "grid" ? (
               <GridListing
@@ -706,6 +819,18 @@ export default function ExplorerApp() {
                 selectedIndex={selectedIndex}
                 focusedPath={selectedPath}
                 multiSelectedPaths={selectedPaths}
+                cutPaths={fileOps.cutPaths}
+                inlineEditPath={fileOps.inlineEditPath}
+                onInlineCommit={(path, name) => {
+                  void fileOps.commitRename(path, name).then((ok) => {
+                    if (ok) {
+                      fileOps.setInlineEditPath(null);
+                    }
+                  });
+                }}
+                onInlineCancel={(path, initialName) => {
+                  void fileOps.cancelInlineEdit(path, initialName);
+                }}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
@@ -716,6 +841,18 @@ export default function ExplorerApp() {
                 selectedIndex={selectedIndex}
                 focusedPath={selectedPath}
                 multiSelectedPaths={selectedPaths}
+                cutPaths={fileOps.cutPaths}
+                inlineEditPath={fileOps.inlineEditPath}
+                onInlineCommit={(path, name) => {
+                  void fileOps.commitRename(path, name).then((ok) => {
+                    if (ok) {
+                      fileOps.setInlineEditPath(null);
+                    }
+                  });
+                }}
+                onInlineCancel={(path, initialName) => {
+                  void fileOps.cancelInlineEdit(path, initialName);
+                }}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
@@ -753,6 +890,13 @@ export default function ExplorerApp() {
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}
           selectedCount={selectedPaths.size}
+          cutStatusText={
+            fileOps.cutPaths.length > 0
+              ? fileOps.cutPaths.length === 1
+                ? t("clipboard.cutOne", { name: basename(fileOps.cutPaths[0] ?? "") })
+                : t("clipboard.cutMany", { count: String(fileOps.cutPaths.length) })
+              : null
+          }
         />
       </section>
 
@@ -784,22 +928,66 @@ export default function ExplorerApp() {
         labelForKey={actionLabel}
       />
 
+      {fileOps.pasteDestContext ? (
+        <PasteDestinationDialog
+          open={fileOps.pasteDestOpen}
+          folderName={fileOps.pasteDestContext.folderName}
+          currentFolderName={fileOps.pasteDestContext.currentFolderName}
+          onChoose={fileOps.onPasteDestinationChoose}
+          onCancel={fileOps.onPasteDestinationCancel}
+        />
+      ) : null}
+
+      {fileOps.pasteConflict ? (
+        <PasteConflictDialog
+          sourceName={fileOps.pasteConflict.sourceName}
+          destName={fileOps.pasteConflict.destName}
+          typeMismatch={fileOps.pasteConflict.typeMismatch}
+          onResolve={fileOps.onPasteConflictResolve}
+        />
+      ) : null}
+
       <ActionConfirmDialog
-        action={actionSystem.confirmState?.action ?? null}
+        action={
+          fileOps.renameReplace
+            ? {
+                id: "file.rename.replace",
+                nameKey: "actions.file.rename.name",
+                categoryKey: "actions.file.category",
+                handler: async () => {},
+              }
+            : actionSystem.confirmState?.action ?? null
+        }
         title={t("actions.confirm.title")}
         cancelLabel={t("actions.confirm.cancel")}
         confirmLabel={t("actions.confirm.confirm")}
         message={
-          actionSystem.confirmState?.action.confirmMessageKey
-            ? t(actionSystem.confirmState.action.confirmMessageKey as MessageKey)
-            : actionSystem.confirmState
-              ? t("actions.confirm.defaultMessage", {
-                  name: actionLabel(actionSystem.confirmState.action.nameKey),
-                })
-              : ""
+          fileOps.renameReplace
+            ? t("file.rename.replace.confirm", {
+                name: fileOps.renameReplace.newName,
+              })
+            : actionSystem.confirmState?.action.confirmMessageKey
+              ? t(actionSystem.confirmState.action.confirmMessageKey as MessageKey)
+              : actionSystem.confirmState
+                ? t("actions.confirm.defaultMessage", {
+                    name: actionLabel(actionSystem.confirmState.action.nameKey),
+                  })
+                : ""
         }
-        onCancel={() => actionSystem.dismissConfirm(false)}
-        onConfirm={() => actionSystem.dismissConfirm(true)}
+        onCancel={() => {
+          if (fileOps.renameReplace) {
+            fileOps.setRenameReplace(null);
+            return;
+          }
+          actionSystem.dismissConfirm(false);
+        }}
+        onConfirm={() => {
+          if (fileOps.renameReplace) {
+            void fileOps.confirmRenameReplace();
+            return;
+          }
+          actionSystem.dismissConfirm(true);
+        }}
       />
 
       <ActionArgPromptDialog

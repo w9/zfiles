@@ -1,3 +1,5 @@
+import type { RunActionParams } from "./runActionParams";
+
 export type BackendMode = "local" | "s3";
 
 export type FileEntry = {
@@ -54,7 +56,7 @@ export interface ExplorerBackend {
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
   ): Promise<void>;
-  runAction(actionId: string, paths: string[]): Promise<void>;
+  runAction(params: RunActionParams): Promise<void>;
   fetchHealth(): Promise<HealthInfo | null>;
   subscribe(
     onEvent: (event: BackendEvent) => void,

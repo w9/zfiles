@@ -208,6 +208,46 @@ async fn delete_action_removes_files() {
 }
 
 #[tokio::test]
+async fn mkdir_rename_copy_actions() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("seed.txt"), b"seed").unwrap();
+    let server = test_server(dir.path());
+
+    server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "action_id": "file.mkdir",
+            "paths": [""],
+            "new_name": "nested",
+        }))
+        .await
+        .assert_status(axum::http::StatusCode::NO_CONTENT);
+    assert!(dir.path().join("nested").is_dir());
+
+    server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "action_id": "file.rename",
+            "paths": ["nested"],
+            "new_name": "renamed",
+        }))
+        .await
+        .assert_status(axum::http::StatusCode::NO_CONTENT);
+    assert!(dir.path().join("renamed").is_dir());
+
+    server
+        .post("/api/actions")
+        .json(&serde_json::json!({
+            "action_id": "file.copy",
+            "paths": ["seed.txt"],
+            "dest_dir": "renamed",
+        }))
+        .await
+        .assert_status(axum::http::StatusCode::NO_CONTENT);
+    assert!(dir.path().join("renamed/seed.txt").exists());
+}
+
+#[tokio::test]
 async fn read_only_blocks_delete() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("notes.txt"), b"hello").unwrap();

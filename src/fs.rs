@@ -103,6 +103,225 @@ impl LocalFs {
         Ok(canonical)
     }
 
+    pub async fn create_dir(&self, parent: &Path, name: &str) -> Result<String> {
+        validate_entry_name(name)?;
+        let parent_relative = if parent.as_os_str().is_empty() {
+            PathBuf::new()
+        } else {
+            normalize_relative(parent)?
+        };
+        let relative = if parent_relative.as_os_str().is_empty() {
+            PathBuf::from(name)
+        } else {
+            parent_relative.join(name)
+        };
+        let relative_str = relative.to_string_lossy();
+        guard_server_metadata_relative(&relative_str)?;
+
+        let absolute = self.resolve_write(&relative)?;
+        if absolute.exists() {
+            bail!("path already exists");
+        }
+        tokio::fs::create_dir(&absolute)
+            .await
+            .with_context(|| format!("failed to create directory {}", absolute.display()))?;
+        Ok(relative_str.replace('\\', "/"))
+    }
+
+    pub async fn rename_path(
+        &self,
+        path: &Path,
+        new_name: &str,
+        overwrite: bool,
+    ) -> Result<String> {
+        if path.as_os_str().is_empty() {
+            bail!("path is required");
+        }
+        validate_entry_name(new_name)?;
+        let relative = normalize_relative(path)?;
+        let relative_str = relative.to_string_lossy();
+        guard_server_metadata_relative(&relative_str)?;
+
+        let parent = relative
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_default();
+        let dest_relative = if parent.as_os_str().is_empty() {
+            PathBuf::from(new_name)
+        } else {
+            parent.join(new_name)
+        };
+        let dest_str = dest_relative.to_string_lossy().replace('\\', "/");
+        guard_server_metadata_relative(&dest_str)?;
+
+        if dest_str == relative_str {
+            return Ok(dest_str);
+        }
+
+        let from = self.resolve(path)?;
+        let to = self.resolve_write(&dest_relative)?;
+        if to.exists() {
+            if !overwrite {
+                bail!("path already exists");
+            }
+            ensure_same_entry_kind(&from, &to).await?;
+            remove_path_tree(&to).await?;
+        }
+        if let Some(parent_abs) = to.parent()
+            && !parent_abs.exists()
+        {
+            bail!("parent directory does not exist");
+        }
+        tokio::fs::rename(&from, &to)
+            .await
+            .with_context(|| format!("failed to rename {} to {}", from.display(), to.display()))?;
+        Ok(dest_str)
+    }
+
+    pub async fn copy_into_dir(
+        &self,
+        source: &Path,
+        dest_dir: &Path,
+        dest_name: Option<&str>,
+        overwrite: bool,
+    ) -> Result<String> {
+        let (dest_abs, dest_logical) = self
+            .prepare_copy_or_move_dest(source, dest_dir, dest_name, overwrite)
+            .await?;
+        let from = self.resolve(source)?;
+        copy_path_tree(&from, &dest_abs).await?;
+        Ok(dest_logical)
+    }
+
+    pub async fn move_into_dir(
+        &self,
+        source: &Path,
+        dest_dir: &Path,
+        dest_name: Option<&str>,
+        overwrite: bool,
+    ) -> Result<String> {
+        if source.as_os_str().is_empty() {
+            bail!("path is required");
+        }
+        let source_relative = normalize_relative(source)?;
+        let source_str = source_relative.to_string_lossy();
+        guard_server_metadata_relative(&source_str)?;
+
+        let parent_relative = if dest_dir.as_os_str().is_empty() {
+            PathBuf::new()
+        } else {
+            normalize_relative(dest_dir)?
+        };
+        let dest_dir_str = parent_relative.to_string_lossy();
+        if is_logical_descendant(&dest_dir_str, &source_str) {
+            bail!("cannot move into itself or a descendant");
+        }
+
+        let name = dest_name
+            .map(str::to_string)
+            .or_else(|| {
+                source_relative
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+            })
+            .ok_or_else(|| anyhow::anyhow!("invalid source path"))?;
+        validate_entry_name(&name)?;
+
+        let dest_relative = if parent_relative.as_os_str().is_empty() {
+            PathBuf::from(&name)
+        } else {
+            parent_relative.join(&name)
+        };
+        let dest_str = dest_relative.to_string_lossy().replace('\\', "/");
+        guard_server_metadata_relative(&dest_str)?;
+
+        let from = self.resolve(source)?;
+        let to = self.resolve_write(&dest_relative)?;
+
+        if from == to {
+            return Ok(dest_str);
+        }
+
+        if to.exists() {
+            if !overwrite {
+                bail!("path already exists");
+            }
+            ensure_same_entry_kind(&from, &to).await?;
+            remove_path_tree(&to).await?;
+        }
+
+        if from.parent() == to.parent() {
+            tokio::fs::rename(&from, &to).await.with_context(|| {
+                format!("failed to rename {} to {}", from.display(), to.display())
+            })?;
+            return Ok(dest_str);
+        }
+
+        copy_path_tree(&from, &to).await?;
+        remove_path_tree(&from).await?;
+        Ok(dest_str)
+    }
+
+    async fn prepare_copy_or_move_dest(
+        &self,
+        source: &Path,
+        dest_dir: &Path,
+        dest_name: Option<&str>,
+        overwrite: bool,
+    ) -> Result<(PathBuf, String)> {
+        if source.as_os_str().is_empty() {
+            bail!("path is required");
+        }
+        let source_relative = normalize_relative(source)?;
+        let source_str = source_relative.to_string_lossy();
+        guard_server_metadata_relative(&source_str)?;
+
+        let parent_relative = if dest_dir.as_os_str().is_empty() {
+            PathBuf::new()
+        } else {
+            normalize_relative(dest_dir)?
+        };
+        let dest_dir_str = parent_relative.to_string_lossy();
+        if is_logical_descendant(&dest_dir_str, &source_str) {
+            bail!("cannot copy into itself or a descendant");
+        }
+
+        let name = dest_name
+            .map(str::to_string)
+            .or_else(|| {
+                source_relative
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+            })
+            .ok_or_else(|| anyhow::anyhow!("invalid source path"))?;
+        validate_entry_name(&name)?;
+
+        let dest_relative = if parent_relative.as_os_str().is_empty() {
+            PathBuf::from(&name)
+        } else {
+            parent_relative.join(&name)
+        };
+        let dest_str = dest_relative.to_string_lossy().replace('\\', "/");
+        guard_server_metadata_relative(&dest_str)?;
+
+        let from = self.resolve(source)?;
+        let to = self.resolve_write(&dest_relative)?;
+
+        if from == to {
+            return Ok((to, dest_str));
+        }
+
+        if to.exists() {
+            if !overwrite {
+                bail!("path already exists");
+            }
+            ensure_same_entry_kind(&from, &to).await?;
+            remove_path_tree(&to).await?;
+        }
+
+        Ok((to, dest_str))
+    }
+
     pub async fn delete_path(&self, path: &Path) -> Result<()> {
         if path.as_os_str().is_empty() {
             bail!("path is required");
@@ -110,9 +329,7 @@ impl LocalFs {
 
         let relative = normalize_relative(path)?;
         let relative_str = relative.to_string_lossy();
-        if relative_str == ".zfiles" || relative_str.starts_with(".zfiles/") {
-            bail!("cannot delete server metadata");
-        }
+        guard_server_metadata_relative(&relative_str)?;
 
         let absolute = self.resolve(path)?;
         let metadata = tokio::fs::metadata(&absolute)
@@ -251,6 +468,89 @@ fn normalize_relative(path: &Path) -> Result<PathBuf> {
     }
 
     Ok(normalized)
+}
+
+fn guard_server_metadata_relative(relative: &str) -> Result<()> {
+    if relative == ".zfiles" || relative.starts_with(".zfiles/") {
+        bail!("cannot modify server metadata");
+    }
+    Ok(())
+}
+
+fn validate_entry_name(name: &str) -> Result<()> {
+    if name.is_empty() || name == "." || name == ".." {
+        bail!("invalid name");
+    }
+    if name.contains('/') || name.contains('\\') {
+        bail!("name must not contain path separators");
+    }
+    Ok(())
+}
+
+fn is_logical_descendant(child: &str, ancestor: &str) -> bool {
+    if ancestor.is_empty() {
+        return false;
+    }
+    child == ancestor || child.starts_with(&format!("{ancestor}/"))
+}
+
+async fn ensure_same_entry_kind(from: &Path, to: &Path) -> Result<()> {
+    let from_meta = tokio::fs::symlink_metadata(from)
+        .await
+        .with_context(|| format!("failed to stat {}", from.display()))?;
+    let to_meta = tokio::fs::symlink_metadata(to)
+        .await
+        .with_context(|| format!("failed to stat {}", to.display()))?;
+    let from_dir = from_meta.is_dir();
+    let to_dir = to_meta.is_dir();
+    if from_dir != to_dir {
+        bail!("cannot replace a file with a folder or vice versa");
+    }
+    Ok(())
+}
+
+async fn remove_path_tree(path: &Path) -> Result<()> {
+    let meta = tokio::fs::symlink_metadata(path)
+        .await
+        .with_context(|| format!("failed to stat {}", path.display()))?;
+    if meta.is_dir() {
+        tokio::fs::remove_dir_all(path)
+            .await
+            .with_context(|| format!("failed to remove directory {}", path.display()))?;
+    } else {
+        tokio::fs::remove_file(path)
+            .await
+            .with_context(|| format!("failed to remove file {}", path.display()))?;
+    }
+    Ok(())
+}
+
+async fn copy_path_tree(from: &Path, to: &Path) -> Result<()> {
+    let meta = tokio::fs::symlink_metadata(from)
+        .await
+        .with_context(|| format!("failed to stat {}", from.display()))?;
+    if meta.is_dir() {
+        tokio::fs::create_dir_all(to)
+            .await
+            .with_context(|| format!("failed to create directory {}", to.display()))?;
+        let mut read_dir = tokio::fs::read_dir(from)
+            .await
+            .with_context(|| format!("failed to read directory {}", from.display()))?;
+        while let Some(entry) = read_dir.next_entry().await? {
+            let name = entry.file_name();
+            Box::pin(copy_path_tree(&entry.path(), &to.join(name))).await?;
+        }
+    } else {
+        if let Some(parent) = to.parent() {
+            tokio::fs::create_dir_all(parent).await.with_context(|| {
+                format!("failed to create parent directory {}", parent.display())
+            })?;
+        }
+        tokio::fs::copy(from, to)
+            .await
+            .with_context(|| format!("failed to copy {} to {}", from.display(), to.display()))?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -496,6 +796,43 @@ mod tests {
         fs.delete_path(Path::new("alpha.txt")).await.unwrap();
 
         assert!(!dir.path().join("alpha.txt").exists());
+    }
+
+    #[tokio::test]
+    async fn create_dir_and_rename() {
+        let dir = tempdir().unwrap();
+        let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+        let created = fs.create_dir(Path::new(""), "projects").await.unwrap();
+        assert_eq!(created, "projects");
+        let renamed = fs
+            .rename_path(Path::new("projects"), "work", false)
+            .await
+            .unwrap();
+        assert_eq!(renamed, "work");
+        assert!(dir.path().join("work").is_dir());
+    }
+
+    #[tokio::test]
+    async fn copy_and_move_file() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("a.txt"), b"hello").unwrap();
+        fs::write(dir.path().join("b.txt"), b"world").unwrap();
+        let fs = LocalFs::new(dir.path().canonicalize().unwrap());
+        fs::create_dir(dir.path().join("dest")).unwrap();
+
+        let copied = fs
+            .copy_into_dir(Path::new("a.txt"), Path::new("dest"), None, false)
+            .await
+            .unwrap();
+        assert_eq!(copied, "dest/a.txt");
+        assert!(dir.path().join("dest/a.txt").exists());
+
+        let moved = fs
+            .move_into_dir(Path::new("b.txt"), Path::new("dest"), None, false)
+            .await
+            .unwrap();
+        assert_eq!(moved, "dest/b.txt");
+        assert!(!dir.path().join("b.txt").exists());
     }
 
     #[tokio::test]

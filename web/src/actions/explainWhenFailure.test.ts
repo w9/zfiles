@@ -12,6 +12,7 @@ const emptySelection: ContextKeys = {
   "current-path": "",
   "connection.online": true,
   "server.read-only": false,
+  "clipboard.count": 0,
   "preview.is-image": false,
   "preview.path": "",
 };

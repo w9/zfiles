@@ -57,4 +57,11 @@ export type BuiltinActionDeps = {
   toggleShowDotEntries: () => void;
   runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
   getListingPathAt: (index: number) => string | null;
+  getOperationTargets: () => string[];
+  getPrimaryPath: () => string | null;
+  copySelection: () => void;
+  cutSelection: () => void;
+  pasteFromClipboard: () => Promise<void>;
+  createNewFolder: () => Promise<void>;
+  startRename: () => void;
 };
