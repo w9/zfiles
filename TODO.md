@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (cloud credential URL params) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** centered empty-folder message in the file list when a directory has no visible entries.
 
 ## TODO List
 
@@ -56,3 +56,7 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] Fix duplicate `clipboard.count` in `contextKeys.ts` (cloud build TS2300)
 - [x] Run `pnpm build:cloud`
+- [ ] `listingEmpty` helper: visible entries empty, not during initial load, not when quick filter active
+- [ ] `ExplorerApp`: centered empty-state overlay (reuse quick-filter empty layout)
+- [ ] i18n `listing.empty` (en + zh-CN)
+- [ ] Run `pnpm test`
