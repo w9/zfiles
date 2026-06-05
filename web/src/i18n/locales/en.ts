@@ -68,6 +68,7 @@ export const en = {
   "selection.clear": "Clear",
   "shortcuts.hint":
     "Shortcuts: j/k move, Enter open, Backspace up, Space toggle, Shift+click range, Ctrl+P command palette",
+  "listing.empty": "This folder is empty",
   "listing.label": "Directory listing",
   "listing.column.name": "Name",
   "listing.column.size": "Size",

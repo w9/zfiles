@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** fix listing overlay when an empty folder has an active quick filter.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (empty-folder overlay with active filter) is complete.
 
 ## TODO List
 
@@ -60,6 +60,6 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `ExplorerApp`: centered empty-state overlay (reuse quick-filter empty layout)
 - [x] i18n `listing.empty` (en + zh-CN)
 - [x] Run `pnpm test`
-- [ ] `listingOverlayState`: show folder-empty message when filter active on empty folder
-- [ ] `ExplorerApp`: use unified overlay helper instead of separate empty flags
-- [ ] Run `pnpm test`
+- [x] `listingOverlayState`: show folder-empty message when filter active on empty folder
+- [x] `ExplorerApp`: use unified overlay helper instead of separate empty flags
+- [x] Run `pnpm test`

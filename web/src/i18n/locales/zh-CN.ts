@@ -68,6 +68,7 @@ export const zhCN: Record<MessageKey, string> = {
   "selection.clear": "清除",
   "shortcuts.hint":
     "快捷键：j/k 移动，Enter 打开，Backspace 返回上级，Space 切换选择，Shift+点击 范围选择，Ctrl+P 命令面板",
+  "listing.empty": "此文件夹为空",
   "listing.label": "目录列表",
   "listing.column.name": "名称",
   "listing.column.size": "大小",

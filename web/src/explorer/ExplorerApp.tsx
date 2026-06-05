@@ -51,6 +51,7 @@ import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
+import { listingOverlayMessageKey } from "../listingEmpty";
 import { filterDotEntries } from "../listingFilter";
 import {
   defaultQuickFilterOptions,
@@ -103,6 +104,7 @@ export default function ExplorerApp() {
   const [listCursor, setListCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [listingLoaded, setListingLoaded] = useState(false);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -178,6 +180,8 @@ export default function ExplorerApp() {
       }
       notifyError(err instanceof Error ? err.message : String(err));
       return false;
+    } finally {
+      setListingLoaded(true);
     }
   }, [backend, t]);
 
@@ -421,10 +425,12 @@ export default function ExplorerApp() {
       filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
     [visibleEntries, quickFilter, quickFilterOptions],
   );
-  const quickFilterEmpty =
-    quickFilterActive &&
-    quickFilteredEntries.length === 0 &&
-    visibleEntries.length > 0;
+  const listingOverlayKey = listingOverlayMessageKey({
+    listingLoaded,
+    quickFilterActive,
+    visibleEntryCount: visibleEntries.length,
+    filteredEntryCount: quickFilteredEntries.length,
+  });
 
   useEffect(() => {
     setQuickFilter("");
@@ -905,12 +911,12 @@ export default function ExplorerApp() {
               void openContextMenuRef.current(event, null);
             }}
           >
-            {quickFilterEmpty ? (
+            {listingOverlayKey ? (
               <p
                 className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground"
                 role="status"
               >
-                {t("quickFilter.empty")}
+                {t(listingOverlayKey)}
               </p>
             ) : null}
             {listingViewMode === "grid" ? (
