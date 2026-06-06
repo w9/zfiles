@@ -8,10 +8,12 @@ function ScrollArea({
   children,
   viewportRef,
   viewportClassName,
+  onViewportPointerDown,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   viewportRef?: React.Ref<HTMLDivElement>
   viewportClassName?: string
+  onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>
 }) {
   return (
     <ScrollAreaPrimitive.Root
@@ -21,6 +23,7 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         ref={viewportRef}
+        onPointerDown={onViewportPointerDown}
         data-slot="scroll-area-viewport"
         className={cn(
           "size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1",

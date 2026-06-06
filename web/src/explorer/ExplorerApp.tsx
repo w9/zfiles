@@ -69,6 +69,9 @@ import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
 import PasteDestinationDialog from "./PasteDestinationDialog";
 import PasteConflictDialog from "./PasteConflictDialog";
+import MarqueeOverlay from "./MarqueeOverlay";
+import { pathsInIndexRange } from "./listingSelection";
+import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
 import { basename } from "@/fileOperations/paths";
 
 type ContextMenuState = {
@@ -126,6 +129,8 @@ export default function ExplorerApp() {
     defaultQuickFilterOptions,
   );
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
+  const listingViewportRef = useRef<HTMLDivElement | null>(null);
+  const consumeMarqueeClickRef = useRef<() => boolean>(() => false);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
   const listingEntriesRef = useRef<ListingEntry[]>([]);
@@ -491,73 +496,69 @@ export default function ExplorerApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const listingEntries = useMemo<ListingEntry[]>(() => {
-    return quickFilteredEntries.map((entry) => ({
-      key: entry.path,
-      name: entry.name,
-      path: entry.path,
-      isDir: entry.is_dir,
-      isSymlink: entry.is_symlink,
-      size: entry.is_dir ? undefined : entry.size,
-      modified: entry.modified,
-      onSelect: (event, displayIndex) => {
-        setFocusPane("file-list");
-        const rows = listingEntriesRef.current;
-        let nextSelectedPath: string | null = entry.path;
+  const listingEntries = useMemo((): Array<ListingEntry> => {
+    return quickFilteredEntries.map((entry) => {
+      const listingEntry: ListingEntry = {
+        key: entry.path,
+        name: entry.name,
+        path: entry.path,
+        isDir: entry.is_dir,
+        isSymlink: entry.is_symlink,
+        size: entry.is_dir ? undefined : entry.size,
+        modified: entry.modified,
+        onSelect: (event, displayIndex) => {
+          if (consumeMarqueeClickRef.current()) {
+            return;
+          }
+          setFocusPane("file-list");
+          const rows = listingEntriesRef.current;
+          let nextSelectedPath: string | null = entry.path;
 
-        if (event.shiftKey) {
-          const anchor = selectionAnchorRef.current;
-          const start = Math.min(anchor, displayIndex);
-          const end = Math.max(anchor, displayIndex);
-          setSelectedPaths(() => {
-            const next = new Set<string>();
-            for (let i = start; i <= end; i += 1) {
-              const row = rows[i];
-              if (row?.path) {
-                next.add(row.path);
-              }
+          if (event.shiftKey) {
+            setSelectedPaths(
+              pathsInIndexRange(rows, selectionAnchorRef.current, displayIndex),
+            );
+          } else if (event.metaKey || event.ctrlKey) {
+            const next = new Set(selectedPathsRef.current);
+            const removing = next.has(entry.path);
+            if (removing) {
+              next.delete(entry.path);
+            } else {
+              next.add(entry.path);
             }
-            return next;
-          });
-        } else if (event.metaKey || event.ctrlKey) {
-          const next = new Set(selectedPathsRef.current);
-          const removing = next.has(entry.path);
-          if (removing) {
-            next.delete(entry.path);
+            setSelectedPaths(next);
+            if (next.size === 0) {
+              nextSelectedPath = null;
+            } else if (removing) {
+              nextSelectedPath = next.values().next().value ?? null;
+            }
+            selectionAnchorRef.current = displayIndex;
           } else {
-            next.add(entry.path);
+            setSelectedPaths(new Set([entry.path]));
+            selectionAnchorRef.current = displayIndex;
           }
-          setSelectedPaths(next);
-          if (next.size === 0) {
-            nextSelectedPath = null;
-          } else if (removing) {
-            nextSelectedPath = next.values().next().value ?? null;
-          }
-          selectionAnchorRef.current = displayIndex;
-        } else {
-          setSelectedPaths(new Set([entry.path]));
-          selectionAnchorRef.current = displayIndex;
-        }
 
-        setSelectedIndex(displayIndex);
-        setSelectedPath(nextSelectedPath);
-      },
-      onActivate: () => {
-        if (entry.is_dir) {
-          navigateTo(entry.path);
-        } else {
-          setSelectedPath(entry.path);
-        }
-      },
-      onContextMenu: (event) => {
-        event.stopPropagation();
-        void openContextMenuRef.current(event, entry.path);
-      },
-      href:
-        entry.is_dir || backend.mode === "s3"
-          ? undefined
-          : backend.downloadUrl(entry.path) as string,
-    }));
+          setSelectedIndex(displayIndex);
+          setSelectedPath(nextSelectedPath);
+        },
+        onActivate: () => {
+          if (entry.is_dir) {
+            navigateTo(entry.path);
+          } else {
+            setSelectedPath(entry.path);
+          }
+        },
+        onContextMenu: (event) => {
+          event.stopPropagation();
+          void openContextMenuRef.current(event, entry.path);
+        },
+        href:
+          entry.is_dir || backend.mode === "s3"
+            ? undefined
+            : (backend.downloadUrl(entry.path) as string),
+      };
+      return listingEntry;
+    });
   }, [quickFilteredEntries, navigateTo, backend]);
 
   const listingColumnLabels = useMemo(
@@ -581,6 +582,40 @@ export default function ExplorerApp() {
   const activeListingEntries =
     listingViewMode === "table" ? displayOrderedEntries : listingEntries;
 
+  const applyMarqueeSelection = useCallback((paths: Set<string>, primaryPath: string | null) => {
+    setSelectedPaths(paths);
+    if (paths.size === 0) {
+      setSelectedPath(null);
+      return;
+    }
+    const focusPath =
+      primaryPath && paths.has(primaryPath)
+        ? primaryPath
+        : ([...paths].find((path) =>
+            listingEntriesRef.current.some((entry) => entry.path === path),
+          ) ?? null);
+    if (!focusPath) {
+      setSelectedPath(null);
+      return;
+    }
+    const focusIndex = listingEntriesRef.current.findIndex(
+      (entry) => entry.path === focusPath,
+    );
+    setSelectedPath(focusPath);
+    if (focusIndex >= 0) {
+      setSelectedIndex(focusIndex);
+      selectionAnchorRef.current = focusIndex;
+    }
+  }, []);
+
+  const marqueeSelect = useListingMarqueeSelect({
+    selectedPaths,
+    enabled: listingLoaded && !listingOverlayKey && activeListingEntries.length > 0,
+    scrollElementRef: listingViewportRef,
+    onSelectionChange: applyMarqueeSelection,
+  });
+  consumeMarqueeClickRef.current = marqueeSelect.consumeClickSuppression;
+
   useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
     const path = selectedPathRef.current;
@@ -594,17 +629,32 @@ export default function ExplorerApp() {
     }
   }, [activeListingEntries]);
 
-  const moveSelectedIndex = useCallback((updater: number | ((index: number) => number)) => {
-    setSelectedIndex((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      const entry = listingEntriesRef.current[next];
-      if (entry?.path) {
-        setSelectedPaths(new Set([entry.path]));
-        setSelectedPath(entry.path);
-      }
-      return next;
-    });
-  }, []);
+  const moveSelectedIndex = useCallback(
+    (
+      updater: number | ((index: number) => number),
+      options?: { extendRange?: boolean },
+    ) => {
+      setSelectedIndex((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        const rows = listingEntriesRef.current;
+        const entry = rows[next];
+        if (options?.extendRange) {
+          setSelectedPaths(
+            pathsInIndexRange(rows, selectionAnchorRef.current, next),
+          );
+          if (entry?.path) {
+            setSelectedPath(entry.path);
+          }
+        } else if (entry?.path) {
+          setSelectedPaths(new Set([entry.path]));
+          setSelectedPath(entry.path);
+          selectionAnchorRef.current = next;
+        }
+        return next;
+      });
+    },
+    [],
+  );
 
   const activateSelected = useCallback(() => {
     const selected = listingEntriesRef.current[selectedIndexRef.current];
@@ -721,7 +771,8 @@ export default function ExplorerApp() {
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
-    fileOps.inlineEditPath != null;
+    fileOps.inlineEditPath != null ||
+    marqueeSelect.isActive;
 
   useEffect(() => {
     const shouldIgnoreTarget = (target: EventTarget | null) => {
@@ -919,6 +970,7 @@ export default function ExplorerApp() {
                 {t(listingOverlayKey)}
               </p>
             ) : null}
+            <MarqueeOverlay rect={marqueeSelect.marqueeRect} />
             {listingViewMode === "grid" ? (
               <GridListing
                 entries={listingEntries}
@@ -927,6 +979,9 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
+                listingViewportRef={listingViewportRef}
+                onViewportPointerDown={marqueeSelect.onViewportPointerDown}
+                marqueeActive={marqueeSelect.isActive}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {
@@ -949,6 +1004,9 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
+                listingViewportRef={listingViewportRef}
+                onViewportPointerDown={marqueeSelect.onViewportPointerDown}
+                marqueeActive={marqueeSelect.isActive}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {

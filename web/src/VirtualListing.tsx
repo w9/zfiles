@@ -43,6 +43,9 @@ type VirtualListingProps = {
   className?: string;
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
+  listingViewportRef?: React.RefObject<HTMLDivElement | null>;
+  onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  marqueeActive?: boolean;
 };
 
 const DEFAULT_COLUMN_LAYOUT: Layout = {
@@ -139,6 +142,9 @@ export default function VirtualListing({
   className,
   sorting: sortingProp,
   onSortingChange,
+  listingViewportRef,
+  onViewportPointerDown,
+  marqueeActive = false,
 }: VirtualListingProps) {
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
   const [internalSorting, setInternalSorting] = useState<SortingState>([
@@ -164,6 +170,15 @@ export default function VirtualListing({
 
   const rows = table.getRowModel().rows;
   const parentRef = useRef<HTMLDivElement | null>(null);
+  const setViewportRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      parentRef.current = node;
+      if (listingViewportRef) {
+        listingViewportRef.current = node;
+      }
+    },
+    [listingViewportRef],
+  );
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
@@ -259,9 +274,13 @@ export default function VirtualListing({
       </div>
 
       <ScrollArea
-        viewportRef={parentRef}
+        viewportRef={setViewportRef}
+        onViewportPointerDown={onViewportPointerDown}
         className={cn("min-h-0 flex-1", BODY_SCROLL_PEER_HOVER_CLASS)}
-        viewportClassName="[&>div]:!block"
+        viewportClassName={cn(
+          "[&>div]:!block",
+          marqueeActive && "select-none",
+        )}
       >
         <div
           className="relative w-full"
@@ -282,6 +301,7 @@ export default function VirtualListing({
                 key={entry.key}
                 role="row"
                 data-listing-entry
+                data-listing-path={entry.path}
                 data-state={isSelected ? "selected" : undefined}
                 className={cn(
                   LISTING_ROW_CLASS,

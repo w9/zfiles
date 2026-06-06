@@ -31,10 +31,12 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       when: "focus.pane == 'file-list'",
       defaultKeybinding: "J",
       contexts: ["file-list"],
-      handler: async () => {
+      handler: async (_context, args) => {
         const deps = getDeps();
-        deps.setSelectedIndex((index) =>
-          Math.min(index + 1, Math.max(deps.getListingLength() - 1, 0)),
+        const extendRange = args?.extendRange === true;
+        deps.setSelectedIndex(
+          (index) => Math.min(index + 1, Math.max(deps.getListingLength() - 1, 0)),
+          { extendRange },
         );
       },
     },
@@ -45,8 +47,9 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       when: "focus.pane == 'file-list'",
       defaultKeybinding: "K",
       contexts: ["file-list"],
-      handler: async () => {
-        getDeps().setSelectedIndex((index) => Math.max(index - 1, 0));
+      handler: async (_context, args) => {
+        const extendRange = args?.extendRange === true;
+        getDeps().setSelectedIndex((index) => Math.max(index - 1, 0), { extendRange });
       },
     },
     {

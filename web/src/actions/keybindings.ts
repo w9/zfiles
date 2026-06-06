@@ -79,6 +79,18 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     { key: "Mod+P", command: "view.open-command-palette" },
     { key: "J", command: "selection.move-down", when: "focus.pane == 'file-list'" },
     { key: "K", command: "selection.move-up", when: "focus.pane == 'file-list'" },
+    {
+      key: "Shift+J",
+      command: "selection.move-down",
+      when: "focus.pane == 'file-list'",
+      args: { extendRange: true },
+    },
+    {
+      key: "Shift+K",
+      command: "selection.move-up",
+      when: "focus.pane == 'file-list'",
+      args: { extendRange: true },
+    },
     { key: "Enter", command: "navigation.open", when: "focus.pane == 'file-list'" },
     { key: "Backspace", command: "navigation.up", when: "focus.pane == 'file-list'" },
     { key: "Space", command: "selection.toggle", when: "focus.pane == 'file-list'" },

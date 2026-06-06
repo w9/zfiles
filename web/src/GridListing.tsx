@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { FileIcon } from "@/FileIcon";
@@ -20,6 +20,9 @@ type GridListingProps = {
   ariaLabel: string;
   iconTheme?: FileIconTheme;
   className?: string;
+  listingViewportRef?: React.RefObject<HTMLDivElement | null>;
+  onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  marqueeActive?: boolean;
 };
 
 const GRID_COLUMNS = 4;
@@ -41,10 +44,22 @@ export default function GridListing({
   ariaLabel,
   iconTheme = "dark",
   className,
+  listingViewportRef,
+  onViewportPointerDown,
+  marqueeActive = false,
 }: GridListingProps) {
   const cutPathSet = new Set(cutPaths);
   const rowCount = Math.ceil(entries.length / GRID_COLUMNS);
   const parentRef = useRef<HTMLDivElement | null>(null);
+  const setViewportRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      parentRef.current = node;
+      if (listingViewportRef) {
+        listingViewportRef.current = node;
+      }
+    },
+    [listingViewportRef],
+  );
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
@@ -67,7 +82,11 @@ export default function GridListing({
       )}
       aria-label={ariaLabel}
     >
-      <div ref={parentRef} className="min-h-0 flex-1 overflow-auto p-3">
+      <div
+        ref={setViewportRef}
+        className={cn("min-h-0 flex-1 overflow-auto p-3", marqueeActive && "select-none")}
+        onPointerDown={onViewportPointerDown}
+      >
         <div
           className="relative w-full"
           style={{ height: `${virtualizer.getTotalSize()}px` }}
@@ -96,6 +115,7 @@ export default function GridListing({
                       key={entry.key}
                       type="button"
                       data-listing-entry
+                      data-listing-path={entry.path}
                       className={cn(
                         "flex h-full select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                         dimmed && "opacity-70",

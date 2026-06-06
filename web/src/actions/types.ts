@@ -47,7 +47,10 @@ export type BuiltinActionDeps = {
   getSelectedIndex: () => number;
   getSelectedPaths: () => string[];
   getCurrentPath: () => string;
-  setSelectedIndex: (updater: (index: number) => number) => void;
+  setSelectedIndex: (
+    updater: (index: number) => number,
+    options?: { extendRange?: boolean },
+  ) => void;
   activateSelected: () => void;
   navigateTo: (path: string) => void;
   toggleMultiSelect: (path: string) => void;

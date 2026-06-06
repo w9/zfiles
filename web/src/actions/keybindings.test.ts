@@ -50,3 +50,17 @@ test("formatKeybindingLabel renders platform-specific modifiers", () => {
   assert.equal(formatKeybindingLabel("Mod+P", "MacIntel"), "⌘P");
   assert.equal(formatKeybindingLabel("Mod+Shift+P", "Linux x86_64"), "Ctrl+Shift+P");
 });
+
+test("matchKeybinding matches shift-extended selection chords", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: "j",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: true,
+  } as KeyboardEvent;
+  const binding = matchKeybinding(bindings, event, () => true);
+  assert.equal(binding?.command, "selection.move-down");
+  assert.equal(binding?.args?.extendRange, true);
+});

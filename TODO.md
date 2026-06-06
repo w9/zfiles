@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (empty-folder overlay with active filter) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (Shift+J/K range-select) is complete.
 
 ## TODO List
 
@@ -62,4 +62,14 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `listingOverlayState`: show folder-empty message when filter active on empty folder
 - [x] `ExplorerApp`: use unified overlay helper instead of separate empty flags
+- [x] Run `pnpm test`
+- [x] `listingMarqueeSelect.ts`: rect intersection + modifier merge helpers; unit tests
+- [x] `useListingMarqueeSelect` + `MarqueeOverlay`: pointer drag, rubber-band, auto-scroll, click suppression
+- [x] `VirtualListing` + `GridListing`: viewport ref, `data-listing-path`, pointer-down wiring
+- [x] `ExplorerApp`: hook integration, selection/anchor updates, block clear during marquee
+- [x] Run `pnpm test`
+- [x] `computeMarqueeSelection`: Cmd/Ctrl+drag removes marquee hits from selection only (no add)
+- [x] Update unit test; run `pnpm test`
+- [x] `listingSelection.ts`: shared index-range path helper + unit test
+- [x] `Shift+J` / `Shift+K` keybindings; `moveSelectedIndex` extend-range + anchor on plain J/K
 - [x] Run `pnpm test`
