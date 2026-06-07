@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** default grid card size 120×120. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid card filename hover tooltips. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -125,5 +125,7 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `GridListing.tsx`: offset grid resize handle 2px right and 2px down
 - [x] Run `pnpm test`
-- [ ] `gridCardSize.ts`: default grid card size 120×120; update tests
+- [x] `gridCardSize.ts`: default grid card size 120×120; update tests
+- [x] Run `pnpm test`
+- [ ] `GridListing.tsx`: shadcn tooltip on truncated grid card filenames
 - [ ] Run `pnpm test`
