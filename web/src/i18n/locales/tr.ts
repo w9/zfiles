@@ -97,6 +97,7 @@ export const tr: Record<MessageKey, string> = {
   "slideshow.zoomOut": "Uzaklaştır",
   "slideshow.interval": "Aralık (saniye)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Önizleme bölmesi",
   "preview.selectFile": "Üst verileri önizlemek için bir dosya seçin.",
   "preview.errorTitle": "Bu öğe açılamıyor",

@@ -97,6 +97,7 @@ export const ja: Record<MessageKey, string> = {
   "slideshow.zoomOut": "縮小",
   "slideshow.interval": "間隔（秒）",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "プレビューパネル",
   "preview.selectFile": "メタデータをプレビューするファイルを選択してください。",
   "preview.errorTitle": "この項目を開けません",

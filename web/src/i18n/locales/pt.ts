@@ -97,6 +97,7 @@ export const pt: Record<MessageKey, string> = {
   "slideshow.zoomOut": "Reduzir",
   "slideshow.interval": "Intervalo (segundos)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Painel de visualização",
   "preview.selectFile": "Selecione um arquivo para visualizar os metadados.",
   "preview.errorTitle": "Não é possível abrir este item",

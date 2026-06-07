@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** move slideshow zoom % label left of zoom controls. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — slideshow zoom label layout complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -68,5 +68,5 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `formatZoomPercentage` helper + test; show zoom % beside slideshow zoom toolbar; i18n (14 locales)
 - [x] Run `pnpm test`
-- [ ] `SlideshowOverlay`: float zoom % text to the left of the zoom control group
-- [ ] Run `pnpm test`
+- [x] `SlideshowOverlay`: float zoom % text to the left of the zoom control group
+- [x] Run `pnpm test`

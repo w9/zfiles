@@ -97,6 +97,7 @@ export const id: Record<MessageKey, string> = {
   "slideshow.zoomOut": "Perkecil",
   "slideshow.interval": "Interval (detik)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Panel pratinjau",
   "preview.selectFile": "Pilih berkas untuk melihat metadata.",
   "preview.errorTitle": "Tidak dapat membuka item ini",

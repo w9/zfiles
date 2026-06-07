@@ -61,6 +61,7 @@ import {
   slideshowNavDirection,
 } from "./slideshowNavigation";
 import {
+  formatZoomPercentage,
   resolveImageScale,
   stepZoom,
   wheelZoomScale,
@@ -285,6 +286,7 @@ export default function SlideshowOverlay({
   }, [open, goNext, goPrev, onOpenChange, bumpActivity]);
 
   const imageScale = effectiveScale(zoomMode, manualScale);
+  const zoomPercent = formatZoomPercentage(imageScale);
   const imageOverflows = imageOverflowsViewport(
     naturalSize.width,
     naturalSize.height,
@@ -532,6 +534,12 @@ export default function SlideshowOverlay({
         </p>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <span
+            className="self-center px-0.5 text-xs tabular-nums text-white/90 drop-shadow-sm"
+            aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+          >
+            {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+          </span>
           <div className="flex items-center gap-1 rounded-md bg-black/50 p-1 backdrop-blur-sm">
             <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
               <Button

@@ -95,6 +95,7 @@ export const zhCN: Record<MessageKey, string> = {
   "slideshow.zoomOut": "缩小",
   "slideshow.interval": "间隔（秒）",
   "slideshow.dimensions": "{{width}} × {{height}} 像素",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "预览面板",
   "preview.selectFile": "选择文件以预览元数据。",
   "preview.errorTitle": "无法打开此项",

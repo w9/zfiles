@@ -97,6 +97,7 @@ export const vi: Record<MessageKey, string> = {
   "slideshow.zoomOut": "Thu nhỏ",
   "slideshow.interval": "Khoảng cách (giây)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Khung xem trước",
   "preview.selectFile": "Chọn một tệp để xem trước siêu dữ liệu.",
   "preview.errorTitle": "Không thể mở mục này",

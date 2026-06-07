@@ -61,6 +61,13 @@ export function wheelZoomScale(current: number, deltaY: number): number {
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, current * factor));
 }
 
+export function formatZoomPercentage(scale: number): number {
+  if (!Number.isFinite(scale) || scale <= 0) {
+    return 100;
+  }
+  return Math.round(scale * 100);
+}
+
 export function pinchZoomScale(current: number, ratio: number): number {
   if (!Number.isFinite(ratio) || ratio <= 0) {
     return current;

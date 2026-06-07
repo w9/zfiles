@@ -97,6 +97,7 @@ export const ko: Record<MessageKey, string> = {
   "slideshow.zoomOut": "축소",
   "slideshow.interval": "간격(초)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "미리보기 창",
   "preview.selectFile": "메타데이터를 미리 보려면 파일을 선택하세요.",
   "preview.errorTitle": "이 항목을 열 수 없습니다",

@@ -97,6 +97,7 @@ export const ru: Record<MessageKey, string> = {
   "slideshow.zoomOut": "Уменьшить",
   "slideshow.interval": "Интервал (секунды)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Панель предпросмотра",
   "preview.selectFile": "Выберите файл, чтобы просмотреть метаданные.",
   "preview.errorTitle": "Не удаётся открыть этот элемент",

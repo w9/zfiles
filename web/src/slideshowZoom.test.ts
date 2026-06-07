@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   defaultScale,
   fitScale,
+  formatZoomPercentage,
   pinchZoomScale,
   resolveImageScale,
   stepZoom,
@@ -27,6 +28,13 @@ test("stepZoom and wheelZoomScale stay within bounds", () => {
   assert.equal(stepZoom(0.05, -1), 0.1);
   assert.ok(wheelZoomScale(1, -100) > 1);
   assert.ok(wheelZoomScale(8, -100) <= 8);
+});
+
+test("formatZoomPercentage rounds scale to whole percent", () => {
+  assert.equal(formatZoomPercentage(1), 100);
+  assert.equal(formatZoomPercentage(0.5), 50);
+  assert.equal(formatZoomPercentage(1.25), 125);
+  assert.equal(formatZoomPercentage(Number.NaN), 100);
 });
 
 test("pinchZoomScale scales by ratio with bounds", () => {

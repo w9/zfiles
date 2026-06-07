@@ -95,6 +95,7 @@ export const zhTW: Record<MessageKey, string> = {
   "slideshow.zoomOut": "縮小",
   "slideshow.interval": "間隔（秒）",
   "slideshow.dimensions": "{{width}} × {{height}} 像素",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "預覽窗格",
   "preview.selectFile": "選擇檔案以預覽中繼資料。",
   "preview.errorTitle": "無法開啟此項目",

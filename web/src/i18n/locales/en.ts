@@ -95,6 +95,7 @@ export const en = {
   "slideshow.zoomOut": "Zoom out",
   "slideshow.interval": "Interval (seconds)",
   "slideshow.dimensions": "{{width}} × {{height}} px",
+  "slideshow.zoomLevel": "{{percent}}%",
   "preview.label": "Preview pane",
   "preview.selectFile": "Select a file to preview metadata.",
   "preview.errorTitle": "Can't open this item",
