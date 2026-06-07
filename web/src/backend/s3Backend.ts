@@ -146,11 +146,22 @@ export class S3Backend implements ExplorerBackend {
           Key: key,
         }),
       );
+      const extra: Record<string, unknown> = {};
+      if (head.ContentType) {
+        extra.contentType = head.ContentType;
+      }
+      if (head.ETag) {
+        extra.etag = head.ETag;
+      }
+      if (head.StorageClass) {
+        extra.storageClass = head.StorageClass;
+      }
       return {
         path,
         is_dir: false,
         size: head.ContentLength ?? 0,
         modified: head.LastModified?.toISOString(),
+        extra: Object.keys(extra).length > 0 ? extra : undefined,
       };
     } catch {
       const prefix = listPrefixForPath(this.config.prefix, path);

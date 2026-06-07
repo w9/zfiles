@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { parentExplorerPath } from "@/explorer/path";
 import {
   explorerHistoryHrefForPath,
   explorerPathFromPathname,
 } from "./explorerUrl";
 
-type LoadListing = (path: string) => Promise<boolean>;
+type LoadListing = (
+  path: string,
+  options?: { preserveSelection?: boolean; focusPath?: string },
+) => Promise<boolean>;
 
 function syncHistoryIndex(
   stack: string[],
@@ -81,13 +85,19 @@ export function useExplorerNavigation(
   }, [applyLoadedPath, loadListing]);
 
   const navigateTo = useCallback(
-    async (path: string) => {
-      if (path === currentPathRef.current) {
+    async (path: string, options?: { focusPath?: string }) => {
+      const listingPath = options?.focusPath
+        ? parentExplorerPath(options.focusPath)
+        : path;
+      if (!options?.focusPath && listingPath === currentPathRef.current) {
         return;
       }
-      const loaded = await loadListing(path);
+      const loaded = await loadListing(
+        listingPath,
+        options?.focusPath ? { focusPath: options.focusPath } : undefined,
+      );
       if (loaded) {
-        applyLoadedPath(path, { pushHistory: true });
+        applyLoadedPath(listingPath, { pushHistory: true });
       }
     },
     [applyLoadedPath, loadListing],

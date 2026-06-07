@@ -15,11 +15,15 @@ const emptySelection: ContextKeys = {
   "clipboard.count": 0,
   "preview.is-image": false,
   "preview.path": "",
+  "listing.show-dot-entries": false,
+  "listing.loaded": true,
+  "listing.visible-count": 0,
 };
 
 const labelForKey = (key: string) =>
   ({
     "actions.whenFailure.selectionRequired": "Select one or more files",
+    "actions.whenFailure.listingEmpty": "No items to select",
     "actions.whenFailure.unavailable": "Unavailable",
     "actions.custom.reason": "Custom reason",
   })[key] ?? key;
@@ -28,6 +32,10 @@ test("whenFailureMessageKey maps known when expressions", () => {
   assert.equal(
     whenFailureMessageKey("selection.count > 0"),
     "actions.whenFailure.selectionRequired",
+  );
+  assert.equal(
+    whenFailureMessageKey("listing.visible-count > 0"),
+    "actions.whenFailure.listingEmpty",
   );
 });
 
@@ -60,6 +68,21 @@ test("explainActionUnavailable uses mapped when failure message", () => {
   assert.equal(
     explainActionUnavailable(action, emptySelection, labelForKey),
     "Select one or more files",
+  );
+});
+
+test("explainActionUnavailable reports first failed compound clause", () => {
+  const action: ActionDefinition = {
+    id: "selection.select-all",
+    nameKey: "actions.selection.selectAll.name",
+    categoryKey: "actions.selection.category",
+    when:
+      "focus.pane == 'file-list' && listing.loaded == true && listing.visible-count > 0",
+    handler: async () => {},
+  };
+  assert.equal(
+    explainActionUnavailable(action, emptySelection, labelForKey),
+    "No items to select",
   );
 });
 

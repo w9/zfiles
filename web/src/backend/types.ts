@@ -19,6 +19,7 @@ export type FileStat = {
   symlink_target?: string;
   size: number;
   modified?: unknown;
+  extra?: Record<string, unknown>;
 };
 
 export type UploadProgress = {

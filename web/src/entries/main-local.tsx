@@ -6,7 +6,9 @@ import AppShell from "../AppShell";
 import { ExplorerBackendProvider } from "../backend";
 import { I18nProvider } from "../i18n";
 import { ModifiedTimeFormatProvider } from "../settings/ModifiedTimeFormatProvider";
+import { GridCardSizeProvider } from "../settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "../settings/ListingSortOrderProvider";
+import { GridImagePreviewsProvider } from "../settings/GridImagePreviewsProvider";
 import { ShowDotEntriesProvider } from "../settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "../routing/AppRouteProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,15 +21,19 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <I18nProvider>
       <AppRouteProvider>
         <ModifiedTimeFormatProvider>
-          <ListingSortOrderProvider>
-            <ShowDotEntriesProvider>
-              <ExplorerBackendProvider>
-                <TooltipProvider>
-                  <AppShell />
-                </TooltipProvider>
-              </ExplorerBackendProvider>
-            </ShowDotEntriesProvider>
-          </ListingSortOrderProvider>
+          <GridCardSizeProvider>
+            <ListingSortOrderProvider>
+              <ShowDotEntriesProvider>
+                <GridImagePreviewsProvider bootMode="local">
+                  <ExplorerBackendProvider>
+                    <TooltipProvider>
+                      <AppShell />
+                    </TooltipProvider>
+                  </ExplorerBackendProvider>
+                </GridImagePreviewsProvider>
+              </ShowDotEntriesProvider>
+            </ListingSortOrderProvider>
+          </GridCardSizeProvider>
         </ModifiedTimeFormatProvider>
       </AppRouteProvider>
     </I18nProvider>

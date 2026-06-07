@@ -40,7 +40,7 @@ import {
   restoreSelectionFromListing,
   shouldRefreshListing,
 } from "../listingRefresh";
-import { notifyApiError, notifyError } from "../notifyError";
+import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
 import UploadPanel from "../UploadPanel";
 import UploadConflictDialog from "../UploadConflictDialog";
 import UploadButton from "../UploadButton";
@@ -52,7 +52,12 @@ import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { listingOverlayMessageKey } from "../listingEmpty";
-import { filterDotEntries } from "../listingFilter";
+import { filterDotEntries, isDotEntryName } from "../listingFilter";
+import {
+  collectSelectAllWarnings,
+  isListingFullySelected,
+  type SelectAllWarningReason,
+} from "./listingSelectAll";
 import {
   defaultQuickFilterOptions,
   filterEntriesByQuickFilter,
@@ -118,6 +123,7 @@ export default function ExplorerApp() {
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readListingViewMode(),
   );
+  const [gridResizeActive, setGridResizeActive] = useState(false);
   const [columnSorting, setColumnSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -145,7 +151,7 @@ export default function ExplorerApp() {
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
 
-  const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean }): Promise<boolean> => {
+  const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
     const previousPaths = options?.preserveSelection
       ? selectedPathsRef.current.size > 0
@@ -159,8 +165,9 @@ export default function ExplorerApp() {
       setEntries(data);
       setListCursor(nextCursor);
       setCurrentPath(path);
-      const restored =
-        previousPaths != null
+      const restored = options?.focusPath
+        ? restoreSelectionFromListing(data, new Set([options.focusPath]), options.focusPath)
+        : previousPaths != null
           ? restoreSelectionFromListing(data, previousPaths, previousPath)
           : null;
       if (restored) {
@@ -281,7 +288,8 @@ export default function ExplorerApp() {
   }, [loadListing, refreshing]);
 
   const loadListingForNavigation = useCallback(
-    (path: string) => loadListing(path),
+    (path: string, options?: { preserveSelection?: boolean; focusPath?: string }) =>
+      loadListing(path, options),
     [loadListing],
   );
 
@@ -297,6 +305,26 @@ export default function ExplorerApp() {
   useEffect(() => {
     trackCurrentPath(currentPath);
   }, [currentPath, trackCurrentPath]);
+
+  const openSymlinkTarget = useCallback(
+    async (resolvedPath: string) => {
+      try {
+        const targetStat = await backend.stat(resolvedPath);
+        if (targetStat.is_dir) {
+          await navigateTo(resolvedPath);
+          return;
+        }
+        await navigateTo(resolvedPath, { focusPath: resolvedPath });
+      } catch (err) {
+        if (err instanceof Response) {
+          await notifyApiError(err, t);
+          return;
+        }
+        notifyError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [backend, navigateTo, t],
+  );
 
   const getOperationTargets = useCallback(() => {
     const selected = Array.from(selectedPathsRef.current);
@@ -321,31 +349,6 @@ export default function ExplorerApp() {
     loadListing,
     t,
   });
-
-  const contextKeys = useMemo<ContextKeys>(
-    () => ({
-      "focus.pane": focusPane,
-      "selection.count": selectedPaths.size,
-      "selection.paths": Array.from(selectedPaths),
-      "current-path": currentPath,
-      "connection.online": backendStatus === "connected",
-      "server.read-only": readOnly,
-      "clipboard.count": fileOps.clipboard?.paths.length ?? 0,
-      "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
-      "preview.path": selectedPath ?? "",
-      "listing.show-dot-entries": showDotEntries,
-    }),
-    [
-      focusPane,
-      selectedPaths,
-      currentPath,
-      backendStatus,
-      readOnly,
-      selectedPath,
-      showDotEntries,
-      fileOps.clipboard,
-    ],
-  );
 
   const runBulkAction = useCallback(
     async (actionId: string, paths: string[]) => {
@@ -430,6 +433,36 @@ export default function ExplorerApp() {
       filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
     [visibleEntries, quickFilter, quickFilterOptions],
   );
+
+  const contextKeys = useMemo<ContextKeys>(
+    () => ({
+      "focus.pane": focusPane,
+      "selection.count": selectedPaths.size,
+      "selection.paths": Array.from(selectedPaths),
+      "current-path": currentPath,
+      "connection.online": backendStatus === "connected",
+      "server.read-only": readOnly,
+      "clipboard.count": fileOps.clipboard?.paths.length ?? 0,
+      "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
+      "preview.path": selectedPath ?? "",
+      "listing.show-dot-entries": showDotEntries,
+      "listing.loaded": listingLoaded,
+      "listing.visible-count": quickFilteredEntries.length,
+    }),
+    [
+      focusPane,
+      selectedPaths,
+      currentPath,
+      backendStatus,
+      readOnly,
+      selectedPath,
+      showDotEntries,
+      fileOps.clipboard,
+      listingLoaded,
+      quickFilteredEntries.length,
+    ],
+  );
+
   const listingOverlayKey = listingOverlayMessageKey({
     listingLoaded,
     quickFilterActive,
@@ -610,7 +643,11 @@ export default function ExplorerApp() {
 
   const marqueeSelect = useListingMarqueeSelect({
     selectedPaths,
-    enabled: listingLoaded && !listingOverlayKey && activeListingEntries.length > 0,
+    enabled:
+      listingLoaded &&
+      !listingOverlayKey &&
+      activeListingEntries.length > 0 &&
+      !gridResizeActive,
     scrollElementRef: listingViewportRef,
     onSelectionChange: applyMarqueeSelection,
   });
@@ -663,6 +700,46 @@ export default function ExplorerApp() {
     }
   }, []);
 
+  const selectAllVisible = useCallback(() => {
+    const rows = listingEntriesRef.current;
+    const visiblePaths = rows.map((entry) => entry.path);
+    if (visiblePaths.length === 0) {
+      return;
+    }
+    if (isListingFullySelected(visiblePaths, selectedPathsRef.current)) {
+      return;
+    }
+    const warningKeys: Record<SelectAllWarningReason, MessageKey> = {
+      "hidden-dot-entries": "actions.selection.selectAll.warning.hiddenDotEntries",
+      "quick-filter-active": "actions.selection.selectAll.warning.quickFilter",
+      "more-to-load": "actions.selection.selectAll.warning.moreToLoad",
+    };
+    for (const reason of collectSelectAllWarnings({
+      quickFilterActive,
+      quickFilteredCount: quickFilteredEntries.length,
+      visibleEntryCount: visibleEntries.length,
+      hasHiddenDotEntries:
+        !showDotEntries && entries.some((entry) => isDotEntryName(entry.name)),
+      hasMoreToLoad: listCursor != null,
+    })) {
+      notifyWarning(t(warningKeys[reason]));
+    }
+    const lastPath = visiblePaths[visiblePaths.length - 1] ?? null;
+    const lastIndex = rows.length - 1;
+    setSelectedPaths(new Set(visiblePaths));
+    setSelectedPath(lastPath);
+    setSelectedIndex(lastIndex);
+    selectionAnchorRef.current = lastIndex;
+  }, [
+    entries,
+    listCursor,
+    quickFilterActive,
+    quickFilteredEntries.length,
+    showDotEntries,
+    t,
+    visibleEntries.length,
+  ]);
+
   const actionSystem = useActionSystem(
     contextKeys,
     {
@@ -687,6 +764,7 @@ export default function ExplorerApp() {
       pasteFromClipboard: fileOps.pasteFromClipboard,
       createNewFolder: fileOps.createNewFolder,
       startRename: fileOps.startRename,
+      selectAllVisible,
       openSettings: () => navigate("settings"),
       toggleShowDotEntries,
     },
@@ -982,6 +1060,7 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
+                onResizeActiveChange={setGridResizeActive}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {
@@ -1043,6 +1122,7 @@ export default function ExplorerApp() {
             <PreviewPane
               path={selectedPath}
               onFocusPreview={() => setFocusPane("preview")}
+              onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
               className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-transparent shadow-none"
             />
           </div>

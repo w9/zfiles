@@ -9,6 +9,8 @@ export type ContextKeys = {
   "preview.is-image": boolean;
   "preview.path": string;
   "listing.show-dot-entries": boolean;
+  "listing.loaded": boolean;
+  "listing.visible-count": number;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -22,6 +24,8 @@ export function defaultContextKeys(): ContextKeys {
     "preview.is-image": false,
     "preview.path": "",
     "listing.show-dot-entries": false,
+    "listing.loaded": false,
+    "listing.visible-count": 0,
     "clipboard.count": 0,
   };
 }

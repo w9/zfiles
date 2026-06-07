@@ -51,6 +51,23 @@ test("formatKeybindingLabel renders platform-specific modifiers", () => {
   assert.equal(formatKeybindingLabel("Mod+Shift+P", "Linux x86_64"), "Ctrl+Shift+P");
 });
 
+test("matchKeybinding matches Mod+A select-all chord", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: "a",
+    ctrlKey: true,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const binding = matchKeybinding(
+    bindings,
+    event,
+    (item) => item.when == null || item.when.includes("listing.visible-count"),
+  );
+  assert.equal(binding?.command, "selection.select-all");
+});
+
 test("matchKeybinding matches shift-extended selection chords", () => {
   const bindings = defaultKeybindings();
   const event = {

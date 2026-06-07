@@ -94,6 +94,12 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     { key: "Enter", command: "navigation.open", when: "focus.pane == 'file-list'" },
     { key: "Backspace", command: "navigation.up", when: "focus.pane == 'file-list'" },
     { key: "Space", command: "selection.toggle", when: "focus.pane == 'file-list'" },
+    {
+      key: "Mod+A",
+      command: "selection.select-all",
+      when:
+        "focus.pane == 'file-list' && listing.loaded == true && listing.visible-count > 0",
+    },
     { key: "Escape", command: "selection.clear", when: "selection.count > 0" },
   ];
 }

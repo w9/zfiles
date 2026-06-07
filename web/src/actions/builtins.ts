@@ -119,6 +119,20 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
     {
+      id: "selection.select-all",
+      nameKey: "actions.selection.selectAll.name",
+      descriptionKey: "actions.selection.selectAll.description",
+      categoryKey: "actions.selection.category",
+      when:
+        "focus.pane == 'file-list' && listing.loaded == true && listing.visible-count > 0",
+      paletteWhen: "focus.pane == 'file-list' && listing.loaded == true",
+      defaultKeybinding: "Mod+A",
+      contexts: ["file-list"],
+      handler: async () => {
+        getDeps().selectAllVisible();
+      },
+    },
+    {
       id: "selection.clear",
       nameKey: "actions.selection.clear.name",
       categoryKey: "actions.selection.category",

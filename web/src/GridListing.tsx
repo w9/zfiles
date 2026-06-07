@@ -1,12 +1,21 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { FileIcon } from "@/FileIcon";
+import GridCardPreview from "@/GridCardPreview";
 import InlineNameInput from "@/explorer/InlineNameInput";
+import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
+import { useTranslation } from "@/i18n";
 import { shouldDimDotEntry } from "@/listingFilter";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
+import {
+  GRID_GAP_PX,
+  computeGridColumnCount,
+  gridIconPixelSize,
+} from "@/settings/gridCardSize";
+import { useGridCardSize } from "@/settings/GridCardSizeProvider";
+import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
 
 type GridListingProps = {
   entries: ListingEntry[];
@@ -23,14 +32,14 @@ type GridListingProps = {
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
+  onResizeActiveChange?: (active: boolean) => void;
 };
-
-const GRID_COLUMNS = 4;
-const ROW_HEIGHT = 168;
 
 const GRID_ITEM_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
+
+const VIEWPORT_PADDING_PX = 12;
 
 export default function GridListing({
   entries,
@@ -47,10 +56,30 @@ export default function GridListing({
   listingViewportRef,
   onViewportPointerDown,
   marqueeActive = false,
+  onResizeActiveChange,
 }: GridListingProps) {
+  const { t } = useTranslation();
+  const { cardSize, setCardSize, resetToDefault } = useGridCardSize();
+  const { enabled: gridImagePreviewsEnabled } = useGridImagePreviews();
   const cutPathSet = new Set(cutPaths);
-  const rowCount = Math.ceil(entries.length / GRID_COLUMNS);
   const parentRef = useRef<HTMLDivElement | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+
+  const columnCount = useMemo(
+    () => computeGridColumnCount(viewportWidth, cardSize.width, GRID_GAP_PX),
+    [cardSize.width, viewportWidth],
+  );
+
+  const rowCount = Math.ceil(entries.length / columnCount);
+  const iconPixelSize = gridIconPixelSize(cardSize.width, cardSize.height);
+
+  const { onHandlePointerDown, onHandleDoubleClick } = useGridCardResize({
+    cardSize,
+    onSizeChange: setCardSize,
+    onReset: resetToDefault,
+    onActiveChange: onResizeActiveChange,
+  });
+
   const setViewportRef = useCallback(
     (node: HTMLDivElement | null) => {
       parentRef.current = node;
@@ -60,19 +89,41 @@ export default function GridListing({
     },
     [listingViewportRef],
   );
+
+  useEffect(() => {
+    const node = parentRef.current;
+    if (!node) {
+      return;
+    }
+    const measure = () => {
+      setViewportWidth(Math.max(0, node.clientWidth - VIEWPORT_PADDING_PX * 2));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
+    estimateSize: () => cardSize.height,
+    gap: GRID_GAP_PX,
     overscan: 4,
   });
 
   useEffect(() => {
-    const row = Math.floor(selectedIndex / GRID_COLUMNS);
+    virtualizer.measure();
+  }, [cardSize.height, virtualizer]);
+
+  useEffect(() => {
+    const row = Math.floor(selectedIndex / columnCount);
     if (row >= 0 && row < rowCount) {
       virtualizer.scrollToIndex(row, { align: "auto" });
     }
-  }, [selectedIndex, rowCount, virtualizer]);
+  }, [columnCount, rowCount, selectedIndex, virtualizer]);
+
+  const gridTemplateColumns = `repeat(${columnCount}, ${cardSize.width}px)`;
 
   return (
     <div
@@ -92,13 +143,14 @@ export default function GridListing({
           style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
           {virtualizer.getVirtualItems().map((virtualRow) => {
-            const startIndex = virtualRow.index * GRID_COLUMNS;
-            const rowEntries = entries.slice(startIndex, startIndex + GRID_COLUMNS);
+            const startIndex = virtualRow.index * columnCount;
+            const rowEntries = entries.slice(startIndex, startIndex + columnCount);
             return (
               <div
                 key={virtualRow.key}
-                className="absolute left-0 grid w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+                className="absolute left-0 grid justify-start gap-3"
                 style={{
+                  gridTemplateColumns,
                   transform: `translateY(${virtualRow.start}px)`,
                   height: `${virtualRow.size}px`,
                 }}
@@ -111,50 +163,75 @@ export default function GridListing({
                   const isCut = cutPathSet.has(entry.path);
                   const isEditing = inlineEditPath === entry.path;
                   return (
-                    <button
+                    <div
                       key={entry.key}
-                      type="button"
-                      data-listing-entry
-                      data-listing-path={entry.path}
-                      className={cn(
-                        "flex h-full select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
-                        dimmed && "opacity-70",
-                        isCut && GRID_ITEM_CUT_CLASS,
-                        isSelected &&
-                          (isFocused
-                            ? GRID_ITEM_FOCUS_SELECTED_CLASS
-                            : GRID_ITEM_SELECTED_CLASS),
-                      )}
-                      onMouseDown={(event) => {
-                        if (event.shiftKey) {
-                          event.preventDefault();
-                        }
+                      className="group relative"
+                      style={{
+                        width: cardSize.width,
+                        height: cardSize.height,
                       }}
-                      onClick={(event) => entry.onSelect(event, index)}
-                      onDoubleClick={entry.onActivate}
-                      onContextMenu={entry.onContextMenu}
                     >
-                      <div className="flex flex-1 items-center justify-center bg-muted/30 p-2">
-                        <FileIcon
+                      <button
+                        type="button"
+                        data-listing-entry
+                        data-listing-path={entry.path}
+                        className={cn(
+                          "absolute inset-0 flex select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
+                          dimmed && "opacity-70",
+                          isCut && GRID_ITEM_CUT_CLASS,
+                          isSelected &&
+                            (isFocused
+                              ? GRID_ITEM_FOCUS_SELECTED_CLASS
+                              : GRID_ITEM_SELECTED_CLASS),
+                        )}
+                        onMouseDown={(event) => {
+                          if (event.shiftKey) {
+                            event.preventDefault();
+                          }
+                        }}
+                        onClick={(event) => entry.onSelect(event, index)}
+                        onDoubleClick={entry.onActivate}
+                        onContextMenu={entry.onContextMenu}
+                      >
+                        <GridCardPreview
+                          path={entry.path}
                           name={entry.name}
                           isDir={entry.isDir}
                           isSymlink={entry.isSymlink}
-                          theme={iconTheme}
-                          size="lg"
+                          previewsEnabled={gridImagePreviewsEnabled}
+                          iconTheme={iconTheme}
+                          pixelSize={iconPixelSize}
+                        />
+                        <div className="shrink-0 border-t px-2 py-1.5 text-sm">
+                          {isEditing && onInlineCommit && onInlineCancel ? (
+                            <InlineNameInput
+                              initialName={entry.name}
+                              onCommit={(name) => onInlineCommit(entry.path, name)}
+                              onCancel={() => onInlineCancel(entry.path, entry.name)}
+                            />
+                          ) : (
+                            <span className="block truncate">{entry.name}</span>
+                          )}
+                        </div>
+                      </button>
+                      <div
+                        role="separator"
+                        aria-orientation="both"
+                        aria-label={t("listing.grid.resizeHandle")}
+                        data-grid-resize-handle
+                        data-prevent-marquee
+                        className={cn(
+                          "absolute bottom-0 right-0 z-10 flex h-4 w-4 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
+                        )}
+                        onPointerDown={onHandlePointerDown}
+                        onDoubleClick={onHandleDoubleClick}
+                      >
+                        <span
+                          aria-hidden
+                          className="h-2.5 w-2.5 border-r-2 border-b-2 border-muted-foreground/70"
                         />
                       </div>
-                      <div className="border-t px-2 py-1.5 text-sm">
-                        {isEditing && onInlineCommit && onInlineCancel ? (
-                          <InlineNameInput
-                            initialName={entry.name}
-                            onCommit={(name) => onInlineCommit(entry.path, name)}
-                            onCancel={() => onInlineCancel(entry.path, entry.name)}
-                          />
-                        ) : (
-                          <span className="block truncate">{entry.name}</span>
-                        )}
-                      </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

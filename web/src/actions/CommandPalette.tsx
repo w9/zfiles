@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/command";
 import { searchActions } from "./search";
 import { isActionAvailable } from "./dispatch";
+import { explainActionUnavailable } from "./explainWhenFailure";
 import KeybindingKbd from "./KeybindingKbd";
 import { keybindingForAction } from "./keybindings";
 import type { ActionRegistry } from "./registry";
@@ -76,6 +77,7 @@ export default function CommandPalette({
       registry.list(),
       query,
       labels,
+      contextKeys,
       (action) => isActionAvailable(action, contextKeys),
     );
   }, [registry, query, contextKeys, labelForKey]);
@@ -156,14 +158,21 @@ export default function CommandPalette({
         <CommandEmpty>{emptyLabel}</CommandEmpty>
         {grouped.map(([category, items]) => (
           <CommandGroup key={category} heading={category}>
-            {items.map(({ action }) => {
+            {items.map(({ action, available }) => {
               const chord = actionKeybindingChord(action, keybindings);
+              const unavailableReason = available
+                ? null
+                : explainActionUnavailable(action, contextKeys, labelForKey);
               return (
                 <CommandItem
                   key={action.id}
                   value={`${action.id} ${labelForKey(action.nameKey)}`}
                   className="flex items-center justify-between"
+                  disabled={!available}
                   onSelect={() => {
+                    if (!available) {
+                      return;
+                    }
                     if (action.args?.some((arg) => !arg.default)) {
                       setPendingActionId(action.id);
                       setArgValue("");
@@ -174,7 +183,14 @@ export default function CommandPalette({
                     setQuery("");
                   }}
                 >
-                  <span>{labelForKey(action.nameKey)}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{labelForKey(action.nameKey)}</span>
+                    {unavailableReason ? (
+                      <span className="truncate text-xs text-muted-foreground">
+                        {unavailableReason}
+                      </span>
+                    ) : null}
+                  </span>
                   {chord ? <KeybindingKbd chord={chord} /> : null}
                 </CommandItem>
               );

@@ -10,6 +10,7 @@ type FileIconProps = {
   isSymlink?: boolean;
   theme?: FileIconTheme;
   size?: "xs" | "sm" | "lg";
+  pixelSize?: number;
   className?: string;
 };
 
@@ -43,31 +44,40 @@ export function FileIcon({
   isSymlink = false,
   theme = "dark",
   size = "sm",
+  pixelSize,
   className,
 }: FileIconProps) {
   const { t } = useTranslation();
   const iconUrl = resolveFileIconUrl({ name, isDir, theme });
+  const resolvedSize = pixelSize ?? SIZE_PX[size];
+  const sizeClass = pixelSize == null ? SIZE_CLASS[size] : undefined;
+  const badgeScale = pixelSize == null ? size : resolvedSize <= 20 ? "xs" : resolvedSize <= 32 ? "sm" : "lg";
 
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
       <img
-        className={cn(SIZE_CLASS[size], "shrink-0")}
+        className={cn(sizeClass, "shrink-0")}
+        style={
+          pixelSize != null
+            ? { width: resolvedSize, height: resolvedSize }
+            : undefined
+        }
         src={iconUrl}
         alt=""
         loading="lazy"
-        width={SIZE_PX[size]}
-        height={SIZE_PX[size]}
+        width={resolvedSize}
+        height={resolvedSize}
       />
       {isSymlink ? (
         <span
           className={cn(
             "absolute -right-0.5 -top-0.5 flex items-center justify-center rounded-full bg-background text-primary ring-1 ring-border",
-            BADGE_CLASS[size],
+            BADGE_CLASS[badgeScale],
           )}
           title={t("fileIcon.symlink")}
           aria-hidden
         >
-          <CornerUpRight className={BADGE_ICON_CLASS[size]} strokeWidth={2.5} />
+          <CornerUpRight className={BADGE_ICON_CLASS[badgeScale]} strokeWidth={2.5} />
         </span>
       ) : null}
     </span>

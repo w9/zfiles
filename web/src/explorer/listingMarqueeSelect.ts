@@ -111,7 +111,7 @@ export function shouldIgnoreMarqueePointerTarget(target: EventTarget | null): bo
   if (!(target instanceof Element)) {
     return true;
   }
-  if (target.closest("input, textarea, [data-prevent-marquee]")) {
+  if (target.closest("input, textarea, [data-prevent-marquee], [data-grid-resize-handle]")) {
     return true;
   }
   return false;

@@ -9,6 +9,10 @@ export function notifyError(message: string): void {
   toast.error(message);
 }
 
+export function notifyWarning(message: string): void {
+  toast.warning(message);
+}
+
 export async function notifyApiError(
   response: Response,
   t: Translate,

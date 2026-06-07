@@ -7,7 +7,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
 import { CloudDisconnectProvider } from "./CloudDisconnectContext";
 import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvider";
+import { GridCardSizeProvider } from "@/settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
+import { GridImagePreviewsProvider } from "@/settings/GridImagePreviewsProvider";
 import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
@@ -62,13 +64,17 @@ export default function CloudApp() {
     <I18nProvider>
       <AppRouteProvider>
         <ModifiedTimeFormatProvider>
-          <ListingSortOrderProvider>
-            <ShowDotEntriesProvider>
-              <TooltipProvider>
-                <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
-              </TooltipProvider>
-            </ShowDotEntriesProvider>
-          </ListingSortOrderProvider>
+          <GridCardSizeProvider>
+            <ListingSortOrderProvider>
+              <ShowDotEntriesProvider>
+                <GridImagePreviewsProvider bootMode="cloud">
+                  <TooltipProvider>
+                    <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
+                  </TooltipProvider>
+                </GridImagePreviewsProvider>
+              </ShowDotEntriesProvider>
+            </ListingSortOrderProvider>
+          </GridCardSizeProvider>
         </ModifiedTimeFormatProvider>
       </AppRouteProvider>
     </I18nProvider>

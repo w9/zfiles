@@ -26,6 +26,7 @@ export type ActionDefinition = {
   aliasKeys?: string[];
   icon?: string;
   when?: string;
+  paletteWhen?: string;
   contexts?: string[];
   defaultKeybinding?: string;
   destructive?: boolean;
@@ -67,4 +68,5 @@ export type BuiltinActionDeps = {
   pasteFromClipboard: () => Promise<void>;
   createNewFolder: () => Promise<void>;
   startRename: () => void;
+  selectAllVisible: () => void;
 };

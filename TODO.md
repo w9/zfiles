@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid view image thumbnails (`isBrowserPreviewImage`, lazy + `fetchpriority`, setting default on local / off cloud). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — grid image thumbnails cycle complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -103,8 +103,8 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `ExplorerApp`: wire select-all (last primary, noop when already full); warning toasts for hidden/paginated items
 - [x] Command palette: show actions matching `paletteWhen` disabled with per-clause failure reasons
 - [x] i18n select-all + warning + when-failure keys (14 locales); `pnpm test`
-- [ ] `gridImagePreviews.ts` + provider: persist toggle; default on (local) / off (cloud); unit tests
-- [ ] `GridCardPreview`: `useDownloadUrl`, file icon until loaded, `object-contain`, lazy + viewport `fetchpriority`
-- [ ] `GridListing`: wire preview when setting enabled and `isBrowserPreviewImage(name)`
-- [ ] `SettingsPage` + providers (local/cloud): grid image previews toggle; i18n (14 locales)
-- [ ] `pnpm test`
+- [x] `gridImagePreviews.ts` + provider: persist toggle; default on (local and cloud); unit tests
+- [x] `GridCardPreview`: `useDownloadUrl`, file icon until loaded, `object-contain`, lazy + viewport `fetchpriority`
+- [x] `GridListing`: wire preview when setting enabled and `isBrowserPreviewImage(name)`
+- [x] `SettingsPage` + providers (local/cloud): grid image previews toggle; i18n (14 locales)
+- [x] `pnpm test`
