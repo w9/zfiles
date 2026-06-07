@@ -197,7 +197,7 @@ export default function GridListing({
                           path={entry.path}
                           name={entry.name}
                           isDir={entry.isDir}
-                          isSymlink={entry.isSymlink}
+                          isSymlink={entry.isSymlink ?? false}
                           previewsEnabled={gridImagePreviewsEnabled}
                           iconTheme={iconTheme}
                           pixelSize={iconPixelSize}
@@ -216,7 +216,6 @@ export default function GridListing({
                       </button>
                       <div
                         role="separator"
-                        aria-orientation="both"
                         aria-label={t("listing.grid.resizeHandle")}
                         data-grid-resize-handle
                         data-prevent-marquee

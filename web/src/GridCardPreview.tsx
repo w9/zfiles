@@ -61,7 +61,6 @@ export default function GridCardPreview({
           src={downloadUrl}
           alt=""
           loading="lazy"
-          // @ts-expect-error fetchPriority is valid in modern browsers
           fetchPriority={inView ? "high" : "low"}
           className={cn(
             "max-h-full max-w-full object-contain",
