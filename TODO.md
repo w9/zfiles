@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** (`en`, `zh-CN`, `zh-TW`, `es`, `fr`, `it`, `pt`, `ru`, `de`, `ja`, `ko`, `tr`, `id`, `vi`) with a region-aware resolver and locale-aware date formatting. **Current cycle:** none — last cycle (README 14-locale i18n copy) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** enrich the preview/metadata panel — modified date, kind (MIME + extension), directory child counts, symlink navigation, and cloud HeadObject extras — without blocking first paint.
 
 ## TODO List
 
@@ -86,3 +86,15 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Update `i18n.test.ts` for new `resolveLocale` mappings + per-locale catalog completeness; run `pnpm test`
 - [x] `design/design.md`: list the supported locales; run `cargo test` + `cargo clippy -- -D warnings`
 - [x] `README.md`: update install blurb and feature list for 14-locale i18n
+- [x] `GridListing.tsx`: add row gap matching column `gap-3` via virtualizer `gap`
+- [x] Run `pnpm test`
+- [x] `gridCardSize.ts` + provider: persist size, default, min/max; column-count helper + tests
+- [x] `GridListing.tsx`: hover resize grip, auto-fit columns, scaled icons; suppress marquee while dragging
+- [x] `SettingsPage`: default/min/max grid card size controls; i18n (14 locales)
+- [x] Run `pnpm test`
+- [ ] `preview-metadata.ts`: extension/MIME label, symlink resolve, dir child counts + unit tests
+- [ ] `FileStat.extra` + `S3Backend.stat`: Content-Type, ETag, storage class from HeadObject
+- [ ] `PreviewPane`: modified, kind, cloud extras; async directory summary row (non-blocking)
+- [ ] Symlink target link + `navigateTo`/`loadListing` focusPath for file targets
+- [ ] i18n preview metadata keys (14 locales)
+- [ ] `cargo test` + `pnpm test`
