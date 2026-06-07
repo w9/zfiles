@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — slideshow zoom label layout complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** fixed 650px preview panel with Sheet fallback when inline would exceed 50% of main content (below `lg` always Sheet-only via context menu). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -70,3 +70,7 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `SlideshowOverlay`: float zoom % text to the left of the zoom control group
 - [x] Run `pnpm test`
+- [ ] `previewLayout.ts`: 650px width, 50% threshold + `lg` breakpoint helpers; unit tests
+- [ ] shadcn `Sheet` component + `PreviewSheet` wrapping `PreviewPane` at 650px from the right
+- [ ] `preview.open-sheet` action, context key `preview.inline-available`; wire layout + Sheet in `ExplorerApp`
+- [ ] i18n preview action keys (14 locales); run `pnpm test`
