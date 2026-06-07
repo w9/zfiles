@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (README Rust/binary opening) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** expand i18n from `en` + `zh-CN` to 14 locales — add Traditional Chinese (`zh-TW`), Spanish (`es`), French (`fr`), Italian (`it`), Portuguese (`pt`), Russian (`ru`), German (`de`), Japanese (`ja`), Korean (`ko`), Turkish (`tr`), Indonesian (`id`), and Vietnamese (`vi`) full message catalogs, wire them into the locale resolver/selector, and pass the real BCP-47 tag to date formatting.
 
 ## TODO List
 
@@ -78,3 +78,10 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
 - [x] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
 - [x] README opening: lead with Rust, statically linked musl binary under 10 MB (no bold emphasis)
+- [ ] `messages.ts` + `index.tsx`: widen `Locale` to 14 codes, build catalogs map, region-aware `resolveLocale`, set `documentElement.lang`
+- [ ] Add `language.*` name keys (one per locale) to `en` + `zh-CN`, then mirror them across all catalogs
+- [ ] Add full locale files: `zh-TW`, `es`, `fr`, `it`, `pt`, `ru`, `de`, `ja`, `ko`, `tr`, `id`, `vi` (every `MessageKey`)
+- [ ] `LanguageToggle.tsx`: enumerate all locales with native labels (drop the `zh-CN`-only ternary)
+- [ ] `ExplorerApp.tsx`: pass the active locale tag to date formatting instead of the `zh-CN`/`en` ternary
+- [ ] Update `i18n.test.ts` for new `resolveLocale` mappings + per-locale catalog completeness; run `pnpm test`
+- [ ] `design/design.md`: list the supported locales; run `cargo test` + `cargo clippy -- -D warnings`
