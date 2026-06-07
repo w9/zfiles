@@ -286,8 +286,9 @@ test("slideshow opens for image preview", async ({ page }) => {
     const palette = page.getByRole("dialog");
     await palette.getByPlaceholder("Type a command…").fill("Slideshow");
     await palette.getByText("Slideshow", { exact: true }).click();
-    await expect(page.getByRole("dialog", { name: /slide-[ab]\.png/ })).toBeVisible();
-    await expect(page.getByText(/\d+ \/ 2/)).toBeVisible();
+    const slideshow = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
+    await expect(slideshow).toBeVisible();
+    await expect(slideshow.getByRole("button", { name: "Play" })).toBeEnabled();
   } finally {
     imageServer.kill("SIGTERM");
   }
