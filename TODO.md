@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** fixed 650px preview panel with Sheet fallback when inline would exceed 50% of main content (below `lg` always Sheet-only via context menu). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** README slideshow feature callout; parallel — fixed 650px preview panel with Sheet fallback when inline would exceed 50% of main content (below `lg` always Sheet-only via context menu). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -74,3 +74,4 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [ ] shadcn `Sheet` component + `PreviewSheet` wrapping `PreviewPane` at 650px from the right
 - [ ] `preview.open-sheet` action, context key `preview.inline-available`; wire layout + Sheet in `ExplorerApp`
 - [ ] i18n preview action keys (14 locales); run `pnpm test`
+- [ ] `README.md`: advertise fullscreen image slideshow in Highlights and More features
