@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** slideshow drag-to-pan (grab cursor, touch pan + pinch-zoom, free pan, drag-only viewport). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** slideshow polish — icon tooltips (1s delay), Space→slideshow in grid, top/bottom vignette, one-line metadata. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -49,6 +49,9 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Toolbar + metadata + actions: zoom/play/interval top-right; metadata bottom-left; Close/Download/Open-tab bottom-right
 - [x] `SettingsPage` slideshow section; i18n keys (14 locales); wire provider in local/cloud entries
 - [x] Run `pnpm test`
-- [ ] `slideshowPan.ts`: pan/pinch helpers + unit tests (grab cursor, drag threshold, pinch scale)
-- [ ] `SlideshowOverlay`: pointer drag pan, touch pinch-zoom, overflow-hidden viewport, side effects
+- [x] `slideshowPan.ts`: pan/pinch helpers + unit tests (grab cursor, drag threshold, pinch scale)
+- [x] `SlideshowOverlay`: pointer drag pan, touch pinch-zoom, overflow-hidden viewport, side effects
+- [x] Run `pnpm test`
+- [ ] `SlideshowOverlay`: 1s-delay tooltips on icon buttons; top/bottom vignette; one-line metadata
+- [ ] Grid view: bind Space to `viewer.slideshow` when an image is selected; keybinding test
 - [ ] Run `pnpm test`
