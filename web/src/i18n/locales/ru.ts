@@ -122,6 +122,8 @@ export const ru: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "Цель находится вне этой папки.",
   "preview.noPreview": "Предпросмотр недоступен для этого типа файла.",
   "preview.download": "Скачать",
+  "preview.category": "Просмотр",
+  "preview.openSheet.name": "Показать сведения",
   "contextMenu.label": "Действия с файлами",
   "language.group": "Язык",
   "language.en": "English",

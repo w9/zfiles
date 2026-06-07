@@ -122,6 +122,8 @@ export const vi: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "Đích nằm ngoài thư mục này.",
   "preview.noPreview": "Không có bản xem trước cho loại tệp này.",
   "preview.download": "Tải xuống",
+  "preview.category": "Xem trước",
+  "preview.openSheet.name": "Hiển thị chi tiết",
   "contextMenu.label": "Thao tác tệp",
   "language.group": "Ngôn ngữ",
   "language.en": "English",

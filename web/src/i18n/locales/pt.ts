@@ -122,6 +122,8 @@ export const pt: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "O destino está fora desta pasta.",
   "preview.noPreview": "A visualização não está disponível para este tipo de arquivo.",
   "preview.download": "Baixar",
+  "preview.category": "Visualização",
+  "preview.openSheet.name": "Mostrar detalhes",
   "contextMenu.label": "Ações de arquivo",
   "language.group": "Idioma",
   "language.en": "English",

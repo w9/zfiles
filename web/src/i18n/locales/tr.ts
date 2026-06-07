@@ -122,6 +122,8 @@ export const tr: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "Hedef bu klasörün dışında.",
   "preview.noPreview": "Bu dosya türü için önizleme kullanılamıyor.",
   "preview.download": "İndir",
+  "preview.category": "Önizleme",
+  "preview.openSheet.name": "Ayrıntıları göster",
   "contextMenu.label": "Dosya eylemleri",
   "language.group": "Dil",
   "language.en": "English",

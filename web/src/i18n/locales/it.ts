@@ -122,6 +122,8 @@ export const it: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "La destinazione è fuori da questa cartella.",
   "preview.noPreview": "L'anteprima non è disponibile per questo tipo di file.",
   "preview.download": "Scarica",
+  "preview.category": "Anteprima",
+  "preview.openSheet.name": "Mostra dettagli",
   "contextMenu.label": "Azioni file",
   "language.group": "Lingua",
   "language.en": "English",

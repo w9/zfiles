@@ -122,6 +122,8 @@ export const ko: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "대상이 이 폴더 밖에 있습니다.",
   "preview.noPreview": "이 파일 형식은 미리 볼 수 없습니다.",
   "preview.download": "다운로드",
+  "preview.category": "미리보기",
+  "preview.openSheet.name": "세부 정보 표시",
   "contextMenu.label": "파일 작업",
   "language.group": "언어",
   "language.en": "English",

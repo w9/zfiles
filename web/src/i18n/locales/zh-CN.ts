@@ -120,6 +120,8 @@ export const zhCN: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "目标在此文件夹之外。",
   "preview.noPreview": "此文件类型无法预览。",
   "preview.download": "下载",
+  "preview.category": "预览",
+  "preview.openSheet.name": "显示详情",
   "contextMenu.label": "文件操作",
   "language.group": "语言",
   "language.en": "English",

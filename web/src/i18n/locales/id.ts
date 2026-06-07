@@ -122,6 +122,8 @@ export const id: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "Target berada di luar folder ini.",
   "preview.noPreview": "Pratinjau tidak tersedia untuk jenis berkas ini.",
   "preview.download": "Unduh",
+  "preview.category": "Pratinjau",
+  "preview.openSheet.name": "Tampilkan detail",
   "contextMenu.label": "Tindakan berkas",
   "language.group": "Bahasa",
   "language.en": "English",

@@ -122,6 +122,8 @@ export const ja: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "リンク先はこのフォルダーの外にあります。",
   "preview.noPreview": "この種類のファイルはプレビューできません。",
   "preview.download": "ダウンロード",
+  "preview.category": "プレビュー",
+  "preview.openSheet.name": "詳細を表示",
   "contextMenu.label": "ファイル操作",
   "language.group": "言語",
   "language.en": "English",

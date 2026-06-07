@@ -120,6 +120,8 @@ export const zhTW: Record<MessageKey, string> = {
   "preview.symlinkOutsideRoot": "目標在此資料夾之外。",
   "preview.noPreview": "此檔案類型無法預覽。",
   "preview.download": "下載",
+  "preview.category": "預覽",
+  "preview.openSheet.name": "顯示詳情",
   "contextMenu.label": "檔案動作",
   "language.group": "語言",
   "language.en": "English",

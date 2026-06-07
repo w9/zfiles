@@ -10,6 +10,7 @@ import LanguageToggle from "../LanguageToggle";
 import ThemeToggle from "../ThemeToggle";
 import ListingViewToggle from "../ListingViewToggle";
 import PreviewPane from "../PreviewPane";
+import PreviewSheet from "../PreviewSheet";
 import VirtualListing, { type ListingEntry } from "../VirtualListing";
 import GridListing from "../GridListing";
 import SlideshowOverlay from "../SlideshowOverlay";
@@ -36,6 +37,11 @@ import {
 } from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
 import { isImagePath } from "../imagePaths";
+import {
+  canShowInlinePreviewPanel,
+  LG_BREAKPOINT_PX,
+  PREVIEW_PANEL_WIDTH_PX,
+} from "../previewLayout";
 import {
   readListingViewMode,
   type ListingViewMode,
@@ -141,12 +147,18 @@ export default function ExplorerApp() {
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
+  const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
+  const [mainContentWidth, setMainContentWidth] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth : LG_BREAKPOINT_PX,
+  );
   const [quickFilter, setQuickFilter] = useState("");
   const [quickFilterOptions, setQuickFilterOptions] = useState<QuickFilterOptions>(
     defaultQuickFilterOptions,
   );
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
+  const mainContentRef = useRef<HTMLElement | null>(null);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
   const listingEntriesRef = useRef<ListingEntry[]>([]);
@@ -444,6 +456,30 @@ export default function ExplorerApp() {
     [visibleEntries, quickFilter, quickFilterOptions],
   );
 
+  useEffect(() => {
+    const onViewportResize = () => setViewportWidth(window.innerWidth);
+    onViewportResize();
+    window.addEventListener("resize", onViewportResize);
+    return () => window.removeEventListener("resize", onViewportResize);
+  }, []);
+
+  useEffect(() => {
+    const node = mainContentRef.current;
+    if (!node) {
+      return;
+    }
+    const measure = () => setMainContentWidth(node.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [listingLoaded, quickFilteredEntries.length, listingViewMode]);
+
+  const inlinePreviewAvailable = useMemo(
+    () => canShowInlinePreviewPanel(mainContentWidth, viewportWidth),
+    [mainContentWidth, viewportWidth],
+  );
+
   const contextKeys = useMemo<ContextKeys>(
     () => ({
       "focus.pane": focusPane,
@@ -460,6 +496,8 @@ export default function ExplorerApp() {
       "listing.visible-count": quickFilteredEntries.length,
       "listing.view": listingViewMode,
       "slideshow.open": slideshowOpen,
+      "preview.inline-available": inlinePreviewAvailable,
+      "preview.sheet-open": previewSheetOpen,
     }),
     [
       focusPane,
@@ -474,6 +512,8 @@ export default function ExplorerApp() {
       quickFilteredEntries.length,
       listingViewMode,
       slideshowOpen,
+      inlinePreviewAvailable,
+      previewSheetOpen,
     ],
   );
 
@@ -824,6 +864,9 @@ export default function ExplorerApp() {
       },
       openSlideshow,
     }),
+    () => ({
+      openPreviewSheet: () => setPreviewSheetOpen(true),
+    }),
   );
 
   const openContextMenu = useCallback(
@@ -917,6 +960,7 @@ export default function ExplorerApp() {
     actionSystem.confirmState != null ||
     contextMenu != null ||
     slideshowOpen ||
+    previewSheetOpen ||
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
@@ -1096,10 +1140,13 @@ export default function ExplorerApp() {
         />
       </section>
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
+      <section
+        ref={mainContentRef}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card"
+      >
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
-            className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
+            className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
             onMouseDown={() => setFocusPane("file-list")}
             onContextMenu={(event) => {
               if (
@@ -1189,14 +1236,19 @@ export default function ExplorerApp() {
               </div>
             ) : null}
           </div>
-          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-t border-border lg:border-t-0 lg:border-l">
-            <PreviewPane
-              path={selectedPath}
-              onFocusPreview={() => setFocusPane("preview")}
-              onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
-              className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-transparent shadow-none"
-            />
-          </div>
+          {inlinePreviewAvailable ? (
+            <div
+              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-t border-border lg:border-t-0 lg:border-l"
+              style={{ width: PREVIEW_PANEL_WIDTH_PX }}
+            >
+              <PreviewPane
+                path={selectedPath}
+                onFocusPreview={() => setFocusPane("preview")}
+                onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
+                className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-transparent shadow-none"
+              />
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -1323,6 +1375,13 @@ export default function ExplorerApp() {
         paths={slideshowPaths}
         startPath={slideshowStartPath}
         onOpenChange={setSlideshowOpen}
+      />
+
+      <PreviewSheet
+        open={previewSheetOpen}
+        onOpenChange={setPreviewSheetOpen}
+        path={selectedPath}
+        onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
       />
 
       <Toaster richColors closeButton position="bottom-right" />

@@ -4,6 +4,7 @@ import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
 import { createBuiltinActions } from "./builtins";
 import { createImageViewerActions, type ImageViewerActionDeps } from "./imageViewerActions";
+import { createPreviewActions, type PreviewActionDeps } from "./previewActions";
 import type { KeybindingDefinition } from "./types";
 import {
   defaultKeybindings,
@@ -45,6 +46,7 @@ export function useActionSystem(
   contextKeys: ContextKeys,
   deps: Omit<BuiltinActionDeps, "openCommandPalette">,
   imageViewerDeps?: () => ImageViewerActionDeps,
+  previewActionDeps?: () => PreviewActionDeps,
 ) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [userKeybindings, setUserKeybindings] = useState<KeybindingDefinition[]>([]);
@@ -56,6 +58,8 @@ export function useActionSystem(
   depsRef.current = deps;
   const imageViewerDepsRef = useRef(imageViewerDeps);
   imageViewerDepsRef.current = imageViewerDeps;
+  const previewActionDepsRef = useRef(previewActionDeps);
+  previewActionDepsRef.current = previewActionDeps;
 
   if (!registryRef.current) {
     const registry = new ActionRegistry();
@@ -68,6 +72,13 @@ export function useActionSystem(
     if (imageViewerDepsRef.current) {
       for (const action of createImageViewerActions(
         () => imageViewerDepsRef.current!(),
+      )) {
+        registry.register(action);
+      }
+    }
+    if (previewActionDepsRef.current) {
+      for (const action of createPreviewActions(
+        () => previewActionDepsRef.current!(),
       )) {
         registry.register(action);
       }
@@ -125,7 +136,7 @@ export function useActionSystem(
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (contextKeys["slideshow.open"]) {
+      if (contextKeys["slideshow.open"] || contextKeys["preview.sheet-open"]) {
         return;
       }
       const typing = isTypingTarget(event.target);

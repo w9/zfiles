@@ -20,6 +20,8 @@ const emptySelection: ContextKeys = {
   "listing.visible-count": 0,
   "listing.view": "table",
   "slideshow.open": false,
+  "preview.inline-available": false,
+  "preview.sheet-open": false,
 };
 
 const labelForKey = (key: string) =>

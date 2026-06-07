@@ -120,6 +120,8 @@ export const en = {
   "preview.symlinkOutsideRoot": "Target is outside this folder.",
   "preview.noPreview": "Preview is not available for this file type.",
   "preview.download": "Download",
+  "preview.category": "Preview",
+  "preview.openSheet.name": "Show details",
   "contextMenu.label": "File actions",
   "language.group": "Language",
   "language.en": "English",
