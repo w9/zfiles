@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** enrich the preview/metadata panel — modified date, kind (MIME + extension), directory child counts, symlink navigation, and cloud HeadObject extras — without blocking first paint.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid view image thumbnails (`isBrowserPreviewImage`, lazy + `fetchpriority`, setting default on local / off cloud). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -92,9 +92,19 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `GridListing.tsx`: hover resize grip, auto-fit columns, scaled icons; suppress marquee while dragging
 - [x] `SettingsPage`: default/min/max grid card size controls; i18n (14 locales)
 - [x] Run `pnpm test`
-- [ ] `preview-metadata.ts`: extension/MIME label, symlink resolve, dir child counts + unit tests
-- [ ] `FileStat.extra` + `S3Backend.stat`: Content-Type, ETag, storage class from HeadObject
-- [ ] `PreviewPane`: modified, kind, cloud extras; async directory summary row (non-blocking)
-- [ ] Symlink target link + `navigateTo`/`loadListing` focusPath for file targets
-- [ ] i18n preview metadata keys (14 locales)
-- [ ] `cargo test` + `pnpm test`
+- [x] `preview-metadata.ts`: extension/MIME label, symlink resolve, dir child counts + unit tests
+- [x] `FileStat.extra` + `S3Backend.stat`: Content-Type, ETag, storage class from HeadObject
+- [x] `PreviewPane`: modified, kind, cloud extras; async directory summary row (non-blocking)
+- [x] Symlink target link + `navigateTo`/`loadListing` focusPath for file targets
+- [x] i18n preview metadata keys (14 locales)
+- [x] `cargo test` + `pnpm test`
+- [x] `listingSelectAll.ts`: visible-path collection, fully-selected check, warning reasons + unit tests
+- [x] `selection.select-all` action, `Mod+A` keybinding, context keys (`listing.loaded`, `listing.visible-count`)
+- [x] `ExplorerApp`: wire select-all (last primary, noop when already full); warning toasts for hidden/paginated items
+- [x] Command palette: show actions matching `paletteWhen` disabled with per-clause failure reasons
+- [x] i18n select-all + warning + when-failure keys (14 locales); `pnpm test`
+- [ ] `gridImagePreviews.ts` + provider: persist toggle; default on (local) / off (cloud); unit tests
+- [ ] `GridCardPreview`: `useDownloadUrl`, file icon until loaded, `object-contain`, lazy + viewport `fetchpriority`
+- [ ] `GridListing`: wire preview when setting enabled and `isBrowserPreviewImage(name)`
+- [ ] `SettingsPage` + providers (local/cloud): grid image previews toggle; i18n (14 locales)
+- [ ] `pnpm test`
