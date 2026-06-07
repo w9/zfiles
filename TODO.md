@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** README opening — emphasize Rust, static linking, and sub-10 MB binary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (README rewrite + CONTRIBUTING.md) is complete.
 
 ## TODO List
 
@@ -77,4 +77,3 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
 - [x] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
 - [x] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
-- [ ] README opening: emphasize Rust, statically linked musl binary under 10 MB

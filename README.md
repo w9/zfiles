@@ -1,213 +1,112 @@
 # zfiles
 
-Dual-mode file explorer: browse **local folders** via a single Rust binary, or **S3-compatible buckets** (AWS S3, Cloudflare R2) from a static cloud SPA — same UI, two backends. No indexing, no plugins, no filename search.
+zfiles is a dual-mode file explorer: run one Rust binary to browse folders on disk, or deploy a static SPA to browse S3-compatible buckets (AWS S3, Cloudflare R2) from the browser — same UI, two backends. There is no indexing step, no plugin host, and no filename search; listings come straight from the filesystem or object store, and the kernel stays small enough to cold-start in milliseconds even when the served tree holds millions of entries. If you want a Finder-style shell that respects `sendfile(2)`, tus resume, and “don’t touch my repo with dot-metadata,” this is the shape of tool.
 
-| Mode | How to run | Storage |
-|------|------------|---------|
-| **Local** | `zfiles ~/Downloads` | Filesystem via embedded kernel |
-| **Cloud** | Deploy `web/dist-cloud/` (see [cloud connect guide](docs/cloud-connect.md)) | S3 / R2 from the browser |
+## Highlights
 
-See [design/design.md](design/design.md) for architecture, [design/dual_mode_refactor.md](design/dual_mode_refactor.md) for the migration plan, and [TODO.md](TODO.md) for current work.
+- **Single static binary (local mode)** — React UI embedded via `rust-embed`; drop a musl build on Linux and run.
+- **Same explorer, two backends** — Shared React code talks to a local kernel or directly to S3/R2 through one `ExplorerBackend` interface.
+- **Instant cold start** — No directory scan, index build, or cache warm-up on startup; time-to-first-byte stays under the design SLA regardless of tree size.
+- **Wire-speed transfers** — Linux downloads use `sendfile(2)` on the hot path; uploads use tus with atomic rename completion; cloud mode uses S3 multipart and Range GET.
+- **Resumable everywhere that matters** — HTTP Range on download, tus PATCH on upload, CLI `zfiles upload --resume` for pushing files to a remote instance.
+- **Virtual-scrolled listings** — List and grid views stay responsive on huge directories without loading the full tree into the DOM.
+- **Keyboard-first power UI** — Command palette, J/K navigation, Shift+J/K range select, marquee rubber-band selection, copy/cut/paste file ops.
+- **LAN sharing built in** — Bind `0.0.0.0`, auto-generate a token, print a share URL and terminal QR code for phones and laptops on the network.
+- **Live refresh** — Filesystem watch pushes `filesystem_changed` over WebSocket; the current listing updates in place.
+- **Cloud mode without a zfiles server** — Static SPA only; temporary bucket credentials stay in `sessionStorage` and go straight to AWS/Cloudflare.
 
-## Linux binaries
+## Install
 
-Static musl builds for **x86_64** and **aarch64** are attached to [GitHub Releases](https://github.com/w9/zfiles/releases):
-
-| Asset | Architecture |
-|-------|----------------|
-| `zfiles-linux-x86_64` | Intel/AMD 64-bit |
-| `zfiles-linux-aarch64` | ARM64 |
+**Pre-built Linux binaries** (static musl, x86_64 and aarch64) are on [GitHub Releases](https://github.com/w9/zfiles/releases):
 
 ```bash
 chmod +x zfiles-linux-x86_64
 ./zfiles-linux-x86_64 ~/Downloads
 ```
 
-## Quick start
+**From source:**
 
 ```bash
 cargo build --release
 ./target/release/zfiles ~/Downloads
 ```
 
-Open the printed startup banner in your browser. The explorer uses **Tailwind CSS** and **shadcn/ui** components, with **English** and **简体中文** language support in the header. By default zfiles binds `127.0.0.1` on an ephemeral port and launches your desktop browser. The header shows a live **Connected** / **Offline** status pill and a **Light / Dark / Auto** theme control (preference is saved in the browser).
+Optional: `./scripts/install-local.sh` installs to `~/.cargo/bin`.
 
-LAN shares (`--host 0.0.0.0 --token`) include a network share URL in the banner and print a terminal QR code other devices can scan to open the explorer.
+**Cloud SPA:** build with `cd web && pnpm install && pnpm build:cloud`, then deploy `web/dist-cloud/` to any static host. See [docs/cloud-connect.md](docs/cloud-connect.md) for credentials and [docs/cors.md](docs/cors.md) for bucket CORS.
 
-```bash
-# Pin the port (host defaults to 127.0.0.1)
-zfiles --port 9000
+Open the URL from the startup banner (local mode opens your browser by default). The header includes connection status, theme (light / dark / auto), and language (English or 简体中文).
 
-# Bind all interfaces with auto-generated token; prints share URL and QR code
-zfiles --host 0.0.0.0 --port 8080 --token
+## More features
 
-# Read-only LAN share
-zfiles --host 0.0.0.0 --port 8080 --token --read-only
+- Quick filter in the address bar — case-sensitive toggle, whole-word match, regex mode, Mod+F focus
+- Inline rename (F2) and new-folder creation in list and grid views
+- Context menu on rows and empty folder background; right-click outside selection retargets before open
+- Clipboard copy/cut/paste with conflict and destination dialogs; batch paste settings
+- Image preview for common formats in the preview pane; other types show metadata and download
+- Material Icon Theme file-type icons (generated at build time)
+- Read-only mode when the serve root is not writable; explicit `--read-only` for LAN shares
+- Symlink policy: follow outbound symlinks on localhost by default; stricter defaults on public binds
+- Token auth for non-loopback binds; bearer token, query token, or auth cookie
+- Background daemon — single folder or multi-share `daemon.toml`
+- Per-folder and global config via `zfiles config` under `~/.config/zfiles/` (XDG; nothing written into the served tree)
+- `zfiles upload` CLI for resumable push to a remote zfiles server
+- Frontend dev loop — Vite HMR via `cargo dev-frontend` without rebuilding embedded assets each edit
+- Performance and integration test suites with fixture corpora and SLA baselines
 
-# Serve without opening a browser tab
-zfiles --no-open
+## Dual-mode architecture
 
-# Verbose logging (-v debug, -vv trace; RUST_LOG overrides when set)
-zfiles -v ~/Downloads
-zfiles -vv --port 9000
-```
+Local mode ships as one process: axum serves REST, tus upload, WebSocket events, and the embedded SPA from a single musl-friendly binary. Cloud mode is the same React explorer compiled with `S3Backend` instead of `KernelBackend` — no kernel in the request path for object storage. Credentials entered in the connect dialog are validated with `HeadBucket`, stored in tab-scoped `sessionStorage`, and sent only to the cloud provider’s API. The UI, action system, selection model, and preview pane are shared; mode differences live behind the backend trait and build entry points (`main-local.tsx` vs `main-cloud.tsx`).
 
-## CLI
+Because a public HTTPS page cannot reliably call `http://127.0.0.1:<port>` (mixed content and Private Network Access), local filesystem mode always opens the embedded app on localhost. Cloud mode is meant for self-hosted static deploys or a future hosted origin — not as a remote control panel for your laptop’s disk.
 
-```bash
-# Initialize ~/.config/zfiles/ (and per-folder config when a path is given)
-zfiles init
-zfiles init ~/Downloads
+## Instant cold start and the no-index kernel
 
-# Show folder status (serve id, state dir)
-zfiles status ~/Downloads
+The load-bearing invariant for the CLI is that startup never scales with directory size. The sequence is parse args, merge XDG config if present, bind the listener, optionally spawn the browser, and serve — no scan, no subprocess farm, no SQLite warm-up beyond what tus needs on first upload. XDG directories are created lazily on first write, so pointing zfiles at a fresh git clone or read-only mount leaves the tree untouched.
 
-# Upload to a remote server
-zfiles upload http://laptop:8080 ./dataset.tar.zst --token "$TOKEN" --resume
+Listings are raw `read_dir` results returned in tens of milliseconds; the WebSocket watch layer notifies the UI when something changes on disk. Plugins, filename search, thumbnails, and content sniffing were deliberately removed from scope — the kernel interprets paths and bytes on the wire, not file formats.
 
-# Background daemon
-zfiles daemon start ~/Downloads --port 8080
-zfiles daemon status ~/Downloads
-zfiles daemon stop ~/Downloads
+## High-throughput resumable transfers
 
-# Multi-folder daemon config
-zfiles daemon start --config ~/.config/zfiles/daemon.toml
-```
+Downloads expose HTTP Range; on Linux the kernel uses `sendfile(2)` for zero-copy file-to-socket transfer on whole-file or single-range requests, falling back to streaming reads for multi-range cases. Uploads use tus: the client creates an upload, appends with PATCH and `Content-Range`, and completion is an `fsync` plus atomic `rename` into the served tree (same-filesystem spool required; the kernel warns on cross-mount setups).
 
-Example `daemon.toml`:
+Cloud uploads run S3 multipart from the browser via `@aws-sdk/lib-storage`; downloads use Range GET. Any HTTP client that speaks Range or tus can talk to the local kernel — including `curl --continue-at` and the bundled `zfiles upload` command with `--resume`.
 
-```toml
-[[share]]
-path = "/home/you/Downloads"
-port = 8080
+## LAN sharing and auth
 
-[[share]]
-path = "/home/you/Photos"
-port = 8081
-```
+To expose a folder on the network, bind all interfaces and require a token: `zfiles --host 0.0.0.0 --port 8080 --token`. The startup banner prints a share URL and a scannable terminal QR code; clients authenticate with the token in the query string, `Authorization: Bearer`, or an HTTP-only cookie set on first visit. Add `--read-only` for shares that should list and download but not mutate.
 
-```bash
-# Configuration (global defaults + per-folder overrides)
-zfiles config get server.read_only
-zfiles config set server.open_browser false
-zfiles config get server.read_only --folder ~/Downloads
-zfiles config set server.read_only true --folder ~/Downloads
-```
+Non-loopback binds reject symlinks that escape the serve root by default (`follow_symlinks_outside_root` is off unless you opt in). `/api/health` reports `read_only` and symlink policy. Session tokens for auth are in-memory with expiry — no session table on disk.
 
-## Config and cache layout
+## FAQ
 
-Kernel settings and durable state live under **`~/.config/zfiles/`**. The served directory is never modified for zfiles housekeeping.
+**Why is there no filename search?** Search implied an index or recursive scan that fights the instant-start and no-metadata-in-your-repo goals. Quick filter narrows the *current* listing client-side; it is not a global search.
 
-```
-~/.config/zfiles/
-  config.toml              Global defaults
-  folders/<serve-id>/      Per serve-root config, tus upload spools and sidecars
-```
+**Why no plugins?** The previous plugin supervisor and JSON-RPC model were removed to keep the kernel small and the security surface predictable. Built-in file actions (`delete`, `mkdir`, `rename`, `copy`, `move`) cover explorer workflows; preview stays client-side for common images.
 
-Each absolute serve root gets a stable id (hash of the canonical path). Use `zfiles status` to see the id and paths for a folder.
+**Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want LAN sharing, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser.
 
-## Read-only serve roots
+**Is it safe to expose on my LAN?** Use `--token` on any non-loopback bind, prefer `--read-only` when writes are not needed, and treat the printed URL like a password. There is no built-in TLS on the kernel listener yet — terminate TLS at a reverse proxy if you expose beyond a trusted network.
 
-If the served directory cannot be written (read-only mount, permission-restricted folder, etc.), zfiles automatically enables **read-only mode** (uploads and deletes are disabled). State still lives under `~/.config/zfiles/folders/<serve-id>/`; the startup banner shows `Mode: read-only …` and the state directory path.
+**What platforms are supported?** v1 targets Linux (x86_64 and aarch64 musl releases). The kernel routes filesystem work through an `Fs` trait so macOS and Windows ports can land without rewriting the center.
 
-## Symlinks outside the serve root
+**Where does zfiles store its state?** Under XDG paths — typically `~/.config/zfiles/` for config and tus spools, not inside the folder you serve. See [design/config_and_cache.md](design/config_and_cache.md).
 
-When serving on **localhost** (loopback bind, the default), zfiles follows symlinks whose targets resolve **outside** the served directory — for example `~/Projects` → `/Projects`. Symlinks to folders inside the serve root always work normally.
+**Can I browse multiple folders at once?** Yes — run separate instances on different ports, or use `zfiles daemon start --config ~/.config/zfiles/daemon.toml` with multiple `[[share]]` entries.
 
-When binding to a non-loopback address (e.g. `--host 0.0.0.0 --port 8080 --token`), outbound symlinks are rejected by default (`path escapes served directory`, HTTP 400). Pass `--follow-symlinks-outside-root` to enable follow mode on public binds, or `--no-follow-symlinks-outside-root` to disable it on localhost.
+## Documentation
 
-The policy is read/list only; uploads and writes still cannot escape the serve root via symlinks. `/api/health` reports `follow_symlinks_outside_root`.
+| Topic | Location |
+|-------|----------|
+| Architecture, invariants, testing strategy | [design/design.md](design/design.md) |
+| Dual-mode migration and module layout | [design/dual_mode_refactor.md](design/dual_mode_refactor.md) |
+| XDG config, tus spools, per-folder state | [design/config_and_cache.md](design/config_and_cache.md) |
+| Action system and keyboard commands | [design/action_system.md](design/action_system.md) |
+| Cloud connect flow, URL params, credentials | [docs/cloud-connect.md](docs/cloud-connect.md) |
+| Bucket CORS for the cloud SPA | [docs/cors.md](docs/cors.md) |
+| Implementation checklist | [TODO.md](TODO.md) |
 
-## Frontend (shadcn/ui)
-
-The explorer UI lives in `web/` and uses [shadcn/ui](https://ui.shadcn.com/docs/components) components configured via `web/components.json`.
-
-To add or refresh a registry component:
-
-```bash
-cd web
-pnpm dlx shadcn@latest add <component> --overwrite
-pnpm test && pnpm build
-```
-
-After CLI updates, reconcile wrappers under `web/src/components/ui/` with any zfiles-specific styling (for example `CommandDialog` uses `p-0` content padding, confirm dialogs hide the close button). Rebuild `web/dist` before `cargo build` so embedded assets stay in sync.
-
-### File icons
-
-Listing file and folder icons come from [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) (MIT). `pnpm build` runs `scripts/generate-file-icons.mts`, which calls the `material-icon-theme` npm package to emit association metadata and copy referenced SVGs into `web/public/file-icons/` for embedding in the static binary.
-
-Image preview in the explorer uses the browser to decode common formats (JPEG, PNG, WebP, GIF, AVIF, BMP, ICO) via `/api/file`; other types show metadata and a download link.
-
-Sortable listing columns are intentionally deferred: the virtual-scrolled table would need `@tanstack/react-table` integrated with `@tanstack/react-virtual` in a follow-up pass.
-
-## Development
-
-```bash
-# Run tests
-cargo test
-
-# Generate test fixtures (small, unicode, deep)
-./scripts/generate-fixtures.sh ./fixtures
-
-# Build the embedded frontend (required before release builds)
-cd web && pnpm install && pnpm build && cd ..
-
-cargo build -p zfiles
-
-# Cloud SPA (static deploy artifact, separate from the embedded binary)
-cd web && pnpm build:cloud
-# Serve locally: pnpm preview:cloud — open / (emitted as index.html)
-# Deploy the contents of web/dist-cloud/ to any static host (S3, R2, nginx, …)
-# Cloudflare Workers (static assets): from web/, run `pnpm build:cloud && wrangler deploy` (see wrangler.jsonc)
-
-# Install to ~/.cargo/bin
-./scripts/install-local.sh
-# Or manually:
-# cargo install --path .
-```
-
-### Frontend HMR (dev-frontend)
-
-For interactive UI work without rebuilding `web/dist` or recompiling embedded assets, run Vite and zfiles with the dev proxy:
-
-```bash
-# Terminal 1 — Vite dev server (port 5173)
-cd web && pnpm install && pnpm dev
-
-# Terminal 2 — zfiles proxies UI to Vite; API stays on zfiles
-cargo dev-frontend ~/Downloads --port 9000 --no-open
-# equivalent to: cargo run --features dev-frontend -- ~/Downloads --dev-frontend --port 9000 --no-open
-```
-
-Open the zfiles URL from the startup banner (e.g. `http://127.0.0.1:9000/`). React/TS/CSS changes hot-reload through Vite; `/api/*` and WebSocket events are served by zfiles as in production. `/file-icons/*` is served from the embedded `web/dist` build (run `pnpm build` once if icons are missing).
-
-Optional: `--vite-url http://127.0.0.1:5173` if Vite listens elsewhere.
-
-### Cloud SPA (self-hosted)
-
-The explorer core lives in `web/src/explorer/` and is imported by two Vite entry points:
-
-| Entry | Build | Output | Use |
-|-------|-------|--------|-----|
-| `src/entries/main-local.tsx` | `pnpm build` | `web/dist/` | Embedded in the Rust binary (kernel backend) |
-| `src/entries/main-cloud.tsx` | `pnpm build:cloud` | `web/dist-cloud/` | Static deploy against S3/R2 |
-
-Cloud builds omit kernel-only boot code; local builds omit the AWS SDK. Interactive cloud development:
-
-```bash
-cd web && pnpm dev:cloud
-```
-
-Opens **http://localhost:5174/** (cloud entry). Local kernel HMR stays on **http://localhost:5173/** via `pnpm dev` — do not use 5173 for cloud work.
-
-Open the connect dialog, paste temporary bucket credentials, and browse. URL params (`provider`, `bucket`, `region`, `endpoint`, `prefix`, `readonly`, and optionally `accessKeyId`, `secretAccessKey`, `sessionToken`) pre-fill the form; credential params are stripped from the address bar after read. Credentials stay in `sessionStorage` for the tab lifetime only.
-
-Documentation:
-
-- [Cloud connect flow and credentials](docs/cloud-connect.md)
-- [Bucket CORS setup (required)](docs/cors.md)
-
-## API (kernel)
+### Kernel HTTP API (local mode)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -219,3 +118,11 @@ Documentation:
 | `/api/upload` | POST | Create tus upload |
 | `/api/upload/:id` | PATCH, HEAD | Resume / query tus upload |
 | `/api/ws` | GET (upgrade) | Live kernel events |
+
+## Authors, license, contributing
+
+**Author:** Xun Zhu
+
+**License:** [MIT](LICENSE)
+
+**Contributing:** Bug reports and pull requests are welcome on [GitHub](https://github.com/w9/zfiles). Read [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and expectations.
