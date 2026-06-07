@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** (`en`, `zh-CN`, `zh-TW`, `es`, `fr`, `it`, `pt`, `ru`, `de`, `ja`, `ko`, `tr`, `id`, `vi`) with a region-aware resolver and locale-aware date formatting. **Current cycle:** none — last cycle (i18n expansion to 14 locales) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** (`en`, `zh-CN`, `zh-TW`, `es`, `fr`, `it`, `pt`, `ru`, `de`, `ja`, `ko`, `tr`, `id`, `vi`) with a region-aware resolver and locale-aware date formatting. **Current cycle:** update `README.md` so install/highlights copy reflects the expanded language support.
 
 ## TODO List
 
@@ -85,3 +85,4 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `ExplorerApp.tsx`: pass the active locale tag to date formatting instead of the `zh-CN`/`en` ternary
 - [x] Update `i18n.test.ts` for new `resolveLocale` mappings + per-locale catalog completeness; run `pnpm test`
 - [x] `design/design.md`: list the supported locales; run `cargo test` + `cargo clippy -- -D warnings`
+- [ ] `README.md`: update install blurb and feature list for 14-locale i18n
