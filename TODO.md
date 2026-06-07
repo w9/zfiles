@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** add MIT `LICENSE` and align `Cargo.toml` SPDX field.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** rewrite `README.md` (marketing structure + deep dives + FAQ) and add minimal `CONTRIBUTING.md`.
 
 ## TODO List
 
@@ -73,5 +73,7 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `listingSelection.ts`: shared index-range path helper + unit test
 - [x] `Shift+J` / `Shift+K` keybindings; `moveSelectedIndex` extend-range + anchor on plain J/K
 - [x] Run `pnpm test`
-- [ ] Add root `LICENSE` (MIT) with copyright holder and year
-- [ ] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
+- [x] Add root `LICENSE` (MIT) with copyright holder and year
+- [x] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
+- [ ] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
+- [ ] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
