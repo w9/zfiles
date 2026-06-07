@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — slideshow navigation keys complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** show current zoom percentage beside slideshow zoom controls. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -66,3 +66,5 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `slideshowNavigation.ts`: prev/next key map (arrows + hjkl) + unit test; wire in overlay
 - [x] Run `pnpm test`
+- [ ] `formatZoomPercentage` helper + test; show zoom % beside slideshow zoom toolbar; i18n (14 locales)
+- [ ] Run `pnpm test`
