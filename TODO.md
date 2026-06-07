@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** none — last cycle (Shift+J/K range-select) is complete.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** add MIT `LICENSE` and align `Cargo.toml` SPDX field.
 
 ## TODO List
 
@@ -73,3 +73,5 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `listingSelection.ts`: shared index-range path helper + unit test
 - [x] `Shift+J` / `Shift+K` keybindings; `moveSelectedIndex` extend-range + anchor on plain J/K
 - [x] Run `pnpm test`
+- [ ] Add root `LICENSE` (MIT) with copyright holder and year
+- [ ] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
