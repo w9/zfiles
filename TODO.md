@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** relative modified time shows as `absolute (relative)` app-wide. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** slideshow navigation keys (arrows + hjkl). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -55,8 +55,14 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `SlideshowOverlay`: 1s-delay tooltips on icon buttons; top/bottom vignette; one-line metadata
 - [x] Grid view: bind Space to `viewer.slideshow` when an image is selected; keybinding test
 - [x] Run `pnpm test`
+- [x] `keybindings.ts`: `keybindingChordForContext` (context-aware `when`, honor user override/unbind) + unit tests
+- [x] `ContextMenu.tsx`: migrate to shadcn/Radix ContextMenu; render `ContextMenuShortcut` when chord bound
+- [x] `ExplorerApp` + `useActionSystem`: wire context menu shortcuts (expose `userKeybindings`)
+- [x] Run `pnpm test`
 - [x] `SlideshowOverlay`: darken fullscreen backdrop dim layer
 - [x] Run `pnpm test`
-- [ ] `formatModifiedDisplay`: relative setting shows `absolute (relative)`; update tests
-- [ ] Fix `SlideshowOverlay` `formatPreviewModified` call arity
+- [x] `formatModifiedDisplay`: relative setting shows `absolute (relative)`; update tests
+- [x] Fix `SlideshowOverlay` `formatPreviewModified` call arity
+- [x] Run `pnpm test`
+- [ ] `slideshowNavigation.ts`: prev/next key map (arrows + hjkl) + unit test; wire in overlay
 - [ ] Run `pnpm test`
