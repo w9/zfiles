@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — grid navigation, grid UX, and marquee click fix complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** redesign slideshow as a fullscreen dimmed overlay (no modal): 1:1-default image sizing with fit/1:1/+/-/wheel zoom, auto-hide chrome, metadata bottom-left, Close/Download/Open-in-new-tab bottom-right, play/pause + interval input top-right, autoplay-off-by-default setting. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -136,3 +136,9 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `SlideshowDialog`: preventDefault on Escape; run `pnpm test`
 - [x] `useListingMarqueeSelect`: one-shot suppress for post-marquee synthetic click
 - [x] Run `pnpm test`
+- [ ] `slideshowSettings.ts` + provider: autoplay-on-open (default off), interval seconds (clamped, persisted)
+- [ ] Replace `SlideshowDialog` with fullscreen dimmed `SlideshowOverlay` (layout, auto-hide chrome, keyboard nav)
+- [ ] Image viewport: centered, default 1:1 scaled down when larger than viewport; fit/1:1/+/-/wheel-pinch zoom
+- [ ] Toolbar + metadata + actions: zoom/play/interval top-right; metadata bottom-left; Close/Download/Open-tab bottom-right
+- [ ] `SettingsPage` slideshow section; i18n keys (14 locales); wire provider in local/cloud entries
+- [ ] Run `pnpm test`
