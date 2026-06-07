@@ -53,7 +53,7 @@ export function showGrabCursor(overflows: boolean, pan: PanOffset): boolean {
 }
 
 export function touchPairDistance(
-  touches: ReadonlyArray<{ clientX: number; clientY: number }>,
+  touches: ArrayLike<{ clientX: number; clientY: number }>,
 ): number {
   if (touches.length < 2) {
     return 0;

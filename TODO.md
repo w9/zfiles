@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — README intro security-defaults mention done. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — CI `TouchList` type error fixed. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -77,3 +77,5 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `README.md`: advertise fullscreen image slideshow in Highlights and More features
 - [x] `README.md`: add concise security-defaults mention in intro paragraph 2
 - [x] `previewLayout.ts`: change inline preview threshold from 50% to 40% of main content; update tests
+- [x] `slideshowPan.ts`: widen `touchPairDistance` param to `ArrayLike` so `TouchList` is accepted
+- [x] Run `pnpm test` and `pnpm build` in `web/`
