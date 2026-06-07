@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid selection border — thicker primary-colored outline on selected cards. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid resize handle offset (+2px right/bottom). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -121,5 +121,7 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Keybindings: h/j/k/l + arrow keys with grid/table `when` clauses; Shift variants
 - [x] i18n: shortcuts hint + move-left/right action names (14 locales)
 - [x] `pnpm test`
-- [ ] `GridListing.tsx`: thicker primary-colored border on selected/focused grid cards
+- [x] `GridListing.tsx`: thicker primary-colored border on selected/focused grid cards
+- [x] Run `pnpm test`
+- [ ] `GridListing.tsx`: offset grid resize handle 2px right and 2px down
 - [ ] Run `pnpm test`
