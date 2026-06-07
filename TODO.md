@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** rewrite `README.md` (marketing structure + deep dives + FAQ) and add minimal `CONTRIBUTING.md`.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. **Current cycle:** README opening — emphasize Rust, static linking, and sub-10 MB binary.
 
 ## TODO List
 
@@ -75,5 +75,6 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] Add root `LICENSE` (MIT) with copyright holder and year
 - [x] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
-- [ ] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
-- [ ] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
+- [x] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
+- [x] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
+- [ ] README opening: emphasize Rust, statically linked musl binary under 10 MB
