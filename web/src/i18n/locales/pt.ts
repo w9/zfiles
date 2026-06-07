@@ -266,6 +266,10 @@ export const pt: Record<MessageKey, string> = {
   "settings.shareUrl.title": "URL de compartilhamento",
   "settings.shareUrl.description":
     "Ao copiar um link de compartilhamento, escolha se as credenciais do bucket devem ser incluídas na string de consulta. Use apenas chaves de curta duração.",
+  "settings.uploadChecksum.title": "Integridade de envios",
+  "settings.uploadChecksum.description":
+    "Para o Amazon S3, opcionalmente faça hash dos arquivos antes e depois do envio e peça ao S3 para validar checksums SHA-256. O Cloudflare R2 nunca usa validação por checksum (o R2 não suporta cabeçalhos flexíveis de checksum do S3).",
+  "settings.uploadChecksum.label": "Validar envios com checksums (somente Amazon S3)",
   "viewer.category": "Visualizador de imagens",
   "viewer.nextImage.name": "Próxima imagem",
   "viewer.prevImage.name": "Imagem anterior",

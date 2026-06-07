@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { useTranslation } from "./i18n";
 import type { UploadConflictResolution } from "./upload-conflict";
 import type { UploadQueueItem } from "./upload-queue";
@@ -44,14 +46,16 @@ export default function UploadConflictDialog({
               : null}
           </DialogDescription>
         </DialogHeader>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+        <Field orientation="horizontal">
+          <Checkbox
+            id="upload-conflict-apply-to-all"
             checked={applyToAll}
-            onChange={(event) => setApplyToAll(event.target.checked)}
+            onCheckedChange={(checked) => setApplyToAll(checked === true)}
           />
-          {t("upload.conflict.applyToAll")}
-        </label>
+          <FieldLabel htmlFor="upload-conflict-apply-to-all">
+            {t("upload.conflict.applyToAll")}
+          </FieldLabel>
+        </Field>
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={() => handleResolve("skip")}>
             {t("upload.conflict.skip")}

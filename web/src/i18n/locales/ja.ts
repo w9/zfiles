@@ -264,6 +264,10 @@ export const ja: Record<MessageKey, string> = {
   "settings.shareUrl.title": "共有 URL",
   "settings.shareUrl.description":
     "共有リンクをコピーするとき、クエリ文字列にバケットの認証情報を含めるかどうかを選択します。短期間有効なキーのみを使用してください。",
+  "settings.uploadChecksum.title": "アップロードの整合性",
+  "settings.uploadChecksum.description":
+    "Amazon S3 では、アップロード前後にファイルをハッシュし、S3 に SHA-256 チェックサムの検証を依頼できます。Cloudflare R2 ではチェックサム検証は行いません（R2 は S3 の柔軟なチェックサムヘッダーに非対応）。",
+  "settings.uploadChecksum.label": "チェックサムでアップロードを検証する（Amazon S3 のみ）",
   "viewer.category": "画像ビューアー",
   "viewer.nextImage.name": "次の画像",
   "viewer.prevImage.name": "前の画像",

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { useTranslation } from "@/i18n";
 export type PasteDestinationChoice = "into_selected_folder" | "into_current_directory";
 
@@ -49,14 +51,16 @@ export default function PasteDestinationDialog({
           <DialogTitle>{t("paste.destination.title")}</DialogTitle>
           <DialogDescription>{t("paste.destination.description")}</DialogDescription>
         </DialogHeader>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+        <Field orientation="horizontal">
+          <Checkbox
+            id="paste-destination-remember"
             checked={remember}
-            onChange={(event) => setRemember(event.target.checked)}
+            onCheckedChange={(checked) => setRemember(checked === true)}
           />
-          {t("paste.destination.remember")}
-        </label>
+          <FieldLabel htmlFor="paste-destination-remember">
+            {t("paste.destination.remember")}
+          </FieldLabel>
+        </Field>
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
             {t("actions.confirm.cancel")}

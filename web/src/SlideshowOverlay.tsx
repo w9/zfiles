@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -616,9 +617,12 @@ export default function SlideshowOverlay({
                 {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
             </SlideshowIconTooltip>
-            <label className="flex items-center gap-1.5 text-xs text-white/90">
-              <span className="sr-only">{t("slideshow.interval")}</span>
+            <Field orientation="horizontal" className="w-auto items-center gap-1.5 text-xs text-white/90">
+              <FieldLabel htmlFor="slideshow-interval" className="sr-only">
+                {t("slideshow.interval")}
+              </FieldLabel>
               <Input
+                id="slideshow-interval"
                 type="number"
                 min={SLIDESHOW_INTERVAL_MIN}
                 max={SLIDESHOW_INTERVAL_MAX}
@@ -641,7 +645,7 @@ export default function SlideshowOverlay({
                 className="h-8 w-16 border-white/20 bg-black/40 text-white"
               />
               <span aria-hidden>s</span>
-            </label>
+            </Field>
           </div>
         </div>
       </div>

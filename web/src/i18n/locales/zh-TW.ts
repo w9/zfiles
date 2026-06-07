@@ -251,6 +251,10 @@ export const zhTW: Record<MessageKey, string> = {
   "settings.shareUrl.title": "分享連結",
   "settings.shareUrl.description":
     "複製分享連結時，可選擇在查詢參數中嵌入儲存桶憑證。請僅使用短期有效的金鑰。",
+  "settings.uploadChecksum.title": "上傳完整性",
+  "settings.uploadChecksum.description":
+    "對於 Amazon S3，可選擇在上傳前後對檔案進行雜湊並要求 S3 驗證 SHA-256 校驗和。Cloudflare R2 從不使用校驗和驗證（R2 不支援 S3 彈性校驗和標頭）。",
+  "settings.uploadChecksum.label": "使用校驗和驗證上傳（僅 Amazon S3）",
   "viewer.category": "圖片檢視器",
   "viewer.nextImage.name": "下一張圖片",
   "viewer.prevImage.name": "上一張圖片",

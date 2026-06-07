@@ -266,6 +266,10 @@ export const fr: Record<MessageKey, string> = {
   "settings.shareUrl.title": "URL de partage",
   "settings.shareUrl.description":
     "Lors de la copie d’un lien de partage, choisissez d’inclure ou non les identifiants du bucket dans la chaîne de requête. Utilisez uniquement des clés à courte durée de vie.",
+  "settings.uploadChecksum.title": "Intégrité des téléversements",
+  "settings.uploadChecksum.description":
+    "Pour Amazon S3, hachez optionnellement les fichiers avant et après le téléversement et demandez à S3 de valider les sommes de contrôle SHA-256. Cloudflare R2 n’utilise jamais la validation par somme de contrôle (R2 ne prend pas en charge les en-têtes de somme de contrôle flexibles S3).",
+  "settings.uploadChecksum.label": "Valider les téléversements avec des sommes de contrôle (Amazon S3 uniquement)",
   "viewer.category": "Visionneuse d'images",
   "viewer.nextImage.name": "Image suivante",
   "viewer.prevImage.name": "Image précédente",

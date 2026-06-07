@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTranslation } from "@/i18n";
 import { createS3Backend, validateS3Connection } from "@/backend/s3Backend";
 import type { S3Backend } from "@/backend/s3Backend";
@@ -155,132 +170,124 @@ export default function ConnectDialog({
             includeCredentials={includeCredentials}
           />
         </DialogHeader>
-        <form className="grid gap-4" onSubmit={(event) => void onSubmit(event)}>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-provider">
-              {t("connect.provider")}
-            </label>
-            <select
-              id="connect-provider"
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-              value={form.provider}
-              onChange={(event) => update("provider", event.target.value as S3Provider)}
-            >
-              <option value="aws">{t("connect.provider.aws")}</option>
-              <option value="r2">{t("connect.provider.r2")}</option>
-            </select>
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-bucket">
-              {t("connect.bucket")}
-            </label>
-            <Input
-              id="connect-bucket"
-              value={form.bucket}
-              onChange={(event) => update("bucket", event.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-region">
-              {t("connect.region")}
-            </label>
-            <Input
-              id="connect-region"
-              value={form.region}
-              onChange={(event) => update("region", event.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-endpoint">
-              {t("connect.endpoint")}
-            </label>
-            <Input
-              id="connect-endpoint"
-              value={form.endpoint}
-              onChange={(event) => update("endpoint", event.target.value)}
-              placeholder={
-                form.provider === "r2"
-                  ? "https://<account-id>.r2.cloudflarestorage.com"
-                  : t("connect.endpointOptional")
-              }
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-prefix">
-              {t("connect.prefix")}
-            </label>
-            <Input
-              id="connect-prefix"
-              value={form.prefix}
-              onChange={(event) => update("prefix", event.target.value)}
-              placeholder="optional/path/prefix/"
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-access-key">
-              {t("connect.accessKeyId")}
-            </label>
-            <Input
-              id="connect-access-key"
-              value={form.accessKeyId}
-              onChange={(event) => update("accessKeyId", event.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-secret-key">
-              {t("connect.secretAccessKey")}
-            </label>
-            <Input
-              id="connect-secret-key"
-              type="password"
-              value={form.secretAccessKey}
-              onChange={(event) => update("secretAccessKey", event.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium" htmlFor="connect-session-token">
-              {t("connect.sessionToken")}
-            </label>
-            <Input
-              id="connect-session-token"
-              type="password"
-              value={form.sessionToken}
-              onChange={(event) => update("sessionToken", event.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.readOnly}
-              onChange={(event) => update("readOnly", event.target.checked)}
-            />
-            {t("connect.readOnly")}
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={includeCredentials}
-              onChange={(event) => {
-                setIncludeCredentials(event.target.checked);
-                storeShareUrlIncludeCredentials(event.target.checked);
-              }}
-            />
-            {t("connect.shareUrl.includeCredentials")}
-          </label>
-          <p className="text-xs text-muted-foreground">{t("connect.privacy")}</p>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <DialogFooter>
-            <Button type="submit" disabled={connecting}>
-              {connecting ? t("connect.connecting") : t("connect.submit")}
-            </Button>
-          </DialogFooter>
+        <form onSubmit={(event) => void onSubmit(event)}>
+          <FieldGroup className="gap-4">
+            <Field>
+              <FieldLabel htmlFor="connect-provider">{t("connect.provider")}</FieldLabel>
+              <Select
+                value={form.provider}
+                onValueChange={(value) => update("provider", value as S3Provider)}
+              >
+                <SelectTrigger id="connect-provider" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aws">{t("connect.provider.aws")}</SelectItem>
+                  <SelectItem value="r2">{t("connect.provider.r2")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-bucket">{t("connect.bucket")}</FieldLabel>
+              <Input
+                id="connect-bucket"
+                value={form.bucket}
+                onChange={(event) => update("bucket", event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-region">{t("connect.region")}</FieldLabel>
+              <Input
+                id="connect-region"
+                value={form.region}
+                onChange={(event) => update("region", event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-endpoint">{t("connect.endpoint")}</FieldLabel>
+              <Input
+                id="connect-endpoint"
+                value={form.endpoint}
+                onChange={(event) => update("endpoint", event.target.value)}
+                placeholder={
+                  form.provider === "r2"
+                    ? "https://<account-id>.r2.cloudflarestorage.com"
+                    : t("connect.endpointOptional")
+                }
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-prefix">{t("connect.prefix")}</FieldLabel>
+              <Input
+                id="connect-prefix"
+                value={form.prefix}
+                onChange={(event) => update("prefix", event.target.value)}
+                placeholder="optional/path/prefix/"
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-access-key">{t("connect.accessKeyId")}</FieldLabel>
+              <Input
+                id="connect-access-key"
+                value={form.accessKeyId}
+                onChange={(event) => update("accessKeyId", event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-secret-key">{t("connect.secretAccessKey")}</FieldLabel>
+              <Input
+                id="connect-secret-key"
+                type="password"
+                value={form.secretAccessKey}
+                onChange={(event) => update("secretAccessKey", event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="connect-session-token">{t("connect.sessionToken")}</FieldLabel>
+              <Input
+                id="connect-session-token"
+                type="password"
+                value={form.sessionToken}
+                onChange={(event) => update("sessionToken", event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="connect-read-only"
+                checked={form.readOnly}
+                onCheckedChange={(checked) => update("readOnly", checked === true)}
+              />
+              <FieldLabel htmlFor="connect-read-only">{t("connect.readOnly")}</FieldLabel>
+            </Field>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="connect-include-credentials"
+                checked={includeCredentials}
+                onCheckedChange={(checked) => {
+                  const next = checked === true;
+                  setIncludeCredentials(next);
+                  storeShareUrlIncludeCredentials(next);
+                }}
+              />
+              <FieldLabel htmlFor="connect-include-credentials">
+                {t("connect.shareUrl.includeCredentials")}
+              </FieldLabel>
+            </Field>
+            <FieldDescription className="text-xs">{t("connect.privacy")}</FieldDescription>
+            {error ? <FieldError>{error}</FieldError> : null}
+            <DialogFooter>
+              <Button type="submit" disabled={connecting}>
+                {connecting ? t("connect.connecting") : t("connect.submit")}
+              </Button>
+            </DialogFooter>
+          </FieldGroup>
         </form>
       </DialogContent>
     </Dialog>

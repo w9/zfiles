@@ -2,6 +2,15 @@ import { ArrowLeft, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import LanguageToggle from "@/LanguageToggle";
@@ -41,6 +50,10 @@ import {
   readShareUrlIncludeCredentials,
   storeShareUrlIncludeCredentials,
 } from "@/cloud/shareUrlSettings";
+import {
+  readUploadChecksumValidation,
+  storeUploadChecksumValidation,
+} from "@/settings/uploadChecksumSettings";
 
 function parseDimensionInput(value: string, allowUnlimited = false): number | null {
   const trimmed = value.trim();
@@ -60,7 +73,53 @@ function parseDimensionInput(value: string, allowUnlimited = false): number | nu
   return parsed;
 }
 
+type SettingsToggleFieldProps<T extends string> = {
+  label: string;
+  description?: string;
+  value: T;
+  onValueChange: (value: T) => void;
+  options: Array<{ value: T; label: string }>;
+};
+
+function SettingsToggleField<T extends string>({
+  label,
+  description,
+  value,
+  onValueChange,
+  options,
+}: SettingsToggleFieldProps<T>) {
+  return (
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        value={value}
+        onValueChange={(next) => {
+          if (next) {
+            onValueChange(next as T);
+          }
+        }}
+        aria-label={label}
+      >
+        {options.map((option) => (
+          <ToggleGroupItem
+            key={option.value}
+            value={option.value}
+            aria-label={option.label}
+          >
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </Field>
+  );
+}
+
 type GridCardSizeFieldsProps = {
+  idPrefix: string;
   widthLabel: string;
   heightLabel: string;
   size: GridCardSize;
@@ -69,21 +128,25 @@ type GridCardSizeFieldsProps = {
 };
 
 function GridCardSizeFields({
+  idPrefix,
   widthLabel,
   heightLabel,
   size,
   allowUnlimitedMax = false,
   onChange,
 }: GridCardSizeFieldsProps) {
+  const widthId = `${idPrefix}-width`;
+  const heightId = `${idPrefix}-height`;
   const commit = (partial: Partial<GridCardSize>) => {
     onChange({ ...size, ...partial });
   };
 
   return (
-    <div className="grid max-w-md grid-cols-2 gap-3">
-      <label className="space-y-1 text-sm">
-        <span className="font-medium">{widthLabel}</span>
+    <FieldGroup className="grid max-w-md grid-cols-2 gap-3">
+      <Field>
+        <FieldLabel htmlFor={widthId}>{widthLabel}</FieldLabel>
         <Input
+          id={widthId}
           type="number"
           min={allowUnlimitedMax ? 0 : 1}
           value={size.width === UNLIMITED_GRID_CARD_DIMENSION ? 0 : size.width}
@@ -94,10 +157,11 @@ function GridCardSizeFields({
             }
           }}
         />
-      </label>
-      <label className="space-y-1 text-sm">
-        <span className="font-medium">{heightLabel}</span>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={heightId}>{heightLabel}</FieldLabel>
         <Input
+          id={heightId}
           type="number"
           min={allowUnlimitedMax ? 0 : 1}
           value={size.height === UNLIMITED_GRID_CARD_DIMENSION ? 0 : size.height}
@@ -108,8 +172,8 @@ function GridCardSizeFields({
             }
           }}
         />
-      </label>
-    </div>
+      </Field>
+    </FieldGroup>
   );
 }
 
@@ -146,6 +210,9 @@ export default function SettingsPage() {
   const [shareUrlIncludeCredentials, setShareUrlIncludeCredentials] = useState(
     readShareUrlIncludeCredentials,
   );
+  const [uploadChecksumValidation, setUploadChecksumValidation] = useState(
+    readUploadChecksumValidation,
+  );
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-8">
@@ -173,359 +240,224 @@ export default function SettingsPage() {
       </header>
 
       <section className="rounded-xl border bg-card p-6">
-        <h2 className="text-base font-semibold">{t("settings.display.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("settings.display.description")}
-        </p>
-
-        <div className="mt-6 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.modifiedTime.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.modifiedTime.description")}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={format}
-            onValueChange={(value) => {
-              if (value) {
-                setFormat(value as ModifiedTimeFormat);
-              }
-            }}
-            aria-label={t("settings.modifiedTime.label")}
-          >
-            <ToggleGroupItem value="relative" aria-label={t("settings.modifiedTime.relative")}>
-              {t("settings.modifiedTime.relative")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="absolute" aria-label={t("settings.modifiedTime.absolute")}>
-              {t("settings.modifiedTime.absolute")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.listingSort.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.listingSort.description")}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={listingSortOrder}
-            onValueChange={(value) => {
-              if (value) {
-                setListingSortOrder(value as ListingSortOrder);
-              }
-            }}
-            aria-label={t("settings.listingSort.label")}
-          >
-            <ToggleGroupItem
-              value="folders-first"
-              aria-label={t("settings.listingSort.foldersFirst")}
-            >
-              {t("settings.listingSort.foldersFirst")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="mixed" aria-label={t("settings.listingSort.mixed")}>
-              {t("settings.listingSort.mixed")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.dotEntries.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.dotEntries.description")}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={visibility}
-            onValueChange={(value) => {
-              if (value) {
-                setVisibility(value as ShowDotEntriesVisibility);
-              }
-            }}
-            aria-label={t("settings.dotEntries.label")}
-          >
-            <ToggleGroupItem value="hidden" aria-label={t("settings.dotEntries.hidden")}>
-              {t("settings.dotEntries.hidden")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="visible" aria-label={t("settings.dotEntries.visible")}>
-              {t("settings.dotEntries.visible")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.gridImagePreviews.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.gridImagePreviews.description")}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={gridImagePreviewsEnabled ? "enabled" : "disabled"}
-            onValueChange={(value) => {
-              if (value === "enabled") {
-                setGridImagePreviewsEnabled(true);
-              } else if (value === "disabled") {
-                setGridImagePreviewsEnabled(false);
-              }
-            }}
-            aria-label={t("settings.gridImagePreviews.label")}
-          >
-            <ToggleGroupItem
-              value="enabled"
-              aria-label={t("settings.gridImagePreviews.enabled")}
-            >
-              {t("settings.gridImagePreviews.enabled")}
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="disabled"
-              aria-label={t("settings.gridImagePreviews.disabled")}
-            >
-              {t("settings.gridImagePreviews.disabled")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.gridThumbnailBadge.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.gridThumbnailBadge.description")}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={gridThumbnailBadgeEnabled ? "enabled" : "disabled"}
-            onValueChange={(value) => {
-              if (value === "enabled") {
-                setGridThumbnailBadgeEnabled(true);
-              } else if (value === "disabled") {
-                setGridThumbnailBadgeEnabled(false);
-              }
-            }}
-            aria-label={t("settings.gridThumbnailBadge.label")}
-          >
-            <ToggleGroupItem
-              value="enabled"
-              aria-label={t("settings.gridThumbnailBadge.enabled")}
-            >
-              {t("settings.gridThumbnailBadge.enabled")}
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="disabled"
-              aria-label={t("settings.gridThumbnailBadge.disabled")}
-            >
-              {t("settings.gridThumbnailBadge.disabled")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.slideshow.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.slideshow.description")}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{t("settings.slideshow.autoplay.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.slideshow.autoplay.description")}
-            </p>
-            <ToggleGroup
-              type="single"
-              variant="outline"
-              size="sm"
-              value={autoplayOnOpen ? "enabled" : "disabled"}
-              onValueChange={(value) => {
-                if (value === "enabled") {
-                  setAutoplayOnOpen(true);
-                } else if (value === "disabled") {
-                  setAutoplayOnOpen(false);
-                }
-              }}
-              aria-label={t("settings.slideshow.autoplay.label")}
-            >
-              <ToggleGroupItem
-                value="enabled"
-                aria-label={t("settings.slideshow.autoplay.enabled")}
-              >
-                {t("settings.slideshow.autoplay.enabled")}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="disabled"
-                aria-label={t("settings.slideshow.autoplay.disabled")}
-              >
-                {t("settings.slideshow.autoplay.disabled")}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{t("settings.slideshow.interval.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.slideshow.interval.description")}
-            </p>
-            <Input
-              type="number"
-              min={SLIDESHOW_INTERVAL_MIN}
-              max={SLIDESHOW_INTERVAL_MAX}
-              value={intervalSeconds}
-              onChange={(event) => {
-                const parsed = Number.parseInt(event.target.value, 10);
-                if (Number.isFinite(parsed)) {
-                  setIntervalSeconds(parsed);
-                }
-              }}
-              onBlur={(event) => {
-                const parsed = Number.parseInt(event.target.value, 10);
-                setIntervalSeconds(
-                  Number.isFinite(parsed)
-                    ? parsed
-                    : clampSlideshowInterval(intervalSeconds),
-                );
-              }}
-              className="h-9 w-28"
-              aria-label={t("settings.slideshow.interval.label")}
+        <FieldSet>
+          <FieldLegend>{t("settings.display.title")}</FieldLegend>
+          <FieldDescription>{t("settings.display.description")}</FieldDescription>
+          <FieldGroup>
+            <SettingsToggleField
+              label={t("settings.modifiedTime.label")}
+              description={t("settings.modifiedTime.description")}
+              value={format}
+              onValueChange={(value) => setFormat(value as ModifiedTimeFormat)}
+              options={[
+                { value: "relative", label: t("settings.modifiedTime.relative") },
+                { value: "absolute", label: t("settings.modifiedTime.absolute") },
+              ]}
             />
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.gridCard.label")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("settings.gridCard.description")}
-            </p>
-          </div>
-          <GridCardSizeFields
-            widthLabel={t("settings.gridCard.defaultWidth")}
-            heightLabel={t("settings.gridCard.defaultHeight")}
-            size={defaultSize}
-            onChange={setDefaultSize}
-          />
-          <GridCardSizeFields
-            widthLabel={t("settings.gridCard.minWidth")}
-            heightLabel={t("settings.gridCard.minHeight")}
-            size={minSize}
-            onChange={setMinSize}
-          />
-          <GridCardSizeFields
-            widthLabel={t("settings.gridCard.maxWidth")}
-            heightLabel={t("settings.gridCard.maxHeight")}
-            size={maxSize}
-            allowUnlimitedMax
-            onChange={setMaxSize}
-          />
-          <p className="text-sm text-muted-foreground">{t("settings.gridCard.maxHint")}</p>
-        </div>
+            <SettingsToggleField
+              label={t("settings.listingSort.label")}
+              description={t("settings.listingSort.description")}
+              value={listingSortOrder}
+              onValueChange={(value) => setListingSortOrder(value as ListingSortOrder)}
+              options={[
+                { value: "folders-first", label: t("settings.listingSort.foldersFirst") },
+                { value: "mixed", label: t("settings.listingSort.mixed") },
+              ]}
+            />
+            <SettingsToggleField
+              label={t("settings.dotEntries.label")}
+              description={t("settings.dotEntries.description")}
+              value={visibility}
+              onValueChange={(value) => setVisibility(value as ShowDotEntriesVisibility)}
+              options={[
+                { value: "hidden", label: t("settings.dotEntries.hidden") },
+                { value: "visible", label: t("settings.dotEntries.visible") },
+              ]}
+            />
+            <SettingsToggleField
+              label={t("settings.gridImagePreviews.label")}
+              description={t("settings.gridImagePreviews.description")}
+              value={gridImagePreviewsEnabled ? "enabled" : "disabled"}
+              onValueChange={(value) => setGridImagePreviewsEnabled(value === "enabled")}
+              options={[
+                { value: "enabled", label: t("settings.gridImagePreviews.enabled") },
+                { value: "disabled", label: t("settings.gridImagePreviews.disabled") },
+              ]}
+            />
+            <SettingsToggleField
+              label={t("settings.gridThumbnailBadge.label")}
+              description={t("settings.gridThumbnailBadge.description")}
+              value={gridThumbnailBadgeEnabled ? "enabled" : "disabled"}
+              onValueChange={(value) => setGridThumbnailBadgeEnabled(value === "enabled")}
+              options={[
+                { value: "enabled", label: t("settings.gridThumbnailBadge.enabled") },
+                { value: "disabled", label: t("settings.gridThumbnailBadge.disabled") },
+              ]}
+            />
+            <Field>
+              <FieldLabel>{t("settings.slideshow.label")}</FieldLabel>
+              <FieldDescription>{t("settings.slideshow.description")}</FieldDescription>
+              <FieldGroup className="gap-4">
+                <SettingsToggleField
+                  label={t("settings.slideshow.autoplay.label")}
+                  description={t("settings.slideshow.autoplay.description")}
+                  value={autoplayOnOpen ? "enabled" : "disabled"}
+                  onValueChange={(value) => setAutoplayOnOpen(value === "enabled")}
+                  options={[
+                    { value: "enabled", label: t("settings.slideshow.autoplay.enabled") },
+                    { value: "disabled", label: t("settings.slideshow.autoplay.disabled") },
+                  ]}
+                />
+                <Field>
+                  <FieldLabel htmlFor="settings-slideshow-interval">
+                    {t("settings.slideshow.interval.label")}
+                  </FieldLabel>
+                  <FieldDescription>
+                    {t("settings.slideshow.interval.description")}
+                  </FieldDescription>
+                  <Input
+                    id="settings-slideshow-interval"
+                    type="number"
+                    min={SLIDESHOW_INTERVAL_MIN}
+                    max={SLIDESHOW_INTERVAL_MAX}
+                    value={intervalSeconds}
+                    onChange={(event) => {
+                      const parsed = Number.parseInt(event.target.value, 10);
+                      if (Number.isFinite(parsed)) {
+                        setIntervalSeconds(parsed);
+                      }
+                    }}
+                    onBlur={(event) => {
+                      const parsed = Number.parseInt(event.target.value, 10);
+                      setIntervalSeconds(
+                        Number.isFinite(parsed)
+                          ? parsed
+                          : clampSlideshowInterval(intervalSeconds),
+                      );
+                    }}
+                    className="h-9 w-28"
+                  />
+                </Field>
+              </FieldGroup>
+            </Field>
+            <Field>
+              <FieldLabel>{t("settings.gridCard.label")}</FieldLabel>
+              <FieldDescription>{t("settings.gridCard.description")}</FieldDescription>
+              <FieldGroup className="gap-3">
+                <GridCardSizeFields
+                  idPrefix="grid-default"
+                  widthLabel={t("settings.gridCard.defaultWidth")}
+                  heightLabel={t("settings.gridCard.defaultHeight")}
+                  size={defaultSize}
+                  onChange={setDefaultSize}
+                />
+                <GridCardSizeFields
+                  idPrefix="grid-min"
+                  widthLabel={t("settings.gridCard.minWidth")}
+                  heightLabel={t("settings.gridCard.minHeight")}
+                  size={minSize}
+                  onChange={setMinSize}
+                />
+                <GridCardSizeFields
+                  idPrefix="grid-max"
+                  widthLabel={t("settings.gridCard.maxWidth")}
+                  heightLabel={t("settings.gridCard.maxHeight")}
+                  size={maxSize}
+                  allowUnlimitedMax
+                  onChange={setMaxSize}
+                />
+                <FieldDescription>{t("settings.gridCard.maxHint")}</FieldDescription>
+              </FieldGroup>
+            </Field>
+          </FieldGroup>
+        </FieldSet>
       </section>
 
       <section className="mt-6 rounded-xl border bg-card p-6">
-        <h2 className="text-base font-semibold">{t("settings.paste.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("settings.paste.description")}
-        </p>
-
-        <div className="mt-6 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.paste.destination.label")}</p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={pasteDestination}
-            onValueChange={(value) => {
-              if (!value) {
-                return;
-              }
-              const next = value as PasteDestinationWhenFolderSelected;
-              setPasteDestination(next);
-              storePasteDestination(next);
-            }}
-            aria-label={t("settings.paste.destination.label")}
-          >
-            <ToggleGroupItem value="ask" aria-label={t("settings.paste.destination.ask")}>
-              {t("settings.paste.destination.ask")}
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="into_selected_folder"
-              aria-label={t("settings.paste.destination.intoSelected")}
-            >
-              {t("settings.paste.destination.intoSelected")}
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="into_current_directory"
-              aria-label={t("settings.paste.destination.intoCurrent")}
-            >
-              {t("settings.paste.destination.intoCurrent")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <div>
-            <p className="text-sm font-medium">{t("settings.paste.batch.label")}</p>
-          </div>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={pasteBatchOnError}
-            onValueChange={(value) => {
-              if (!value) {
-                return;
-              }
-              const next = value as PasteBatchOnError;
-              setPasteBatchOnError(next);
-              storePasteBatchOnError(next);
-            }}
-            aria-label={t("settings.paste.batch.label")}
-          >
-            <ToggleGroupItem value="stop" aria-label={t("settings.paste.batch.stop")}>
-              {t("settings.paste.batch.stop")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="continue" aria-label={t("settings.paste.batch.continue")}>
-              {t("settings.paste.batch.continue")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+        <FieldSet>
+          <FieldLegend>{t("settings.paste.title")}</FieldLegend>
+          <FieldDescription>{t("settings.paste.description")}</FieldDescription>
+          <FieldGroup>
+            <SettingsToggleField
+              label={t("settings.paste.destination.label")}
+              value={pasteDestination}
+              onValueChange={(value) => {
+                const next = value as PasteDestinationWhenFolderSelected;
+                setPasteDestination(next);
+                storePasteDestination(next);
+              }}
+              options={[
+                { value: "ask", label: t("settings.paste.destination.ask") },
+                {
+                  value: "into_selected_folder",
+                  label: t("settings.paste.destination.intoSelected"),
+                },
+                {
+                  value: "into_current_directory",
+                  label: t("settings.paste.destination.intoCurrent"),
+                },
+              ]}
+            />
+            <SettingsToggleField
+              label={t("settings.paste.batch.label")}
+              value={pasteBatchOnError}
+              onValueChange={(value) => {
+                const next = value as PasteBatchOnError;
+                setPasteBatchOnError(next);
+                storePasteBatchOnError(next);
+              }}
+              options={[
+                { value: "stop", label: t("settings.paste.batch.stop") },
+                { value: "continue", label: t("settings.paste.batch.continue") },
+              ]}
+            />
+          </FieldGroup>
+        </FieldSet>
       </section>
 
       {isCloudMode ? (
         <section className="mt-6 rounded-xl border bg-card p-6">
-          <h2 className="text-base font-semibold">{t("settings.shareUrl.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("settings.shareUrl.description")}
-          </p>
-          <label className="mt-6 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={shareUrlIncludeCredentials}
-              onChange={(event) => {
-                setShareUrlIncludeCredentials(event.target.checked);
-                storeShareUrlIncludeCredentials(event.target.checked);
-              }}
-            />
-            {t("connect.shareUrl.includeCredentials")}
-          </label>
+          <FieldSet>
+            <FieldLegend>{t("settings.uploadChecksum.title")}</FieldLegend>
+            <FieldDescription>{t("settings.uploadChecksum.description")}</FieldDescription>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="settings-upload-checksum-validation"
+                checked={uploadChecksumValidation}
+                onCheckedChange={(checked) => {
+                  const next = checked === true;
+                  setUploadChecksumValidation(next);
+                  storeUploadChecksumValidation(next);
+                }}
+              />
+              <FieldLabel htmlFor="settings-upload-checksum-validation">
+                {t("settings.uploadChecksum.label")}
+              </FieldLabel>
+            </Field>
+          </FieldSet>
+        </section>
+      ) : null}
+
+      {isCloudMode ? (
+        <section className="mt-6 rounded-xl border bg-card p-6">
+          <FieldSet>
+            <FieldLegend>{t("settings.shareUrl.title")}</FieldLegend>
+            <FieldDescription>{t("settings.shareUrl.description")}</FieldDescription>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="settings-share-url-include-credentials"
+                checked={shareUrlIncludeCredentials}
+                onCheckedChange={(checked) => {
+                  const next = checked === true;
+                  setShareUrlIncludeCredentials(next);
+                  storeShareUrlIncludeCredentials(next);
+                }}
+              />
+              <FieldLabel htmlFor="settings-share-url-include-credentials">
+                {t("connect.shareUrl.includeCredentials")}
+              </FieldLabel>
+            </Field>
+          </FieldSet>
         </section>
       ) : null}
     </main>

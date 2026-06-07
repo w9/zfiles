@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** cloud share URL — copy deep link from current config (credentials optional via settings toggle), `/f/…` pathname for browse location. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** drop R2 upload checksums; cloud setting to disable AWS S3 checksum validation (client + `ChecksumAlgorithm`). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -89,4 +89,17 @@ Dual-mode refactor is **complete**. **Current cycle:** cloud share URL — copy 
 - [x] `shareUrlSettings.ts`: localStorage toggle for include-credentials (default on)
 - [x] `ShareUrlButton`: copy-to-clipboard + toast; wire explorer header (left of Disconnect) and connect dialog
 - [x] `SettingsPage`: cloud-only include-credentials checkbox; i18n keys (14 locales)
+- [x] Run `pnpm test`
+- [x] Add shadcn `field` + `checkbox` components
+- [x] Refactor `ConnectDialog` to `Field` / `FieldGroup` / `FieldError`
+- [x] Refactor `SettingsPage` sections to `FieldSet` / `FieldGroup` / `Field`
+- [x] Refactor dialog checkboxes (`PasteDestinationDialog`, `UploadConflictDialog`) and cloud settings checkbox
+- [x] Refactor `SlideshowOverlay` interval control to horizontal `Field`
+- [x] Run `pnpm test`
+- [x] Add shadcn `select` component
+- [x] Replace native provider `<select>` in `ConnectDialog` with shadcn `Select`
+- [x] Run `pnpm test`
+- [x] `uploadChecksumSettings.ts`: localStorage toggle (default on) + unit tests; `uploadChecksumEnabled(provider, setting)` helper
+- [x] `s3Backend.ts`: skip all checksum paths for R2; honor setting for AWS (no client hash, no `ChecksumAlgorithm`, no verifying)
+- [x] `SettingsPage`: cloud-only upload checksum checkbox; i18n keys (14 locales)
 - [x] Run `pnpm test`

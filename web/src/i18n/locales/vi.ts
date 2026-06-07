@@ -264,6 +264,10 @@ export const vi: Record<MessageKey, string> = {
   "settings.shareUrl.title": "URL chia sẻ",
   "settings.shareUrl.description":
     "Khi sao chép liên kết chia sẻ, chọn có nhúng thông tin xác thực bucket vào chuỗi truy vấn hay không. Chỉ dùng khóa có thời hạn ngắn.",
+  "settings.uploadChecksum.title": "Toàn vẹn tải lên",
+  "settings.uploadChecksum.description":
+    "Với Amazon S3, tùy chọn băm tệp trước và sau khi tải lên và yêu cầu S3 xác thực checksum SHA-256. Cloudflare R2 không bao giờ dùng xác thực checksum (R2 không hỗ trợ header checksum linh hoạt của S3).",
+  "settings.uploadChecksum.label": "Xác thực tải lên bằng checksum (chỉ Amazon S3)",
   "viewer.category": "Trình xem ảnh",
   "viewer.nextImage.name": "Ảnh tiếp theo",
   "viewer.prevImage.name": "Ảnh trước",

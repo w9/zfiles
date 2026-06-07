@@ -251,6 +251,10 @@ export const zhCN: Record<MessageKey, string> = {
   "settings.shareUrl.title": "分享链接",
   "settings.shareUrl.description":
     "复制分享链接时，可选择在查询参数中嵌入存储桶凭证。请仅使用短期有效的密钥。",
+  "settings.uploadChecksum.title": "上传完整性",
+  "settings.uploadChecksum.description":
+    "对于 Amazon S3，可选择在前后对文件进行哈希并让 S3 验证 SHA-256 校验和。Cloudflare R2 从不使用校验和验证（R2 不支持 S3 灵活校验和标头）。",
+  "settings.uploadChecksum.label": "使用校验和验证上传（仅 Amazon S3）",
   "viewer.category": "图片查看",
   "viewer.nextImage.name": "下一张",
   "viewer.prevImage.name": "上一张",

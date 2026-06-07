@@ -265,6 +265,10 @@ export const ru: Record<MessageKey, string> = {
   "settings.shareUrl.title": "Ссылка для доступа",
   "settings.shareUrl.description":
     "При копировании ссылки выберите, включать ли учётные данные бакета в строку запроса. Используйте только краткосрочные ключи.",
+  "settings.uploadChecksum.title": "Целостность загрузок",
+  "settings.uploadChecksum.description":
+    "Для Amazon S3 можно хешировать файлы до и после загрузки и просить S3 проверять контрольные суммы SHA-256. Cloudflare R2 никогда не использует проверку контрольных сумм (R2 не поддерживает гибкие заголовки контрольных сумм S3).",
+  "settings.uploadChecksum.label": "Проверять загрузки контрольными суммами (только Amazon S3)",
   "viewer.category": "Просмотр изображений",
   "viewer.nextImage.name": "Следующее изображение",
   "viewer.prevImage.name": "Предыдущее изображение",

@@ -264,6 +264,10 @@ export const ko: Record<MessageKey, string> = {
   "settings.shareUrl.title": "공유 URL",
   "settings.shareUrl.description":
     "공유 링크를 복사할 때 쿼리 문자열에 버킷 자격 증명을 포함할지 선택합니다. 단기 키만 사용하세요.",
+  "settings.uploadChecksum.title": "업로드 무결성",
+  "settings.uploadChecksum.description":
+    "Amazon S3의 경우 업로드 전후에 파일을 해시하고 S3에 SHA-256 체크섬 검증을 요청할 수 있습니다. Cloudflare R2는 체크섬 검증을 사용하지 않습니다(R2는 S3 유연 체크섬 헤더를 지원하지 않음).",
+  "settings.uploadChecksum.label": "체크섬으로 업로드 검증(Amazon S3만)",
   "viewer.category": "이미지 뷰어",
   "viewer.nextImage.name": "다음 이미지",
   "viewer.prevImage.name": "이전 이미지",

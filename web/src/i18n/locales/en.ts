@@ -264,6 +264,10 @@ export const en = {
   "settings.shareUrl.title": "Share URL",
   "settings.shareUrl.description":
     "When you copy a share link, choose whether to embed bucket credentials in the query string. Use short-lived keys only.",
+  "settings.uploadChecksum.title": "Upload integrity",
+  "settings.uploadChecksum.description":
+    "For Amazon S3, optionally hash files before and after upload and ask S3 to validate SHA-256 checksums. Cloudflare R2 never uses checksum validation (R2 does not support S3 flexible checksum headers).",
+  "settings.uploadChecksum.label": "Validate uploads with checksums (Amazon S3 only)",
   "viewer.category": "Image viewer",
   "viewer.nextImage.name": "Next Image",
   "viewer.prevImage.name": "Previous Image",

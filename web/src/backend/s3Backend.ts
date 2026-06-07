@@ -20,6 +20,10 @@ import {
 } from "../cloud/s3Paths";
 import type { S3ConnectionConfig } from "../cloud/types";
 import { sha256Base64, sha256Base64Matches } from "../fileHash";
+import {
+  readUploadChecksumValidation,
+  uploadChecksumValidationEnabled,
+} from "../settings/uploadChecksumSettings";
 import type {
   BackendEvent,
   BackendStatus,
@@ -48,6 +52,9 @@ function createS3Client(config: S3ConnectionConfig): S3Client {
       secretAccessKey: config.credentials.secretAccessKey,
       sessionToken: config.credentials.sessionToken,
     },
+    // AWS SDK v3.729+ defaults to CRC checksums on uploads; R2 does not implement them.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   };
   if (config.endpoint) {
     clientConfig.endpoint = config.endpoint;
@@ -213,17 +220,26 @@ export class S3Backend implements ExplorerBackend {
     if (signal?.aborted) {
       throw new DOMException("Upload aborted", "AbortError");
     }
-    const checksum = await sha256Base64(file, undefined, signal);
+    const checksumValidation = uploadChecksumValidationEnabled(
+      this.config.provider,
+      readUploadChecksumValidation(),
+    );
+    const checksum = checksumValidation
+      ? await sha256Base64(file, undefined, signal)
+      : null;
     const key = keyForExplorerPath(this.config.prefix, destPath);
+    const uploadParams: Upload["params"] = {
+      Bucket: this.config.bucket,
+      Key: key,
+      Body: file,
+      ContentType: file.type || undefined,
+    };
+    if (checksumValidation) {
+      uploadParams.ChecksumAlgorithm = "SHA256";
+    }
     const upload = new Upload({
       client: this.client,
-      params: {
-        Bucket: this.config.bucket,
-        Key: key,
-        Body: file,
-        ContentType: file.type || undefined,
-        ChecksumAlgorithm: "SHA256",
-      },
+      params: uploadParams,
     });
     const onAbort = () => {
       void upload.abort();
@@ -246,6 +262,10 @@ export class S3Backend implements ExplorerBackend {
       throw err;
     } finally {
       signal?.removeEventListener("abort", onAbort);
+    }
+
+    if (!checksumValidation || checksum == null) {
+      return;
     }
 
     onVerifying?.();

@@ -264,6 +264,10 @@ export const id: Record<MessageKey, string> = {
   "settings.shareUrl.title": "URL berbagi",
   "settings.shareUrl.description":
     "Saat menyalin tautan berbagi, pilih apakah kredensial bucket disertakan dalam string kueri. Gunakan kunci berumur pendek saja.",
+  "settings.uploadChecksum.title": "Integritas unggahan",
+  "settings.uploadChecksum.description":
+    "Untuk Amazon S3, opsional hash file sebelum dan sesudah unggah dan minta S3 memvalidasi checksum SHA-256. Cloudflare R2 tidak pernah menggunakan validasi checksum (R2 tidak mendukung header checksum fleksibel S3).",
+  "settings.uploadChecksum.label": "Validasi unggahan dengan checksum (hanya Amazon S3)",
   "viewer.category": "Penampil gambar",
   "viewer.nextImage.name": "Gambar berikutnya",
   "viewer.prevImage.name": "Gambar sebelumnya",

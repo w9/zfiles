@@ -264,6 +264,10 @@ export const es: Record<MessageKey, string> = {
   "settings.shareUrl.title": "URL para compartir",
   "settings.shareUrl.description":
     "Al copiar un enlace para compartir, elige si incluir las credenciales del bucket en la cadena de consulta. Usa solo claves de corta duración.",
+  "settings.uploadChecksum.title": "Integridad de subidas",
+  "settings.uploadChecksum.description":
+    "Para Amazon S3, opcionalmente calcula hashes antes y después de la subida y pide a S3 que valide sumas de comprobación SHA-256. Cloudflare R2 nunca usa validación por suma de comprobación (R2 no admite los encabezados flexibles de suma de comprobación de S3).",
+  "settings.uploadChecksum.label": "Validar subidas con sumas de comprobación (solo Amazon S3)",
   "viewer.category": "Visor de imágenes",
   "viewer.nextImage.name": "Imagen siguiente",
   "viewer.prevImage.name": "Imagen anterior",
