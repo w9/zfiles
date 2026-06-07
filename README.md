@@ -1,6 +1,8 @@
 # zfiles
 
-zfiles is a file explorer written in Rust. Local mode ships as a statically linked musl binary under 10 MB — embedded UI included, no runtime dependencies — that you point at a folder and open in the browser. Cloud mode is the same UI built as a static SPA for S3-compatible buckets (AWS S3, Cloudflare R2). There is no indexing step, no plugin host, and no filename search; listings come straight from the filesystem or object store, and the kernel cold-starts in milliseconds even when the served tree holds millions of entries. If you want a Finder-style shell that respects `sendfile(2)`, tus resume, and “don’t touch my repo with dot-metadata,” this is the shape of tool.
+`zfiles` is a modern, web-based file explorer packed into a single, zero-dependency binary. Think of it as a much faster, fully-featured `python -m http.server` that also supports file uploads.
+
+Written in Rust, the sub-10MB executable boots the UI in under 10ms, regardless of directory size. Just type `zfiles` to instantly manage your files. It features a localized UI, safely handles Unicode filenames, and plays perfectly with VSCode's Remote SSH and `xdg-open` wiring.
 
 https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 
@@ -37,10 +39,11 @@ Optional: `./scripts/install-local.sh` installs to `~/.cargo/bin`.
 
 **Cloud SPA:** build with `cd web && pnpm install && pnpm build:cloud`, then deploy `web/dist-cloud/` to any static host. See [docs/cloud-connect.md](docs/cloud-connect.md) for credentials and [docs/cors.md](docs/cors.md) for bucket CORS.
 
-Open the URL from the startup banner (local mode opens your browser by default). The header includes connection status, theme (light / dark / auto), and language (English or 简体中文).
+Open the URL from the startup banner (local mode opens your browser by default). The header includes connection status, theme (light / dark / auto), and a language selector for 14 locales — English, Simplified and Traditional Chinese, Spanish, French, Italian, Portuguese, Russian, German, Japanese, Korean, Turkish, Indonesian, and Vietnamese. Switch in the menu or pass `?lang=` in the URL (for example `?lang=fr` or `?lang=zh-TW`).
 
 ## More features
 
+- UI i18n — 14 locales in the header language menu; preference saved in `localStorage`; `?lang=` overrides on load
 - Quick filter in the address bar — case-sensitive toggle, whole-word match, regex mode, Mod+F focus
 - Inline rename (F2) and new-folder creation in list and grid views
 - Context menu on rows and empty folder background; right-click outside selection retargets before open
