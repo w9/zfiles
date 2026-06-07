@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** darken slideshow backdrop. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** relative modified time shows as `absolute (relative)` app-wide. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -55,5 +55,8 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `SlideshowOverlay`: 1s-delay tooltips on icon buttons; top/bottom vignette; one-line metadata
 - [x] Grid view: bind Space to `viewer.slideshow` when an image is selected; keybinding test
 - [x] Run `pnpm test`
-- [ ] `SlideshowOverlay`: darken fullscreen backdrop dim layer
+- [x] `SlideshowOverlay`: darken fullscreen backdrop dim layer
+- [x] Run `pnpm test`
+- [ ] `formatModifiedDisplay`: relative setting shows `absolute (relative)`; update tests
+- [ ] Fix `SlideshowOverlay` `formatPreviewModified` call arity
 - [ ] Run `pnpm test`
