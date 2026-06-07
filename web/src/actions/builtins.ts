@@ -1,6 +1,36 @@
+import {
+  moveGridIndex,
+  moveLinearIndex,
+  type GridMoveDirection,
+} from "../explorer/listingGridNavigation";
 import type { ActionDefinition, BuiltinActionDeps } from "./types";
 
 export type { BuiltinActionDeps };
+
+function moveSelection(
+  getDeps: () => BuiltinActionDeps,
+  direction: GridMoveDirection,
+  args?: Record<string, unknown>,
+) {
+  const deps = getDeps();
+  const length = deps.getListingLength();
+  if (length <= 0) {
+    return;
+  }
+  const extendRange = args?.extendRange === true;
+  deps.setSelectedIndex((index) => {
+    if (deps.getListingViewMode() === "grid") {
+      return moveGridIndex(index, direction, deps.getGridColumnCount(), length);
+    }
+    if (direction === "down") {
+      return moveLinearIndex(index, 1, length);
+    }
+    if (direction === "up") {
+      return moveLinearIndex(index, -1, length);
+    }
+    return index;
+  }, { extendRange });
+}
 
 export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDefinition[] {
   return [
@@ -32,12 +62,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       defaultKeybinding: "J",
       contexts: ["file-list"],
       handler: async (_context, args) => {
-        const deps = getDeps();
-        const extendRange = args?.extendRange === true;
-        deps.setSelectedIndex(
-          (index) => Math.min(index + 1, Math.max(deps.getListingLength() - 1, 0)),
-          { extendRange },
-        );
+        moveSelection(getDeps, "down", args);
       },
     },
     {
@@ -48,8 +73,29 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       defaultKeybinding: "K",
       contexts: ["file-list"],
       handler: async (_context, args) => {
-        const extendRange = args?.extendRange === true;
-        getDeps().setSelectedIndex((index) => Math.max(index - 1, 0), { extendRange });
+        moveSelection(getDeps, "up", args);
+      },
+    },
+    {
+      id: "selection.move-left",
+      nameKey: "actions.selection.moveLeft.name",
+      categoryKey: "actions.selection.category",
+      when: "focus.pane == 'file-list' && listing.view == 'grid'",
+      defaultKeybinding: "H",
+      contexts: ["file-list"],
+      handler: async (_context, args) => {
+        moveSelection(getDeps, "left", args);
+      },
+    },
+    {
+      id: "selection.move-right",
+      nameKey: "actions.selection.moveRight.name",
+      categoryKey: "actions.selection.category",
+      when: "focus.pane == 'file-list' && listing.view == 'grid'",
+      defaultKeybinding: "L",
+      contexts: ["file-list"],
+      handler: async (_context, args) => {
+        moveSelection(getDeps, "right", args);
       },
     },
     {

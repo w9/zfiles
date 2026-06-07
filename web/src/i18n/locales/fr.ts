@@ -69,7 +69,7 @@ export const fr: Record<MessageKey, string> = {
   "selection.copyPaths": "Copier les chemins",
   "selection.clear": "Effacer",
   "shortcuts.hint":
-    "Raccourcis : j/k déplacer, Entrée ouvrir, Retour arrière remonter, Espace basculer, Maj+clic plage, Ctrl+P palette de commandes",
+    "Raccourcis : h/j/k/l ou flèches naviguent (grille) ; j/k ou ↑↓ (tableau) ; Entrée ouvrir, Retour arrière remonter, Espace basculer, Maj+clic plage, Ctrl+P palette de commandes",
   "listing.empty": "Ce dossier est vide",
   "listing.label": "Liste du répertoire",
   "listing.column.name": "Nom",
@@ -158,11 +158,16 @@ export const fr: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Largeur maximale (px)",
   "settings.gridCard.maxHeight": "Hauteur maximale (px)",
   "settings.gridCard.maxHint": "Utilisez 0 pour aucune limite.",
-  "settings.gridImagePreviews.label": "Aperçus d'images en grille",
+  "settings.gridImagePreviews.label": "Aperçus multimédias en grille",
   "settings.gridImagePreviews.description":
-    "Affiche des miniatures dans les cartes de la grille pour les images affichables nativement par le navigateur (JPEG, PNG, WebP, GIF, etc.).",
+    "Affiche des miniatures d'images et de vidéos dans les cartes de la grille pour les fichiers affichables nativement par le navigateur (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
   "settings.gridImagePreviews.enabled": "Activé",
   "settings.gridImagePreviews.disabled": "Désactivé",
+  "settings.gridThumbnailBadge.label": "Badges des miniatures vidéo",
+  "settings.gridThumbnailBadge.description":
+    "Affiche une icône de lecture et la durée sur les miniatures vidéo de la grille.",
+  "settings.gridThumbnailBadge.enabled": "Activé",
+  "settings.gridThumbnailBadge.disabled": "Désactivé",
   "listing.grid.resizeHandle": "Redimensionner toutes les cartes",
   "statusBar.label": "Barre d'état",
   "error.actionFailed": "Échec de l'action : HTTP {{status}}",
@@ -184,6 +189,8 @@ export const fr: Record<MessageKey, string> = {
   "actions.selection.category": "Sélection",
   "actions.selection.moveDown.name": "Déplacer la sélection vers le bas",
   "actions.selection.moveUp.name": "Déplacer la sélection vers le haut",
+  "actions.selection.moveLeft.name": "Déplacer la sélection vers la gauche",
+  "actions.selection.moveRight.name": "Déplacer la sélection vers la droite",
   "actions.selection.toggle.name": "Basculer la sélection",
   "actions.selection.selectAll.name": "Tout sélectionner",
   "actions.selection.selectAll.description":

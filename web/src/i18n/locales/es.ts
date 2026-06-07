@@ -68,7 +68,7 @@ export const es: Record<MessageKey, string> = {
   "selection.copyPaths": "Copiar rutas",
   "selection.clear": "Borrar",
   "shortcuts.hint":
-    "Atajos: j/k mover, Enter abrir, Retroceso subir, Espacio alternar, Mayús+clic rango, Ctrl+P paleta de comandos",
+    "Atajos: h/j/k/l o flechas navegan (cuadrícula); j/k o ↑↓ (tabla); Enter abrir, Retroceso subir, Espacio alternar, Mayús+clic rango, Ctrl+P paleta de comandos",
   "listing.empty": "Esta carpeta está vacía",
   "listing.label": "Listado del directorio",
   "listing.column.name": "Nombre",
@@ -156,11 +156,16 @@ export const es: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Ancho máximo (px)",
   "settings.gridCard.maxHeight": "Alto máximo (px)",
   "settings.gridCard.maxHint": "Use 0 para sin límite.",
-  "settings.gridImagePreviews.label": "Vistas previas de imágenes en cuadrícula",
+  "settings.gridImagePreviews.label": "Vistas previas de medios en cuadrícula",
   "settings.gridImagePreviews.description":
-    "Muestra miniaturas en las tarjetas de la cuadrícula para imágenes que el navegador puede mostrar de forma nativa (JPEG, PNG, WebP, GIF, etc.).",
+    "Muestra miniaturas de imágenes y vídeos en las tarjetas de la cuadrícula para archivos que el navegador puede mostrar de forma nativa (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
   "settings.gridImagePreviews.enabled": "Activado",
   "settings.gridImagePreviews.disabled": "Desactivado",
+  "settings.gridThumbnailBadge.label": "Insignias de miniaturas de vídeo",
+  "settings.gridThumbnailBadge.description":
+    "Muestra un icono de reproducción y la duración en las miniaturas de vídeo de la cuadrícula.",
+  "settings.gridThumbnailBadge.enabled": "Activado",
+  "settings.gridThumbnailBadge.disabled": "Desactivado",
   "listing.grid.resizeHandle": "Redimensionar todas las tarjetas",
   "statusBar.label": "Barra de estado",
   "error.actionFailed": "Acción fallida: HTTP {{status}}",
@@ -182,6 +187,8 @@ export const es: Record<MessageKey, string> = {
   "actions.selection.category": "Selección",
   "actions.selection.moveDown.name": "Mover selección abajo",
   "actions.selection.moveUp.name": "Mover selección arriba",
+  "actions.selection.moveLeft.name": "Mover selección a la izquierda",
+  "actions.selection.moveRight.name": "Mover selección a la derecha",
   "actions.selection.toggle.name": "Alternar selección",
   "actions.selection.selectAll.name": "Seleccionar todo",
   "actions.selection.selectAll.description":

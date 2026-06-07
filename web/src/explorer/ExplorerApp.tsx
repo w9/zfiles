@@ -50,6 +50,11 @@ import { useAppRoute } from "../routing/AppRouteProvider";
 import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "../settings/ShowDotEntriesProvider";
+import { useGridCardSize } from "../settings/GridCardSizeProvider";
+import {
+  computeGridColumnCount,
+  GRID_GAP_PX,
+} from "../settings/gridCardSize";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { listingOverlayMessageKey } from "../listingEmpty";
 import { filterDotEntries, isDotEntryName } from "../listingFilter";
@@ -103,6 +108,7 @@ export default function ExplorerApp() {
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder } = useListingSortOrder();
   const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
+  const { cardSize } = useGridCardSize();
   const initialPath = useMemo(
     () => explorerPathFromPathname(window.location.pathname),
     [],
@@ -124,6 +130,7 @@ export default function ExplorerApp() {
     readListingViewMode(),
   );
   const [gridResizeActive, setGridResizeActive] = useState(false);
+  const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const [columnSorting, setColumnSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -136,7 +143,6 @@ export default function ExplorerApp() {
   );
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
-  const consumeMarqueeClickRef = useRef<() => boolean>(() => false);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
   const listingEntriesRef = useRef<ListingEntry[]>([]);
@@ -448,6 +454,8 @@ export default function ExplorerApp() {
       "listing.show-dot-entries": showDotEntries,
       "listing.loaded": listingLoaded,
       "listing.visible-count": quickFilteredEntries.length,
+      "listing.view": listingViewMode,
+      "slideshow.open": slideshowOpen,
     }),
     [
       focusPane,
@@ -460,8 +468,37 @@ export default function ExplorerApp() {
       fileOps.clipboard,
       listingLoaded,
       quickFilteredEntries.length,
+      listingViewMode,
+      slideshowOpen,
     ],
   );
+
+  const gridColumnCount = useMemo(
+    () => computeGridColumnCount(gridViewportWidth, cardSize.width, GRID_GAP_PX),
+    [gridViewportWidth, cardSize.width],
+  );
+  const gridColumnCountRef = useRef(gridColumnCount);
+  gridColumnCountRef.current = gridColumnCount;
+  const listingViewModeRef = useRef(listingViewMode);
+  listingViewModeRef.current = listingViewMode;
+
+  useEffect(() => {
+    if (listingViewMode !== "grid") {
+      return;
+    }
+    const node = listingViewportRef.current;
+    if (!node) {
+      return;
+    }
+    const viewportPaddingPx = 12;
+    const measure = () => {
+      setGridViewportWidth(Math.max(0, node.clientWidth - viewportPaddingPx * 2));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [listingViewMode, listingLoaded, quickFilteredEntries.length]);
 
   const listingOverlayKey = listingOverlayMessageKey({
     listingLoaded,
@@ -505,6 +542,9 @@ export default function ExplorerApp() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (slideshowOpen) {
+        return;
+      }
       const isMac =
         typeof navigator !== "undefined" &&
         navigator.platform.toLowerCase().includes("mac");
@@ -527,7 +567,7 @@ export default function ExplorerApp() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [slideshowOpen]);
 
   const listingEntries = useMemo((): Array<ListingEntry> => {
     return quickFilteredEntries.map((entry) => {
@@ -540,9 +580,6 @@ export default function ExplorerApp() {
         size: entry.is_dir ? undefined : entry.size,
         modified: entry.modified,
         onSelect: (event, displayIndex) => {
-          if (consumeMarqueeClickRef.current()) {
-            return;
-          }
           setFocusPane("file-list");
           const rows = listingEntriesRef.current;
           let nextSelectedPath: string | null = entry.path;
@@ -651,7 +688,6 @@ export default function ExplorerApp() {
     scrollElementRef: listingViewportRef,
     onSelectionChange: applyMarqueeSelection,
   });
-  consumeMarqueeClickRef.current = marqueeSelect.consumeClickSuppression;
 
   useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
@@ -744,6 +780,8 @@ export default function ExplorerApp() {
     contextKeys,
     {
       getListingLength: () => listingEntriesRef.current.length,
+      getListingViewMode: () => listingViewModeRef.current,
+      getGridColumnCount: () => gridColumnCountRef.current,
       getSelectedIndex: () => selectedIndexRef.current,
       getSelectedPaths: () => Array.from(selectedPathsRef.current),
       getCurrentPath: () => currentPathRef.current,

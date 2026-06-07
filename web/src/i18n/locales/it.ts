@@ -69,7 +69,7 @@ export const it: Record<MessageKey, string> = {
   "selection.copyPaths": "Copia percorsi",
   "selection.clear": "Cancella",
   "shortcuts.hint":
-    "Scorciatoie: j/k sposta, Invio apri, Backspace su, Spazio attiva/disattiva, Maiusc+clic intervallo, Ctrl+P palette comandi",
+    "Scorciatoie: h/j/k/l o frecce navigano (griglia); j/k o ↑↓ (tabella); Invio apri, Backspace su, Spazio attiva/disattiva, Maiusc+clic intervallo, Ctrl+P palette comandi",
   "listing.empty": "Questa cartella è vuota",
   "listing.label": "Elenco della directory",
   "listing.column.name": "Nome",
@@ -158,11 +158,16 @@ export const it: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Larghezza massima (px)",
   "settings.gridCard.maxHeight": "Altezza massima (px)",
   "settings.gridCard.maxHint": "Usa 0 per nessun limite.",
-  "settings.gridImagePreviews.label": "Anteprime immagini in griglia",
+  "settings.gridImagePreviews.label": "Anteprime multimediali in griglia",
   "settings.gridImagePreviews.description":
-    "Mostra miniature nelle schede della griglia per immagini visualizzabili nativamente dal browser (JPEG, PNG, WebP, GIF, ecc.).",
+    "Mostra miniature di immagini e video nelle schede della griglia per file visualizzabili nativamente dal browser (JPEG, PNG, WebP, GIF, MP4, WebM, ecc.).",
   "settings.gridImagePreviews.enabled": "Attivo",
   "settings.gridImagePreviews.disabled": "Disattivo",
+  "settings.gridThumbnailBadge.label": "Badge anteprime video",
+  "settings.gridThumbnailBadge.description":
+    "Mostra un'icona play e la durata sulle anteprime video in griglia.",
+  "settings.gridThumbnailBadge.enabled": "Attivo",
+  "settings.gridThumbnailBadge.disabled": "Disattivo",
   "listing.grid.resizeHandle": "Ridimensiona tutte le schede",
   "statusBar.label": "Barra di stato",
   "error.actionFailed": "Azione non riuscita: HTTP {{status}}",
@@ -184,6 +189,8 @@ export const it: Record<MessageKey, string> = {
   "actions.selection.category": "Selezione",
   "actions.selection.moveDown.name": "Sposta selezione in basso",
   "actions.selection.moveUp.name": "Sposta selezione in alto",
+  "actions.selection.moveLeft.name": "Sposta selezione a sinistra",
+  "actions.selection.moveRight.name": "Sposta selezione a destra",
   "actions.selection.toggle.name": "Attiva/disattiva selezione",
   "actions.selection.selectAll.name": "Seleziona tutto",
   "actions.selection.selectAll.description":

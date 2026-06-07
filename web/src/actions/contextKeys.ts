@@ -11,6 +11,8 @@ export type ContextKeys = {
   "listing.show-dot-entries": boolean;
   "listing.loaded": boolean;
   "listing.visible-count": number;
+  "listing.view": string;
+  "slideshow.open": boolean;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -26,7 +28,9 @@ export function defaultContextKeys(): ContextKeys {
     "listing.show-dot-entries": false,
     "listing.loaded": false,
     "listing.visible-count": 0,
+    "listing.view": "table",
     "clipboard.count": 0,
+    "slideshow.open": false,
   };
 }
 

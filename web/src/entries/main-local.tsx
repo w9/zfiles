@@ -9,6 +9,7 @@ import { ModifiedTimeFormatProvider } from "../settings/ModifiedTimeFormatProvid
 import { GridCardSizeProvider } from "../settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "../settings/ListingSortOrderProvider";
 import { GridImagePreviewsProvider } from "../settings/GridImagePreviewsProvider";
+import { GridThumbnailBadgeProvider } from "../settings/GridThumbnailBadgeProvider";
 import { ShowDotEntriesProvider } from "../settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "../routing/AppRouteProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,11 +26,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <ListingSortOrderProvider>
               <ShowDotEntriesProvider>
                 <GridImagePreviewsProvider bootMode="local">
-                  <ExplorerBackendProvider>
-                    <TooltipProvider>
-                      <AppShell />
-                    </TooltipProvider>
-                  </ExplorerBackendProvider>
+                  <GridThumbnailBadgeProvider bootMode="local">
+                    <ExplorerBackendProvider>
+                      <TooltipProvider>
+                        <AppShell />
+                      </TooltipProvider>
+                    </ExplorerBackendProvider>
+                  </GridThumbnailBadgeProvider>
                 </GridImagePreviewsProvider>
               </ShowDotEntriesProvider>
             </ListingSortOrderProvider>

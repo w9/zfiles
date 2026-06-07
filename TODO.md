@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid filename tooltip 1s hover delay. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — grid navigation, grid UX, and marquee click fix complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -129,5 +129,10 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] Run `pnpm test`
 - [x] `GridListing.tsx`: shadcn tooltip on truncated grid card filenames
 - [x] Run `pnpm test`
-- [ ] `GridListing.tsx`: 1s delay on grid filename tooltips
-- [ ] Run `pnpm test`
+- [x] `GridListing.tsx`: 1s delay on grid filename tooltips
+- [x] Run `pnpm test`
+- [x] `contextKeys`: add `slideshow.open`; wire from `ExplorerApp`
+- [x] `useActionSystem` + `ExplorerApp` Mod+F: skip global shortcuts while slideshow open
+- [x] `SlideshowDialog`: preventDefault on Escape; run `pnpm test`
+- [x] `useListingMarqueeSelect`: one-shot suppress for post-marquee synthetic click
+- [x] Run `pnpm test`

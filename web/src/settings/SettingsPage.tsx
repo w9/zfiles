@@ -10,6 +10,7 @@ import { useTranslation } from "@/i18n";
 import { useAppRoute } from "@/routing/AppRouteProvider";
 import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
+import { useGridThumbnailBadge } from "@/settings/GridThumbnailBadgeProvider";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "@/settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
@@ -117,6 +118,8 @@ export default function SettingsPage() {
   } = useGridCardSize();
   const { enabled: gridImagePreviewsEnabled, setEnabled: setGridImagePreviewsEnabled } =
     useGridImagePreviews();
+  const { enabled: gridThumbnailBadgeEnabled, setEnabled: setGridThumbnailBadgeEnabled } =
+    useGridThumbnailBadge();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const [pasteDestination, setPasteDestination] = useState(
     readStoredPasteDestination,
@@ -273,6 +276,42 @@ export default function SettingsPage() {
               aria-label={t("settings.gridImagePreviews.disabled")}
             >
               {t("settings.gridImagePreviews.disabled")}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <div>
+            <p className="text-sm font-medium">{t("settings.gridThumbnailBadge.label")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("settings.gridThumbnailBadge.description")}
+            </p>
+          </div>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={gridThumbnailBadgeEnabled ? "enabled" : "disabled"}
+            onValueChange={(value) => {
+              if (value === "enabled") {
+                setGridThumbnailBadgeEnabled(true);
+              } else if (value === "disabled") {
+                setGridThumbnailBadgeEnabled(false);
+              }
+            }}
+            aria-label={t("settings.gridThumbnailBadge.label")}
+          >
+            <ToggleGroupItem
+              value="enabled"
+              aria-label={t("settings.gridThumbnailBadge.enabled")}
+            >
+              {t("settings.gridThumbnailBadge.enabled")}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="disabled"
+              aria-label={t("settings.gridThumbnailBadge.disabled")}
+            >
+              {t("settings.gridThumbnailBadge.disabled")}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>

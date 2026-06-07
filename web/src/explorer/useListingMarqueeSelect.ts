@@ -24,7 +24,6 @@ export type UseListingMarqueeSelectOptions = {
 export type UseListingMarqueeSelectResult = {
   isActive: boolean;
   marqueeRect: ClientRect | null;
-  consumeClickSuppression: () => boolean;
   onViewportPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
 };
 
@@ -60,6 +59,24 @@ function collectEntryRectsFromViewport(
   });
 }
 
+function suppressMarqueeEndClick(
+  pendingListenerRef: React.MutableRefObject<((event: MouseEvent) => void) | null>,
+) {
+  if (pendingListenerRef.current) {
+    window.removeEventListener("click", pendingListenerRef.current, true);
+  }
+
+  const suppressNextClick = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    window.removeEventListener("click", suppressNextClick, true);
+    pendingListenerRef.current = null;
+  };
+
+  pendingListenerRef.current = suppressNextClick;
+  window.addEventListener("click", suppressNextClick, true);
+}
+
 export function useListingMarqueeSelect({
   selectedPaths,
   enabled = true,
@@ -69,7 +86,9 @@ export function useListingMarqueeSelect({
   const [isActive, setIsActive] = useState(false);
   const [marqueeRect, setMarqueeRect] = useState<ClientRect | null>(null);
   const sessionRef = useRef<DragSession | null>(null);
-  const suppressClickRef = useRef(false);
+  const pendingClickSuppressRef = useRef<((event: MouseEvent) => void) | null>(
+    null,
+  );
   const autoScrollFrameRef = useRef<number | null>(null);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const selectedPathsRef = useRef(selectedPaths);
@@ -148,13 +167,26 @@ export function useListingMarqueeSelect({
       setMarqueeRect(null);
       stopAutoScroll();
       if (didMarquee) {
-        suppressClickRef.current = true;
+        suppressMarqueeEndClick(pendingClickSuppressRef);
       }
     },
     [stopAutoScroll],
   );
 
-  useEffect(() => () => stopAutoScroll(), [stopAutoScroll]);
+  useEffect(
+    () => () => {
+      stopAutoScroll();
+      if (pendingClickSuppressRef.current) {
+        window.removeEventListener(
+          "click",
+          pendingClickSuppressRef.current,
+          true,
+        );
+        pendingClickSuppressRef.current = null;
+      }
+    },
+    [stopAutoScroll],
+  );
 
   const onViewportPointerDown = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
@@ -243,18 +275,9 @@ export function useListingMarqueeSelect({
     [applyMarqueeAt, enabled, endSession, scrollElementRef, startAutoScroll, stopAutoScroll],
   );
 
-  const consumeClickSuppression = useCallback(() => {
-    if (!suppressClickRef.current) {
-      return false;
-    }
-    suppressClickRef.current = false;
-    return true;
-  }, []);
-
   return {
     isActive,
     marqueeRect,
-    consumeClickSuppression,
     onViewportPointerDown,
   };
 }

@@ -68,6 +68,7 @@ export default function SlideshowDialog({
         event.preventDefault();
         goPrev();
       } else if (event.key === "Escape") {
+        event.preventDefault();
         onOpenChange(false);
       }
     };

@@ -30,6 +30,8 @@ const BROWSER_PREVIEW_EXTENSIONS = [
   ".ico",
 ];
 
+const BROWSER_PREVIEW_VIDEO_EXTENSIONS = [".mp4", ".webm"];
+
 export function isImagePath(path: string): boolean {
   const lower = path.toLowerCase();
   return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
@@ -38,4 +40,9 @@ export function isImagePath(path: string): boolean {
 export function isBrowserPreviewImage(path: string): boolean {
   const lower = path.toLowerCase();
   return BROWSER_PREVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+export function isBrowserPreviewVideo(path: string): boolean {
+  const lower = path.toLowerCase();
+  return BROWSER_PREVIEW_VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }

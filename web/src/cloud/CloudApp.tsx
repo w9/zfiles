@@ -10,6 +10,7 @@ import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvide
 import { GridCardSizeProvider } from "@/settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
 import { GridImagePreviewsProvider } from "@/settings/GridImagePreviewsProvider";
+import { GridThumbnailBadgeProvider } from "@/settings/GridThumbnailBadgeProvider";
 import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
@@ -68,9 +69,11 @@ export default function CloudApp() {
             <ListingSortOrderProvider>
               <ShowDotEntriesProvider>
                 <GridImagePreviewsProvider bootMode="cloud">
-                  <TooltipProvider>
-                    <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
-                  </TooltipProvider>
+                  <GridThumbnailBadgeProvider bootMode="cloud">
+                    <TooltipProvider>
+                      <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
+                    </TooltipProvider>
+                  </GridThumbnailBadgeProvider>
                 </GridImagePreviewsProvider>
               </ShowDotEntriesProvider>
             </ListingSortOrderProvider>

@@ -125,6 +125,9 @@ export function useActionSystem(
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (contextKeys["slideshow.open"]) {
+        return;
+      }
       const typing = isTypingTarget(event.target);
       const bindingAvailable = (binding: KeybindingDefinition) =>
         evaluateWhen(binding.when, contextKeys);

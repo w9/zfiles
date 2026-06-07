@@ -81,3 +81,40 @@ test("matchKeybinding matches shift-extended selection chords", () => {
   assert.equal(binding?.command, "selection.move-down");
   assert.equal(binding?.args?.extendRange, true);
 });
+
+test("matchKeybinding matches grid-only horizontal navigation", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: "ArrowLeft",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const gridAvailable = (binding: { when?: string }) =>
+    binding.when?.includes("listing.view == 'grid'") ?? false;
+  const tableAvailable = (binding: { when?: string }) =>
+    binding.when != null && !binding.when.includes("listing.view");
+  assert.equal(
+    matchKeybinding(bindings, event, gridAvailable)?.command,
+    "selection.move-left",
+  );
+  assert.equal(matchKeybinding(bindings, event, tableAvailable), null);
+});
+
+test("matchKeybinding matches arrow up/down in file list", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: "ArrowDown",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const binding = matchKeybinding(
+    bindings,
+    event,
+    (item) => item.when?.includes("focus.pane == 'file-list'") ?? false,
+  );
+  assert.equal(binding?.command, "selection.move-down");
+});

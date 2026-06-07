@@ -1,4 +1,5 @@
 import type { ContextKeys } from "./contextKeys";
+import type { ListingViewMode } from "../listingView";
 
 export type ArgDefault =
   | { from: "selection" }
@@ -45,6 +46,8 @@ export type KeybindingDefinition = {
 
 export type BuiltinActionDeps = {
   getListingLength: () => number;
+  getListingViewMode: () => ListingViewMode;
+  getGridColumnCount: () => number;
   getSelectedIndex: () => number;
   getSelectedPaths: () => string[];
   getCurrentPath: () => string;

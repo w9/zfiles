@@ -69,7 +69,7 @@ export const ru: Record<MessageKey, string> = {
   "selection.copyPaths": "Копировать пути",
   "selection.clear": "Очистить",
   "shortcuts.hint":
-    "Горячие клавиши: j/k перемещение, Enter открыть, Backspace вверх, Пробел переключить, Shift+клик диапазон, Ctrl+P палитра команд",
+    "Горячие клавиши: h/j/k/l или стрелки — навигация (сетка); j/k или ↑↓ (таблица); Enter открыть, Backspace вверх, Пробел переключить, Shift+клик диапазон, Ctrl+P палитра команд",
   "listing.empty": "Эта папка пуста",
   "listing.label": "Список каталога",
   "listing.column.name": "Имя",
@@ -157,11 +157,16 @@ export const ru: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Макс. ширина (px)",
   "settings.gridCard.maxHeight": "Макс. высота (px)",
   "settings.gridCard.maxHint": "0 — без ограничения.",
-  "settings.gridImagePreviews.label": "Превью изображений в сетке",
+  "settings.gridImagePreviews.label": "Превью медиа в сетке",
   "settings.gridImagePreviews.description":
-    "Показывать миниатюры на карточках сетки для изображений, которые браузер отображает нативно (JPEG, PNG, WebP, GIF и т. п.).",
+    "Показывать миниатюры изображений и видео на карточках сетки для файлов, которые браузер отображает нативно (JPEG, PNG, WebP, GIF, MP4, WebM и т. п.).",
   "settings.gridImagePreviews.enabled": "Вкл.",
   "settings.gridImagePreviews.disabled": "Выкл.",
+  "settings.gridThumbnailBadge.label": "Метки видео-миниатюр",
+  "settings.gridThumbnailBadge.description":
+    "Показывать значок воспроизведения и длительность на постерных миниатюрах видео в сетке.",
+  "settings.gridThumbnailBadge.enabled": "Вкл.",
+  "settings.gridThumbnailBadge.disabled": "Выкл.",
   "listing.grid.resizeHandle": "Изменить размер всех карточек",
   "statusBar.label": "Строка состояния",
   "error.actionFailed": "Сбой действия: HTTP {{status}}",
@@ -183,6 +188,8 @@ export const ru: Record<MessageKey, string> = {
   "actions.selection.category": "Выбор",
   "actions.selection.moveDown.name": "Переместить выбор вниз",
   "actions.selection.moveUp.name": "Переместить выбор вверх",
+  "actions.selection.moveLeft.name": "Переместить выбор влево",
+  "actions.selection.moveRight.name": "Переместить выбор вправо",
   "actions.selection.toggle.name": "Переключить выбор",
   "actions.selection.selectAll.name": "Выбрать всё",
   "actions.selection.selectAll.description":

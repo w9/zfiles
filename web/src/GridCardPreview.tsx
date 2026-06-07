@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
+import { Play } from "lucide-react";
 
 import { FileIcon } from "@/FileIcon";
 import { useExplorerBackend } from "@/backend";
 import type { FileIconTheme } from "@/fileIcons";
-import { isBrowserPreviewImage } from "@/imagePaths";
+import { isBrowserPreviewImage, isBrowserPreviewVideo } from "@/imagePaths";
 import { cn } from "@/lib/utils";
+import { useGridThumbnailBadge } from "@/settings/GridThumbnailBadgeProvider";
 import { useDownloadUrl } from "@/useDownloadUrl";
 import { useInView } from "@/useInView";
+import { formatVideoDuration } from "@/videoDuration";
 
 type GridCardPreviewProps = {
   path: string;
@@ -28,19 +31,33 @@ export default function GridCardPreview({
   pixelSize,
 }: GridCardPreviewProps) {
   const backend = useExplorerBackend();
+  const { enabled: thumbnailBadgeEnabled } = useGridThumbnailBadge();
   const containerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(containerRef);
-  const showThumbnail = previewsEnabled && !isDir && isBrowserPreviewImage(name);
-  const downloadUrl = useDownloadUrl(backend, showThumbnail ? path : null);
+  const canPreviewImage = previewsEnabled && !isDir && isBrowserPreviewImage(name);
+  const canPreviewVideo = previewsEnabled && !isDir && isBrowserPreviewVideo(name);
+  const showImagePreview = canPreviewImage;
+  const showVideoPreview = canPreviewVideo && inView;
+  const wantsPreviewUrl = showImagePreview || showVideoPreview;
+  const downloadUrl = useDownloadUrl(backend, wantsPreviewUrl ? path : null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [durationLabel, setDurationLabel] = useState<string | null>(null);
 
   useEffect(() => {
     setLoaded(false);
     setFailed(false);
-  }, [path]);
+    setDurationLabel(null);
+  }, [path, showVideoPreview]);
 
-  const showIcon = !showThumbnail || !downloadUrl || failed || !loaded;
+  const showIcon =
+    (!showImagePreview && !showVideoPreview) ||
+    !downloadUrl ||
+    failed ||
+    !loaded;
+
+  const showVideoChrome =
+    thumbnailBadgeEnabled && showVideoPreview && loaded && !failed;
 
   return (
     <div
@@ -56,10 +73,11 @@ export default function GridCardPreview({
           pixelSize={pixelSize}
         />
       ) : null}
-      {showThumbnail && downloadUrl && !failed ? (
+      {showImagePreview && downloadUrl && !failed ? (
         <img
           src={downloadUrl}
           alt=""
+          draggable={false}
           loading="lazy"
           fetchPriority={inView ? "high" : "low"}
           className={cn(
@@ -68,7 +86,47 @@ export default function GridCardPreview({
           )}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
+          onDragStart={(event) => event.preventDefault()}
         />
+      ) : null}
+      {showVideoPreview && downloadUrl && !failed ? (
+        <video
+          src={downloadUrl}
+          preload="metadata"
+          muted
+          playsInline
+          draggable={false}
+          className={cn(
+            "pointer-events-none max-h-full max-w-full object-contain",
+            loaded ? "opacity-100" : "absolute opacity-0",
+          )}
+          onLoadedData={(event) => {
+            setLoaded(true);
+            setDurationLabel(formatVideoDuration(event.currentTarget.duration));
+          }}
+          onError={() => setFailed(true)}
+          onDragStart={(event) => event.preventDefault()}
+        />
+      ) : null}
+      {showVideoChrome ? (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <div className="flex size-7 items-center justify-center rounded-full bg-black/40 text-white/80">
+              <Play className="size-3.5 fill-current" />
+            </div>
+          </div>
+          {durationLabel ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-black/50 px-1 py-0.5 text-[10px] leading-none text-white/70 tabular-nums"
+            >
+              {durationLabel}
+            </div>
+          ) : null}
+        </>
       ) : null}
     </div>
   );

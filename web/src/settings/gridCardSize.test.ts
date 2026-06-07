@@ -45,11 +45,11 @@ test("clampGridCardSize treats zero max dimensions as unlimited", () => {
 test("parseGridCardSizeJson falls back on invalid input", () => {
   assert.deepEqual(parseGridCardSizeJson(null, BUILTIN_DEFAULT_GRID_CARD_SIZE), {
     width: 120,
-    height: 168,
+    height: 120,
   });
   assert.deepEqual(parseGridCardSizeJson("{bad", BUILTIN_DEFAULT_GRID_CARD_SIZE), {
     width: 120,
-    height: 168,
+    height: 120,
   });
   assert.deepEqual(parseGridCardSizeJson('{"width":80,"height":100}', BUILTIN_DEFAULT_GRID_CARD_SIZE), {
     width: 80,

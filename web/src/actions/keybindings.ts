@@ -75,25 +75,69 @@ export function matchKeybinding(
 }
 
 export function defaultKeybindings(): KeybindingDefinition[] {
+  const fileList = "focus.pane == 'file-list'";
+  const gridView = `${fileList} && listing.view == 'grid'`;
   return [
     { key: "Mod+P", command: "view.open-command-palette" },
-    { key: "J", command: "selection.move-down", when: "focus.pane == 'file-list'" },
-    { key: "K", command: "selection.move-up", when: "focus.pane == 'file-list'" },
+    { key: "J", command: "selection.move-down", when: fileList },
+    { key: "K", command: "selection.move-up", when: fileList },
     {
       key: "Shift+J",
       command: "selection.move-down",
-      when: "focus.pane == 'file-list'",
+      when: fileList,
       args: { extendRange: true },
     },
     {
       key: "Shift+K",
       command: "selection.move-up",
-      when: "focus.pane == 'file-list'",
+      when: fileList,
       args: { extendRange: true },
     },
-    { key: "Enter", command: "navigation.open", when: "focus.pane == 'file-list'" },
-    { key: "Backspace", command: "navigation.up", when: "focus.pane == 'file-list'" },
-    { key: "Space", command: "selection.toggle", when: "focus.pane == 'file-list'" },
+    { key: "ArrowDown", command: "selection.move-down", when: fileList },
+    { key: "ArrowUp", command: "selection.move-up", when: fileList },
+    {
+      key: "Shift+ArrowDown",
+      command: "selection.move-down",
+      when: fileList,
+      args: { extendRange: true },
+    },
+    {
+      key: "Shift+ArrowUp",
+      command: "selection.move-up",
+      when: fileList,
+      args: { extendRange: true },
+    },
+    { key: "H", command: "selection.move-left", when: gridView },
+    { key: "L", command: "selection.move-right", when: gridView },
+    {
+      key: "Shift+H",
+      command: "selection.move-left",
+      when: gridView,
+      args: { extendRange: true },
+    },
+    {
+      key: "Shift+L",
+      command: "selection.move-right",
+      when: gridView,
+      args: { extendRange: true },
+    },
+    { key: "ArrowLeft", command: "selection.move-left", when: gridView },
+    { key: "ArrowRight", command: "selection.move-right", when: gridView },
+    {
+      key: "Shift+ArrowLeft",
+      command: "selection.move-left",
+      when: gridView,
+      args: { extendRange: true },
+    },
+    {
+      key: "Shift+ArrowRight",
+      command: "selection.move-right",
+      when: gridView,
+      args: { extendRange: true },
+    },
+    { key: "Enter", command: "navigation.open", when: fileList },
+    { key: "Backspace", command: "navigation.up", when: fileList },
+    { key: "Space", command: "selection.toggle", when: fileList },
     {
       key: "Mod+A",
       command: "selection.select-all",

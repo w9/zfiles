@@ -69,7 +69,7 @@ export const de: Record<MessageKey, string> = {
   "selection.copyPaths": "Pfade kopieren",
   "selection.clear": "Löschen",
   "shortcuts.hint":
-    "Tastenkürzel: j/k bewegen, Enter öffnen, Rücktaste hoch, Leertaste umschalten, Umschalt+Klick Bereich, Strg+P Befehlspalette",
+    "Tastenkürzel: h/j/k/l oder Pfeile navigieren (Raster); j/k oder ↑↓ (Tabelle); Enter öffnen, Rücktaste hoch, Leertaste umschalten, Umschalt+Klick Bereich, Strg+P Befehlspalette",
   "listing.empty": "Dieser Ordner ist leer",
   "listing.label": "Verzeichnisliste",
   "listing.column.name": "Name",
@@ -158,11 +158,16 @@ export const de: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Maximalbreite (px)",
   "settings.gridCard.maxHeight": "Maximalhöhe (px)",
   "settings.gridCard.maxHint": "0 = kein Limit.",
-  "settings.gridImagePreviews.label": "Raster-Bildvorschauen",
+  "settings.gridImagePreviews.label": "Raster-Medienvorschauen",
   "settings.gridImagePreviews.description":
-    "Zeigt Miniaturbilder in Rasterkarten für vom Browser nativ unterstützte Bildformate (JPEG, PNG, WebP, GIF usw.).",
+    "Zeigt Bild- und Video-Miniaturen in Rasterkarten für vom Browser nativ unterstützte Dateien (JPEG, PNG, WebP, GIF, MP4, WebM usw.).",
   "settings.gridImagePreviews.enabled": "Ein",
   "settings.gridImagePreviews.disabled": "Aus",
+  "settings.gridThumbnailBadge.label": "Video-Miniatur-Badges",
+  "settings.gridThumbnailBadge.description":
+    "Zeigt ein Wiedergabe-Symbol und die Dauer auf Video-Poster-Miniaturen in der Rasteransicht.",
+  "settings.gridThumbnailBadge.enabled": "Ein",
+  "settings.gridThumbnailBadge.disabled": "Aus",
   "listing.grid.resizeHandle": "Alle Karten skalieren",
   "statusBar.label": "Statusleiste",
   "error.actionFailed": "Aktion fehlgeschlagen: HTTP {{status}}",
@@ -184,6 +189,8 @@ export const de: Record<MessageKey, string> = {
   "actions.selection.category": "Auswahl",
   "actions.selection.moveDown.name": "Auswahl nach unten verschieben",
   "actions.selection.moveUp.name": "Auswahl nach oben verschieben",
+  "actions.selection.moveLeft.name": "Auswahl nach links verschieben",
+  "actions.selection.moveRight.name": "Auswahl nach rechts verschieben",
   "actions.selection.toggle.name": "Auswahl umschalten",
   "actions.selection.selectAll.name": "Alles auswählen",
   "actions.selection.selectAll.description":

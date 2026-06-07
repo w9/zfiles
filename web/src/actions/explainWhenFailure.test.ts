@@ -18,6 +18,8 @@ const emptySelection: ContextKeys = {
   "listing.show-dot-entries": false,
   "listing.loaded": true,
   "listing.visible-count": 0,
+  "listing.view": "table",
+  "slideshow.open": false,
 };
 
 const labelForKey = (key: string) =>

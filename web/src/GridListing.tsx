@@ -10,6 +10,11 @@ import { shouldDimDotEntry } from "@/listingFilter";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   GRID_GAP_PX,
   computeGridColumnCount,
   gridIconPixelSize,
@@ -35,8 +40,10 @@ type GridListingProps = {
   onResizeActiveChange?: (active: boolean) => void;
 };
 
-const GRID_ITEM_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
-const GRID_ITEM_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+const GRID_ITEM_SELECTED_CLASS =
+  "shadow-[inset_0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
+const GRID_ITEM_FOCUS_SELECTED_CLASS =
+  "shadow-[inset_0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 
 const VIEWPORT_PADDING_PX = 12;
@@ -190,7 +197,13 @@ export default function GridListing({
                           }
                         }}
                         onClick={(event) => entry.onSelect(event, index)}
-                        onDoubleClick={entry.onActivate}
+                        onDoubleClick={() => {
+                          if (entry.href) {
+                            window.location.href = entry.href;
+                            return;
+                          }
+                          entry.onActivate();
+                        }}
                         onContextMenu={entry.onContextMenu}
                       >
                         <GridCardPreview
@@ -210,7 +223,22 @@ export default function GridListing({
                               onCancel={() => onInlineCancel(entry.path, entry.name)}
                             />
                           ) : (
-                            <span className="block truncate">{entry.name}</span>
+                            <Tooltip delayDuration={1000}>
+                              <TooltipTrigger asChild>
+                                <span className="block truncate">{entry.name}</span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="break-all"
+                                style={{
+                                  textWrap: "wrap",
+                                  width: "max-content",
+                                  maxWidth: "20rem",
+                                }}
+                              >
+                                {entry.name}
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                         </div>
                       </button>
@@ -220,7 +248,7 @@ export default function GridListing({
                         data-grid-resize-handle
                         data-prevent-marquee
                         className={cn(
-                          "absolute bottom-0 right-0 z-10 flex h-4 w-4 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
+                          "absolute bottom-0 right-0 z-10 flex h-4 w-4 translate-x-0.5 translate-y-0.5 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
                         )}
                         onPointerDown={onHandlePointerDown}
                         onDoubleClick={onHandleDoubleClick}
