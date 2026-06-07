@@ -1,102 +1,9 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** redesign slideshow as a fullscreen dimmed overlay (no modal): 1:1-default image sizing with fit/1:1/+/-/wheel zoom, auto-hide chrome, metadata bottom-left, Close/Download/Open-in-new-tab bottom-right, play/pause + interval input top-right, autoplay-off-by-default setting. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** slideshow drag-to-pan (grab cursor, touch pan + pinch-zoom, free pan, drag-only viewport). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
-- [x] `Cargo.toml`: `reqwest` + `tokio-tungstenite` without TLS features; refresh lockfile
-- [x] `vite_proxy.rs`: HTTP/WS only; tests for rejected `https` Vite URL
-- [x] `upload.rs`: `resolve_location` HTTP only; reject `https://` server URLs
-- [x] `design/design.md`: document plain-HTTP clients vs future listener TLS
-- [x] `cargo test` and `cargo clippy -- -D warnings`
-- [x] `useExplorerNavigation`: push/replace URL on navigate; preserve query; browser back/forward
-- [x] `appRoute` + settings back: recognize `/f/*`; restore explorer URL when leaving settings
-- [x] Run `pnpm test`
-- [x] Status bar: show "Connected" when online; kernel version in hover title only
-- [x] Update e2e smoke test for connected status label
-- [x] Run `pnpm test`
-- [x] Rename offline status label to "Connection lost" (en + zh-CN i18n)
-- [x] Update e2e smoke test for new offline aria label
-- [x] Run `pnpm test`
-- [x] Add hover title for "Connection lost" status (en + zh-CN i18n)
-- [x] Update e2e smoke test for offline hover title
-- [x] Run `pnpm test`
-- [x] Remove SQLite `sessions` table and `create_session` / `session_valid` from `state.rs`
-- [x] Rewrite `auth.rs`: in-memory expiry only; rename cookie helpers (`AUTH_COOKIE_NAME`, etc.)
-- [x] Drop `create_session` from `transport.rs`; update `tests/auth.rs`
-- [x] Rename `bootstrapSessionFromUrl` → `stripShareTokenFromUrl` in `web/src/api.ts`
-- [x] Update design docs: `state.db` is tus-only (no session tokens)
-- [x] Run `cargo test` and `cargo clippy -- -D warnings`
-- [x] `VirtualListing.tsx`: remove `transition-colors` from row and body gutter classes
-- [x] Run `pnpm test`
-- [x] Local kernel: `LocalFs` mkdir/rename/copy/move + extended `POST /api/actions` + integration tests
-- [x] `S3Backend`: mkdir, rename, copy, move via AWS SDK; extend `runAction` payload
-- [x] Web: clipboard, copy/cut/paste actions, paste destination + conflict dialogs, batch/paste settings
-- [x] Web: inline name editor (new folder + F2 rename) in list/grid; primary selection + focused row ops
-- [x] i18n (en + zh-CN), status bar cut hint, README API table; `cargo test` + `pnpm test`
-- [x] Context menu: right-click outside selection selects that row only before opening menu
-- [x] Context menu: right-click empty listing area shows folder actions (new folder, paste, …)
-- [x] `input-group` + `textarea` shadcn components; `quickFilter.ts` with case/whole/regex + tests
-- [x] `ExplorerBreadcrumb`: Input Group filter at right with match toggles; i18n (en + zh-CN)
-- [x] `ExplorerApp`: loaded-only filter, dot reveal while filtered, navigate clear, selection prune, Mod+F, overlay
-- [x] `pnpm test`
-- [x] `ExplorerBreadcrumb`: add right padding on quick-filter `InputGroup` so toggle buttons stay inside the border
-- [x] Run `pnpm test`
-- [x] `ExplorerBreadcrumb`: use `rounded-lg` on quick-filter `InputGroup`
-- [x] Run `pnpm test`
-- [x] Quick filter: Lucide `X` clear button instead of native search cancel; i18n (en + zh-CN)
-- [x] Run `pnpm test`
-- [x] `ExplorerBreadcrumb`: reduce address bar row horizontal padding to `px-1`
-- [x] Run `pnpm test`
-- [x] `bootParams`: parse credential URL params (`accessKeyId`, `secretAccessKey`, `sessionToken` + snake_case aliases)
-- [x] `stripCredentialParamsFromUrl`: remove credential params from address bar after read; wire in `CloudApp`
-- [x] `ConnectDialog`: pre-fill credential fields from boot params; auto-connect when required params present
-- [x] Tests: boot param parsing and credential URL stripping
-- [x] Design docs + `docs/cloud-connect.md`: document credential URL params and security warnings
-- [x] Run `pnpm test`
-- [x] Fix duplicate `clipboard.count` in `contextKeys.ts` (cloud build TS2300)
-- [x] Run `pnpm build:cloud`
-- [x] `listingEmpty` helper: visible entries empty, not during initial load, not when quick filter active
-- [x] `ExplorerApp`: centered empty-state overlay (reuse quick-filter empty layout)
-- [x] i18n `listing.empty` (en + zh-CN)
-- [x] Run `pnpm test`
-- [x] `listingOverlayState`: show folder-empty message when filter active on empty folder
-- [x] `ExplorerApp`: use unified overlay helper instead of separate empty flags
-- [x] Run `pnpm test`
-- [x] `listingMarqueeSelect.ts`: rect intersection + modifier merge helpers; unit tests
-- [x] `useListingMarqueeSelect` + `MarqueeOverlay`: pointer drag, rubber-band, auto-scroll, click suppression
-- [x] `VirtualListing` + `GridListing`: viewport ref, `data-listing-path`, pointer-down wiring
-- [x] `ExplorerApp`: hook integration, selection/anchor updates, block clear during marquee
-- [x] Run `pnpm test`
-- [x] `computeMarqueeSelection`: Cmd/Ctrl+drag removes marquee hits from selection only (no add)
-- [x] Update unit test; run `pnpm test`
-- [x] `listingSelection.ts`: shared index-range path helper + unit test
-- [x] `Shift+J` / `Shift+K` keybindings; `moveSelectedIndex` extend-range + anchor on plain J/K
-- [x] Run `pnpm test`
-- [x] Add root `LICENSE` (MIT) with copyright holder and year
-- [x] Set `Cargo.toml` `[package].license` to `MIT` (matches `LICENSE` file)
-- [x] Rewrite `README.md`: overview, top-10 features, install, feature list, deep dives, FAQ, doc links, authors/license/contribute
-- [x] Add minimal `CONTRIBUTING.md` (issues, PRs, dev commands, design doc pointer)
-- [x] README opening: lead with Rust, statically linked musl binary under 10 MB (no bold emphasis)
-- [x] `messages.ts` + `index.tsx`: widen `Locale` to 14 codes, build catalogs map, region-aware `resolveLocale`, set `documentElement.lang`
-- [x] Add `language.*` name keys (one per locale) to `en` + `zh-CN`, then mirror them across all catalogs
-- [x] Add full locale files: `zh-TW`, `es`, `fr`, `it`, `pt`, `ru`, `de`, `ja`, `ko`, `tr`, `id`, `vi` (every `MessageKey`)
-- [x] `LanguageToggle.tsx`: enumerate all locales with native labels (drop the `zh-CN`-only ternary)
-- [x] `ExplorerApp.tsx`: pass the active locale tag to date formatting instead of the `zh-CN`/`en` ternary
-- [x] Update `i18n.test.ts` for new `resolveLocale` mappings + per-locale catalog completeness; run `pnpm test`
-- [x] `design/design.md`: list the supported locales; run `cargo test` + `cargo clippy -- -D warnings`
-- [x] `README.md`: update install blurb and feature list for 14-locale i18n
-- [x] `GridListing.tsx`: add row gap matching column `gap-3` via virtualizer `gap`
-- [x] Run `pnpm test`
-- [x] `gridCardSize.ts` + provider: persist size, default, min/max; column-count helper + tests
-- [x] `GridListing.tsx`: hover resize grip, auto-fit columns, scaled icons; suppress marquee while dragging
-- [x] `SettingsPage`: default/min/max grid card size controls; i18n (14 locales)
-- [x] Run `pnpm test`
-- [x] `preview-metadata.ts`: extension/MIME label, symlink resolve, dir child counts + unit tests
-- [x] `FileStat.extra` + `S3Backend.stat`: Content-Type, ETag, storage class from HeadObject
-- [x] `PreviewPane`: modified, kind, cloud extras; async directory summary row (non-blocking)
-- [x] Symlink target link + `navigateTo`/`loadListing` focusPath for file targets
-- [x] i18n preview metadata keys (14 locales)
 - [x] `cargo test` + `pnpm test`
 - [x] `listingSelectAll.ts`: visible-path collection, fully-selected check, warning reasons + unit tests
 - [x] `selection.select-all` action, `Mod+A` keybinding, context keys (`listing.loaded`, `listing.visible-count`)
@@ -136,9 +43,12 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `SlideshowDialog`: preventDefault on Escape; run `pnpm test`
 - [x] `useListingMarqueeSelect`: one-shot suppress for post-marquee synthetic click
 - [x] Run `pnpm test`
-- [ ] `slideshowSettings.ts` + provider: autoplay-on-open (default off), interval seconds (clamped, persisted)
-- [ ] Replace `SlideshowDialog` with fullscreen dimmed `SlideshowOverlay` (layout, auto-hide chrome, keyboard nav)
-- [ ] Image viewport: centered, default 1:1 scaled down when larger than viewport; fit/1:1/+/-/wheel-pinch zoom
-- [ ] Toolbar + metadata + actions: zoom/play/interval top-right; metadata bottom-left; Close/Download/Open-tab bottom-right
-- [ ] `SettingsPage` slideshow section; i18n keys (14 locales); wire provider in local/cloud entries
+- [x] `slideshowSettings.ts` + provider: autoplay-on-open (default off), interval seconds (clamped, persisted)
+- [x] Replace `SlideshowDialog` with fullscreen dimmed `SlideshowOverlay` (layout, auto-hide chrome, keyboard nav)
+- [x] Image viewport: centered, default 1:1 scaled down when larger than viewport; fit/1:1/+/-/wheel-pinch zoom
+- [x] Toolbar + metadata + actions: zoom/play/interval top-right; metadata bottom-left; Close/Download/Open-tab bottom-right
+- [x] `SettingsPage` slideshow section; i18n keys (14 locales); wire provider in local/cloud entries
+- [x] Run `pnpm test`
+- [ ] `slideshowPan.ts`: pan/pinch helpers + unit tests (grab cursor, drag threshold, pinch scale)
+- [ ] `SlideshowOverlay`: pointer drag pan, touch pinch-zoom, overflow-hidden viewport, side effects
 - [ ] Run `pnpm test`
