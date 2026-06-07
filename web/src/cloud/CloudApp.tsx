@@ -11,6 +11,7 @@ import { GridCardSizeProvider } from "@/settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
 import { GridImagePreviewsProvider } from "@/settings/GridImagePreviewsProvider";
 import { GridThumbnailBadgeProvider } from "@/settings/GridThumbnailBadgeProvider";
+import { SlideshowSettingsProvider } from "@/settings/SlideshowSettingsProvider";
 import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
@@ -70,9 +71,11 @@ export default function CloudApp() {
               <ShowDotEntriesProvider>
                 <GridImagePreviewsProvider bootMode="cloud">
                   <GridThumbnailBadgeProvider bootMode="cloud">
-                    <TooltipProvider>
-                      <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
-                    </TooltipProvider>
+                    <SlideshowSettingsProvider>
+                      <TooltipProvider>
+                        <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
+                      </TooltipProvider>
+                    </SlideshowSettingsProvider>
                   </GridThumbnailBadgeProvider>
                 </GridImagePreviewsProvider>
               </ShowDotEntriesProvider>

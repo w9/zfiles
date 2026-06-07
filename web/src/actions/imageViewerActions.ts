@@ -51,6 +51,7 @@ export function createImageViewerActions(
       nameKey: "viewer.slideshow.name",
       categoryKey: "viewer.category",
       when: "preview.is-image == true",
+      defaultKeybinding: "Space",
       contexts: ["context-menu", "file-list", "preview"],
       handler: async () => {
         const deps = getDeps();

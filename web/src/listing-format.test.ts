@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   formatModifiedAbsolute,
+  formatModifiedCombined,
   formatModifiedDisplay,
   formatRelativeModified,
   formatSize,
@@ -64,14 +65,31 @@ test("formatModifiedAbsolute uses locale-specific datetime formatting", () => {
   assert.equal(formatModifiedAbsolute(null, "en"), null);
 });
 
+test("formatModifiedCombined shows absolute with relative in parentheses", () => {
+  const now = Date.parse("2025-05-29T12:00:00Z");
+  const originalNow = Date.now;
+  Date.now = () => now;
+  try {
+    const oneHourAgo = now - 3_600_000;
+    const combined = formatModifiedCombined(oneHourAgo, "en");
+    assert.match(combined, /May/);
+    assert.match(combined, /\(1 hour ago\)/);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test("formatModifiedDisplay switches between relative and absolute formats", () => {
   const now = Date.parse("2025-05-29T12:00:00Z");
   const originalNow = Date.now;
   Date.now = () => now;
   try {
     const oneHourAgo = now - 3_600_000;
-    assert.equal(formatModifiedDisplay(oneHourAgo, "en", "relative"), "1 hour ago");
+    const relative = formatModifiedDisplay(oneHourAgo, "en", "relative");
+    assert.match(relative, /May/);
+    assert.match(relative, /\(1 hour ago\)/);
     assert.match(formatModifiedDisplay(oneHourAgo, "en", "absolute"), /May/);
+    assert.doesNotMatch(formatModifiedDisplay(oneHourAgo, "en", "absolute"), /hour ago/);
   } finally {
     Date.now = originalNow;
   }

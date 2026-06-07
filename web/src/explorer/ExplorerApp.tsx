@@ -12,7 +12,7 @@ import ListingViewToggle from "../ListingViewToggle";
 import PreviewPane from "../PreviewPane";
 import VirtualListing, { type ListingEntry } from "../VirtualListing";
 import GridListing from "../GridListing";
-import SlideshowDialog from "../SlideshowDialog";
+import SlideshowOverlay from "../SlideshowOverlay";
 import { useExplorerBackend, type FileEntry } from "../backend";
 import { useTranslation, type MessageKey } from "../i18n";
 import { useBackendStatus, type BackendEvent } from "../useBackendStatus";
@@ -30,6 +30,10 @@ import MenuBar from "../actions/MenuBar";
 import ActionToolbar from "../actions/ActionToolbar";
 import { actionsForContext } from "../actions/dispatch";
 import { type ContextKeys } from "../actions/contextKeys";
+import {
+  formatKeybindingLabel,
+  keybindingChordForContext,
+} from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
 import { isImagePath } from "../imagePaths";
 import {
@@ -835,6 +839,8 @@ export default function ExplorerApp() {
           ...contextKeys,
           "selection.count": 0,
           "selection.paths": [],
+          "preview.path": "",
+          "preview.is-image": false,
         };
       } else if (!selectedPathsRef.current.has(path)) {
         const rows = listingEntriesRef.current;
@@ -849,6 +855,14 @@ export default function ExplorerApp() {
           ...contextKeys,
           "selection.count": 1,
           "selection.paths": [path],
+          "preview.path": path,
+          "preview.is-image": isImagePath(path),
+        };
+      } else {
+        menuContextKeys = {
+          ...contextKeys,
+          "preview.path": path,
+          "preview.is-image": isImagePath(path),
         };
       }
 
@@ -860,10 +874,23 @@ export default function ExplorerApp() {
       if (path == null) {
         actions = actions.filter((action) => !CONTEXT_MENU_REQUIRES_ROW.has(action.id));
       }
-      const menuActions = actions.map((action) => ({
-        id: action.id,
-        label: actionLabel(action.nameKey),
-      }));
+      const menuActions: ContextMenuAction[] = actions.map((action) => {
+        const chord = keybindingChordForContext(
+          action.id,
+          actionSystem.keybindings,
+          menuContextKeys,
+          {
+            defaultKeybinding: action.defaultKeybinding,
+            userBindings: actionSystem.userKeybindings,
+          },
+        );
+        return {
+          id: action.id,
+          label: actionLabel(action.nameKey),
+          shortcut: chord ? formatKeybindingLabel(chord) : null,
+          variant: action.destructive ? "destructive" : "default",
+        };
+      });
       if (menuActions.length === 0) {
         return;
       }
@@ -874,7 +901,13 @@ export default function ExplorerApp() {
         actions: menuActions,
       });
     },
-    [actionSystem.registry, actionLabel, contextKeys],
+    [
+      actionSystem.keybindings,
+      actionSystem.registry,
+      actionSystem.userKeybindings,
+      actionLabel,
+      contextKeys,
+    ],
   );
   openContextMenuRef.current = openContextMenu;
 
@@ -1285,7 +1318,7 @@ export default function ExplorerApp() {
         onSubmit={() => actionSystem.dismissArgPrompt(actionSystem.argPromptValue)}
       />
 
-      <SlideshowDialog
+      <SlideshowOverlay
         open={slideshowOpen}
         paths={slideshowPaths}
         startPath={slideshowStartPath}

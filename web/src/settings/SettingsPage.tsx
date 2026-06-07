@@ -11,6 +11,12 @@ import { useAppRoute } from "@/routing/AppRouteProvider";
 import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
 import { useGridThumbnailBadge } from "@/settings/GridThumbnailBadgeProvider";
+import { useSlideshowSettings } from "@/settings/SlideshowSettingsProvider";
+import {
+  SLIDESHOW_INTERVAL_MAX,
+  SLIDESHOW_INTERVAL_MIN,
+  clampSlideshowInterval,
+} from "@/settings/slideshowSettings";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "@/settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
@@ -120,6 +126,12 @@ export default function SettingsPage() {
     useGridImagePreviews();
   const { enabled: gridThumbnailBadgeEnabled, setEnabled: setGridThumbnailBadgeEnabled } =
     useGridThumbnailBadge();
+  const {
+    autoplayOnOpen,
+    setAutoplayOnOpen,
+    intervalSeconds,
+    setIntervalSeconds,
+  } = useSlideshowSettings();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const [pasteDestination, setPasteDestination] = useState(
     readStoredPasteDestination,
@@ -314,6 +326,76 @@ export default function SettingsPage() {
               {t("settings.gridThumbnailBadge.disabled")}
             </ToggleGroupItem>
           </ToggleGroup>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <div>
+            <p className="text-sm font-medium">{t("settings.slideshow.label")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("settings.slideshow.description")}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t("settings.slideshow.autoplay.label")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("settings.slideshow.autoplay.description")}
+            </p>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={autoplayOnOpen ? "enabled" : "disabled"}
+              onValueChange={(value) => {
+                if (value === "enabled") {
+                  setAutoplayOnOpen(true);
+                } else if (value === "disabled") {
+                  setAutoplayOnOpen(false);
+                }
+              }}
+              aria-label={t("settings.slideshow.autoplay.label")}
+            >
+              <ToggleGroupItem
+                value="enabled"
+                aria-label={t("settings.slideshow.autoplay.enabled")}
+              >
+                {t("settings.slideshow.autoplay.enabled")}
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="disabled"
+                aria-label={t("settings.slideshow.autoplay.disabled")}
+              >
+                {t("settings.slideshow.autoplay.disabled")}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t("settings.slideshow.interval.label")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("settings.slideshow.interval.description")}
+            </p>
+            <Input
+              type="number"
+              min={SLIDESHOW_INTERVAL_MIN}
+              max={SLIDESHOW_INTERVAL_MAX}
+              value={intervalSeconds}
+              onChange={(event) => {
+                const parsed = Number.parseInt(event.target.value, 10);
+                if (Number.isFinite(parsed)) {
+                  setIntervalSeconds(parsed);
+                }
+              }}
+              onBlur={(event) => {
+                const parsed = Number.parseInt(event.target.value, 10);
+                setIntervalSeconds(
+                  Number.isFinite(parsed)
+                    ? parsed
+                    : clampSlideshowInterval(intervalSeconds),
+                );
+              }}
+              className="h-9 w-28"
+              aria-label={t("settings.slideshow.interval.label")}
+            />
+          </div>
         </div>
 
         <div className="mt-8 space-y-3">

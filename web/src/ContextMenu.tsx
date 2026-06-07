@@ -2,12 +2,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export type ContextMenuAction = {
   id: string;
   label: string;
+  shortcut?: string | null;
+  variant?: "default" | "destructive";
 };
 
 type ContextMenuProps = {
@@ -40,12 +43,16 @@ export default function ExplorerContextMenu({
         {actions.map((action) => (
           <DropdownMenuItem
             key={action.id}
+            variant={action.variant}
             onSelect={() => {
               onSelect(action.id);
               onClose();
             }}
           >
             {action.label}
+            {action.shortcut ? (
+              <DropdownMenuShortcut>{action.shortcut}</DropdownMenuShortcut>
+            ) : null}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

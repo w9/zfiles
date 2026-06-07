@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** slideshow navigation keys (arrows + hjkl). Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — slideshow navigation keys complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -64,5 +64,5 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `formatModifiedDisplay`: relative setting shows `absolute (relative)`; update tests
 - [x] Fix `SlideshowOverlay` `formatPreviewModified` call arity
 - [x] Run `pnpm test`
-- [ ] `slideshowNavigation.ts`: prev/next key map (arrows + hjkl) + unit test; wire in overlay
-- [ ] Run `pnpm test`
+- [x] `slideshowNavigation.ts`: prev/next key map (arrows + hjkl) + unit test; wire in overlay
+- [x] Run `pnpm test`

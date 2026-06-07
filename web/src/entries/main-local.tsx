@@ -10,6 +10,7 @@ import { GridCardSizeProvider } from "../settings/GridCardSizeProvider";
 import { ListingSortOrderProvider } from "../settings/ListingSortOrderProvider";
 import { GridImagePreviewsProvider } from "../settings/GridImagePreviewsProvider";
 import { GridThumbnailBadgeProvider } from "../settings/GridThumbnailBadgeProvider";
+import { SlideshowSettingsProvider } from "../settings/SlideshowSettingsProvider";
 import { ShowDotEntriesProvider } from "../settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "../routing/AppRouteProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,11 +28,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <ShowDotEntriesProvider>
                 <GridImagePreviewsProvider bootMode="local">
                   <GridThumbnailBadgeProvider bootMode="local">
-                    <ExplorerBackendProvider>
-                      <TooltipProvider>
-                        <AppShell />
-                      </TooltipProvider>
-                    </ExplorerBackendProvider>
+                    <SlideshowSettingsProvider>
+                      <ExplorerBackendProvider>
+                        <TooltipProvider>
+                          <AppShell />
+                        </TooltipProvider>
+                      </ExplorerBackendProvider>
+                    </SlideshowSettingsProvider>
                   </GridThumbnailBadgeProvider>
                 </GridImagePreviewsProvider>
               </ShowDotEntriesProvider>

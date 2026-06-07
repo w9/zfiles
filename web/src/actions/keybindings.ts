@@ -1,4 +1,6 @@
+import type { ContextKeys } from "./contextKeys";
 import type { KeybindingDefinition } from "./types";
+import { evaluateWhen } from "./when";
 
 export type { KeybindingDefinition };
 
@@ -137,6 +139,11 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     },
     { key: "Enter", command: "navigation.open", when: fileList },
     { key: "Backspace", command: "navigation.up", when: fileList },
+    {
+      key: "Space",
+      command: "viewer.slideshow",
+      when: `${gridView} && preview.is-image == true`,
+    },
     { key: "Space", command: "selection.toggle", when: fileList },
     {
       key: "Mod+A",
@@ -164,6 +171,51 @@ export function keybindingForAction(
 ): string | null {
   const binding = bindings.find((item) => item.command === actionId);
   return binding?.key ?? defaultKeybinding ?? null;
+}
+
+export type KeybindingChordForContextOptions = {
+  defaultKeybinding?: string;
+  userBindings?: KeybindingDefinition[];
+};
+
+function isUnbindChord(key: string): boolean {
+  return key === "" || key.startsWith("-");
+}
+
+export function keybindingChordForContext(
+  actionId: string,
+  mergedBindings: KeybindingDefinition[],
+  contextKeys: ContextKeys,
+  options: KeybindingChordForContextOptions = {},
+): string | null {
+  const whenMatches = (binding: KeybindingDefinition) =>
+    evaluateWhen(binding.when, contextKeys);
+
+  const userBindings = options.userBindings ?? [];
+  const userForCommand = userBindings.filter((binding) => binding.command === actionId);
+  if (userForCommand.length > 0) {
+    for (const binding of userForCommand) {
+      if (isUnbindChord(binding.key)) {
+        return null;
+      }
+      if (whenMatches(binding)) {
+        return binding.key;
+      }
+    }
+    return null;
+  }
+
+  const mergedForCommand = mergedBindings.filter((binding) => binding.command === actionId);
+  if (mergedForCommand.length > 0) {
+    for (const binding of mergedForCommand) {
+      if (whenMatches(binding)) {
+        return binding.key;
+      }
+    }
+    return null;
+  }
+
+  return options.defaultKeybinding ?? null;
 }
 
 export function formatKeybindingLabel(

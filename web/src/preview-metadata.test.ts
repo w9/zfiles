@@ -65,8 +65,11 @@ test("formatKindLabel uses MIME and extension for files", () => {
 
 test("formatPreviewModified respects modified-time format setting", () => {
   const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
-  assert.match(formatPreviewModified(oneHourAgo, "en", "relative"), /hour/);
+  const relative = formatPreviewModified(oneHourAgo, "en", "relative");
+  assert.match(relative, /:/);
+  assert.match(relative, /\(.*hour.*\)/);
   assert.match(formatPreviewModified(oneHourAgo, "en", "absolute"), /:/);
+  assert.doesNotMatch(formatPreviewModified(oneHourAgo, "en", "absolute"), /\(.*hour.*\)/);
   assert.equal(formatPreviewModified(null, "en", "relative"), "—");
 });
 

@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { matchKeybinding, mergeKeybindings, parseKeyChord, defaultKeybindings, formatKeybindingLabel, keybindingForAction } from "./keybindings";
+import {
+  matchKeybinding,
+  mergeKeybindings,
+  parseKeyChord,
+  defaultKeybindings,
+  formatKeybindingLabel,
+  keybindingForAction,
+  keybindingChordForContext,
+} from "./keybindings";
 
 test("parseKeyChord normalizes mod shift and key", () => {
   assert.deepEqual(parseKeyChord("Mod+P"), ["Mod", "P"]);
@@ -100,6 +108,111 @@ test("matchKeybinding matches grid-only horizontal navigation", () => {
     "selection.move-left",
   );
   assert.equal(matchKeybinding(bindings, event, tableAvailable), null);
+});
+
+test("matchKeybinding prefers grid slideshow over selection toggle on Space", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: " ",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const gridImageAvailable = (binding: { when?: string }) => {
+    if (binding.command === "viewer.slideshow") {
+      return binding.when?.includes("listing.view == 'grid'") ?? false;
+    }
+    if (binding.command === "selection.toggle") {
+      return binding.when?.includes("focus.pane == 'file-list'") ?? false;
+    }
+    return false;
+  };
+  assert.equal(
+    matchKeybinding(bindings, event, gridImageAvailable)?.command,
+    "viewer.slideshow",
+  );
+
+  const tableAvailable = (binding: { when?: string }) => {
+    if (binding.command === "viewer.slideshow") {
+      return false;
+    }
+    if (binding.command === "selection.toggle") {
+      return binding.when?.includes("focus.pane == 'file-list'") ?? false;
+    }
+    return false;
+  };
+  assert.equal(
+    matchKeybinding(bindings, event, tableAvailable)?.command,
+    "selection.toggle",
+  );
+});
+
+test("keybindingChordForContext prefers binding whose when matches context", () => {
+  const bindings = defaultKeybindings();
+  const gridContext = {
+    "focus.pane": "file-list",
+    "listing.view": "grid",
+    "preview.is-image": true,
+  };
+  const tableContext = {
+    "focus.pane": "file-list",
+    "listing.view": "table",
+    "preview.is-image": true,
+  };
+  assert.equal(
+    keybindingChordForContext("viewer.slideshow", bindings, gridContext, {
+      defaultKeybinding: "Space",
+    }),
+    "Space",
+  );
+  assert.equal(
+    keybindingChordForContext("viewer.slideshow", bindings, tableContext, {
+      defaultKeybinding: "Space",
+    }),
+    null,
+  );
+  assert.equal(
+    keybindingChordForContext("selection.toggle", bindings, tableContext),
+    "Space",
+  );
+});
+
+test("keybindingChordForContext falls back to action default when unbound in merged list", () => {
+  const bindings = defaultKeybindings();
+  const context = { "focus.pane": "file-list" };
+  assert.equal(
+    keybindingChordForContext("file.copy", bindings, context, {
+      defaultKeybinding: "Mod+C",
+    }),
+    "Mod+C",
+  );
+});
+
+test("keybindingChordForContext honors user override and unbind for a command", () => {
+  const bindings = defaultKeybindings();
+  const context = { "focus.pane": "file-list" };
+  assert.equal(
+    keybindingChordForContext("file.rename", bindings, context, {
+      defaultKeybinding: "F2",
+      userBindings: [{ key: "Mod+Shift+R", command: "file.rename" }],
+    }),
+    "Mod+Shift+R",
+  );
+  assert.equal(
+    keybindingChordForContext("file.rename", bindings, context, {
+      defaultKeybinding: "F2",
+      userBindings: [{ key: "-F2", command: "file.rename" }],
+    }),
+    null,
+  );
+  assert.equal(
+    keybindingChordForContext("file.rename", bindings, context, {
+      defaultKeybinding: "F2",
+      userBindings: [{ key: "Mod+Shift+R", command: "file.rename", when: "selection.count > 1" }],
+    }),
+    null,
+  );
 });
 
 test("matchKeybinding matches arrow up/down in file list", () => {

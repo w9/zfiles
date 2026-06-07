@@ -66,6 +66,18 @@ export function formatModifiedAbsolute(value: unknown, locale: string): string |
   }).format(new Date(ms));
 }
 
+export function formatModifiedCombined(value: unknown, locale: string): string {
+  const absolute = formatModifiedAbsolute(value, locale);
+  if (absolute == null) {
+    return "—";
+  }
+  const relative = formatRelativeModified(value, locale);
+  if (relative === "—") {
+    return absolute;
+  }
+  return `${absolute} (${relative})`;
+}
+
 export function formatModifiedDisplay(
   value: unknown,
   locale: string,
@@ -74,7 +86,7 @@ export function formatModifiedDisplay(
   if (format === "absolute") {
     return formatModifiedAbsolute(value, locale) ?? "—";
   }
-  return formatRelativeModified(value, locale);
+  return formatModifiedCombined(value, locale);
 }
 
 export function formatSize(bytes: number | undefined, isDir: boolean): string {
