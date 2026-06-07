@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid/table keyboard navigation — vim-style h/j/k/l + arrows in grid (2D, clamp at edges); j/k + ↑↓ in table; Shift+all directions extend range. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid selection border — thicker primary-colored outline on selected cards. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -115,9 +115,11 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `videoDuration.ts`: `formatVideoDuration` helper + unit tests
 - [x] `GridCardPreview`: subtle play overlay + duration pill on loaded video posters
 - [x] `pnpm test`
-- [ ] `listingGridNavigation.ts`: 2D grid move helpers (clamp at edges) + unit tests
-- [ ] Context key `listing.view`; grid column count in `ExplorerApp`; extend action deps
-- [ ] `selection.move-left/right` actions; view-aware up/down handlers in `builtins.ts`
-- [ ] Keybindings: h/j/k/l + arrow keys with grid/table `when` clauses; Shift variants
-- [ ] i18n: shortcuts hint + move-left/right action names (14 locales)
-- [ ] `pnpm test`
+- [x] `listingGridNavigation.ts`: 2D grid move helpers (clamp at edges) + unit tests
+- [x] Context key `listing.view`; grid column count in `ExplorerApp`; extend action deps
+- [x] `selection.move-left/right` actions; view-aware up/down handlers in `builtins.ts`
+- [x] Keybindings: h/j/k/l + arrow keys with grid/table `when` clauses; Shift variants
+- [x] i18n: shortcuts hint + move-left/right action names (14 locales)
+- [x] `pnpm test`
+- [ ] `GridListing.tsx`: thicker primary-colored border on selected/focused grid cards
+- [ ] Run `pnpm test`
