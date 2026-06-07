@@ -2,6 +2,8 @@
 
 zfiles is a file explorer written in Rust. Local mode ships as a statically linked musl binary under 10 MB — embedded UI included, no runtime dependencies — that you point at a folder and open in the browser. Cloud mode is the same UI built as a static SPA for S3-compatible buckets (AWS S3, Cloudflare R2). There is no indexing step, no plugin host, and no filename search; listings come straight from the filesystem or object store, and the kernel cold-starts in milliseconds even when the served tree holds millions of entries. If you want a Finder-style shell that respects `sendfile(2)`, tus resume, and “don’t touch my repo with dot-metadata,” this is the shape of tool.
 
+https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
+
 ## Highlights
 
 - **Single static binary (local mode)** — React UI embedded via `rust-embed`; drop a musl build on Linux and run.
