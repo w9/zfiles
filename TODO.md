@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** none — grid image thumbnails cycle complete. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. Quick filter in the address bar is **done**. i18n now ships **14 locales** with locale-aware date formatting. **Current cycle:** grid/table keyboard navigation — vim-style h/j/k/l + arrows in grid (2D, clamp at edges); j/k + ↑↓ in table; Shift+all directions extend range. Deferred: dedicated preview panel (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -108,3 +108,16 @@ Dual-mode refactor is **complete**. Quick filter in the address bar is **done**.
 - [x] `GridListing`: wire preview when setting enabled and `isBrowserPreviewImage(name)`
 - [x] `SettingsPage` + providers (local/cloud): grid image previews toggle; i18n (14 locales)
 - [x] `pnpm test`
+- [x] `imagePaths.ts`: `isBrowserPreviewVideo` for `.mp4`/`.webm` + unit tests
+- [x] `GridCardPreview`: poster-frame `<video preload="metadata">` when in viewport; icon fallback on error
+- [x] i18n: extend grid previews label/description for images + videos (14 locales)
+- [x] `pnpm test`
+- [x] `videoDuration.ts`: `formatVideoDuration` helper + unit tests
+- [x] `GridCardPreview`: subtle play overlay + duration pill on loaded video posters
+- [x] `pnpm test`
+- [ ] `listingGridNavigation.ts`: 2D grid move helpers (clamp at edges) + unit tests
+- [ ] Context key `listing.view`; grid column count in `ExplorerApp`; extend action deps
+- [ ] `selection.move-left/right` actions; view-aware up/down handlers in `builtins.ts`
+- [ ] Keybindings: h/j/k/l + arrow keys with grid/table `when` clauses; Shift variants
+- [ ] i18n: shortcuts hint + move-left/right action names (14 locales)
+- [ ] `pnpm test`
