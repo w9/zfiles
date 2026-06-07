@@ -10,6 +10,7 @@ import {
 export type UploadItemStatus =
   | "pending"
   | "active"
+  | "verifying"
   | "awaiting_conflict"
   | "done"
   | "failed"
@@ -82,6 +83,7 @@ export function uploadPercent(item: UploadQueueItem): number {
 /** Display order for upload status segments in the panel header. */
 export const UPLOAD_QUEUE_HEADER_STATUS_ORDER: UploadItemStatus[] = [
   "active",
+  "verifying",
   "awaiting_conflict",
   "pending",
   "done",
@@ -482,6 +484,21 @@ export function useUploadQueue({
           commitProgressItem(queueId, updated, false);
           },
           abortController.signal,
+          () => {
+            setItems((prev) =>
+              prev.map((item) =>
+                item.id === queueId
+                  ? {
+                      ...item,
+                      status: "verifying" as const,
+                      offset: item.total,
+                      speedBps: null,
+                      etaSeconds: null,
+                    }
+                  : item,
+              ),
+            );
+          },
         );
         if (cancelledIdsRef.current.has(queueId)) {
           throw new DOMException("Upload aborted", "AbortError");
@@ -535,7 +552,9 @@ export function useUploadQueue({
     };
 
     const hasPending = items.some((item) => item.status === "pending");
-    const hasActive = items.some((item) => item.status === "active");
+    const hasActive = items.some(
+      (item) => item.status === "active" || item.status === "verifying",
+    );
     const hasAwaitingConflict = items.some((item) => item.status === "awaiting_conflict");
     if (hasPending && !hasActive && !hasAwaitingConflict) {
       void run();

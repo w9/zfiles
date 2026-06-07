@@ -1,5 +1,6 @@
 import { apiFetch, websocketUrl } from "../api";
 import { base64EncodeUtf8 } from "../base64Utf8";
+import { sha256Base64, sha256Base64Matches } from "../fileHash";
 import type {
   BackendEvent,
   BackendStatus,
@@ -14,8 +15,8 @@ import type {
 const UPLOAD_CHUNK_SIZE = 256 * 1024;
 const HEALTH_POLL_MS = 5_000;
 
-function encodeUploadMetadata(filename: string): string {
-  return `filename ${base64EncodeUtf8(filename)}`;
+function encodeUploadMetadata(filename: string, checksumBase64: string): string {
+  return `filename ${base64EncodeUtf8(filename)},checksum ${checksumBase64}`;
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -64,13 +65,15 @@ export class KernelBackend implements ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
+    onVerifying?: () => void,
   ): Promise<void> {
     throwIfAborted(signal);
+    const checksum = await sha256Base64(file, UPLOAD_CHUNK_SIZE, signal);
     const create = await apiFetch("/api/upload", {
       method: "POST",
       headers: {
         "Upload-Length": String(file.size),
-        "Upload-Metadata": encodeUploadMetadata(destPath),
+        "Upload-Metadata": encodeUploadMetadata(destPath, checksum),
       },
       signal,
     });
@@ -101,6 +104,9 @@ export class KernelBackend implements ExplorerBackend {
       });
 
       if (!patch.ok) {
+        if (patch.status === 400) {
+          throw new Error(`upload patch failed: HTTP ${patch.status}`);
+        }
         offset = await headUploadOffset(location, signal);
         if (offset >= file.size) {
           break;
@@ -110,6 +116,12 @@ export class KernelBackend implements ExplorerBackend {
 
       offset = Number(patch.headers.get("Upload-Offset") ?? String(offset + chunk.size));
       onProgress?.({ id: uploadId, offset, length: file.size });
+    }
+
+    onVerifying?.();
+    const verified = await sha256Base64Matches(file, checksum, UPLOAD_CHUNK_SIZE, signal);
+    if (!verified) {
+      throw new Error("checksum mismatch");
     }
   }
 

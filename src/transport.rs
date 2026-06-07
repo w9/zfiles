@@ -472,12 +472,13 @@ async fn create_upload(
         .map_err(|_| AppError(anyhow::anyhow!("invalid Upload-Length")))?
         .ok_or_else(|| AppError(anyhow::anyhow!("Upload-Length is required")))?;
 
-    let relative_path = parse_upload_metadata(headers.get(&HDR_UPLOAD_METADATA))?
-        .ok_or_else(|| AppError(anyhow::anyhow!("Upload-Metadata filename is required")))?;
+    let parsed = parse_upload_metadata(headers.get(&HDR_UPLOAD_METADATA))?;
 
-    let record = state
-        .state
-        .create_upload(relative_path, Some(upload_length))?;
+    let record = state.state.create_upload(
+        parsed.relative_path,
+        Some(upload_length),
+        parsed.checksum_sha256,
+    )?;
 
     let location = format!("/api/upload/{}", record.id);
     let mut response = StatusCode::CREATED.into_response();
@@ -652,13 +653,23 @@ async fn static_or_index(
     embed::serve_static(path)
 }
 
-fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<Option<String>, AppError> {
+struct ParsedUploadMetadata {
+    relative_path: String,
+    checksum_sha256: String,
+}
+
+fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<ParsedUploadMetadata, AppError> {
     let Some(value) = value else {
-        return Ok(None);
+        return Err(AppError(anyhow::anyhow!(
+            "Upload-Metadata filename and checksum are required"
+        )));
     };
     let value = value
         .to_str()
         .map_err(|_| AppError(anyhow::anyhow!("invalid Upload-Metadata")))?;
+
+    let mut relative_path = None;
+    let mut checksum_sha256 = None;
 
     for part in value.split(',') {
         let part = part.trim();
@@ -669,11 +680,27 @@ fn parse_upload_metadata(value: Option<&HeaderValue>) -> Result<Option<String>, 
                 .map_err(|_| AppError(anyhow::anyhow!("invalid Upload-Metadata filename")))?;
             let filename = String::from_utf8(decoded)
                 .map_err(|_| AppError(anyhow::anyhow!("invalid Upload-Metadata filename")))?;
-            return Ok(Some(filename));
+            relative_path = Some(filename);
+        } else if let Some(encoded) = part.strip_prefix("checksum ") {
+            use base64::Engine;
+            let decoded = base64::engine::general_purpose::STANDARD
+                .decode(encoded.trim())
+                .map_err(|_| AppError(anyhow::anyhow!("invalid Upload-Metadata checksum")))?;
+            if decoded.len() != 32 {
+                return Err(AppError(anyhow::anyhow!(
+                    "invalid Upload-Metadata checksum length"
+                )));
+            }
+            checksum_sha256 = Some(base64::engine::general_purpose::STANDARD.encode(decoded));
         }
     }
 
-    Ok(None)
+    Ok(ParsedUploadMetadata {
+        relative_path: relative_path
+            .ok_or_else(|| AppError(anyhow::anyhow!("Upload-Metadata filename is required")))?,
+        checksum_sha256: checksum_sha256
+            .ok_or_else(|| AppError(anyhow::anyhow!("Upload-Metadata checksum is required")))?,
+    })
 }
 
 #[derive(Debug)]
@@ -696,7 +723,13 @@ impl IntoResponse for AppError {
         let message = self.0.to_string();
         let status = if message.contains("offset conflict") {
             StatusCode::CONFLICT
-        } else if message.contains("escapes") || message.contains("not allowed") {
+        } else if message.contains("checksum mismatch")
+            || message.contains("Upload-Metadata")
+            || message.contains("invalid Upload-Metadata")
+            || message.contains("escapes")
+            || message.contains("not allowed")
+            || message.contains("cannot download a directory")
+        {
             StatusCode::BAD_REQUEST
         } else if message.contains("not found")
             || message.contains("failed to resolve path")
@@ -705,8 +738,6 @@ impl IntoResponse for AppError {
             || message.contains("unknown action")
         {
             StatusCode::NOT_FOUND
-        } else if message.contains("cannot download a directory") {
-            StatusCode::BAD_REQUEST
         } else {
             StatusCode::INTERNAL_SERVER_ERROR
         };
@@ -720,11 +751,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_upload_metadata_filename() {
+    fn parse_upload_metadata_filename_and_checksum() {
         use base64::Engine;
-        let encoded = base64::engine::general_purpose::STANDARD.encode("notes.txt");
-        let value = HeaderValue::from_str(&format!("filename {encoded}")).unwrap();
-        let path = parse_upload_metadata(Some(&value)).unwrap();
-        assert_eq!(path.as_deref(), Some("notes.txt"));
+        let filename = base64::engine::general_purpose::STANDARD.encode("notes.txt");
+        let checksum = base64::engine::general_purpose::STANDARD.encode([0u8; 32]);
+        let value =
+            HeaderValue::from_str(&format!("filename {filename},checksum {checksum}")).unwrap();
+        let parsed = parse_upload_metadata(Some(&value)).unwrap();
+        assert_eq!(parsed.relative_path, "notes.txt");
+        assert_eq!(parsed.checksum_sha256, checksum);
     }
 }

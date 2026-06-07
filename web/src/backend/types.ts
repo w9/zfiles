@@ -56,6 +56,7 @@ export interface ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
+    onVerifying?: () => void,
   ): Promise<void>;
   runAction(params: RunActionParams): Promise<void>;
   fetchHealth(): Promise<HealthInfo | null>;

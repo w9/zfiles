@@ -2,8 +2,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -11,6 +12,7 @@ struct UploadMeta {
     relative_path: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<u64>,
+    checksum_sha256: String,
 }
 
 pub struct StateStore {
@@ -130,7 +132,12 @@ impl StateStore {
         }))
     }
 
-    pub fn create_upload(&self, relative_path: String, size: Option<u64>) -> Result<UploadRecord> {
+    pub fn create_upload(
+        &self,
+        relative_path: String,
+        size: Option<u64>,
+        checksum_sha256: String,
+    ) -> Result<UploadRecord> {
         self.with_lock(|| {
             let id = Uuid::new_v4().to_string();
             self.ensure_state_dir()?;
@@ -142,6 +149,7 @@ impl StateStore {
             let meta = UploadMeta {
                 relative_path: relative_path.clone(),
                 size,
+                checksum_sha256,
             };
             Self::write_meta_atomic(&self.upload_meta_path(&id), &meta)?;
 
@@ -182,6 +190,40 @@ impl StateStore {
         })
     }
 
+    fn hash_spool(spool: &Path) -> Result<String> {
+        use base64::Engine;
+        use std::io::Read;
+
+        let mut file = std::fs::File::open(spool)
+            .with_context(|| format!("open upload spool {}", spool.display()))?;
+        let mut hasher = Sha256::new();
+        let mut buffer = [0u8; 256 * 1024];
+        loop {
+            let read = file
+                .read(&mut buffer)
+                .with_context(|| format!("read upload spool {}", spool.display()))?;
+            if read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..read]);
+        }
+        Ok(base64::engine::general_purpose::STANDARD.encode(hasher.finalize()))
+    }
+
+    fn remove_upload_artifacts(&self, id: &str) -> Result<()> {
+        let spool = self.upload_spool_path(id);
+        let meta_path = self.upload_meta_path(id);
+        if spool.is_file() {
+            std::fs::remove_file(&spool)
+                .with_context(|| format!("remove upload spool {}", spool.display()))?;
+        }
+        if meta_path.is_file() {
+            std::fs::remove_file(&meta_path)
+                .with_context(|| format!("remove upload meta {}", meta_path.display()))?;
+        }
+        Ok(())
+    }
+
     pub fn finalize_upload(&self, id: &str, fs: &crate::fs::LocalFs) -> Result<PathBuf> {
         self.with_lock(|| {
             let record = self
@@ -196,6 +238,13 @@ impl StateStore {
 
             let spool = self.upload_spool_path(id);
             let meta_path = self.upload_meta_path(id);
+            let meta = Self::read_meta(&meta_path)?;
+            let actual_checksum = Self::hash_spool(&spool)?;
+            if actual_checksum != meta.checksum_sha256 {
+                self.remove_upload_artifacts(id)?;
+                bail!("checksum mismatch");
+            }
+
             let target = fs.resolve_write(Path::new(&record.relative_path))?;
             if let Some(parent) = target.parent() {
                 std::fs::create_dir_all(parent)
@@ -232,8 +281,14 @@ mod tests {
     use super::*;
     use crate::fs::LocalFs;
     use crate::xdg;
+    use base64::Engine;
     use serde_json::Value;
+    use sha2::{Digest, Sha256};
     use tempfile::tempdir;
+
+    fn sha256_b64(data: &[u8]) -> String {
+        base64::engine::general_purpose::STANDARD.encode(Sha256::digest(data))
+    }
 
     fn upload_meta_path(store: &StateStore, id: &str) -> PathBuf {
         store.upload_meta_path(id)
@@ -275,7 +330,9 @@ mod tests {
             let store = StateStore::new(root.clone());
             let fs = LocalFs::new(root.clone());
 
-            let record = store.create_upload("incoming.txt".into(), Some(5)).unwrap();
+            let record = store
+                .create_upload("incoming.txt".into(), Some(5), sha256_b64(b"hello"))
+                .unwrap();
             assert_eq!(record.offset, 0);
             assert!(store.upload_spool_path(&record.id).exists());
             assert!(store.state_dir().starts_with(xdg::config_home()));
@@ -293,7 +350,9 @@ mod tests {
     fn create_upload_writes_meta_and_empty_spool() {
         let (_dir, store) = store_with_local_state("share");
 
-        let record = store.create_upload("file.txt".into(), Some(10)).unwrap();
+        let record = store
+            .create_upload("file.txt".into(), Some(10), sha256_b64(b""))
+            .unwrap();
         let spool = store.upload_spool_path(&record.id);
         let meta = upload_meta_path(&store, &record.id);
 
@@ -310,7 +369,9 @@ mod tests {
     #[test]
     fn offset_comes_from_spool_size() {
         let (_dir, store) = store_with_local_state("share");
-        let record = store.create_upload("file.txt".into(), Some(10)).unwrap();
+        let record = store
+            .create_upload("file.txt".into(), Some(10), sha256_b64(b""))
+            .unwrap();
 
         store.append_upload(&record.id, b"ab").unwrap();
         let loaded = store.get_upload(&record.id).unwrap().unwrap();
@@ -331,7 +392,9 @@ mod tests {
     fn multi_chunk_append_then_finalize() {
         let (_dir, store) = store_with_local_state("share");
         let fs = LocalFs::new(store.serve_root().to_path_buf());
-        let record = store.create_upload("chunks.bin".into(), Some(6)).unwrap();
+        let record = store
+            .create_upload("chunks.bin".into(), Some(6), sha256_b64(b"abcdef"))
+            .unwrap();
 
         store.append_upload(&record.id, b"ab").unwrap();
         store.append_upload(&record.id, b"cd").unwrap();
@@ -346,7 +409,9 @@ mod tests {
         let (_dir, store) = store_with_local_state("share");
         let root = store.serve_root().to_path_buf();
         let state_dir = store.state_dir();
-        let record = store.create_upload("resume.txt".into(), Some(6)).unwrap();
+        let record = store
+            .create_upload("resume.txt".into(), Some(6), sha256_b64(b"abcdef"))
+            .unwrap();
         store.append_upload(&record.id, b"abc").unwrap();
         let id = record.id.clone();
 
@@ -361,10 +426,29 @@ mod tests {
     }
 
     #[test]
+    fn checksum_mismatch_rejects_and_cleans() {
+        let (_dir, store) = store_with_local_state("share");
+        let fs = LocalFs::new(store.serve_root().to_path_buf());
+        let record = store
+            .create_upload("bad.txt".into(), Some(3), sha256_b64(b"wrong"))
+            .unwrap();
+        let id = record.id.clone();
+        store.append_upload(&id, b"abc").unwrap();
+
+        let err = store.finalize_upload(&id, &fs).unwrap_err();
+        assert!(err.to_string().contains("checksum mismatch"));
+        assert!(!store.serve_root().join("bad.txt").exists());
+        assert!(!store.upload_spool_path(&id).exists());
+        assert!(!upload_meta_path(&store, &id).exists());
+    }
+
+    #[test]
     fn finalize_cleans_artifacts() {
         let (_dir, store) = store_with_local_state("share");
         let fs = LocalFs::new(store.serve_root().to_path_buf());
-        let record = store.create_upload("done.txt".into(), Some(3)).unwrap();
+        let record = store
+            .create_upload("done.txt".into(), Some(3), sha256_b64(b"yes"))
+            .unwrap();
         let id = record.id.clone();
         let spool = store.upload_spool_path(&id);
         let meta = upload_meta_path(&store, &id);
@@ -380,7 +464,9 @@ mod tests {
     #[test]
     fn append_exceeds_upload_length_fails() {
         let (_dir, store) = store_with_local_state("share");
-        let record = store.create_upload("file.txt".into(), Some(3)).unwrap();
+        let record = store
+            .create_upload("file.txt".into(), Some(3), sha256_b64(b"abc"))
+            .unwrap();
         store.append_upload(&record.id, b"ab").unwrap();
 
         let err = store.append_upload(&record.id, b"cde").unwrap_err();
@@ -394,7 +480,9 @@ mod tests {
     fn finalize_incomplete_fails() {
         let (_dir, store) = store_with_local_state("share");
         let fs = LocalFs::new(store.serve_root().to_path_buf());
-        let record = store.create_upload("file.txt".into(), Some(5)).unwrap();
+        let record = store
+            .create_upload("file.txt".into(), Some(5), sha256_b64(b"hello"))
+            .unwrap();
         store.append_upload(&record.id, b"ab").unwrap();
 
         let err = store.finalize_upload(&record.id, &fs).unwrap_err();
@@ -430,7 +518,7 @@ mod tests {
         let (_dir, store) = store_with_local_state("share");
         let fs = LocalFs::new(store.serve_root().to_path_buf());
         let record = store
-            .create_upload("nested/dir/file.txt".into(), Some(2))
+            .create_upload("nested/dir/file.txt".into(), Some(2), sha256_b64(b"ok"))
             .unwrap();
 
         let meta = read_meta(&store, &record.id);
@@ -447,8 +535,12 @@ mod tests {
         let (_dir, store) = store_with_local_state("share");
         let fs = LocalFs::new(store.serve_root().to_path_buf());
 
-        let a = store.create_upload("a.txt".into(), Some(1)).unwrap();
-        let b = store.create_upload("b.txt".into(), Some(2)).unwrap();
+        let a = store
+            .create_upload("a.txt".into(), Some(1), sha256_b64(b"a"))
+            .unwrap();
+        let b = store
+            .create_upload("b.txt".into(), Some(2), sha256_b64(b"bb"))
+            .unwrap();
 
         store.append_upload(&a.id, b"a").unwrap();
         store.append_upload(&b.id, b"bb").unwrap();

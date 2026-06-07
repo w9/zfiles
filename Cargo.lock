@@ -2384,7 +2384,7 @@ dependencies = [
 
 [[package]]
 name = "zfiles"
-version = "0.1.58"
+version = "0.1.60"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2402,6 +2402,7 @@ dependencies = [
  "rust-embed",
  "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "tokio",
  "tokio-tungstenite 0.26.2",

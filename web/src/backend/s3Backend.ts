@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
@@ -18,6 +19,7 @@ import {
   objectKeyForPath,
 } from "../cloud/s3Paths";
 import type { S3ConnectionConfig } from "../cloud/types";
+import { sha256Base64, sha256Base64Matches } from "../fileHash";
 import type {
   BackendEvent,
   BackendStatus,
@@ -203,6 +205,7 @@ export class S3Backend implements ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
+    onVerifying?: () => void,
   ): Promise<void> {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
@@ -210,6 +213,7 @@ export class S3Backend implements ExplorerBackend {
     if (signal?.aborted) {
       throw new DOMException("Upload aborted", "AbortError");
     }
+    const checksum = await sha256Base64(file, undefined, signal);
     const key = keyForExplorerPath(this.config.prefix, destPath);
     const upload = new Upload({
       client: this.client,
@@ -218,6 +222,7 @@ export class S3Backend implements ExplorerBackend {
         Key: key,
         Body: file,
         ContentType: file.type || undefined,
+        ChecksumAlgorithm: "SHA256",
       },
     });
     const onAbort = () => {
@@ -236,8 +241,31 @@ export class S3Backend implements ExplorerBackend {
     });
     try {
       await upload.done();
+    } catch (err) {
+      await this.deleteUploadedObject(key);
+      throw err;
     } finally {
       signal?.removeEventListener("abort", onAbort);
+    }
+
+    onVerifying?.();
+    const verified = await sha256Base64Matches(file, checksum, undefined, signal);
+    if (!verified) {
+      await this.deleteUploadedObject(key);
+      throw new Error("checksum mismatch");
+    }
+  }
+
+  private async deleteUploadedObject(key: string): Promise<void> {
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({
+          Bucket: this.config.bucket,
+          Key: key,
+        }),
+      );
+    } catch {
+      // Best-effort cleanup after a failed or mismatched upload.
     }
   }
 

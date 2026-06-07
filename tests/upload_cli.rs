@@ -4,6 +4,7 @@ use std::sync::Arc;
 use axum_test::TestServer;
 use base64::Engine;
 use reqwest::Client;
+use sha2::{Digest, Sha256};
 use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
@@ -58,10 +59,14 @@ async fn cli_upload_resumes_from_offset() {
 
     let client = Client::new();
     let encoded = base64::engine::general_purpose::STANDARD.encode("partial.bin");
+    let checksum = base64::engine::general_purpose::STANDARD.encode(Sha256::digest(b"abcdef"));
     let create = client
         .post(format!("{}/api/upload", server_url.trim_end_matches('/')))
         .header("Upload-Length", "6")
-        .header("Upload-Metadata", format!("filename {encoded}"))
+        .header(
+            "Upload-Metadata",
+            format!("filename {encoded},checksum {checksum}"),
+        )
         .send()
         .await
         .expect("create upload");
@@ -85,7 +90,10 @@ async fn cli_upload_resumes_from_offset() {
         .error_for_status()
         .expect("partial patch status");
 
-    let state = serde_json::json!({ "location": location });
+    let state = serde_json::json!({
+        "location": location,
+        "checksum_sha256": checksum,
+    });
     fs::write(
         local.with_extension("zfiles-upload.json"),
         state.to_string(),

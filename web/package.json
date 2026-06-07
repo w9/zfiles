@@ -12,12 +12,13 @@
     "dev:cloud": "vite --config vite.cloud.config.ts --open /",
     "preview:cloud": "vite preview --config vite.cloud.config.ts --outDir dist-cloud",
     "preview": "vite preview",
-    "test": "pnpm generate-icons && tsx --test src/theme.test.ts src/i18n/i18n.test.ts src/actions/*.test.ts src/listing-format.test.ts src/listingSort.test.ts src/listingFilter.test.ts src/listingEmpty.test.ts src/quickFilter.test.ts src/fileIcons.test.ts src/base64Utf8.test.ts src/api.test.ts src/backend/*.test.ts src/cloud/*.test.ts src/explorer/*.test.ts src/routing/*.test.ts src/settings/*.test.ts src/preview-metadata.test.ts src/previewLayout.test.ts src/slideshowZoom.test.ts src/slideshowPan.test.ts src/slideshowNavigation.test.ts src/imagePaths.test.ts src/videoDuration.test.ts src/upload-conflict.test.ts src/upload-queue.test.ts src/useGlobalFileDrop.test.ts"
+    "test": "pnpm generate-icons && tsx --test src/theme.test.ts src/i18n/i18n.test.ts src/actions/*.test.ts src/listing-format.test.ts src/listingSort.test.ts src/listingFilter.test.ts src/listingEmpty.test.ts src/quickFilter.test.ts src/fileIcons.test.ts src/base64Utf8.test.ts src/fileHash.test.ts src/api.test.ts src/backend/*.test.ts src/cloud/*.test.ts src/explorer/*.test.ts src/routing/*.test.ts src/settings/*.test.ts src/preview-metadata.test.ts src/previewLayout.test.ts src/slideshowZoom.test.ts src/slideshowPan.test.ts src/slideshowNavigation.test.ts src/imagePaths.test.ts src/videoDuration.test.ts src/upload-conflict.test.ts src/upload-queue.test.ts src/useGlobalFileDrop.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1056.0",
     "@aws-sdk/lib-storage": "^3.1056.0",
     "@aws-sdk/s3-request-presigner": "^3.1056.0",
+    "@noble/hashes": "1.8.0",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

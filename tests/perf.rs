@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 
 use axum_test::TestServer;
 use base64::Engine;
+use sha2::{Digest, Sha256};
 use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
@@ -102,11 +103,15 @@ async fn upload_one_mib_under_sla() {
 
     let payload = vec![7u8; ONE_MIB];
     let encoded = base64::engine::general_purpose::STANDARD.encode("large-upload.bin");
+    let checksum = base64::engine::general_purpose::STANDARD.encode(Sha256::digest(&payload));
     let start = Instant::now();
     let create = server
         .post("/api/upload")
         .add_header("Upload-Length", &ONE_MIB.to_string())
-        .add_header("Upload-Metadata", &format!("filename {encoded}"))
+        .add_header(
+            "Upload-Metadata",
+            &format!("filename {encoded},checksum {checksum}"),
+        )
         .await;
     create.assert_status(axum::http::StatusCode::CREATED);
 

@@ -34,6 +34,7 @@ export const fr: Record<MessageKey, string> = {
   "upload.queue.title": "Téléversements ({{count}})",
   "upload.queue.titleWithStatus": "Téléversements ({{count}}) · {{statusSummary}}",
   "upload.queue.header.active": "{{count}} en cours",
+  "upload.queue.header.verifying": "{{count}} en vérification",
   "upload.queue.header.pending": "{{count}} en attente",
   "upload.queue.header.awaitingConflict": "{{count}} en suspens",
   "upload.queue.header.done": "{{count}} terminés",
@@ -42,6 +43,7 @@ export const fr: Record<MessageKey, string> = {
   "upload.clearFinished": "Effacer les terminés",
   "upload.status.pending": "En attente",
   "upload.status.active": "Téléversement",
+  "upload.status.verifying": "Vérification…",
   "upload.status.done": "Terminé",
   "upload.status.failed": "Échoué",
   "upload.status.cancelled": "Annulé",
@@ -261,6 +263,9 @@ export const fr: Record<MessageKey, string> = {
   "settings.paste.batch.label": "Lorsqu'un élément échoue pendant le collage",
   "settings.paste.batch.stop": "Arrêter et conserver les éléments terminés",
   "settings.paste.batch.continue": "Continuer avec les éléments restants",
+  "settings.shareUrl.title": "URL de partage",
+  "settings.shareUrl.description":
+    "Lors de la copie d’un lien de partage, choisissez d’inclure ou non les identifiants du bucket dans la chaîne de requête. Utilisez uniquement des clés à courte durée de vie.",
   "viewer.category": "Visionneuse d'images",
   "viewer.nextImage.name": "Image suivante",
   "viewer.prevImage.name": "Image précédente",
@@ -285,6 +290,10 @@ export const fr: Record<MessageKey, string> = {
   "connect.submit": "Se connecter",
   "connect.connecting": "Connexion…",
   "connect.disconnect": "Se déconnecter",
+  "connect.shareUrl.label": "Copier l’URL de partage",
+  "connect.shareUrl.copied": "URL de partage copiée dans le presse-papiers",
+  "connect.shareUrl.copyFailed": "Impossible de copier l’URL de partage",
+  "connect.shareUrl.includeCredentials": "Inclure les identifiants dans l’URL de partage",
   "connect.error.required":
     "Le bucket, la clé d'accès et la clé secrète sont obligatoires.",
   "connect.error.endpointRequired":

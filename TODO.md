@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** upload SHA-256 validation v1 — required checksum on tus create (local/LAN + CLI), server verify at finalize (reject + delete spool on mismatch), cloud multipart with SHA256 + DeleteObject on SDK mismatch, client rehash + “Verifying…” queue state. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** cloud share URL — copy deep link from current config (credentials optional via settings toggle), `/f/…` pathname for browse location. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -79,9 +79,14 @@ Dual-mode refactor is **complete**. **Current cycle:** upload SHA-256 validation
 - [x] `previewLayout.ts`: change inline preview threshold from 50% to 40% of main content; update tests
 - [x] `slideshowPan.ts`: widen `touchPairDistance` param to `ArrayLike` so `TouchList` is accepted
 - [x] Run `pnpm test` and `pnpm build` in `web/`
-- [ ] `fileHash.ts`: streaming SHA-256 (base64 digest) + unit tests
-- [ ] Rust tus: required `checksum` in Upload-Metadata, verify spool at finalize, cleanup on mismatch + integration tests
-- [ ] `kernelBackend.ts` + `upload.rs` CLI: hash before create, client rehash + `onVerifying`; resume stores checksum in state
-- [ ] `s3Backend.ts`: `ChecksumAlgorithm: SHA256`, verify via SDK, DeleteObject on mismatch
-- [ ] Upload queue + panel: `verifying` status; i18n keys (14 locales)
-- [ ] `cargo test` + `pnpm test`
+- [x] `fileHash.ts`: streaming SHA-256 (base64 digest) + unit tests
+- [x] Rust tus: required `checksum` in Upload-Metadata, verify spool at finalize, cleanup on mismatch + integration tests
+- [x] `kernelBackend.ts` + `upload.rs` CLI: hash before create, client rehash + `onVerifying`; resume stores checksum in state
+- [x] `s3Backend.ts`: `ChecksumAlgorithm: SHA256`, verify via SDK, DeleteObject on mismatch
+- [x] Upload queue + panel: `verifying` status; i18n keys (14 locales)
+- [x] `cargo test` + `pnpm test`
+- [x] `shareUrl.ts`: build camelCase deep link (`/f/…` + query) + unit tests; accept `readOnly` boot param
+- [x] `shareUrlSettings.ts`: localStorage toggle for include-credentials (default on)
+- [x] `ShareUrlButton`: copy-to-clipboard + toast; wire explorer header (left of Disconnect) and connect dialog
+- [x] `SettingsPage`: cloud-only include-credentials checkbox; i18n keys (14 locales)
+- [x] Run `pnpm test`

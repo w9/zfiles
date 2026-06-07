@@ -4,12 +4,14 @@ use anyhow::{Context, Result, bail};
 use base64::Engine;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderValue, LOCATION};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 const CHUNK_SIZE: usize = 256 * 1024;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct UploadState {
     location: String,
+    checksum_sha256: String,
 }
 
 pub struct UploadOptions<'a> {
@@ -28,10 +30,14 @@ pub async fn upload_file(options: UploadOptions<'_>) -> Result<()> {
         .await
         .with_context(|| format!("stat {}", options.file.display()))?;
     let upload_length = metadata.len();
+    let checksum_sha256 = sha256_b64_file(options.file).await?;
     let client = reqwest::Client::new();
 
     let location = if options.resume {
         if let Some(state) = read_state(options.file)? {
+            if state.checksum_sha256 != checksum_sha256 {
+                bail!("local file changed since upload started");
+            }
             state.location
         } else {
             create_upload(
@@ -39,6 +45,7 @@ pub async fn upload_file(options: UploadOptions<'_>) -> Result<()> {
                 options.server,
                 options.target_path,
                 upload_length,
+                &checksum_sha256,
                 options.token,
             )
             .await?
@@ -49,12 +56,13 @@ pub async fn upload_file(options: UploadOptions<'_>) -> Result<()> {
             options.server,
             options.target_path,
             upload_length,
+            &checksum_sha256,
             options.token,
         )
         .await?
     };
 
-    write_state(options.file, &location)?;
+    write_state(options.file, &location, &checksum_sha256)?;
 
     let mut offset = head_offset(&client, &location, options.token).await?;
     let mut file = tokio::fs::File::open(options.file)
@@ -102,8 +110,33 @@ pub async fn upload_file(options: UploadOptions<'_>) -> Result<()> {
             .unwrap_or(offset + read as u64);
     }
 
+    let verified = sha256_b64_file(options.file).await?;
+    if verified != checksum_sha256 {
+        bail!("checksum mismatch");
+    }
+
     clear_state(options.file)?;
     Ok(())
+}
+
+async fn sha256_b64_file(path: &Path) -> Result<String> {
+    let mut file = tokio::fs::File::open(path)
+        .await
+        .with_context(|| format!("open {}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; CHUNK_SIZE];
+    use tokio::io::AsyncReadExt;
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .await
+            .context("read file for checksum")?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(base64::engine::general_purpose::STANDARD.encode(hasher.finalize()))
 }
 
 async fn create_upload(
@@ -111,6 +144,7 @@ async fn create_upload(
     server: &str,
     target_path: &str,
     upload_length: u64,
+    checksum_sha256: &str,
     token: Option<&str>,
 ) -> Result<String> {
     let mut headers = auth_headers(token);
@@ -121,8 +155,9 @@ async fn create_upload(
     headers.insert(
         "Upload-Metadata",
         HeaderValue::from_str(&format!(
-            "filename {}",
-            base64::engine::general_purpose::STANDARD.encode(target_path)
+            "filename {},checksum {}",
+            base64::engine::general_purpose::STANDARD.encode(target_path),
+            checksum_sha256
         ))
         .context("upload metadata header")?,
     );
@@ -177,9 +212,10 @@ fn read_state(file: &Path) -> Result<Option<UploadState>> {
     ))
 }
 
-fn write_state(file: &Path, location: &str) -> Result<()> {
+fn write_state(file: &Path, location: &str, checksum_sha256: &str) -> Result<()> {
     let state = UploadState {
         location: location.to_string(),
+        checksum_sha256: checksum_sha256.to_string(),
     };
     std::fs::write(
         state_path(file),

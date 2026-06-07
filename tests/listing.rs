@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum_test::TestServer;
 use base64::Engine;
+use sha2::{Digest, Sha256};
 use tempfile::tempdir;
 use zfiles::auth::AuthConfig;
 use zfiles::events::EventBus;
@@ -143,10 +144,14 @@ async fn tus_upload_completes_file() {
     let server = test_server(dir.path());
 
     let encoded = base64::engine::general_purpose::STANDARD.encode("uploaded.txt");
+    let checksum = base64::engine::general_purpose::STANDARD.encode(Sha256::digest(b"hello"));
     let create = server
         .post("/api/upload")
         .add_header("Upload-Length", "5")
-        .add_header("Upload-Metadata", &format!("filename {encoded}"))
+        .add_header(
+            "Upload-Metadata",
+            &format!("filename {encoded},checksum {checksum}"),
+        )
         .await;
     create.assert_status(axum::http::StatusCode::CREATED);
 
@@ -179,10 +184,14 @@ async fn read_only_blocks_uploads() {
     let server = test_server_with_options(dir.path(), true);
 
     let encoded = base64::engine::general_purpose::STANDARD.encode("blocked.txt");
+    let checksum = base64::engine::general_purpose::STANDARD.encode([0u8; 32]);
     let create = server
         .post("/api/upload")
         .add_header("Upload-Length", "1")
-        .add_header("Upload-Metadata", &format!("filename {encoded}"))
+        .add_header(
+            "Upload-Metadata",
+            &format!("filename {encoded},checksum {checksum}"),
+        )
         .await;
 
     create.assert_status(axum::http::StatusCode::FORBIDDEN);

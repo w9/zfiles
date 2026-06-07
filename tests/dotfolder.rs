@@ -1,3 +1,5 @@
+use base64::Engine;
+use sha2::{Digest, Sha256};
 use tempfile::tempdir;
 use zfiles::config::Config;
 use zfiles::state::StateStore;
@@ -15,7 +17,11 @@ fn xdg_state_dir_stores_state_outside_serve_root() {
         assert!(store.state_dir().starts_with(xdg::config_home()));
         assert!(!store.state_dir().starts_with(&root));
 
-        let record = store.create_upload("file.txt".into(), Some(0)).unwrap();
+        let checksum =
+            base64::engine::general_purpose::STANDARD.encode(Sha256::digest(b"" as &[u8]));
+        let record = store
+            .create_upload("file.txt".into(), Some(0), checksum)
+            .unwrap();
         let meta = store
             .state_dir()
             .join("uploads")

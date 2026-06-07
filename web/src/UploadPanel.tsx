@@ -39,6 +39,8 @@ function statusLabel(
       return t("upload.status.awaitingConflict");
     case "active":
       return t("upload.status.active");
+    case "verifying":
+      return t("upload.status.verifying");
     case "done":
       return t("upload.status.done");
     case "failed":
@@ -55,6 +57,17 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
     return t("upload.statsQueued", {
       status,
       size: formatSize(item.total, false),
+    });
+  }
+
+  if (item.status === "verifying") {
+    const uploaded = formatSize(item.total, false);
+    const total = formatSize(item.total, false);
+    return t("upload.statsBasic", {
+      status,
+      uploaded,
+      total,
+      percent: "100",
     });
   }
 
@@ -77,6 +90,7 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
 const HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
   pending: "upload.queue.header.pending",
   active: "upload.queue.header.active",
+  verifying: "upload.queue.header.verifying",
   awaiting_conflict: "upload.queue.header.awaitingConflict",
   done: "upload.queue.header.done",
   failed: "upload.queue.header.failed",
