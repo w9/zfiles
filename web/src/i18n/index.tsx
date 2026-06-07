@@ -20,6 +20,7 @@ export type { Locale, MessageKey };
 export {
   LOCALE_STORAGE_KEY,
   LOCALE_URL_PARAM,
+  SUPPORTED_LOCALES,
   backendStatusMessage,
   readInitialLocale,
   readLocaleFromUrl,
@@ -42,7 +43,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
     window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
-    document.documentElement.lang = next === "zh-CN" ? "zh-CN" : "en";
+    document.documentElement.lang = next;
   }, []);
 
   const value = useMemo<I18nContextValue>(

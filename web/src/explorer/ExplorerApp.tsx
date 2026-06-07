@@ -566,7 +566,7 @@ export default function ExplorerApp() {
       name: t("listing.column.name"),
       size: t("listing.column.size"),
       modified: t("listing.column.modified"),
-      locale: locale === "zh-CN" ? "zh-CN" : "en",
+      locale,
       modifiedTimeFormat,
       listingSortOrder,
     }),

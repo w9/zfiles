@@ -216,7 +216,7 @@ The React UI is compiled by Vite. **Local:** output embedded in the binary; dev 
 - **Backend injection.** `useExplorerBackend()` (or equivalent context) is the only path from components to storage.
 - **Preview.** Client-side decode for common images (JPEG, PNG, WebP, GIF). Other types: metadata panel + download link. No dynamic plugin viewer imports.
 - **Actions.** Built-in actions only; see [action_system.md](action_system.md). No plugin action registration or `plugin.*` context keys.
-- **i18n.** English and Simplified Chinese (`zh-CN`) for all user-visible strings.
+- **i18n.** All user-visible strings ship in 14 locales: English (`en`), Simplified Chinese (`zh-CN`), Traditional Chinese (`zh-TW`), Spanish (`es`), French (`fr`), Italian (`it`), Portuguese (`pt`), Russian (`ru`), German (`de`), Japanese (`ja`), Korean (`ko`), Turkish (`tr`), Indonesian (`id`), and Vietnamese (`vi`). `resolveLocale` normalizes BCP-47 tags (region/script subtags, casing) to a supported locale and falls back to English; each catalog implements the full `MessageKey` set, with English as the runtime fallback for any missing key.
 
 ### Cloud boot and URL params
 

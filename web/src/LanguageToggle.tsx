@@ -13,12 +13,27 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { type Locale, useTranslation } from "@/i18n";
+import { type Locale, type MessageKey, SUPPORTED_LOCALES, useTranslation } from "@/i18n";
 
-const LOCALES: Locale[] = ["en", "zh-CN"];
+const LOCALE_LABEL_KEYS: Record<Locale, MessageKey> = {
+  en: "language.en",
+  "zh-CN": "language.zhCN",
+  "zh-TW": "language.zhTW",
+  es: "language.es",
+  fr: "language.fr",
+  it: "language.it",
+  pt: "language.pt",
+  ru: "language.ru",
+  de: "language.de",
+  ja: "language.ja",
+  ko: "language.ko",
+  tr: "language.tr",
+  id: "language.id",
+  vi: "language.vi",
+};
 
-function localeLabel(locale: Locale, t: (key: "language.en" | "language.zhCN") => string) {
-  return locale === "zh-CN" ? t("language.zhCN") : t("language.en");
+function localeLabel(locale: Locale, t: (key: MessageKey) => string) {
+  return t(LOCALE_LABEL_KEYS[locale]);
 }
 
 type LanguageToggleProps = {
@@ -54,12 +69,12 @@ export default function LanguageToggle({ iconOnly = false }: LanguageToggleProps
       ) : (
         <DropdownMenuTrigger asChild>{menuButton}</DropdownMenuTrigger>
       )}
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="max-h-[60vh] overflow-y-auto">
         <DropdownMenuRadioGroup
           value={locale}
           onValueChange={(value) => setLocale(value as Locale)}
         >
-          {LOCALES.map((option) => (
+          {SUPPORTED_LOCALES.map((option) => (
             <DropdownMenuRadioItem key={option} value={option}>
               {localeLabel(option, t)}
             </DropdownMenuRadioItem>
