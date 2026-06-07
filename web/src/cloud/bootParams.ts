@@ -39,7 +39,9 @@ export function readBootParamsFromSearch(search: string): S3BootParams {
     region: params.get("region") ?? undefined,
     endpoint: params.get("endpoint") ?? undefined,
     prefix: params.get("prefix") ?? undefined,
-    readOnly: parseBoolean(params.get("readonly") ?? params.get("read_only")),
+    readOnly: parseBoolean(
+      params.get("readonly") ?? params.get("read_only") ?? params.get("readOnly"),
+    ),
     accessKeyId: firstParam(params, "accessKeyId", "access_key_id"),
     secretAccessKey: firstParam(params, "secretAccessKey", "secret_access_key"),
     sessionToken: firstParam(params, "sessionToken", "session_token"),

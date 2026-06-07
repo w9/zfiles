@@ -36,6 +36,11 @@ import {
   type PasteDestinationWhenFolderSelected,
 } from "@/settings/pasteDestination";
 import { useTheme } from "@/useTheme";
+import { detectBootMode } from "@/cloud/bootParams";
+import {
+  readShareUrlIncludeCredentials,
+  storeShareUrlIncludeCredentials,
+} from "@/cloud/shareUrlSettings";
 
 function parseDimensionInput(value: string, allowUnlimited = false): number | null {
   const trimmed = value.trim();
@@ -137,6 +142,10 @@ export default function SettingsPage() {
     readStoredPasteDestination,
   );
   const [pasteBatchOnError, setPasteBatchOnError] = useState(readStoredPasteBatchOnError);
+  const isCloudMode = detectBootMode() === "cloud";
+  const [shareUrlIncludeCredentials, setShareUrlIncludeCredentials] = useState(
+    readShareUrlIncludeCredentials,
+  );
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-8">
@@ -499,6 +508,26 @@ export default function SettingsPage() {
           </ToggleGroup>
         </div>
       </section>
+
+      {isCloudMode ? (
+        <section className="mt-6 rounded-xl border bg-card p-6">
+          <h2 className="text-base font-semibold">{t("settings.shareUrl.title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("settings.shareUrl.description")}
+          </p>
+          <label className="mt-6 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={shareUrlIncludeCredentials}
+              onChange={(event) => {
+                setShareUrlIncludeCredentials(event.target.checked);
+                storeShareUrlIncludeCredentials(event.target.checked);
+              }}
+            />
+            {t("connect.shareUrl.includeCredentials")}
+          </label>
+        </section>
+      ) : null}
     </main>
   );
 }

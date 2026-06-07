@@ -84,6 +84,9 @@ import type { ListingColumnLabels } from "../listing-types";
 import { useListingDisplayOrder } from "../useListingDisplayOrder";
 import DisconnectButton from "../cloud/DisconnectButton";
 import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
+import { loadSessionConfig } from "../cloud/credentials";
+import ShareUrlButton from "../cloud/ShareUrlButton";
+import { connectionConfigToShareInput } from "../cloud/shareUrl";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
@@ -113,6 +116,7 @@ const CONTEXT_MENU_REQUIRES_ROW = new Set([
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
   const onCloudDisconnect = useCloudDisconnect();
+  const cloudSessionConfig = onCloudDisconnect ? loadSessionConfig() : null;
   const { t, locale } = useTranslation();
   const { navigate } = useAppRoute();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
@@ -1077,7 +1081,15 @@ export default function ExplorerApp() {
               ariaLabel={t("actions.toolbar.label")}
             />
             {onCloudDisconnect ? (
-              <DisconnectButton onClick={onCloudDisconnect} />
+              <>
+                {cloudSessionConfig ? (
+                  <ShareUrlButton
+                    input={connectionConfigToShareInput(cloudSessionConfig)}
+                    explorerPath={currentPath}
+                  />
+                ) : null}
+                <DisconnectButton onClick={onCloudDisconnect} />
+              </>
             ) : null}
           </div>
         </div>

@@ -15,6 +15,12 @@ import { createS3Backend, validateS3Connection } from "@/backend/s3Backend";
 import type { S3Backend } from "@/backend/s3Backend";
 import { readBootParamsFromUrl } from "./bootParams";
 import { saveSessionConfig } from "./credentials";
+import ShareUrlButton from "./ShareUrlButton";
+import { formToShareInput } from "./shareUrl";
+import {
+  readShareUrlIncludeCredentials,
+  storeShareUrlIncludeCredentials,
+} from "./shareUrlSettings";
 import type { S3BootParams, S3ConnectionConfig, S3Provider } from "./types";
 
 type ConnectDialogProps = {
@@ -78,6 +84,9 @@ export default function ConnectDialog({
   const [form, setForm] = useState<FormState>(() => initialForm(resolvedBoot));
   const [error, setError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [includeCredentials, setIncludeCredentials] = useState(
+    readShareUrlIncludeCredentials,
+  );
   const autoConnectAttempted = useRef(false);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -136,9 +145,15 @@ export default function ConnectDialog({
   return (
     <Dialog open={open}>
       <DialogContent className="max-w-lg" showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{t("connect.title")}</DialogTitle>
-          <DialogDescription>{t("connect.description")}</DialogDescription>
+        <DialogHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div className="space-y-1.5">
+            <DialogTitle>{t("connect.title")}</DialogTitle>
+            <DialogDescription>{t("connect.description")}</DialogDescription>
+          </div>
+          <ShareUrlButton
+            input={formToShareInput(form)}
+            includeCredentials={includeCredentials}
+          />
         </DialogHeader>
         <form className="grid gap-4" onSubmit={(event) => void onSubmit(event)}>
           <div className="grid gap-2">
@@ -247,6 +262,17 @@ export default function ConnectDialog({
               onChange={(event) => update("readOnly", event.target.checked)}
             />
             {t("connect.readOnly")}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={includeCredentials}
+              onChange={(event) => {
+                setIncludeCredentials(event.target.checked);
+                storeShareUrlIncludeCredentials(event.target.checked);
+              }}
+            />
+            {t("connect.shareUrl.includeCredentials")}
           </label>
           <p className="text-xs text-muted-foreground">{t("connect.privacy")}</p>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}

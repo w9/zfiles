@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import AppShell from "@/AppShell";
 import { ExplorerBackendProvider } from "@/backend";
 import { createS3Backend, type S3Backend } from "@/backend/s3Backend";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n";
 import { CloudDisconnectProvider } from "./CloudDisconnectContext";
@@ -57,6 +58,7 @@ export default function CloudApp() {
       <I18nProvider>
         <TooltipProvider>
           <ConnectDialog open bootParams={bootParams} onConnected={setBackend} />
+          <Toaster richColors closeButton position="bottom-right" />
         </TooltipProvider>
       </I18nProvider>
     );

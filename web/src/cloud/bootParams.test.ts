@@ -49,6 +49,10 @@ test("readBootParamsFromSearch parses credential params", () => {
   );
 });
 
+test("readBootParamsFromSearch accepts readOnly camelCase alias", () => {
+  assert.equal(readBootParamsFromSearch("?readOnly=true").readOnly, true);
+});
+
 test("readBootParamsFromSearch prefers camelCase credential aliases", () => {
   assert.equal(
     readBootParamsFromSearch("?accessKeyId=camel&access_key_id=snake").accessKeyId,
