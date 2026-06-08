@@ -54,7 +54,8 @@ import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
 import UploadPanel from "../UploadPanel";
 import UploadConflictDialog from "../UploadConflictDialog";
 import UploadButton from "../UploadButton";
-import { useUploadQueue } from "../upload-queue";
+import { useMultipartSessions } from "../cloud/useMultipartSessions";
+import { activeMultipartUploadIds, useUploadQueue } from "../upload-queue";
 import { useGlobalFileDrop } from "../useGlobalFileDrop";
 import { useAppRoute } from "../routing/AppRouteProvider";
 import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
@@ -254,6 +255,7 @@ export default function ExplorerApp() {
   const {
     items: uploadItems,
     enqueue: enqueueUploads,
+    enqueueResume,
     applyRemoteProgress,
     cancelUpload,
     resolveUploadConflict,
@@ -268,7 +270,31 @@ export default function ExplorerApp() {
       );
     },
     onItemFailed: (message) => notifyError(message),
+    onMultipartSessionFinished: (uploadId) => {
+      void multipartSessionsRef.current.onUploadSessionFinished(uploadId);
+    },
   });
+
+  const multipartSessionsRef = useRef({
+    onUploadSessionFinished: async (_uploadId: string) => {},
+  });
+  const multipartSessions = useMultipartSessions({
+    backend,
+    readOnly,
+    onResumeEnqueue: enqueueResume,
+    onResumeMismatch: () => {
+      notifyError(t("upload.multipart.fileMismatch"));
+    },
+    onError: (message) => notifyError(message),
+  });
+  multipartSessionsRef.current = multipartSessions;
+
+  const visibleMultipartSessions = useMemo(() => {
+    const activeUploadIds = activeMultipartUploadIds(uploadItems);
+    return multipartSessions.sessions.filter(
+      (session) => !activeUploadIds.has(session.uploadId),
+    );
+  }, [uploadItems, multipartSessions.sessions]);
 
   const handleKernelEvent = useCallback(
     (event: BackendEvent) => {
@@ -1022,11 +1048,11 @@ export default function ExplorerApp() {
   }, [selectedIndex, activeListingEntries]);
 
   const onUpload = useCallback(
-    (files: FileList | null) => {
-      if (!files || files.length === 0 || readOnly) {
+    (dropped: { file: File; sourceHandle: FileSystemFileHandle | null }[]) => {
+      if (dropped.length === 0 || readOnly) {
         return;
       }
-      enqueueUploads(files, currentPath);
+      enqueueUploads(dropped, currentPath);
     },
     [enqueueUploads, currentPath, readOnly],
   );
@@ -1110,6 +1136,18 @@ export default function ExplorerApp() {
         items={uploadItems}
         onClearFinished={clearFinishedUploads}
         onCancel={cancelUpload}
+        cloudMultipart={
+          multipartSessions.enabled
+            ? {
+                sessions: visibleMultipartSessions,
+                loading: multipartSessions.loading,
+                error: multipartSessions.error,
+                readOnly: multipartSessions.readOnly,
+                onResume: multipartSessions.resumeSession,
+                onAbort: multipartSessions.abortSession,
+              }
+            : undefined
+        }
       />
 
       <UploadConflictDialog

@@ -26,6 +26,7 @@ export type UploadProgress = {
   id: string;
   offset: number;
   length?: number;
+  multipartUploadId?: string;
 };
 
 export type UploadCallbacks = {

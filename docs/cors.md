@@ -12,7 +12,7 @@ If CORS is missing or too narrow, the connect dialog or listing will fail with b
 | List folders / files | `ListObjectsV2` | `GET` |
 | File metadata | `HeadObject` | `HEAD` |
 | Download / image preview | `GetObject` (presigned URL) | `GET` |
-| Upload | `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`, `AbortMultipartUpload` | `POST`, `PUT` |
+| Upload | `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`, `AbortMultipartUpload`, `ListMultipartUploads`, `ListParts` | `GET`, `POST`, `PUT` |
 | Delete | `DeleteObject` | `DELETE` |
 
 Allowed methods on the bucket CORS rule: **`GET`, `PUT`, `POST`, `DELETE`, `HEAD`**.

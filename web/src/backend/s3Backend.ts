@@ -13,6 +13,26 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import {
+  computeMultipartPartSize,
+  multipartSessionScopeId,
+  pruneStaleMultipartRecords,
+  readScopedMultipartRecords,
+  removeMultipartRecord,
+  upsertMultipartRecord,
+  type MultipartSessionRecord,
+} from "../cloud/multipartSessions";
+import {
+  listInProgressMultipartUploads,
+  listUploadedParts,
+  mergeMultipartSessions,
+  multipartBytesUploaded,
+  type MergedMultipartSession,
+} from "../cloud/s3Multipart";
+import {
+  abortMultipartUpload,
+  resumeMultipartUpload,
+} from "../cloud/s3MultipartUpload";
+import {
   explorerPathFromCommonPrefix,
   explorerPathFromObjectKey,
   listPrefixForPath,
@@ -37,6 +57,13 @@ import type {
 } from "./types";
 
 const PRESIGN_TTL_SECONDS = 3600;
+
+function isUploadAbortError(err: unknown): boolean {
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return true;
+  }
+  return err instanceof Error && err.name === "AbortError";
+}
 
 function keyForExplorerPath(bucketPrefix: string, explorerPath: string): string {
   const segments = explorerPath.split("/").filter(Boolean);
@@ -208,6 +235,127 @@ export class S3Backend implements ExplorerBackend {
     );
   }
 
+  async listMultipartSessions(): Promise<MergedMultipartSession[]> {
+    const scopeId = multipartSessionScopeId(this.config);
+    const listed = await listInProgressMultipartUploads(
+      this.client,
+      this.config.bucket,
+      this.config.prefix,
+    );
+    pruneStaleMultipartRecords(scopeId, new Set(listed.map((upload) => upload.uploadId)));
+    const localRecords = readScopedMultipartRecords(scopeId);
+    const bytesUploadedByUploadId = new Map<string, number>();
+    await Promise.all(
+      listed.map(async (upload) => {
+        const parts = await listUploadedParts(
+          this.client,
+          this.config.bucket,
+          upload.objectKey,
+          upload.uploadId,
+        );
+        bytesUploadedByUploadId.set(upload.uploadId, multipartBytesUploaded(parts));
+      }),
+    );
+    return mergeMultipartSessions(
+      listed,
+      localRecords,
+      this.config.prefix,
+      bytesUploadedByUploadId,
+    );
+  }
+
+  async abortMultipartSession(objectKey: string, uploadId: string): Promise<void> {
+    await abortMultipartUpload(this.client, this.config.bucket, objectKey, uploadId);
+  }
+
+  async resumeUpload(
+    file: File,
+    record: MultipartSessionRecord,
+    onProgress?: (progress: UploadProgress) => void,
+    signal?: AbortSignal,
+    callbacks?: UploadCallbacks,
+  ): Promise<void> {
+    if (this.config.readOnly) {
+      throw new Error("bucket is read-only");
+    }
+    if (signal?.aborted) {
+      throw new DOMException("Upload aborted", "AbortError");
+    }
+
+    const checksumValidation = record.checksumValidation;
+    let checksum: string | null = record.checksumSha256Base64 ?? null;
+    if (checksumValidation && checksum == null) {
+      callbacks?.onHashing?.();
+      checksum = await sha256Base64(file, undefined, signal, (offset, total) => {
+        onProgress?.({ id: "hashing", offset, length: total });
+      });
+      this.persistMultipartRecord(
+        file,
+        record.destPath,
+        record.objectKey,
+        record.uploadId,
+        record.partSize,
+        checksumValidation,
+        checksum,
+      );
+    }
+
+    callbacks?.onUploadStart?.();
+    const key = record.objectKey;
+    try {
+      await resumeMultipartUpload(
+        this.client,
+        {
+          bucket: this.config.bucket,
+          objectKey: key,
+          uploadId: record.uploadId,
+          body: file,
+          partSize: record.partSize,
+          contentType: file.type || undefined,
+          checksumAlgorithm: checksumValidation ? "SHA256" : undefined,
+        },
+        (loaded, total) => {
+          onProgress?.({
+            id: key,
+            offset: loaded,
+            length: total,
+            multipartUploadId: record.uploadId,
+          });
+        },
+        signal,
+      );
+    } catch (err) {
+      if (!isUploadAbortError(err)) {
+        this.persistMultipartRecord(
+          file,
+          record.destPath,
+          key,
+          record.uploadId,
+          record.partSize,
+          checksumValidation,
+          checksum ?? undefined,
+        );
+      }
+      throw err;
+    }
+
+    const scopeId = multipartSessionScopeId(this.config);
+    removeMultipartRecord(scopeId, record.uploadId);
+
+    if (!checksumValidation || checksum == null) {
+      return;
+    }
+
+    callbacks?.onVerifying?.();
+    const verified = await sha256Base64Matches(file, checksum, undefined, signal, (offset, total) => {
+      onProgress?.({ id: "verifying", offset, length: total });
+    });
+    if (!verified) {
+      await this.deleteUploadedObject(key);
+      throw new Error("checksum mismatch");
+    }
+  }
+
   async upload(
     file: File,
     destPath: string,
@@ -234,6 +382,7 @@ export class S3Backend implements ExplorerBackend {
     }
     callbacks?.onUploadStart?.();
     const key = keyForExplorerPath(this.config.prefix, destPath);
+    const partSize = computeMultipartPartSize(file.size);
     const uploadParams: Upload["params"] = {
       Bucket: this.config.bucket,
       Key: key,
@@ -246,12 +395,27 @@ export class S3Backend implements ExplorerBackend {
     const upload = new Upload({
       client: this.client,
       params: uploadParams,
+      partSize,
+      leavePartsOnError: true,
     });
+    let sessionSaved = false;
     const onAbort = () => {
       void upload.abort();
     };
     signal?.addEventListener("abort", onAbort, { once: true });
     upload.on("httpUploadProgress", (progress) => {
+      if (upload.uploadId && !sessionSaved) {
+        sessionSaved = true;
+        this.persistMultipartRecord(
+          file,
+          destPath,
+          key,
+          upload.uploadId,
+          partSize,
+          checksumValidation,
+          checksum ?? undefined,
+        );
+      }
       if (progress.loaded == null) {
         return;
       }
@@ -259,12 +423,26 @@ export class S3Backend implements ExplorerBackend {
         id: key,
         offset: progress.loaded,
         length: progress.total ?? file.size,
+        multipartUploadId: upload.uploadId,
       });
     });
     try {
       await upload.done();
+      if (upload.uploadId) {
+        removeMultipartRecord(multipartSessionScopeId(this.config), upload.uploadId);
+      }
     } catch (err) {
-      await this.deleteUploadedObject(key);
+      if (!isUploadAbortError(err) && upload.uploadId) {
+        this.persistMultipartRecord(
+          file,
+          destPath,
+          key,
+          upload.uploadId,
+          partSize,
+          checksumValidation,
+          checksum ?? undefined,
+        );
+      }
       throw err;
     } finally {
       signal?.removeEventListener("abort", onAbort);
@@ -282,6 +460,30 @@ export class S3Backend implements ExplorerBackend {
       await this.deleteUploadedObject(key);
       throw new Error("checksum mismatch");
     }
+  }
+
+  private persistMultipartRecord(
+    file: File,
+    destPath: string,
+    objectKey: string,
+    uploadId: string,
+    partSize: number,
+    checksumValidation: boolean,
+    checksumSha256Base64?: string,
+  ): void {
+    upsertMultipartRecord(multipartSessionScopeId(this.config), {
+      uploadId,
+      objectKey,
+      destPath,
+      fileName: file.name,
+      fileSize: file.size,
+      fileLastModified: file.lastModified,
+      partSize,
+      checksumValidation,
+      checksumSha256Base64:
+        checksumValidation && checksumSha256Base64 ? checksumSha256Base64 : undefined,
+      createdAt: new Date().toISOString(),
+    });
   }
 
   private async deleteUploadedObject(key: string): Promise<void> {

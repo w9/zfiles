@@ -106,6 +106,7 @@ Replace `YOUR_BUCKET` and optional `prefix/path/*`:
         "s3:PutObject",
         "s3:DeleteObject",
         "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploads",
         "s3:ListMultipartUploadParts"
       ],
       "Resource": "arn:aws:s3:::YOUR_BUCKET/prefix/path/*"

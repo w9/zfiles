@@ -1,6 +1,6 @@
 ## High-level plan next
 
-**Current cycle:** muted progress bar for hashing/verifying vs primary blue for upload. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** cloud multipart listing/resume and upload progress polish — **complete**. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -111,6 +111,6 @@
 - [x] `useMultipartSessions` hook + `UploadPanel` cloud sessions section; wire `ExplorerApp` + upload queue resume enqueue
 - [x] i18n multipart session keys (14 locales); update `docs/cloud-connect.md` IAM for ListMultipartUploads
 - [x] `pnpm test`
-- [ ] `progress.tsx`: `variant` prop (`upload` | `local`) for track/indicator colors
-- [ ] `UploadPanel.tsx`: muted bar for hashing/verifying, primary for active upload
-- [ ] Run `pnpm test`
+- [x] `progress.tsx`: `variant` prop (`upload` | `local`) for track/indicator colors
+- [x] `UploadPanel.tsx`: muted bar for hashing/verifying, primary for active upload
+- [x] Run `pnpm test`

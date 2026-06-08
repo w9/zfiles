@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { S3Backend } from "./backend/s3Backend";
+import { storeFileHandle } from "./cloud/multipartFileHandles";
+import {
+  multipartSessionScopeId,
+  type MultipartSessionRecord,
+} from "./cloud/multipartSessions";
 import type { ExplorerBackend, UploadProgress } from "./backend/types";
 import {
   findKeepBothPath,
@@ -29,6 +35,8 @@ export function isUploadAbortError(err: unknown): boolean {
 export type UploadQueueItem = {
   id: string;
   file: File;
+  /** When present, persisted for multipart resume once an upload id is known. */
+  sourceFileHandle?: FileSystemFileHandle;
   fileName: string;
   destPath: string;
   overwriteExisting?: boolean;
@@ -39,6 +47,17 @@ export type UploadQueueItem = {
   etaSeconds: number | null;
   error?: string;
   backendUploadId?: string;
+  multipartUpload?: {
+    uploadId: string;
+    objectKey: string;
+  };
+  multipartResume?: {
+    uploadId: string;
+    objectKey: string;
+    partSize: number;
+    checksumValidation: boolean;
+    checksumSha256Base64?: string;
+  };
 };
 
 type ProgressSample = { time: number; offset: number };
@@ -60,10 +79,15 @@ export function shouldCommitProgressUi(
   return now - lastCommitMs >= PROGRESS_UI_MIN_INTERVAL_MS;
 }
 
-export function createQueueItem(file: File, destPath: string): UploadQueueItem {
+export function createQueueItem(
+  file: File,
+  destPath: string,
+  sourceFileHandle?: FileSystemFileHandle,
+): UploadQueueItem {
   return {
     id: crypto.randomUUID(),
     file,
+    sourceFileHandle,
     fileName: file.name,
     destPath,
     status: "pending",
@@ -74,6 +98,50 @@ export function createQueueItem(file: File, destPath: string): UploadQueueItem {
   };
 }
 
+export function createResumeQueueItem(
+  file: File,
+  record: MultipartSessionRecord,
+  initialOffset = 0,
+): UploadQueueItem {
+  return {
+    id: crypto.randomUUID(),
+    file,
+    fileName: record.fileName,
+    destPath: record.destPath,
+    status: "pending",
+    offset: initialOffset,
+    total: record.fileSize,
+    speedBps: null,
+    etaSeconds: null,
+    multipartResume: {
+      uploadId: record.uploadId,
+      objectKey: record.objectKey,
+      partSize: record.partSize,
+      checksumValidation: record.checksumValidation,
+      checksumSha256Base64: record.checksumSha256Base64,
+    },
+    multipartUpload: {
+      uploadId: record.uploadId,
+      objectKey: record.objectKey,
+    },
+  };
+}
+
+/** Upload ids for multipart sessions already represented in the active queue. */
+export function activeMultipartUploadIds(items: UploadQueueItem[]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of items) {
+    if (item.status === "done" || item.status === "failed" || item.status === "cancelled") {
+      continue;
+    }
+    const uploadId = item.multipartResume?.uploadId ?? item.multipartUpload?.uploadId;
+    if (uploadId) {
+      ids.add(uploadId);
+    }
+  }
+  return ids;
+}
+
 export function uploadPercent(item: UploadQueueItem): number {
   if (item.total <= 0) {
     return 0;
@@ -82,6 +150,20 @@ export function uploadPercent(item: UploadQueueItem): number {
 }
 
 /** Map backend progress ids to queue status (upload ids are object keys / tus ids). */
+export function uploadProgressVariant(
+  status: UploadItemStatus,
+): "upload" | "local" {
+  if (
+    status === "hashing" ||
+    status === "verifying" ||
+    status === "cancelled" ||
+    status === "failed"
+  ) {
+    return "local";
+  }
+  return "upload";
+}
+
 export function uploadStatusForProgress(progressId: string): UploadItemStatus {
   if (progressId === "hashing") {
     return "hashing";
@@ -172,6 +254,7 @@ type UseUploadQueueOptions = {
   readOnly?: boolean;
   onItemComplete?: () => void;
   onItemFailed?: (message: string) => void;
+  onMultipartSessionFinished?: (uploadId: string) => void;
 };
 
 export function useUploadQueue({
@@ -179,6 +262,7 @@ export function useUploadQueue({
   readOnly = false,
   onItemComplete,
   onItemFailed,
+  onMultipartSessionFinished,
 }: UseUploadQueueOptions) {
   const [items, setItems] = useState<UploadQueueItem[]>([]);
   const itemsRef = useRef(items);
@@ -262,19 +346,44 @@ export function useUploadQueue({
     [],
   );
 
+  const persistedSourceHandlesRef = useRef(new Set<string>());
+
   const enqueue = useCallback(
-    (files: FileList | File[] | null, basePath: string) => {
-      if (!files || readOnly) {
+    (
+      dropped:
+        | { file: File; sourceHandle?: FileSystemFileHandle | null }[]
+        | FileList
+        | File[]
+        | null,
+      basePath: string,
+    ) => {
+      if (!dropped || readOnly) {
         return;
       }
-      const list = Array.from(files);
+      const list = Array.isArray(dropped)
+        ? dropped
+        : Array.from(dropped).map((file) => ({ file, sourceHandle: null }));
       if (list.length === 0) {
         return;
       }
-      const newItems = list.map((file) =>
-        createQueueItem(file, basePath ? `${basePath}/${file.name}` : file.name),
+      const newItems = list.map(({ file, sourceHandle }) =>
+        createQueueItem(
+          file,
+          basePath ? `${basePath}/${file.name}` : file.name,
+          sourceHandle ?? undefined,
+        ),
       );
       setItems((prev) => [...prev, ...newItems]);
+    },
+    [readOnly],
+  );
+
+  const enqueueResume = useCallback(
+    (file: File, record: MultipartSessionRecord, initialOffset = 0) => {
+      if (readOnly) {
+        return;
+      }
+      setItems((prev) => [...prev, createResumeQueueItem(file, record, initialOffset)]);
     },
     [readOnly],
   );
@@ -318,15 +427,27 @@ export function useUploadQueue({
       return;
     }
     cancelledIdsRef.current.add(queueId);
+    clearProgressFlush(queueId);
     if (item.status === "pending" || item.status === "awaiting_conflict") {
       setItems((prev) => prev.filter((entry) => entry.id !== queueId));
       cancelledIdsRef.current.delete(queueId);
       return;
     }
-    if (item.status === "active" || item.status === "hashing") {
+    if (
+      item.status === "active" ||
+      item.status === "hashing" ||
+      item.status === "verifying"
+    ) {
       abortControllersRef.current.get(queueId)?.abort();
+      const multipart = item.multipartUpload;
+      if (backend.mode === "s3" && multipart) {
+        void (backend as S3Backend)
+          .abortMultipartSession(multipart.objectKey, multipart.uploadId)
+          .then(() => onMultipartSessionFinished?.(multipart.uploadId))
+          .catch(() => {});
+      }
     }
-  }, []);
+  }, [backend, clearProgressFlush, onMultipartSessionFinished]);
 
   const resolveUploadConflict = useCallback(
     (queueId: string, resolution: UploadConflictResolution, applyToAll: boolean) => {
@@ -450,7 +571,9 @@ export function useUploadQueue({
         return;
       }
 
-      const conflictResult = await handleUploadConflict(pending);
+      const conflictResult = pending.multipartResume
+        ? { outcome: "proceed" as const, destPath: pending.destPath }
+        : await handleUploadConflict(pending);
       if (conflictResult.outcome === "paused" || conflictResult.outcome === "skipped") {
         workerRef.current = false;
         return;
@@ -498,10 +621,39 @@ export function useUploadQueue({
         if (cancelledIdsRef.current.has(queueId)) {
           abortController.abort();
         }
-        await backend.upload(
-          ready.file,
-          uploadDestPath,
-          (progress) => {
+        const uploadCallbacks = {
+          onHashing: () => {
+            samplesRef.current.set(queueId, []);
+            lastProgressUiAtRef.current.delete(queueId);
+            patchQueueItem({
+              status: "hashing",
+              offset: 0,
+              speedBps: null,
+              etaSeconds: null,
+            });
+          },
+          onUploadStart: () => {
+            if (cancelledIdsRef.current.has(queueId)) {
+              abortController.abort();
+              return;
+            }
+            beginUploadPhase();
+          },
+          onVerifying: () => {
+            samplesRef.current.set(queueId, []);
+            lastProgressUiAtRef.current.delete(queueId);
+            patchQueueItem({
+              status: "verifying",
+              offset: 0,
+              speedBps: null,
+              etaSeconds: null,
+            });
+          },
+        };
+        const onUploadProgress = (progress: UploadProgress) => {
+          if (cancelledIdsRef.current.has(queueId)) {
+            return;
+          }
           const active = itemsRef.current.find((item) => item.id === queueId);
           if (!active) {
             return;
@@ -511,40 +663,77 @@ export function useUploadQueue({
             samplesRef.current.set(queueId, []);
             lastProgressUiAtRef.current.delete(queueId);
           }
+          const multipartUpload =
+            progress.multipartUploadId && active.multipartUpload?.objectKey
+              ? {
+                  uploadId: progress.multipartUploadId,
+                  objectKey: active.multipartUpload.objectKey,
+                }
+              : progress.multipartUploadId
+                ? {
+                    uploadId: progress.multipartUploadId,
+                    objectKey: progress.id,
+                  }
+                : active.multipartUpload;
+          if (
+            progress.multipartUploadId &&
+            active.sourceFileHandle &&
+            backend.mode === "s3" &&
+            !persistedSourceHandlesRef.current.has(progress.multipartUploadId)
+          ) {
+            persistedSourceHandlesRef.current.add(progress.multipartUploadId);
+            const scopeId = multipartSessionScopeId(
+              (backend as S3Backend).connectionConfig,
+            );
+            void storeFileHandle(
+              scopeId,
+              progress.multipartUploadId,
+              active.sourceFileHandle,
+            );
+          }
           const updated = ingestProgress(
             queueId,
-            { ...active, status },
+            {
+              ...active,
+              status,
+              multipartUpload,
+            },
             progress.offset,
             progress.length,
             progress.id,
           );
           commitProgressItem(queueId, updated, false);
-          },
-          abortController.signal,
-          {
-            onHashing: () => {
-              samplesRef.current.set(queueId, []);
-              lastProgressUiAtRef.current.delete(queueId);
-              patchQueueItem({
-                status: "hashing",
-                offset: 0,
-                speedBps: null,
-                etaSeconds: null,
-              });
-            },
-            onUploadStart: beginUploadPhase,
-            onVerifying: () => {
-              samplesRef.current.set(queueId, []);
-              lastProgressUiAtRef.current.delete(queueId);
-              patchQueueItem({
-                status: "verifying",
-                offset: 0,
-                speedBps: null,
-                etaSeconds: null,
-              });
-            },
-          },
-        );
+        };
+
+        if (ready.multipartResume && backend.mode === "s3") {
+          const resumeRecord: MultipartSessionRecord = {
+            uploadId: ready.multipartResume.uploadId,
+            objectKey: ready.multipartResume.objectKey,
+            destPath: uploadDestPath,
+            fileName: ready.fileName,
+            fileSize: ready.total,
+            fileLastModified: ready.file.lastModified,
+            partSize: ready.multipartResume.partSize,
+            checksumValidation: ready.multipartResume.checksumValidation,
+            checksumSha256Base64: ready.multipartResume.checksumSha256Base64,
+            createdAt: new Date().toISOString(),
+          };
+          await (backend as S3Backend).resumeUpload(
+            ready.file,
+            resumeRecord,
+            onUploadProgress,
+            abortController.signal,
+            uploadCallbacks,
+          );
+        } else {
+          await backend.upload(
+            ready.file,
+            uploadDestPath,
+            onUploadProgress,
+            abortController.signal,
+            uploadCallbacks,
+          );
+        }
         if (cancelledIdsRef.current.has(queueId)) {
           throw new DOMException("Upload aborted", "AbortError");
         }
@@ -560,6 +749,9 @@ export function useUploadQueue({
         commitProgressItem(queueId, finalItem, true);
         samplesRef.current.delete(queueId);
         lastProgressUiAtRef.current.delete(queueId);
+        if (ready.multipartResume?.uploadId) {
+          onMultipartSessionFinished?.(ready.multipartResume.uploadId);
+        }
         onItemComplete?.();
       } catch (err) {
         clearProgressFlush(queueId);
@@ -607,11 +799,12 @@ export function useUploadQueue({
     if (hasPending && !hasActive && !hasAwaitingConflict) {
       void run();
     }
-  }, [items, backend, clearProgressFlush, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed]);
+  }, [items, backend, clearProgressFlush, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed, onMultipartSessionFinished]);
 
   return {
     items,
     enqueue,
+    enqueueResume,
     cancelUpload,
     resolveUploadConflict,
     applyRemoteProgress,

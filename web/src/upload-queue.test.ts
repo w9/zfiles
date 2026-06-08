@@ -2,14 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  activeMultipartUploadIds,
   applyProgressUpdate,
   countUploadsByStatus,
   createQueueItem,
+  createResumeQueueItem,
   formatEtaSeconds,
   isUploadAbortError,
   PROGRESS_UI_MIN_INTERVAL_MS,
   shouldCommitProgressUi,
   uploadPercent,
+  uploadProgressVariant,
   uploadStatusForProgress,
 } from "./upload-queue";
 
@@ -19,6 +22,15 @@ test("createQueueItem starts pending with file size as total", () => {
   assert.equal(item.status, "pending");
   assert.equal(item.total, 5);
   assert.equal(item.destPath, "dir/a.txt");
+});
+
+test("uploadProgressVariant uses local styling for hashing and verifying", () => {
+  assert.equal(uploadProgressVariant("hashing"), "local");
+  assert.equal(uploadProgressVariant("verifying"), "local");
+  assert.equal(uploadProgressVariant("cancelled"), "local");
+  assert.equal(uploadProgressVariant("failed"), "local");
+  assert.equal(uploadProgressVariant("active"), "upload");
+  assert.equal(uploadProgressVariant("done"), "upload");
 });
 
 test("uploadStatusForProgress maps synthetic and upload progress ids", () => {
@@ -86,4 +98,41 @@ test("countUploadsByStatus tallies each status", () => {
     done: 2,
     failed: 1,
   });
+});
+
+test("createResumeQueueItem seeds offset and carries stored checksum", () => {
+  const file = new File(["x"], "big.iso");
+  const record = {
+    uploadId: "upload-1",
+    objectKey: "prefix/big.iso",
+    destPath: "big.iso",
+    fileName: "big.iso",
+    fileSize: 100,
+    fileLastModified: 1,
+    partSize: 5_242_880,
+    checksumValidation: true,
+    checksumSha256Base64: "abc123",
+    createdAt: new Date().toISOString(),
+  };
+  const item = createResumeQueueItem(file, record, 42);
+  assert.equal(item.offset, 42);
+  assert.equal(item.multipartResume?.checksumSha256Base64, "abc123");
+});
+
+test("activeMultipartUploadIds ignores finished queue items", () => {
+  const file = new File(["x"], "big.iso");
+  const active = createResumeQueueItem(file, {
+    uploadId: "upload-active",
+    objectKey: "k",
+    destPath: "big.iso",
+    fileName: "big.iso",
+    fileSize: 1,
+    fileLastModified: 1,
+    partSize: 5_242_880,
+    checksumValidation: false,
+    createdAt: new Date().toISOString(),
+  });
+  const done = { ...active, id: "done", status: "done" as const };
+  const ids = activeMultipartUploadIds([active, done]);
+  assert.deepEqual([...ids], ["upload-active"]);
 });

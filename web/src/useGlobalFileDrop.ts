@@ -4,9 +4,53 @@ export function dragEventHasFiles(event: DragEvent): boolean {
   return event.dataTransfer?.types.includes("Files") ?? false;
 }
 
+export type DroppedUploadFile = {
+  file: File;
+  sourceHandle: FileSystemFileHandle | null;
+};
+
+/** Extract files (and handles when the browser provides them) from a drop event. */
+export async function extractDroppedUploadFiles(
+  dataTransfer: DataTransfer,
+): Promise<DroppedUploadFile[]> {
+  const items = dataTransfer.items;
+  if (items && items.length > 0) {
+    const dropped: DroppedUploadFile[] = [];
+    for (const item of items) {
+      if (item.kind !== "file") {
+        continue;
+      }
+      const file = item.getAsFile();
+      if (!file) {
+        continue;
+      }
+      let sourceHandle: FileSystemFileHandle | null = null;
+      if ("getAsFileSystemHandle" in item) {
+        try {
+          const handle = await item.getAsFileSystemHandle();
+          if (handle.kind === "file") {
+            sourceHandle = handle;
+          }
+        } catch {
+          // Fall back to File-only resume (picker on first resume).
+        }
+      }
+      dropped.push({ file, sourceHandle });
+    }
+    if (dropped.length > 0) {
+      return dropped;
+    }
+  }
+
+  return Array.from(dataTransfer.files).map((file) => ({
+    file,
+    sourceHandle: null,
+  }));
+}
+
 type UseGlobalFileDropOptions = {
   enabled: boolean;
-  onDrop: (files: FileList) => void;
+  onDrop: (dropped: DroppedUploadFile[]) => void;
 };
 
 export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions) {
@@ -59,10 +103,15 @@ export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions)
       event.preventDefault();
       depthRef.current = 0;
       setDragging(false);
-      const files = event.dataTransfer?.files;
-      if (files && files.length > 0) {
-        onDropRef.current(files);
+      const dataTransfer = event.dataTransfer;
+      if (!dataTransfer) {
+        return;
       }
+      void extractDroppedUploadFiles(dataTransfer).then((dropped) => {
+        if (dropped.length > 0) {
+          onDropRef.current(dropped);
+        }
+      });
     };
 
     window.addEventListener("dragenter", onDragEnter);
