@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** complete. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** keep slideshow chrome visible while a chrome input is focused (lock auto-hide; force-show on focus; restart 2s idle timer on blur). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -127,3 +127,5 @@ Dual-mode refactor is **complete**. **Current cycle:** complete. Deferred: dedic
 - [x] Run `pnpm test`
 - [x] `useSlideshowIntervalInput`: Enter confirm + Escape cancel (overlay opts)
 - [x] Wire overlay interval input; `pnpm test`
+- [x] `useChromeAutoHide`: lock auto-hide while focused (force-show; restart 2s timer on unlock)
+- [x] Wire overlay `onFocus`/`onBlur` (typing target) to chrome lock; `pnpm test`

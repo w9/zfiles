@@ -105,33 +105,49 @@ type SlideshowOverlayProps = {
 function useChromeAutoHide(open: boolean) {
   const [visible, setVisible] = useState(true);
   const timerRef = useRef<number | null>(null);
+  const lockedRef = useRef(false);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current != null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   const bumpActivity = useCallback(() => {
     setVisible(true);
-    if (timerRef.current != null) {
-      window.clearTimeout(timerRef.current);
+    clearTimer();
+    if (lockedRef.current) {
+      return;
     }
     timerRef.current = window.setTimeout(() => setVisible(false), CHROME_IDLE_MS);
-  }, []);
+  }, [clearTimer]);
+
+  const setChromeLocked = useCallback(
+    (locked: boolean) => {
+      lockedRef.current = locked;
+      if (locked) {
+        setVisible(true);
+        clearTimer();
+      } else {
+        bumpActivity();
+      }
+    },
+    [bumpActivity, clearTimer],
+  );
 
   useEffect(() => {
     if (!open) {
       setVisible(true);
-      if (timerRef.current != null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      lockedRef.current = false;
+      clearTimer();
       return;
     }
     bumpActivity();
-    return () => {
-      if (timerRef.current != null) {
-        window.clearTimeout(timerRef.current);
-      }
-    };
-  }, [open, bumpActivity]);
+    return clearTimer;
+  }, [open, bumpActivity, clearTimer]);
 
-  return { chromeVisible: visible, bumpActivity };
+  return { chromeVisible: visible, bumpActivity, setChromeLocked };
 }
 
 export default function SlideshowOverlay({
@@ -157,7 +173,7 @@ export default function SlideshowOverlay({
   const dragSessionRef = useRef<DragSession | null>(null);
   const pinchSessionRef = useRef<PinchSession | null>(null);
   const suppressClickRef = useRef(false);
-  const { chromeVisible, bumpActivity } = useChromeAutoHide(open);
+  const { chromeVisible, bumpActivity, setChromeLocked } = useChromeAutoHide(open);
   const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds, {
     onDraftChange: bumpActivity,
     confirmOnEnter: true,
@@ -468,6 +484,16 @@ export default function SlideshowOverlay({
       aria-modal="true"
       aria-label={t("slideshow.title", { name: fileName })}
       onMouseMove={bumpActivity}
+      onFocus={(event) => {
+        if (isSlideshowTypingTarget(event.target)) {
+          setChromeLocked(true);
+        }
+      }}
+      onBlur={(event) => {
+        if (isSlideshowTypingTarget(event.target)) {
+          setChromeLocked(false);
+        }
+      }}
     >
       <div className="absolute inset-0 bg-black/80" aria-hidden />
 
