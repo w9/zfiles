@@ -38,11 +38,7 @@ import {
   formatPreviewModified,
 } from "./preview-metadata";
 import { useSlideshowSettings } from "@/settings/SlideshowSettingsProvider";
-import {
-  SLIDESHOW_INTERVAL_MAX,
-  SLIDESHOW_INTERVAL_MIN,
-  clampSlideshowInterval,
-} from "@/settings/slideshowSettings";
+import { useSlideshowIntervalInput } from "@/settings/useSlideshowIntervalInput";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { cn } from "@/lib/utils";
 import { useExplorerBackend, type FileStat } from "./backend";
@@ -162,6 +158,11 @@ export default function SlideshowOverlay({
   const pinchSessionRef = useRef<PinchSession | null>(null);
   const suppressClickRef = useRef(false);
   const { chromeVisible, bumpActivity } = useChromeAutoHide(open);
+  const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds, {
+    onDraftChange: bumpActivity,
+    confirmOnEnter: true,
+    cancelOnEscape: true,
+  });
 
   const currentPath = paths[index] ?? null;
   const imageUrl = useDownloadUrl(backend, currentPath);
@@ -624,25 +625,8 @@ export default function SlideshowOverlay({
               <Input
                 id="slideshow-interval"
                 type="number"
-                min={SLIDESHOW_INTERVAL_MIN}
-                max={SLIDESHOW_INTERVAL_MAX}
-                value={intervalSeconds}
-                onChange={(event) => {
-                  bumpActivity();
-                  const parsed = Number.parseInt(event.target.value, 10);
-                  if (Number.isFinite(parsed)) {
-                    setIntervalSeconds(parsed);
-                  }
-                }}
-                onBlur={(event) => {
-                  const parsed = Number.parseInt(event.target.value, 10);
-                  setIntervalSeconds(
-                    Number.isFinite(parsed)
-                      ? parsed
-                      : clampSlideshowInterval(intervalSeconds),
-                  );
-                }}
                 className="h-8 w-16 border-white/20 bg-black/40 text-white"
+                {...slideshowIntervalInput}
               />
               <span aria-hidden>s</span>
             </Field>

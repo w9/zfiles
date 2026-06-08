@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** slideshow letterbox backdrop click closes overlay (image/chrome clicks unchanged; drag suppresses image click only). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** slideshow interval input — Enter confirms (blur), Escape cancels draft (overlay only). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -125,3 +125,5 @@ Dual-mode refactor is **complete**. **Current cycle:** slideshow letterbox backd
 - [ ] `SlideshowOverlay`: letterbox backdrop click calls `onOpenChange(false)`; image click unchanged
 - [ ] E2E: slideshow closes on letterbox backdrop click
 - [ ] Run `pnpm test`
+- [x] `useSlideshowIntervalInput`: Enter confirm + Escape cancel (overlay opts)
+- [x] Wire overlay interval input; `pnpm test`

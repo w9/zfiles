@@ -1,7 +1,7 @@
 export const SLIDESHOW_AUTOPLAY_STORAGE_KEY = "zfiles-slideshow-autoplay";
 export const SLIDESHOW_INTERVAL_STORAGE_KEY = "zfiles-slideshow-interval";
 
-export const SLIDESHOW_INTERVAL_MIN = 1;
+export const SLIDESHOW_INTERVAL_MIN = 0.1;
 export const SLIDESHOW_INTERVAL_MAX = 300;
 export const SLIDESHOW_INTERVAL_DEFAULT = 4;
 
@@ -11,7 +11,7 @@ export function clampSlideshowInterval(seconds: number): number {
   }
   return Math.min(
     SLIDESHOW_INTERVAL_MAX,
-    Math.max(SLIDESHOW_INTERVAL_MIN, Math.round(seconds)),
+    Math.max(SLIDESHOW_INTERVAL_MIN, seconds),
   );
 }
 
@@ -45,7 +45,7 @@ export function parseSlideshowInterval(value: string | null): number | null {
   if (value == null || value.trim() === "") {
     return null;
   }
-  const parsed = Number.parseInt(value, 10);
+  const parsed = Number.parseFloat(value);
   if (!Number.isFinite(parsed)) {
     return null;
   }
@@ -65,4 +65,17 @@ export function storeSlideshowInterval(seconds: number): void {
     SLIDESHOW_INTERVAL_STORAGE_KEY,
     String(clampSlideshowInterval(seconds)),
   );
+}
+
+/** Commit a focused interval field draft; invalid or empty input keeps the fallback. */
+export function commitSlideshowIntervalDraft(draft: string, fallback: number): number {
+  const trimmed = draft.trim();
+  if (trimmed === "") {
+    return clampSlideshowInterval(fallback);
+  }
+  const parsed = Number.parseFloat(trimmed);
+  if (!Number.isFinite(parsed)) {
+    return clampSlideshowInterval(fallback);
+  }
+  return clampSlideshowInterval(parsed);
 }

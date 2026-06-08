@@ -21,11 +21,7 @@ import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
 import { useGridThumbnailBadge } from "@/settings/GridThumbnailBadgeProvider";
 import { useSlideshowSettings } from "@/settings/SlideshowSettingsProvider";
-import {
-  SLIDESHOW_INTERVAL_MAX,
-  SLIDESHOW_INTERVAL_MIN,
-  clampSlideshowInterval,
-} from "@/settings/slideshowSettings";
+import { useSlideshowIntervalInput } from "@/settings/useSlideshowIntervalInput";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "@/settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
@@ -201,6 +197,7 @@ export default function SettingsPage() {
     intervalSeconds,
     setIntervalSeconds,
   } = useSlideshowSettings();
+  const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds);
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const [pasteDestination, setPasteDestination] = useState(
     readStoredPasteDestination,
@@ -318,24 +315,8 @@ export default function SettingsPage() {
                   <Input
                     id="settings-slideshow-interval"
                     type="number"
-                    min={SLIDESHOW_INTERVAL_MIN}
-                    max={SLIDESHOW_INTERVAL_MAX}
-                    value={intervalSeconds}
-                    onChange={(event) => {
-                      const parsed = Number.parseInt(event.target.value, 10);
-                      if (Number.isFinite(parsed)) {
-                        setIntervalSeconds(parsed);
-                      }
-                    }}
-                    onBlur={(event) => {
-                      const parsed = Number.parseInt(event.target.value, 10);
-                      setIntervalSeconds(
-                        Number.isFinite(parsed)
-                          ? parsed
-                          : clampSlideshowInterval(intervalSeconds),
-                      );
-                    }}
                     className="h-9 w-28"
+                    {...slideshowIntervalInput}
                   />
                 </Field>
               </FieldGroup>
