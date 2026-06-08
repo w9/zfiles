@@ -1,6 +1,6 @@
 ## High-level plan next
 
-**Current cycle:** cloud multipart session listing + resume (hybrid ListMultipartUploads + local records, File Handle resume, upload panel section). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+**Current cycle:** muted progress bar for hashing/verifying vs primary blue for upload. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -106,8 +106,11 @@
 - [x] `hashing` upload status + `UploadCallbacks`; hash progress in `fileHash.ts`
 - [x] Wire `s3Backend` / `kernelBackend` and upload panel i18n (14 locales)
 - [x] Run `pnpm test`
-- [ ] `multipartSessions.ts` + `s3Multipart.ts`: local records, ListMultipartUploads merge, part-size/resume helpers + unit tests
-- [ ] `s3Backend.ts`: leavePartsOnError, track uploadId, resume/abort/list APIs; cancel → AbortMultipartUpload
-- [ ] `useMultipartSessions` hook + `UploadPanel` cloud sessions section; wire `ExplorerApp` + upload queue resume enqueue
-- [ ] i18n multipart session keys (14 locales); update `docs/cloud-connect.md` IAM for ListMultipartUploads
-- [ ] `pnpm test`
+- [x] `multipartSessions.ts` + `s3Multipart.ts`: local records, ListMultipartUploads merge, part-size/resume helpers + unit tests
+- [x] `s3Backend.ts`: leavePartsOnError, track uploadId, resume/abort/list APIs; cancel → AbortMultipartUpload
+- [x] `useMultipartSessions` hook + `UploadPanel` cloud sessions section; wire `ExplorerApp` + upload queue resume enqueue
+- [x] i18n multipart session keys (14 locales); update `docs/cloud-connect.md` IAM for ListMultipartUploads
+- [x] `pnpm test`
+- [ ] `progress.tsx`: `variant` prop (`upload` | `local`) for track/indicator colors
+- [ ] `UploadPanel.tsx`: muted bar for hashing/verifying, primary for active upload
+- [ ] Run `pnpm test`
