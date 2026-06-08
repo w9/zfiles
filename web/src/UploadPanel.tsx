@@ -37,6 +37,8 @@ function statusLabel(
       return t("upload.status.pending");
     case "awaiting_conflict":
       return t("upload.status.awaitingConflict");
+    case "hashing":
+      return t("upload.status.hashing");
     case "active":
       return t("upload.status.active");
     case "verifying":
@@ -60,17 +62,6 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
     });
   }
 
-  if (item.status === "verifying") {
-    const uploaded = formatSize(item.total, false);
-    const total = formatSize(item.total, false);
-    return t("upload.statsBasic", {
-      status,
-      uploaded,
-      total,
-      percent: "100",
-    });
-  }
-
   const uploaded = formatSize(item.offset, false);
   const total = formatSize(item.total, false);
   const percent = String(uploadPercent(item));
@@ -89,6 +80,7 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
 
 const HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
   pending: "upload.queue.header.pending",
+  hashing: "upload.queue.header.hashing",
   active: "upload.queue.header.active",
   verifying: "upload.queue.header.verifying",
   awaiting_conflict: "upload.queue.header.awaitingConflict",
@@ -145,7 +137,7 @@ export default function UploadPanel({ items, onClearFinished, onCancel }: Upload
       </div>
       <ul className="max-h-64 divide-y overflow-y-auto">
         {items.map((item) => {
-          const isActive = item.status === "active";
+          const isActive = item.status === "active" || item.status === "hashing";
           return (
             <li
               key={item.id}
@@ -164,6 +156,7 @@ export default function UploadPanel({ items, onClearFinished, onCancel }: Upload
                   {statsLine(item, t)}
                 </p>
                 {item.status === "pending" ||
+                item.status === "hashing" ||
                 item.status === "active" ||
                 item.status === "awaiting_conflict" ? (
                   <Button

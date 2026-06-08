@@ -9,6 +9,7 @@ import type {
   FileStat,
   HealthInfo,
   ListResult,
+  UploadCallbacks,
   UploadProgress,
 } from "./types";
 
@@ -65,10 +66,19 @@ export class KernelBackend implements ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
-    onVerifying?: () => void,
+    callbacks?: UploadCallbacks,
   ): Promise<void> {
     throwIfAborted(signal);
-    const checksum = await sha256Base64(file, UPLOAD_CHUNK_SIZE, signal);
+    callbacks?.onHashing?.();
+    const checksum = await sha256Base64(
+      file,
+      UPLOAD_CHUNK_SIZE,
+      signal,
+      (offset, total) => {
+        onProgress?.({ id: "hashing", offset, length: total });
+      },
+    );
+    callbacks?.onUploadStart?.();
     const create = await apiFetch("/api/upload", {
       method: "POST",
       headers: {
@@ -118,8 +128,16 @@ export class KernelBackend implements ExplorerBackend {
       onProgress?.({ id: uploadId, offset, length: file.size });
     }
 
-    onVerifying?.();
-    const verified = await sha256Base64Matches(file, checksum, UPLOAD_CHUNK_SIZE, signal);
+    callbacks?.onVerifying?.();
+    const verified = await sha256Base64Matches(
+      file,
+      checksum,
+      UPLOAD_CHUNK_SIZE,
+      signal,
+      (offset, total) => {
+        onProgress?.({ id: "verifying", offset, length: total });
+      },
+    );
     if (!verified) {
       throw new Error("checksum mismatch");
     }

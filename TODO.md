@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** drop R2 upload checksums; cloud setting to disable AWS S3 checksum validation (client + `ChecksumAlgorithm`). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** complete. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -102,4 +102,7 @@ Dual-mode refactor is **complete**. **Current cycle:** drop R2 upload checksums;
 - [x] `uploadChecksumSettings.ts`: localStorage toggle (default on) + unit tests; `uploadChecksumEnabled(provider, setting)` helper
 - [x] `s3Backend.ts`: skip all checksum paths for R2; honor setting for AWS (no client hash, no `ChecksumAlgorithm`, no verifying)
 - [x] `SettingsPage`: cloud-only upload checksum checkbox; i18n keys (14 locales)
+- [x] Run `pnpm test`
+- [x] `hashing` upload status + `UploadCallbacks`; hash progress in `fileHash.ts`
+- [x] Wire `s3Backend` / `kernelBackend` and upload panel i18n (14 locales)
 - [x] Run `pnpm test`

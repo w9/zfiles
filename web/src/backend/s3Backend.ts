@@ -32,6 +32,7 @@ import type {
   FileStat,
   HealthInfo,
   ListResult,
+  UploadCallbacks,
   UploadProgress,
 } from "./types";
 
@@ -212,7 +213,7 @@ export class S3Backend implements ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
-    onVerifying?: () => void,
+    callbacks?: UploadCallbacks,
   ): Promise<void> {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
@@ -224,9 +225,14 @@ export class S3Backend implements ExplorerBackend {
       this.config.provider,
       readUploadChecksumValidation(),
     );
-    const checksum = checksumValidation
-      ? await sha256Base64(file, undefined, signal)
-      : null;
+    let checksum: string | null = null;
+    if (checksumValidation) {
+      callbacks?.onHashing?.();
+      checksum = await sha256Base64(file, undefined, signal, (offset, total) => {
+        onProgress?.({ id: "hashing", offset, length: total });
+      });
+    }
+    callbacks?.onUploadStart?.();
     const key = keyForExplorerPath(this.config.prefix, destPath);
     const uploadParams: Upload["params"] = {
       Bucket: this.config.bucket,
@@ -268,8 +274,10 @@ export class S3Backend implements ExplorerBackend {
       return;
     }
 
-    onVerifying?.();
-    const verified = await sha256Base64Matches(file, checksum, undefined, signal);
+    callbacks?.onVerifying?.();
+    const verified = await sha256Base64Matches(file, checksum, undefined, signal, (offset, total) => {
+      onProgress?.({ id: "verifying", offset, length: total });
+    });
     if (!verified) {
       await this.deleteUploadedObject(key);
       throw new Error("checksum mismatch");

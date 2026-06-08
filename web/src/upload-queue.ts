@@ -9,6 +9,7 @@ import {
 
 export type UploadItemStatus =
   | "pending"
+  | "hashing"
   | "active"
   | "verifying"
   | "awaiting_conflict"
@@ -80,9 +81,21 @@ export function uploadPercent(item: UploadQueueItem): number {
   return Math.min(100, Math.round((item.offset / item.total) * 100));
 }
 
+/** Map backend progress ids to queue status (upload ids are object keys / tus ids). */
+export function uploadStatusForProgress(progressId: string): UploadItemStatus {
+  if (progressId === "hashing") {
+    return "hashing";
+  }
+  if (progressId === "verifying") {
+    return "verifying";
+  }
+  return "active";
+}
+
 /** Display order for upload status segments in the panel header. */
 export const UPLOAD_QUEUE_HEADER_STATUS_ORDER: UploadItemStatus[] = [
   "active",
+  "hashing",
   "verifying",
   "awaiting_conflict",
   "pending",
@@ -310,7 +323,7 @@ export function useUploadQueue({
       cancelledIdsRef.current.delete(queueId);
       return;
     }
-    if (item.status === "active") {
+    if (item.status === "active" || item.status === "hashing") {
       abortControllersRef.current.get(queueId)?.abort();
     }
   }, []);
@@ -453,14 +466,33 @@ export function useUploadQueue({
       setItems((prev) =>
         prev.map((item) =>
           item.id === queueId
-            ? { ...item, status: "active" as const, destPath: uploadDestPath }
+            ? { ...item, destPath: uploadDestPath }
             : item,
         ),
       );
-      samplesRef.current.set(queueId, []);
 
       const abortController = new AbortController();
       abortControllersRef.current.set(queueId, abortController);
+
+      const patchQueueItem = (patch: Partial<UploadQueueItem> & { status: UploadItemStatus }) => {
+        clearProgressFlush(queueId);
+        const next = itemsRef.current.map((item) =>
+          item.id === queueId ? { ...item, ...patch } : item,
+        );
+        itemsRef.current = next;
+        setItems(next);
+      };
+
+      const beginUploadPhase = () => {
+        samplesRef.current.set(queueId, []);
+        lastProgressUiAtRef.current.delete(queueId);
+        patchQueueItem({
+          status: "active",
+          offset: 0,
+          speedBps: null,
+          etaSeconds: null,
+        });
+      };
 
       try {
         if (cancelledIdsRef.current.has(queueId)) {
@@ -474,9 +506,14 @@ export function useUploadQueue({
           if (!active) {
             return;
           }
+          const status = uploadStatusForProgress(progress.id);
+          if (status === "active" && active.status === "hashing") {
+            samplesRef.current.set(queueId, []);
+            lastProgressUiAtRef.current.delete(queueId);
+          }
           const updated = ingestProgress(
             queueId,
-            active,
+            { ...active, status },
             progress.offset,
             progress.length,
             progress.id,
@@ -484,20 +521,28 @@ export function useUploadQueue({
           commitProgressItem(queueId, updated, false);
           },
           abortController.signal,
-          () => {
-            setItems((prev) =>
-              prev.map((item) =>
-                item.id === queueId
-                  ? {
-                      ...item,
-                      status: "verifying" as const,
-                      offset: item.total,
-                      speedBps: null,
-                      etaSeconds: null,
-                    }
-                  : item,
-              ),
-            );
+          {
+            onHashing: () => {
+              samplesRef.current.set(queueId, []);
+              lastProgressUiAtRef.current.delete(queueId);
+              patchQueueItem({
+                status: "hashing",
+                offset: 0,
+                speedBps: null,
+                etaSeconds: null,
+              });
+            },
+            onUploadStart: beginUploadPhase,
+            onVerifying: () => {
+              samplesRef.current.set(queueId, []);
+              lastProgressUiAtRef.current.delete(queueId);
+              patchQueueItem({
+                status: "verifying",
+                offset: 0,
+                speedBps: null,
+                etaSeconds: null,
+              });
+            },
           },
         );
         if (cancelledIdsRef.current.has(queueId)) {
@@ -553,7 +598,10 @@ export function useUploadQueue({
 
     const hasPending = items.some((item) => item.status === "pending");
     const hasActive = items.some(
-      (item) => item.status === "active" || item.status === "verifying",
+      (item) =>
+        item.status === "active" ||
+        item.status === "hashing" ||
+        item.status === "verifying",
     );
     const hasAwaitingConflict = items.some((item) => item.status === "awaiting_conflict");
     if (hasPending && !hasActive && !hasAwaitingConflict) {

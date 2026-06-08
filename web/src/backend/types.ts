@@ -28,6 +28,12 @@ export type UploadProgress = {
   length?: number;
 };
 
+export type UploadCallbacks = {
+  onHashing?: () => void;
+  onUploadStart?: () => void;
+  onVerifying?: () => void;
+};
+
 export type ListResult = {
   entries: FileEntry[];
   nextCursor?: string;
@@ -56,7 +62,7 @@ export interface ExplorerBackend {
     destPath: string,
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
-    onVerifying?: () => void,
+    callbacks?: UploadCallbacks,
   ): Promise<void>;
   runAction(params: RunActionParams): Promise<void>;
   fetchHealth(): Promise<HealthInfo | null>;

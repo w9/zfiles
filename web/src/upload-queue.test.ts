@@ -10,6 +10,7 @@ import {
   PROGRESS_UI_MIN_INTERVAL_MS,
   shouldCommitProgressUi,
   uploadPercent,
+  uploadStatusForProgress,
 } from "./upload-queue";
 
 test("createQueueItem starts pending with file size as total", () => {
@@ -18,6 +19,12 @@ test("createQueueItem starts pending with file size as total", () => {
   assert.equal(item.status, "pending");
   assert.equal(item.total, 5);
   assert.equal(item.destPath, "dir/a.txt");
+});
+
+test("uploadStatusForProgress maps synthetic and upload progress ids", () => {
+  assert.equal(uploadStatusForProgress("hashing"), "hashing");
+  assert.equal(uploadStatusForProgress("verifying"), "verifying");
+  assert.equal(uploadStatusForProgress("photos/big.iso"), "active");
 });
 
 test("uploadPercent clamps to 100", () => {
