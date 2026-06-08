@@ -54,6 +54,7 @@ import {
   type PanOffset,
 } from "./slideshowPan";
 import {
+  isPointerOverChrome,
   isSlideshowTypingTarget,
   slideshowNavDirection,
 } from "./slideshowNavigation";
@@ -67,6 +68,9 @@ import {
 
 const CHROME_IDLE_MS = 2000;
 const TOOLTIP_DELAY_MS = 1000;
+// Hover zones matching the top/bottom gradient strips (h-28 = 112px, h-32 = 128px).
+const CHROME_TOP_ZONE_PX = 112;
+const CHROME_BOTTOM_ZONE_PX = 128;
 
 function SlideshowIconTooltip({
   label,
@@ -102,10 +106,12 @@ type SlideshowOverlayProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+type ChromeLockReason = "focus" | "hover";
+
 function useChromeAutoHide(open: boolean) {
   const [visible, setVisible] = useState(true);
   const timerRef = useRef<number | null>(null);
-  const lockedRef = useRef(false);
+  const locksRef = useRef<Set<ChromeLockReason>>(new Set());
 
   const clearTimer = useCallback(() => {
     if (timerRef.current != null) {
@@ -117,20 +123,23 @@ function useChromeAutoHide(open: boolean) {
   const bumpActivity = useCallback(() => {
     setVisible(true);
     clearTimer();
-    if (lockedRef.current) {
+    if (locksRef.current.size > 0) {
       return;
     }
     timerRef.current = window.setTimeout(() => setVisible(false), CHROME_IDLE_MS);
   }, [clearTimer]);
 
-  const setChromeLocked = useCallback(
-    (locked: boolean) => {
-      lockedRef.current = locked;
+  const setChromeLock = useCallback(
+    (reason: ChromeLockReason, locked: boolean) => {
       if (locked) {
+        locksRef.current.add(reason);
         setVisible(true);
         clearTimer();
       } else {
-        bumpActivity();
+        locksRef.current.delete(reason);
+        if (locksRef.current.size === 0) {
+          bumpActivity();
+        }
       }
     },
     [bumpActivity, clearTimer],
@@ -139,7 +148,7 @@ function useChromeAutoHide(open: boolean) {
   useEffect(() => {
     if (!open) {
       setVisible(true);
-      lockedRef.current = false;
+      locksRef.current.clear();
       clearTimer();
       return;
     }
@@ -147,7 +156,7 @@ function useChromeAutoHide(open: boolean) {
     return clearTimer;
   }, [open, bumpActivity, clearTimer]);
 
-  return { chromeVisible: visible, bumpActivity, setChromeLocked };
+  return { chromeVisible: visible, bumpActivity, setChromeLock };
 }
 
 export default function SlideshowOverlay({
@@ -173,7 +182,7 @@ export default function SlideshowOverlay({
   const dragSessionRef = useRef<DragSession | null>(null);
   const pinchSessionRef = useRef<PinchSession | null>(null);
   const suppressClickRef = useRef(false);
-  const { chromeVisible, bumpActivity, setChromeLocked } = useChromeAutoHide(open);
+  const { chromeVisible, bumpActivity, setChromeLock } = useChromeAutoHide(open);
   const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds, {
     onDraftChange: bumpActivity,
     confirmOnEnter: true,
@@ -483,15 +492,29 @@ export default function SlideshowOverlay({
       role="dialog"
       aria-modal="true"
       aria-label={t("slideshow.title", { name: fileName })}
-      onMouseMove={bumpActivity}
+      onMouseMove={(event) => {
+        setChromeLock(
+          "hover",
+          isPointerOverChrome(
+            event.clientY,
+            window.innerHeight,
+            CHROME_TOP_ZONE_PX,
+            CHROME_BOTTOM_ZONE_PX,
+          ),
+        );
+        bumpActivity();
+      }}
+      onMouseLeave={() => {
+        setChromeLock("hover", false);
+      }}
       onFocus={(event) => {
         if (isSlideshowTypingTarget(event.target)) {
-          setChromeLocked(true);
+          setChromeLock("focus", true);
         }
       }}
       onBlur={(event) => {
         if (isSlideshowTypingTarget(event.target)) {
-          setChromeLocked(false);
+          setChromeLock("focus", false);
         }
       }}
     >

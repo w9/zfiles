@@ -129,6 +129,6 @@ Dual-mode refactor is **complete**. **Current cycle:** also keep slideshow chrom
 - [x] Wire overlay interval input; `pnpm test`
 - [x] `useChromeAutoHide`: lock auto-hide while focused (force-show; restart 2s timer on unlock)
 - [x] Wire overlay `onFocus`/`onBlur` (typing target) to chrome lock; `pnpm test`
-- [ ] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
-- [ ] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
-- [ ] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
+- [x] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
+- [x] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
+- [x] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
