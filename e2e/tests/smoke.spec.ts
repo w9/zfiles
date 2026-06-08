@@ -289,6 +289,8 @@ test("slideshow opens for image preview", async ({ page }) => {
     const slideshow = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
     await expect(slideshow).toBeVisible();
     await expect(slideshow.getByRole("button", { name: "Play" })).toBeEnabled();
+    await page.mouse.click(8, 8);
+    await expect(slideshow).not.toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");
   }

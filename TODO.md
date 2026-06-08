@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** slideshow interval input — Enter confirms (blur), Escape cancels draft (overlay only). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** complete. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -122,8 +122,8 @@ Dual-mode refactor is **complete**. **Current cycle:** slideshow interval input 
 - [x] `commitSlideshowIntervalDraft` helper + unit tests
 - [x] `useSlideshowIntervalInput` hook; wire Settings + slideshow overlay
 - [x] `pnpm test`
-- [ ] `SlideshowOverlay`: letterbox backdrop click calls `onOpenChange(false)`; image click unchanged
-- [ ] E2E: slideshow closes on letterbox backdrop click
-- [ ] Run `pnpm test`
+- [x] `SlideshowOverlay`: letterbox backdrop click calls `onOpenChange(false)`; image click unchanged
+- [x] E2E: slideshow closes on letterbox backdrop click
+- [x] Run `pnpm test`
 - [x] `useSlideshowIntervalInput`: Enter confirm + Escape cancel (overlay opts)
 - [x] Wire overlay interval input; `pnpm test`

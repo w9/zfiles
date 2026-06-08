@@ -381,6 +381,13 @@ export default function SlideshowOverlay({
     }
   };
 
+  const handleLetterboxClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    onOpenChange(false);
+  };
+
   const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
     if (event.touches.length !== 2) {
       return;
@@ -488,7 +495,10 @@ export default function SlideshowOverlay({
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
       >
-        <div className="flex h-full w-full items-center justify-center p-6">
+        <div
+          className="flex h-full w-full items-center justify-center p-6"
+          onClick={handleLetterboxClick}
+        >
           {imageUrl ? (
             <div
               className={cn("touch-none select-none", stageCursorClass)}
