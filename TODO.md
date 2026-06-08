@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** cloud multipart listing/resume and upload progress polish — **complete**. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** document **AQ** (AskQuestion before planning) in `AGENTS.md`. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -114,3 +114,5 @@ Dual-mode refactor is **complete**. **Current cycle:** cloud multipart listing/r
 - [x] `progress.tsx`: `variant` prop (`upload` | `local`) for track/indicator colors
 - [x] `UploadPanel.tsx`: muted bar for hashing/verifying, primary for active upload
 - [x] Run `pnpm test`
+- [x] `AGENTS.md`: add **AQ** section (triggers, AskQuestion before plan, separate from scope gate)
+- [x] Cross-link Development cycle step 1 to AQ section

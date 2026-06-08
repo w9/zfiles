@@ -12,6 +12,22 @@ When scope or priorities shift:
 - Add new items as needed, but keep the list focused on near-term work — not the full roadmap.
 - **Append new unchecked items at the bottom** of the TODO list — after all existing items (including completed `[x]` entries). Do not insert new cycle items at the top or above the historical checklist.
 
+## AQ — ask before planning
+
+**"AQ"** means: before you make a plan, use Cursor's **AskQuestion** tool to confirm behavioral details and edge cases with the user.
+
+**When to run AQ**
+
+- The user appends **"AQ"** to a request (shorthand, like **"Go!"**).
+- The request has meaningful behavioral or edge-case ambiguity — even if the user did not say **"AQ"**.
+
+When a trigger applies, **do not skip AQ** for trivial changes or other exemptions. Still run AskQuestion.
+
+**Relationship to the development cycle and scope gate**
+
+- Run AQ **before** cycle step 1 (plan / TODO updates).
+- AQ is **separate from** the [scope gate](#scope-gate-before-implementing): AQ confirms *what* to build and edge cases; the scope gate authorizes work that is not design-aligned, a fix, or trivial.
+
 ## Development cycle
 
 ### Mandatory — read before any code change
@@ -51,6 +67,7 @@ Common mistakes to avoid:
 
 For each cycle:
 
+0. **[AQ](#aq--ask-before-planning)** — When triggered, use **AskQuestion** to confirm behavioral details and edge cases before planning.
 1. **Update the high-level plan** — Read [design/design.md](design/design.md) and [TODO.md](TODO.md). Revise the "High-level plan next" paragraph in `TODO.md` to reflect current progress and near-term priorities (including the user's request when they gave one). If it is still accurate, leave it unchanged.
 2. **Add TODO items** — Break the cycle's scope into concrete unchecked items in `TODO.md` (from the user's request and/or the plan). **Append them to the bottom** of the TODO list; never prepend them above existing entries. Use **as many items as the work warrants**, up to a **maximum of 7** per cycle — do not pad the list to hit a count, and do not exceed seven in the batch you commit before implementation. Each item should be a concrete, deliverable slice of work.
 3. **Commit** — Commit the plan and new TODO items before writing implementation code.
