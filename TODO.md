@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** document **AQ** (AskQuestion before planning) in `AGENTS.md`. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** slideshow letterbox backdrop click closes overlay (image/chrome clicks unchanged; drag suppresses image click only). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -116,3 +116,12 @@ Dual-mode refactor is **complete**. **Current cycle:** document **AQ** (AskQuest
 - [x] Run `pnpm test`
 - [x] `AGENTS.md`: add **AQ** section (triggers, AskQuestion before plan, separate from scope gate)
 - [x] Cross-link Development cycle step 1 to AQ section
+- [x] `slideshowSettings.ts`: min 0.1 s, float clamp/parse (no rounding); update unit tests
+- [x] Settings + slideshow overlay inputs: `parseFloat`, `step="any"`
+- [x] `pnpm test`
+- [x] `commitSlideshowIntervalDraft` helper + unit tests
+- [x] `useSlideshowIntervalInput` hook; wire Settings + slideshow overlay
+- [x] `pnpm test`
+- [ ] `SlideshowOverlay`: letterbox backdrop click calls `onOpenChange(false)`; image click unchanged
+- [ ] E2E: slideshow closes on letterbox backdrop click
+- [ ] Run `pnpm test`
