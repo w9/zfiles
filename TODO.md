@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** keep slideshow chrome visible while a chrome input is focused (lock auto-hide; force-show on focus; restart 2s idle timer on blur). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** also keep slideshow chrome visible while the cursor hovers the chrome zone (top/bottom gradient strips); combine with the focus lock so it stays visible while hovering OR focused, restarting the 2s idle timer once both release. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -129,3 +129,6 @@ Dual-mode refactor is **complete**. **Current cycle:** keep slideshow chrome vis
 - [x] Wire overlay interval input; `pnpm test`
 - [x] `useChromeAutoHide`: lock auto-hide while focused (force-show; restart 2s timer on unlock)
 - [x] Wire overlay `onFocus`/`onBlur` (typing target) to chrome lock; `pnpm test`
+- [ ] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
+- [ ] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
+- [ ] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
