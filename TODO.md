@@ -134,8 +134,8 @@ Dual-mode refactor is **complete**. **Current cycle:** tuck the uploads UI out o
 - [x] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
 - [x] `uploadTray.ts`: `aggregateUploadStats` (counts by status, in-flight, percent, combined speed/ETA, recent/history count) + `uploadTrayAttention` (paused/failed flag) + unit tests; register test file in `pnpm test` script
 - [x] `uploadTray.ts`: `reduceTrayAutoOpen` (auto-open once per batch when pending work appears, re-arm after the queue drains) + unit tests
-- [ ] Add non-modal shadcn/Radix `popover` primitive (`components/ui/popover.tsx`)
-- [ ] `UploadIndicator.tsx`: always-visible status-bar pill — quiet icon + recent count when idle, live aggregate progress + speed/ETA when active, paused/failed attention flag; `useUploadTray` hook (auto-open wiring)
-- [ ] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
-- [ ] i18n: add uploads tray/indicator keys across all 14 locales
-- [ ] Run `pnpm test` + `cargo test`; fix any failures
+- [x] Add non-modal shadcn/Radix `popover` primitive (`components/ui/popover.tsx`)
+- [x] `UploadIndicator.tsx`: always-visible status-bar pill — quiet icon + recent count when idle, live aggregate progress + speed/ETA when active, paused/failed attention flag; auto-open wiring
+- [x] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
+- [x] i18n: add uploads tray/indicator keys across all 14 locales
+- [x] Run `pnpm test` + `cargo test`; fix any failures (`pnpm build`/`tsc` has 8 pre-existing errors on `main`, unrelated to this cycle)
