@@ -51,7 +51,7 @@ import {
   shouldRefreshListing,
 } from "../listingRefresh";
 import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
-import UploadPanel from "../UploadPanel";
+import UploadIndicator from "../UploadIndicator";
 import UploadConflictDialog from "../UploadConflictDialog";
 import UploadButton from "../UploadButton";
 import { useMultipartSessions } from "../cloud/useMultipartSessions";
@@ -1132,24 +1132,6 @@ export default function ExplorerApp() {
         </div>
       ) : null}
 
-      <UploadPanel
-        items={uploadItems}
-        onClearFinished={clearFinishedUploads}
-        onCancel={cancelUpload}
-        cloudMultipart={
-          multipartSessions.enabled
-            ? {
-                sessions: visibleMultipartSessions,
-                loading: multipartSessions.loading,
-                error: multipartSessions.error,
-                readOnly: multipartSessions.readOnly,
-                onResume: multipartSessions.resumeSession,
-                onAbort: multipartSessions.abortSession,
-              }
-            : undefined
-        }
-      />
-
       <UploadConflictDialog
         item={uploadConflictItem}
         onResolve={(resolution, applyToAll) => {
@@ -1313,6 +1295,25 @@ export default function ExplorerApp() {
                 ? t("clipboard.cutOne", { name: basename(fileOps.cutPaths[0] ?? "") })
                 : t("clipboard.cutMany", { count: String(fileOps.cutPaths.length) })
               : null
+          }
+          uploads={
+            <UploadIndicator
+              items={uploadItems}
+              onClearFinished={clearFinishedUploads}
+              onCancel={cancelUpload}
+              cloudMultipart={
+                multipartSessions.enabled
+                  ? {
+                      sessions: visibleMultipartSessions,
+                      loading: multipartSessions.loading,
+                      error: multipartSessions.error,
+                      readOnly: multipartSessions.readOnly,
+                      onResume: multipartSessions.resumeSession,
+                      onAbort: multipartSessions.abortSession,
+                    }
+                  : undefined
+              }
+            />
           }
         />
       </section>

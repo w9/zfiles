@@ -17,7 +17,7 @@ import {
   type UploadQueueItem,
 } from "./upload-queue";
 
-type CloudMultipartPanelProps = {
+export type CloudMultipartPanelProps = {
   sessions: MultipartSessionView[];
   loading: boolean;
   error: string | null;
@@ -234,29 +234,21 @@ export default function UploadPanel({
       item.status === "cancelled",
   ).length;
 
-  if (items.length === 0 && !cloudMultipart) {
-    return null;
-  }
-
   const headerTitle =
-    items.length > 0 ? queueHeaderTitle(items, t) : t("upload.multipart.panelTitle");
+    items.length > 0 ? queueHeaderTitle(items, t) : t("upload.tray.title");
 
   return (
-    <section
-      className="mt-4 rounded-xl border bg-card"
-      aria-label={headerTitle}
-    >
+    <div className="flex w-full flex-col" aria-label={headerTitle}>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+        <h2 className="text-sm font-medium">{headerTitle}</h2>
+        {finishedCount > 0 ? (
+          <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
+            {t("upload.clearFinished")}
+          </Button>
+        ) : null}
+      </div>
       {items.length > 0 ? (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-            <h2 className="text-sm font-medium">{headerTitle}</h2>
-            {finishedCount > 0 ? (
-              <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
-                {t("upload.clearFinished")}
-              </Button>
-            ) : null}
-          </div>
-          <ul className="max-h-64 divide-y overflow-y-auto">
+        <ul className="max-h-64 divide-y overflow-y-auto">
             {items.map((item) => {
               const isActive =
                 item.status === "active" ||
@@ -308,14 +300,13 @@ export default function UploadPanel({
                 </li>
               );
             })}
-          </ul>
-        </>
-      ) : (
-        <div className="border-b px-4 py-3">
-          <h2 className="text-sm font-medium">{headerTitle}</h2>
-        </div>
+        </ul>
+      ) : cloudMultipart ? null : (
+        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+          {t("upload.tray.empty")}
+        </p>
       )}
       {cloudMultipart ? <MultipartSessionsSection {...cloudMultipart} /> : null}
-    </section>
+    </div>
   );
 }

@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import BackendStatus from "./BackendStatus";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -8,6 +10,7 @@ type StatusBarProps = {
   kernelVersion?: string | null;
   selectedCount?: number;
   cutStatusText?: string | null;
+  uploads?: ReactNode;
   className?: string;
 };
 
@@ -16,6 +19,7 @@ export default function StatusBar({
   kernelVersion,
   selectedCount = 0,
   cutStatusText = null,
+  uploads = null,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
@@ -43,6 +47,7 @@ export default function StatusBar({
         {selectionLabel ? (
           <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
         ) : null}
+        {uploads}
       </div>
     </div>
   );

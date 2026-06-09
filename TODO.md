@@ -132,8 +132,8 @@ Dual-mode refactor is **complete**. **Current cycle:** tuck the uploads UI out o
 - [x] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
 - [x] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
 - [x] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
-- [ ] `uploadTray.ts`: `aggregateUploadStats` (counts by status, in-flight, percent, combined speed/ETA, recent/history count) + `uploadTrayAttention` (paused/failed flag) + unit tests; register test file in `pnpm test` script
-- [ ] `uploadTray.ts`: `reduceTrayAutoOpen` (auto-open once per batch from empty, re-arm after the queue drains) + `markTrayDismissed` + unit tests
+- [x] `uploadTray.ts`: `aggregateUploadStats` (counts by status, in-flight, percent, combined speed/ETA, recent/history count) + `uploadTrayAttention` (paused/failed flag) + unit tests; register test file in `pnpm test` script
+- [x] `uploadTray.ts`: `reduceTrayAutoOpen` (auto-open once per batch when pending work appears, re-arm after the queue drains) + unit tests
 - [ ] Add non-modal shadcn/Radix `popover` primitive (`components/ui/popover.tsx`)
 - [ ] `UploadIndicator.tsx`: always-visible status-bar pill — quiet icon + recent count when idle, live aggregate progress + speed/ETA when active, paused/failed attention flag; `useUploadTray` hook (auto-open wiring)
 - [ ] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
