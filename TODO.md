@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** tuck the uploads UI out of the main layout — replace the always-on `UploadPanel` flow block with a compact, **always-present** uploads indicator in the bottom status bar that expands into a non-modal popover. The popover holds the full per-file queue plus session upload **history** (finished items stay reachable, dimmed, until cleared) and cloud multipart sessions. The pill is quiet with a recent count when idle and shows live aggregate progress while transferring; auto-open the popover once per batch (re-arm after the queue drains) and flag paused/failed uploads. History is session-only (cleared on reload) with a Clear-finished control. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** make the cloud “Unfinished uploads” (multipart) section elegant inside the uploads popover — rename the heading, tuck the long description into an info (ⓘ) tooltip, unify each session row with the active-queue rows (file icon + name + single stats line + single progress bar), replace the wrapping text buttons with compact Resume/Abort icon buttons + tooltips, and surface started-time + percent (with a Remote badge for abort-only sessions). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -139,3 +139,9 @@ Dual-mode refactor is **complete**. **Current cycle:** tuck the uploads UI out o
 - [x] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
 - [x] i18n: add uploads tray/indicator keys across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures (`pnpm build`/`tsc` has 8 pre-existing errors on `main`, unrelated to this cycle)
+- [ ] `s3Multipart.ts`: pure `multipartPercent(session)` helper (null when size unknown) + unit test in `cloud/s3Multipart.test.ts`
+- [ ] `MultipartSessionsSection` header: rename heading to “Unfinished uploads”; move the description into an info (ⓘ) tooltip beside it
+- [ ] Unify session rows with the active-queue rows — file icon + name + dest, single stats line, single progress bar; add file icons to the active-queue rows too (via `useTheme`)
+- [ ] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
+- [ ] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
+- [ ] Run `pnpm test` + `cargo test`; fix any failures
