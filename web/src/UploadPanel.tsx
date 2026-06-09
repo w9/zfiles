@@ -1,12 +1,21 @@
-import { X } from "lucide-react";
+import { Info, Play, Trash2, X } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { FileIcon } from "./FileIcon";
+import { multipartPercent } from "./cloud/s3Multipart";
 import type { MultipartSessionView } from "./cloud/useMultipartSessions";
 import { useTranslation } from "./i18n";
 import type { MessageKey } from "./i18n/messages";
-import { formatSize } from "./listing-format";
+import { formatRelativeModified, formatSize } from "./listing-format";
+import { useTheme } from "./useTheme";
 import {
   countUploadsByStatus,
   formatEtaSeconds,
@@ -123,16 +132,14 @@ function multipartProgressLine(
   session: MultipartSessionView,
   t: ReturnType<typeof useTranslation>["t"],
 ): string {
-  if (session.bytesUploaded == null || session.totalBytes == null || session.totalBytes <= 0) {
+  const percent = multipartPercent(session);
+  if (percent == null || session.bytesUploaded == null || session.totalBytes == null) {
     return t("upload.multipart.progressUnknown");
   }
-  const percent = String(
-    Math.min(100, Math.round((session.bytesUploaded / session.totalBytes) * 100)),
-  );
   return t("upload.multipart.progressKnown", {
     uploaded: formatSize(session.bytesUploaded, false),
     total: formatSize(session.totalBytes, false),
-    percent,
+    percent: String(percent),
   });
 }
 
@@ -144,13 +151,27 @@ function MultipartSessionsSection({
   onResume,
   onAbort,
 }: CloudMultipartPanelProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const { resolved: iconTheme } = useTheme();
 
   return (
     <div className="border-t">
-      <div className="px-4 py-3">
+      <div className="flex items-center gap-1.5 px-4 py-3">
         <h3 className="text-sm font-medium">{t("upload.multipart.title")}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{t("upload.multipart.description")}</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none"
+              aria-label={t("upload.multipart.description")}
+            >
+              <Info className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            {t("upload.multipart.description")}
+          </TooltipContent>
+        </Tooltip>
       </div>
       {loading ? (
         <p className="px-4 pb-3 text-xs text-muted-foreground">{t("upload.multipart.loading")}</p>
@@ -163,57 +184,95 @@ function MultipartSessionsSection({
       ) : null}
       {sessions.length > 0 ? (
         <ul className="max-h-48 divide-y overflow-y-auto border-t">
-          {sessions.map((session) => (
-            <li key={session.uploadId} className="space-y-2 px-4 py-3">
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium" title={session.fileName}>
-                    {session.fileName}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground" title={session.destPath}>
-                    {session.destPath}
-                  </p>
+          {sessions.map((session) => {
+            const busy = session.resuming || session.aborting;
+            const startedAt =
+              session.initiated != null
+                ? formatRelativeModified(session.initiated.getTime(), locale)
+                : null;
+            const resumeLabel = session.resuming
+              ? t("upload.multipart.resuming")
+              : t("upload.multipart.resume");
+            const abortLabel = session.aborting
+              ? t("upload.multipart.aborting")
+              : t("upload.multipart.abort");
+            return (
+              <li key={session.uploadId} className="space-y-2 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <FileIcon
+                    name={session.fileName}
+                    isDir={false}
+                    theme={iconTheme}
+                    size="xs"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium" title={session.fileName}>
+                      {session.fileName}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground" title={session.destPath}>
+                      {session.destPath}
+                    </p>
+                  </div>
+                  {session.canResume && !readOnly ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          disabled={busy}
+                          aria-label={resumeLabel}
+                          onClick={() => onResume(session.uploadId)}
+                        >
+                          <Play className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{resumeLabel}</TooltipContent>
+                    </Tooltip>
+                  ) : null}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                        disabled={busy}
+                        aria-label={abortLabel}
+                        onClick={() => onAbort(session.uploadId)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{abortLabel}</TooltipContent>
+                  </Tooltip>
                 </div>
-                <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                  {multipartProgressLine(session, t)}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {!session.canResume ? (
-                  <span className="text-xs text-muted-foreground">
-                    {t("upload.multipart.remoteOnly")}
+                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground tabular-nums">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {startedAt ? (
+                      <span className="truncate">
+                        {t("upload.multipart.startedAt", { time: startedAt })}
+                      </span>
+                    ) : null}
+                    {!session.canResume ? (
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 font-normal"
+                        title={t("upload.multipart.remoteOnly")}
+                      >
+                        {t("upload.multipart.remote")}
+                      </Badge>
+                    ) : null}
                   </span>
+                  <span className="shrink-0">{multipartProgressLine(session, t)}</span>
+                </div>
+                {session.bytesUploaded != null && session.totalBytes != null ? (
+                  <Progress value={session.bytesUploaded} max={session.totalBytes || 1} />
                 ) : null}
-                {session.canResume && !readOnly ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={session.resuming || session.aborting}
-                    onClick={() => onResume(session.uploadId)}
-                  >
-                    {session.resuming
-                      ? t("upload.multipart.resuming")
-                      : t("upload.multipart.resume")}
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={session.resuming || session.aborting}
-                  onClick={() => onAbort(session.uploadId)}
-                >
-                  {session.aborting
-                    ? t("upload.multipart.aborting")
-                    : t("upload.multipart.abort")}
-                </Button>
-              </div>
-              {session.bytesUploaded != null && session.totalBytes != null ? (
-                <Progress value={session.bytesUploaded} max={session.totalBytes || 1} />
-              ) : null}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       ) : null}
     </div>
@@ -227,6 +286,7 @@ export default function UploadPanel({
   cloudMultipart,
 }: UploadPanelProps) {
   const { t } = useTranslation();
+  const { resolved: iconTheme } = useTheme();
   const finishedCount = items.filter(
     (item) =>
       item.status === "done" ||
@@ -265,6 +325,12 @@ export default function UploadPanel({
                   )}
                 >
                   <div className="flex items-center gap-2">
+                    <FileIcon
+                      name={item.fileName}
+                      isDir={false}
+                      theme={iconTheme}
+                      size="xs"
+                    />
                     <p className="min-w-0 flex-1 truncate text-sm font-medium" title={item.fileName}>
                       {item.fileName}
                     </p>

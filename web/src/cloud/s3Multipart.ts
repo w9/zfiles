@@ -32,6 +32,23 @@ export function multipartBytesUploaded(parts: ListedPart[]): number {
   return parts.reduce((sum, part) => sum + (part.Size ?? 0), 0);
 }
 
+/** Upload progress as a 0–100 integer, or null when the total size is unknown. */
+export function multipartPercent(
+  session: Pick<MergedMultipartSession, "bytesUploaded" | "totalBytes">,
+): number | null {
+  if (
+    session.bytesUploaded == null ||
+    session.totalBytes == null ||
+    session.totalBytes <= 0
+  ) {
+    return null;
+  }
+  return Math.min(
+    100,
+    Math.round((session.bytesUploaded / session.totalBytes) * 100),
+  );
+}
+
 export function mergeMultipartSessions(
   listed: S3ListedMultipartUpload[],
   localRecords: MultipartSessionRecord[],

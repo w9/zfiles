@@ -139,9 +139,9 @@ Dual-mode refactor is **complete**. **Current cycle:** make the cloud “Unfinis
 - [x] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
 - [x] i18n: add uploads tray/indicator keys across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures (`pnpm build`/`tsc` has 8 pre-existing errors on `main`, unrelated to this cycle)
-- [ ] `s3Multipart.ts`: pure `multipartPercent(session)` helper (null when size unknown) + unit test in `cloud/s3Multipart.test.ts`
-- [ ] `MultipartSessionsSection` header: rename heading to “Unfinished uploads”; move the description into an info (ⓘ) tooltip beside it
-- [ ] Unify session rows with the active-queue rows — file icon + name + dest, single stats line, single progress bar; add file icons to the active-queue rows too (via `useTheme`)
-- [ ] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
-- [ ] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
-- [ ] Run `pnpm test` + `cargo test`; fix any failures
+- [x] `s3Multipart.ts`: pure `multipartPercent(session)` helper (null when size unknown) + unit test in `cloud/s3Multipart.test.ts`
+- [x] `MultipartSessionsSection` header: rename heading to “Unfinished uploads”; move the description into an info (ⓘ) tooltip beside it
+- [x] Unify session rows with the active-queue rows — file icon + name + dest, single stats line, single progress bar; add file icons to the active-queue rows too (via `useTheme`)
+- [x] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
+- [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
+- [x] Run `pnpm test` + `cargo test`; fix any failures

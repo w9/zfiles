@@ -67,7 +67,9 @@ export const de: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Für alle Konflikte anwenden",
   "upload.status.awaitingConflict": "Wartet",
   "upload.multipart.panelTitle": "Uploads",
-  "upload.multipart.title": "Unvollständige Multipart-Uploads",
+  "upload.multipart.title": "Unfertige Uploads",
+  "upload.multipart.startedAt": "Gestartet {{time}}",
+  "upload.multipart.remote": "Extern",
   "upload.multipart.description":
     "Sitzungen aus Ihrem Bucket. Fortsetzen ist nur für in diesem Browser gestartete Uploads möglich.",
   "upload.multipart.loading": "Multipart-Sitzungen werden geladen…",

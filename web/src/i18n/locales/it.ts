@@ -67,7 +67,9 @@ export const it: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Applica a tutti i conflitti",
   "upload.status.awaitingConflict": "In attesa",
   "upload.multipart.panelTitle": "Caricamenti",
-  "upload.multipart.title": "Caricamenti multipart incompleti",
+  "upload.multipart.title": "Caricamenti non completati",
+  "upload.multipart.startedAt": "Avviato {{time}}",
+  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sessioni elencate dal bucket. La ripresa è disponibile solo per caricamenti avviati in questo browser.",
   "upload.multipart.loading": "Caricamento sessioni multipart…",

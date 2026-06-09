@@ -67,7 +67,9 @@ export const fr: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Appliquer à tous les conflits",
   "upload.status.awaitingConflict": "En attente",
   "upload.multipart.panelTitle": "Téléversements",
-  "upload.multipart.title": "Téléversements multipart incomplets",
+  "upload.multipart.title": "Téléversements inachevés",
+  "upload.multipart.startedAt": "Démarré {{time}}",
+  "upload.multipart.remote": "Distant",
   "upload.multipart.description":
     "Sessions listées depuis votre bucket. La reprise n'est disponible que pour les téléversements démarrés dans ce navigateur.",
   "upload.multipart.loading": "Chargement des sessions multipart…",

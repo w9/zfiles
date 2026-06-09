@@ -67,7 +67,9 @@ export const id: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Lakukan ini untuk semua konflik",
   "upload.status.awaitingConflict": "Menunggu",
   "upload.multipart.panelTitle": "Unggahan",
-  "upload.multipart.title": "Unggahan multipart belum selesai",
+  "upload.multipart.title": "Unggahan belum selesai",
+  "upload.multipart.startedAt": "Dimulai {{time}}",
+  "upload.multipart.remote": "Jarak jauh",
   "upload.multipart.description":
     "Sesi dari bucket Anda. Lanjutkan hanya tersedia untuk unggahan yang dimulai di browser ini.",
   "upload.multipart.loading": "Memuat sesi multipart…",

@@ -67,7 +67,9 @@ export const vi: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Áp dụng cho mọi xung đột",
   "upload.status.awaitingConflict": "Đang đợi",
   "upload.multipart.panelTitle": "Tải lên",
-  "upload.multipart.title": "Tải lên multipart chưa hoàn tất",
+  "upload.multipart.title": "Tải lên chưa hoàn tất",
+  "upload.multipart.startedAt": "Bắt đầu {{time}}",
+  "upload.multipart.remote": "Từ xa",
   "upload.multipart.description":
     "Phiên được liệt kê từ bucket của bạn. Chỉ có thể tiếp tục các tải lên bắt đầu trong trình duyệt này.",
   "upload.multipart.loading": "Đang tải phiên multipart…",

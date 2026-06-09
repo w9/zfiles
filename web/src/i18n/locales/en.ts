@@ -65,7 +65,9 @@ export const en = {
   "upload.conflict.applyToAll": "Do this for all conflicts",
   "upload.status.awaitingConflict": "Waiting",
   "upload.multipart.panelTitle": "Uploads",
-  "upload.multipart.title": "Incomplete multipart uploads",
+  "upload.multipart.title": "Unfinished uploads",
+  "upload.multipart.startedAt": "Started {{time}}",
+  "upload.multipart.remote": "Remote",
   "upload.multipart.description":
     "Sessions listed from your bucket. Resume is available only for uploads started in this browser.",
   "upload.multipart.loading": "Loading multipart sessions…",

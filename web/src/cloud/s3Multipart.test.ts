@@ -8,7 +8,12 @@ import {
   multipartSessionScopeId,
   type MultipartSessionRecord,
 } from "./multipartSessions";
-import { mergeMultipartSessions, multipartBytesUploaded, type ListedPart } from "./s3Multipart";
+import {
+  mergeMultipartSessions,
+  multipartBytesUploaded,
+  multipartPercent,
+  type ListedPart,
+} from "./s3Multipart";
 
 test("multipartSessionScopeId keys by provider bucket and prefix", () => {
   assert.equal(
@@ -66,6 +71,15 @@ test("multipartBytesUploaded sums part sizes", () => {
     { PartNumber: 2, ETag: '"b"', Size: 50 },
   ];
   assert.equal(multipartBytesUploaded(parts), 150);
+});
+
+test("multipartPercent returns rounded percent or null when size unknown", () => {
+  assert.equal(multipartPercent({ bytesUploaded: 250, totalBytes: 1000 }), 25);
+  assert.equal(multipartPercent({ bytesUploaded: 999, totalBytes: 1000 }), 100);
+  assert.equal(multipartPercent({ bytesUploaded: 2000, totalBytes: 1000 }), 100);
+  assert.equal(multipartPercent({ bytesUploaded: null, totalBytes: 1000 }), null);
+  assert.equal(multipartPercent({ bytesUploaded: 10, totalBytes: null }), null);
+  assert.equal(multipartPercent({ bytesUploaded: 10, totalBytes: 0 }), null);
 });
 
 test("mergeMultipartSessions marks resume only with local records", () => {

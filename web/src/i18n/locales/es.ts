@@ -66,7 +66,9 @@ export const es: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Hacer esto para todos los conflictos",
   "upload.status.awaitingConflict": "Esperando",
   "upload.multipart.panelTitle": "Subidas",
-  "upload.multipart.title": "Subidas multiparte incompletas",
+  "upload.multipart.title": "Subidas sin terminar",
+  "upload.multipart.startedAt": "Iniciado {{time}}",
+  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sesiones listadas desde su bucket. Reanudar solo está disponible para subidas iniciadas en este navegador.",
   "upload.multipart.loading": "Cargando sesiones multiparte…",

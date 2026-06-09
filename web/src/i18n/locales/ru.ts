@@ -67,7 +67,9 @@ export const ru: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Применить ко всем конфликтам",
   "upload.status.awaitingConflict": "Ожидание",
   "upload.multipart.panelTitle": "Загрузки",
-  "upload.multipart.title": "Незавершённые составные загрузки",
+  "upload.multipart.title": "Незавершённые загрузки",
+  "upload.multipart.startedAt": "Начато {{time}}",
+  "upload.multipart.remote": "Удалённо",
   "upload.multipart.description":
     "Сеансы из вашего бакета. Возобновление доступно только для загрузок, начатых в этом браузере.",
   "upload.multipart.loading": "Загрузка сеансов составной загрузки…",

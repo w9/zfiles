@@ -67,7 +67,9 @@ export const tr: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Tüm çakışmalara uygula",
   "upload.status.awaitingConflict": "Bekliyor",
   "upload.multipart.panelTitle": "Yüklemeler",
-  "upload.multipart.title": "Tamamlanmamış çok parçalı yüklemeler",
+  "upload.multipart.title": "Tamamlanmamış yüklemeler",
+  "upload.multipart.startedAt": "Başladı {{time}}",
+  "upload.multipart.remote": "Uzak",
   "upload.multipart.description":
     "Kovadan listelenen oturumlar. Yalnızca bu tarayıcıda başlatılan yüklemeler sürdürülebilir.",
   "upload.multipart.loading": "Çok parçalı oturumlar yükleniyor…",

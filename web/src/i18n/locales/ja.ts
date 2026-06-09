@@ -67,7 +67,9 @@ export const ja: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "すべての競合に適用",
   "upload.status.awaitingConflict": "確認待ち",
   "upload.multipart.panelTitle": "アップロード",
-  "upload.multipart.title": "未完了のマルチパートアップロード",
+  "upload.multipart.title": "未完了のアップロード",
+  "upload.multipart.startedAt": "開始: {{time}}",
+  "upload.multipart.remote": "リモート",
   "upload.multipart.description":
     "バケットのセッション一覧。このブラウザで開始したアップロードのみ再開できます。",
   "upload.multipart.loading": "マルチパートセッションを読み込み中…",

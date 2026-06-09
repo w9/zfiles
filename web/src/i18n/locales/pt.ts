@@ -67,7 +67,9 @@ export const pt: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "Fazer isto para todos os conflitos",
   "upload.status.awaitingConflict": "Aguardando",
   "upload.multipart.panelTitle": "Envios",
-  "upload.multipart.title": "Envios multipart incompletos",
+  "upload.multipart.title": "Envios não concluídos",
+  "upload.multipart.startedAt": "Iniciado {{time}}",
+  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sessões listadas do seu bucket. Retomar só está disponível para envios iniciados neste navegador.",
   "upload.multipart.loading": "Carregando sessões multipart…",

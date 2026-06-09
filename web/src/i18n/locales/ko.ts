@@ -67,7 +67,9 @@ export const ko: Record<MessageKey, string> = {
   "upload.conflict.applyToAll": "모든 충돌에 적용",
   "upload.status.awaitingConflict": "대기",
   "upload.multipart.panelTitle": "업로드",
-  "upload.multipart.title": "미완료 멀티파트 업로드",
+  "upload.multipart.title": "완료되지 않은 업로드",
+  "upload.multipart.startedAt": "시작됨 {{time}}",
+  "upload.multipart.remote": "원격",
   "upload.multipart.description":
     "버킷의 세션 목록입니다. 이 브라우저에서 시작한 업로드만 재개할 수 있습니다.",
   "upload.multipart.loading": "멀티파트 세션 로드 중…",
