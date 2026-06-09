@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** also keep slideshow chrome visible while the cursor hovers the chrome zone (top/bottom gradient strips); combine with the focus lock so it stays visible while hovering OR focused, restarting the 2s idle timer once both release. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** tuck the uploads UI out of the main layout — replace the always-on `UploadPanel` flow block with a compact, **always-present** uploads indicator in the bottom status bar that expands into a non-modal popover. The popover holds the full per-file queue plus session upload **history** (finished items stay reachable, dimmed, until cleared) and cloud multipart sessions. The pill is quiet with a recent count when idle and shows live aggregate progress while transferring; auto-open the popover once per batch (re-arm after the queue drains) and flag paused/failed uploads. History is session-only (cleared on reload) with a Clear-finished control. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -132,3 +132,10 @@ Dual-mode refactor is **complete**. **Current cycle:** also keep slideshow chrom
 - [x] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
 - [x] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
 - [x] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
+- [ ] `uploadTray.ts`: `aggregateUploadStats` (counts by status, in-flight, percent, combined speed/ETA, recent/history count) + `uploadTrayAttention` (paused/failed flag) + unit tests; register test file in `pnpm test` script
+- [ ] `uploadTray.ts`: `reduceTrayAutoOpen` (auto-open once per batch from empty, re-arm after the queue drains) + `markTrayDismissed` + unit tests
+- [ ] Add non-modal shadcn/Radix `popover` primitive (`components/ui/popover.tsx`)
+- [ ] `UploadIndicator.tsx`: always-visible status-bar pill — quiet icon + recent count when idle, live aggregate progress + speed/ETA when active, paused/failed attention flag; `useUploadTray` hook (auto-open wiring)
+- [ ] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
+- [ ] i18n: add uploads tray/indicator keys across all 14 locales
+- [ ] Run `pnpm test` + `cargo test`; fix any failures
