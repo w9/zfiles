@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** add instant (0-delay) tooltips on every **Keep both** conflict button showing the resolved basename (async `findKeepBothPath` with loading placeholder). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. **Current cycle:** command palette visual parity with shadcn — `max-w-sm` dialog, re-sync Command dialog sizing classes, revert `CommandList` to native scroll (drop ScrollArea). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -158,7 +158,10 @@ Dual-mode refactor is **complete**. **Current cycle:** add instant (0-delay) too
 - [x] Run `pnpm test`
 - [x] `CommandList`: wrap with shadcn `ScrollArea` (`max-h-[300px]`); drop native `overflow-y-auto`
 - [x] Run `pnpm test` + `cargo test`
-- [ ] i18n: `upload.conflict.keepBothTooltip` + `keepBothTooltipLoading` across all 14 locales
-- [ ] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
-- [ ] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
+- [x] i18n: `upload.conflict.keepBothTooltip` + `keepBothTooltipLoading` across all 14 locales
+- [x] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
+- [x] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
+- [x] Run `pnpm test` + `cargo test`
+- [ ] `command.tsx`: re-sync shadcn dialog Command styles; `CommandDialog` `sm:max-w-sm`; revert `CommandList` native scroll
+- [ ] `CommandPalette.tsx`: drop redundant `<Command>` wrapper (styled by `CommandDialog`)
 - [ ] Run `pnpm test` + `cargo test`
