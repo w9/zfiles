@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** extend `AGENTS.md` shadcn guidance — remind agents to consult the latest component docs for stock styling and APIs (training data may be outdated). Deferred: command palette shadcn parity, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** restyle command palette to match latest shadcn Command — InputGroup search, `rounded-xl` popover shell, muted selection, native `max-h-72` list scroll. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -162,7 +162,6 @@ Dual-mode refactor is **complete**. **Current cycle:** extend `AGENTS.md` shadcn
 - [x] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
 - [x] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
 - [x] Run `pnpm test` + `cargo test`
-- [x] `command.tsx`: re-sync shadcn dialog Command styles; `CommandDialog` `sm:max-w-sm`; revert `CommandList` native scroll
-- [x] `CommandPalette.tsx`: drop redundant `<Command>` wrapper (styled by `CommandDialog`)
-- [x] Run `pnpm test` + `cargo test`
-- [x] `AGENTS.md`: remind agents to check latest shadcn docs for stock styling (training data may be outdated)
+- [ ] `command.tsx`: shadcn styling — InputGroup input, muted selection, native `no-scrollbar max-h-72` list
+- [ ] `CommandDialog`: popover shell (`rounded-xl`, `bg-popover`) to match shadcn palette chrome
+- [ ] Run `pnpm test`
