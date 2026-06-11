@@ -7,9 +7,8 @@ import {
 import { cn } from "@/lib/utils";
 import { isActionAvailable } from "./dispatch";
 import { explainActionUnavailable } from "./explainWhenFailure";
-import { actionIcon } from "./icons";
-import KeybindingKbd from "./KeybindingKbd";
-import { keybindingForAction } from "./keybindings";
+import { actionIconWithFallback } from "./icons";
+import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
 import { DEFAULT_TOOLBAR_ACTIONS } from "./surfaces";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
@@ -40,7 +39,7 @@ export default function ActionToolbar({
           return null;
         }
         const available = isActionAvailable(action, contextKeys);
-        const Icon = actionIcon(actionId);
+        const Icon = actionIconWithFallback(actionId);
         const label = labelForKey(action.nameKey);
         const chord = keybindingForAction(
           action.id,
@@ -68,7 +67,11 @@ export default function ActionToolbar({
             <TooltipContent side="bottom" className="flex max-w-xs flex-col gap-1">
               <span className="flex items-center gap-2">
                 {label}
-                {chord ? <KeybindingKbd chord={chord} className="ml-0" /> : null}
+                {chord ? (
+                  <span className="text-xs tracking-widest text-background/70">
+                    {formatKeybindingLabel(chord)}
+                  </span>
+                ) : null}
               </span>
               {!available && unavailableReason ? (
                 <span className="text-background/80">{unavailableReason}</span>

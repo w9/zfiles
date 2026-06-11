@@ -1,18 +1,20 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
+  CommandShortcut,
 } from "@/components/ui/command";
+import { actionIconWithFallback } from "./icons";
 import { searchActions } from "./search";
 import { isActionAvailable } from "./dispatch";
-import { explainActionUnavailable } from "./explainWhenFailure";
-import KeybindingKbd from "./KeybindingKbd";
-import { keybindingForAction } from "./keybindings";
+import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
 import type { ActionDefinition, KeybindingDefinition } from "./types";
@@ -37,6 +39,22 @@ function actionKeybindingChord(
   keybindings: KeybindingDefinition[],
 ): string | null {
   return keybindingForAction(action.id, keybindings, action.defaultKeybinding);
+}
+
+function resetPaletteState(
+  onOpenChange: (open: boolean) => void,
+  setQuery: (query: string) => void,
+  setPendingActionId: (id: string | null) => void,
+  setArgValue: (value: string) => void,
+) {
+  return (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+    if (!nextOpen) {
+      setQuery("");
+      setPendingActionId(null);
+      setArgValue("");
+    }
+  };
 }
 
 export default function CommandPalette({
@@ -73,12 +91,8 @@ export default function CommandPalette({
         return entries;
       }),
     );
-    return searchActions(
-      registry.list(),
-      query,
-      labels,
-      contextKeys,
-      (action) => isActionAvailable(action, contextKeys),
+    return searchActions(registry.list(), query, labels, (action) =>
+      isActionAvailable(action, contextKeys),
     );
   }, [registry, query, contextKeys, labelForKey]);
 
@@ -95,45 +109,48 @@ export default function CommandPalette({
 
   const pendingAction = pendingActionId ? registry.get(pendingActionId) : null;
   const pendingSchema = pendingAction?.args?.[0];
+  const handleOpenChange = resetPaletteState(
+    onOpenChange,
+    setQuery,
+    setPendingActionId,
+    setArgValue,
+  );
 
   if (pendingAction && pendingSchema) {
     const chord = actionKeybindingChord(pendingAction, keybindings);
+    const Icon = actionIconWithFallback(pendingAction.id);
     return (
       <CommandDialog
         open={open}
         title={title}
-        description={placeholder}
-        onOpenChange={(nextOpen) => {
-          onOpenChange(nextOpen);
-          if (!nextOpen) {
-            setQuery("");
-            setPendingActionId(null);
-            setArgValue("");
-          }
-        }}
+        description={argPromptTitle}
+        showCloseButton={false}
+        onOpenChange={handleOpenChange}
       >
-        <CommandInput
-          placeholder={argPromptPlaceholder}
-          aria-label={argPromptTitle}
-          value={argValue}
-          onValueChange={setArgValue}
-        />
-        <CommandList>
-          <CommandItem
-            value={`continue ${pendingAction.id}`}
-            className="flex items-center justify-between"
-            onSelect={() => {
-              void dispatch(pendingAction.id, { args: { [pendingSchema.name]: argValue } });
-              onOpenChange(false);
-              setQuery("");
-              setPendingActionId(null);
-              setArgValue("");
-            }}
-          >
-            <span>{labelForKey(pendingAction.nameKey)}</span>
-            {chord ? <KeybindingKbd chord={chord} /> : null}
-          </CommandItem>
-        </CommandList>
+        <Command>
+          <CommandInput
+            placeholder={argPromptPlaceholder}
+            aria-label={argPromptTitle}
+            value={argValue}
+            onValueChange={setArgValue}
+          />
+          <CommandList>
+            <CommandItem
+              value={`continue ${pendingAction.id}`}
+              onSelect={() => {
+                void dispatch(pendingAction.id, { args: { [pendingSchema.name]: argValue } });
+                onOpenChange(false);
+                setQuery("");
+                setPendingActionId(null);
+                setArgValue("");
+              }}
+            >
+              <Icon />
+              <span>{labelForKey(pendingAction.nameKey)}</span>
+              {chord ? <CommandShortcut>{formatKeybindingLabel(chord)}</CommandShortcut> : null}
+            </CommandItem>
+          </CommandList>
+        </Command>
       </CommandDialog>
     );
   }
@@ -141,6 +158,9 @@ export default function CommandPalette({
   return (
     <CommandDialog
       open={open}
+      title={title}
+      description={placeholder}
+      showCloseButton={false}
       onOpenChange={(nextOpen) => {
         onOpenChange(nextOpen);
         if (!nextOpen) {
@@ -148,56 +168,50 @@ export default function CommandPalette({
         }
       }}
     >
-      <CommandInput
-        placeholder={placeholder}
-        aria-label={title}
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        <CommandEmpty>{emptyLabel}</CommandEmpty>
-        {grouped.map(([category, items]) => (
-          <CommandGroup key={category} heading={category}>
-            {items.map(({ action, available }) => {
-              const chord = actionKeybindingChord(action, keybindings);
-              const unavailableReason = available
-                ? null
-                : explainActionUnavailable(action, contextKeys, labelForKey);
-              return (
-                <CommandItem
-                  key={action.id}
-                  value={`${action.id} ${labelForKey(action.nameKey)}`}
-                  className="flex items-center justify-between"
-                  disabled={!available}
-                  onSelect={() => {
-                    if (!available) {
-                      return;
-                    }
-                    if (action.args?.some((arg) => !arg.default)) {
-                      setPendingActionId(action.id);
-                      setArgValue("");
-                      return;
-                    }
-                    void dispatch(action.id);
-                    onOpenChange(false);
-                    setQuery("");
-                  }}
-                >
-                  <span className="flex min-w-0 flex-col">
-                    <span>{labelForKey(action.nameKey)}</span>
-                    {unavailableReason ? (
-                      <span className="truncate text-xs text-muted-foreground">
-                        {unavailableReason}
-                      </span>
-                    ) : null}
-                  </span>
-                  {chord ? <KeybindingKbd chord={chord} /> : null}
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
-        ))}
-      </CommandList>
+      <Command>
+        <CommandInput
+          placeholder={placeholder}
+          aria-label={title}
+          value={query}
+          onValueChange={setQuery}
+        />
+        <CommandList>
+          <CommandEmpty>{emptyLabel}</CommandEmpty>
+          {grouped.map(([category, items], groupIndex) => (
+            <Fragment key={category}>
+              {groupIndex > 0 ? <CommandSeparator /> : null}
+              <CommandGroup heading={category}>
+                {items.map(({ action }) => {
+                  const chord = actionKeybindingChord(action, keybindings);
+                  const Icon = actionIconWithFallback(action.id);
+                  return (
+                    <CommandItem
+                      key={action.id}
+                      value={`${action.id} ${labelForKey(action.nameKey)}`}
+                      onSelect={() => {
+                        if (action.args?.some((arg) => !arg.default)) {
+                          setPendingActionId(action.id);
+                          setArgValue("");
+                          return;
+                        }
+                        void dispatch(action.id);
+                        onOpenChange(false);
+                        setQuery("");
+                      }}
+                    >
+                      <Icon />
+                      <span>{labelForKey(action.nameKey)}</span>
+                      {chord ? (
+                        <CommandShortcut>{formatKeybindingLabel(chord)}</CommandShortcut>
+                      ) : null}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </Fragment>
+          ))}
+        </CommandList>
+      </Command>
     </CommandDialog>
   );
 }

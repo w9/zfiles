@@ -3,11 +3,12 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarMenu,
+  MenubarShortcut,
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { isActionAvailable } from "./dispatch";
-import KeybindingKbd from "./KeybindingKbd";
-import { keybindingForAction } from "./keybindings";
+import { actionIcon } from "./icons";
+import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
 import { MENU_CATEGORIES } from "./surfaces";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
@@ -67,10 +68,19 @@ export default function MenuBar({
               {items.map((action) => {
                 const chord = menuItemChord(action, keybindings);
                 const label = labelForKey(action.nameKey);
+                const Icon = actionIcon(action.id);
                 return (
-                  <MenubarItem key={action.id} onSelect={() => invoke(action.id)}>
-                    <span className="flex-1">{label}</span>
-                    {chord ? <KeybindingKbd chord={chord} className="ml-2" /> : null}
+                  <MenubarItem
+                    key={action.id}
+                    inset={Icon == null}
+                    variant={action.destructive ? "destructive" : "default"}
+                    onSelect={() => invoke(action.id)}
+                  >
+                    {Icon ? <Icon /> : null}
+                    {label}
+                    {chord ? (
+                      <MenubarShortcut>{formatKeybindingLabel(chord)}</MenubarShortcut>
+                    ) : null}
                   </MenubarItem>
                 );
               })}
