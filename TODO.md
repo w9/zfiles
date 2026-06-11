@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. ScrollArea upload list is **complete**. **Current cycle:** replace the Radix upload popover with a detached floating panel (2× default: 56rem×~43rem), draggable from the title only, resizable from invisible edge/corner hit zones, geometry persisted in localStorage; on viewports under 640px fall back to a bottom sheet (no drag/resize); close via status-bar toggle or Escape only. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Floating upload tray is **complete**. **Current cycle:** add a header × close button to the upload panel (floating + sheet) and a subtle wide drop shadow on the floating shell. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -176,9 +176,13 @@ Dual-mode refactor is **complete**. ScrollArea upload list is **complete**. **Cu
 - [x] Run `pnpm test`; fix failures
 - [x] `UploadPanel.tsx`: wrap merged `<ul>` in shadcn `ScrollArea` (`max-h-80`); drop native `overflow-y-auto` on the list
 - [x] Run `pnpm test`
-- [ ] `uploadTrayGeometry.ts`: defaults (2× prior size), clamp, resize deltas, localStorage persistence + unit tests; register in `pnpm test`
-- [ ] `UploadFloatingPanel.tsx`: fixed portal shell — drag (title handle), invisible 8-edge resize, Escape close, viewport clamp on resize
-- [ ] `UploadPanel.tsx`: title-only drag handle prop; `h-full` flex layout so `ScrollArea` fills resizable height
-- [ ] `UploadIndicator.tsx`: wide → floating panel anchored to trigger; narrow (<640px) → bottom `Sheet`; drop Radix `Popover`; no outside-click close
-- [ ] i18n (14 locales): `upload.tray.dragHandle` (+ sheet label if needed)
+- [x] `uploadTrayGeometry.ts`: defaults (2× prior size), clamp, resize deltas, localStorage persistence + unit tests; register in `pnpm test`
+- [x] `UploadFloatingPanel.tsx`: fixed portal shell — drag (title handle), invisible 8-edge resize, Escape close, viewport clamp on resize
+- [x] `UploadPanel.tsx`: title-only drag handle prop; `h-full` flex layout so `ScrollArea` fills resizable height
+- [x] `UploadIndicator.tsx`: wide → floating panel anchored to trigger; narrow (<640px) → bottom `Sheet`; drop Radix `Popover`; no outside-click close
+- [x] i18n (14 locales): `upload.tray.dragHandle` (+ sheet label if needed)
+- [x] Run `pnpm test`
+- [ ] `UploadPanel.tsx`: header × close button (`onClose` prop); wire from `UploadIndicator` (floating + sheet)
+- [ ] `UploadFloatingPanel.tsx`: subtle wide drop shadow on the shell
+- [ ] i18n (14 locales): `upload.tray.close`
 - [ ] Run `pnpm test`
