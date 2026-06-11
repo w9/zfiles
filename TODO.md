@@ -145,4 +145,4 @@ Dual-mode refactor is **complete**. **Current cycle:** strengthen the `AGENTS.md
 - [x] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
 - [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures
-- [ ] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
+- [x] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
