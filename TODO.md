@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** inline ~6em upload progress bar in queue row stats (replaces xx% text + full-width row); tooltip `xx% (uploaded / total)`; stats line shows total size only; hide bar for terminal states; multipart session rows unchanged. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** revert custom presigned-XHR multipart uploader; restore `@aws-sdk/lib-storage` for fresh S3 uploads with `XhrHttpHandler` on the whole `S3Client`; parallel resume of missing parts (~4) with aggregated in-flight progress via the same handler. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -69,6 +69,10 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] i18n (14 locales): `upload.tray.close`
 - [x] Run `pnpm test`
 - [x] `.gitignore`: ignore `web/tsconfig.tsbuildinfo`
-- [ ] `UploadPanel.tsx`: inline ~6em progress bar in queue row stats (replaces xx% + full-width row); 0-delay tooltip `xx% (uploaded / total)`; stats show total only; no bar for done/failed/cancelled
-- [ ] i18n (14 locales): adjust upload stats strings + add `upload.stats.progressTooltip`
-- [ ] Run `pnpm test`
+- [x] `UploadPanel.tsx`: inline ~6em progress bar in queue row stats (replaces xx% + full-width row); 0-delay tooltip `xx% (uploaded / total)`; stats show total only; no bar for done/failed/cancelled
+- [x] i18n (14 locales): adjust upload stats strings + add `upload.stats.progressTooltip`
+- [x] Run `pnpm test`
+- [ ] Add `@aws-sdk/xhr-http-handler`; wire `XhrHttpHandler` on whole `S3Client` in `createS3Client`
+- [ ] Restore `@aws-sdk/lib-storage` `Upload` in `s3Backend.upload`; remove `multipartUploadFile` / presigned-XHR path
+- [ ] `resumeMultipartUpload`: parallel missing parts (queue ~4) + aggregated in-flight progress via XhrHttpHandler events; unit tests
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
