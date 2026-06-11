@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** gitignore `web/tsconfig.tsbuildinfo`. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** inline ~6em upload progress bar in queue row stats (replaces xx% text + full-width row); tooltip `xx% (uploaded / total)`; stats line shows total size only; hide bar for terminal states; multipart session rows unchanged. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -69,3 +69,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] i18n (14 locales): `upload.tray.close`
 - [x] Run `pnpm test`
 - [x] `.gitignore`: ignore `web/tsconfig.tsbuildinfo`
+- [ ] `UploadPanel.tsx`: inline ~6em progress bar in queue row stats (replaces xx% + full-width row); 0-delay tooltip `xx% (uploaded / total)`; stats show total only; no bar for done/failed/cancelled
+- [ ] i18n (14 locales): adjust upload stats strings + add `upload.stats.progressTooltip`
+- [ ] Run `pnpm test`
