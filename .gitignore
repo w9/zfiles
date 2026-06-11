@@ -3,6 +3,7 @@
 /web/dist
 /web/dist-cloud
 /web/node_modules
+/web/tsconfig.tsbuildinfo
 /web/public/file-icons
 /web/src/generated
 /web/pnpm-workspace.yaml

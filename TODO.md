@@ -68,4 +68,4 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `UploadFloatingPanel.tsx`: subtle wide drop shadow on the shell
 - [x] i18n (14 locales): `upload.tray.close`
 - [x] Run `pnpm test`
-- [ ] `.gitignore`: ignore `web/tsconfig.tsbuildinfo`
+- [x] `.gitignore`: ignore `web/tsconfig.tsbuildinfo`
