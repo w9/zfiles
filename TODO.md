@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** strengthen the `AGENTS.md` frontend guidance — always prefer shadcn/ui components when applicable, and check the shadcn components index before building custom components. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** align the command palette and shortcut display with [shadcn Command](https://ui.shadcn.com/docs/components/radix/command) — docs composition (icons, separators, `CommandShortcut`), hide unavailable actions, minimal dialog chrome (Escape + backdrop dismiss), keep custom `searchActions` filtering. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -146,3 +146,9 @@ Dual-mode refactor is **complete**. **Current cycle:** strengthen the `AGENTS.md
 - [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures
 - [x] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
+- [ ] `command.tsx`: match shadcn `CommandDialog` composition (no auto-wrap sizing overrides); palette uses explicit `<Command>`
+- [ ] `CommandPalette.tsx`: shadcn docs layout — icons, `CommandSeparator`, `CommandShortcut`, hide unavailable, no × button
+- [ ] `searchActions`: available actions only; update unit tests (drop disabled `paletteWhen` palette rows)
+- [ ] Replace `KeybindingKbd` with `formatKeybindingLabel` + surface `*Shortcut` in palette, menubar, toolbar
+- [ ] Arg-prompt palette step: same shadcn item layout; update e2e shortcut assertions
+- [ ] Run `pnpm test` + `cargo test`
