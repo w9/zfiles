@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** restyle command palette to match latest shadcn Command — InputGroup search, `rounded-xl` popover shell, muted selection, native `max-h-72` list scroll. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. **Current cycle:** aggressively streamline `AGENTS.md` — state each rule once, drop the "Common mistakes" list, fold Task tracking / AQ / scope gate / pre-commit sections into a tighter structure, and apply approved relaxations (`cargo fmt`/`clippy` and patch bumps only for commits touching Rust / shipped behavior; Verify runs the suites the cycle touched). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -162,6 +162,9 @@ Dual-mode refactor is **complete**. **Current cycle:** restyle command palette t
 - [x] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
 - [x] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
 - [x] Run `pnpm test` + `cargo test`
-- [ ] `command.tsx`: shadcn styling — InputGroup input, muted selection, native `no-scrollbar max-h-72` list
-- [ ] `CommandDialog`: popover shell (`rounded-xl`, `bg-popover`) to match shadcn palette chrome
-- [ ] Run `pnpm test`
+- [x] `command.tsx`: shadcn styling — InputGroup input, muted selection, native `no-scrollbar max-h-72` list
+- [x] `CommandDialog`: popover shell (`rounded-xl`, `bg-popover`) to match shadcn palette chrome
+- [x] Run `pnpm test`
+- [ ] `AGENTS.md`: aggressive streamline — each rule stated once; fold Task tracking, AQ, scope gate, and Key references into a tighter structure; drop "Common mistakes" (unique nuances folded into the main rules)
+- [ ] `AGENTS.md`: approved relaxations — `cargo fmt`/`clippy` only for Rust-touching commits; patch bump only for shipped-behavior commits; Verify = suites covering what the cycle touched
+- [ ] Run `cargo test`; hold the AGENTS.md implementation commit for user review
