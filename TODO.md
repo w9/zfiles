@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** align the command palette and shortcut display with [shadcn Command](https://ui.shadcn.com/docs/components/radix/command) — docs composition (icons, separators, `CommandShortcut`), hide unavailable actions, minimal dialog chrome (Escape + backdrop dismiss), keep custom `searchActions` filtering. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. **Current cycle:** action icons in menubar and context menu — same `actionIcon()` map as the palette where a distinct icon exists; `inset` text-only rows otherwise; destructive variant styling preserved. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -146,9 +146,13 @@ Dual-mode refactor is **complete**. **Current cycle:** align the command palette
 - [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures
 - [x] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
-- [ ] `command.tsx`: match shadcn `CommandDialog` composition (no auto-wrap sizing overrides); palette uses explicit `<Command>`
-- [ ] `CommandPalette.tsx`: shadcn docs layout — icons, `CommandSeparator`, `CommandShortcut`, hide unavailable, no × button
-- [ ] `searchActions`: available actions only; update unit tests (drop disabled `paletteWhen` palette rows)
-- [ ] Replace `KeybindingKbd` with `formatKeybindingLabel` + surface `*Shortcut` in palette, menubar, toolbar
-- [ ] Arg-prompt palette step: same shadcn item layout; update e2e shortcut assertions
-- [ ] Run `pnpm test` + `cargo test`
+- [x] `command.tsx`: match shadcn `CommandDialog` composition (no auto-wrap sizing overrides); palette uses explicit `<Command>`
+- [x] `CommandPalette.tsx`: shadcn docs layout — icons, `CommandSeparator`, `CommandShortcut`, hide unavailable, no × button
+- [x] `searchActions`: available actions only; update unit tests (drop disabled `paletteWhen` palette rows)
+- [x] Replace `KeybindingKbd` with `formatKeybindingLabel` + surface `*Shortcut` in palette, menubar, toolbar
+- [x] Arg-prompt palette step: same shadcn item layout; update e2e shortcut assertions
+- [x] Run `pnpm test` + `cargo test`
+- [ ] `icons.ts`: expand built-in action map; `actionIcon()` returns null when no icon (palette keeps Terminal fallback)
+- [ ] `MenuBar.tsx`: icon + label + shortcut; `inset` when no icon
+- [ ] `ContextMenu.tsx`: same icon layout for context-menu actions
+- [ ] Run `pnpm test`
