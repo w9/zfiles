@@ -1133,6 +1133,7 @@ export default function ExplorerApp() {
       ) : null}
 
       <UploadConflictDialog
+        backend={backend}
         item={uploadConflictItem}
         onResolve={(resolution, applyToAll) => {
           if (uploadConflictItem) {
@@ -1305,8 +1306,6 @@ export default function ExplorerApp() {
                 multipartSessions.enabled
                   ? {
                       sessions: visibleMultipartSessions,
-                      loading: multipartSessions.loading,
-                      error: multipartSessions.error,
                       readOnly: multipartSessions.readOnly,
                       onResume: multipartSessions.resumeSession,
                       onAbort: multipartSessions.abortSession,

@@ -18,10 +18,12 @@ import {
 
 test("createQueueItem starts pending with file size as total", () => {
   const file = new File(["hello"], "a.txt", { type: "text/plain" });
+  const before = Date.now();
   const item = createQueueItem(file, "dir/a.txt");
   assert.equal(item.status, "pending");
   assert.equal(item.total, 5);
   assert.equal(item.destPath, "dir/a.txt");
+  assert.ok(item.enqueuedAt >= before && item.enqueuedAt <= Date.now());
 });
 
 test("uploadProgressVariant uses local styling for hashing and verifying", () => {
@@ -114,9 +116,11 @@ test("createResumeQueueItem seeds offset and carries stored checksum", () => {
     checksumSha256Base64: "abc123",
     createdAt: new Date().toISOString(),
   };
+  const before = Date.now();
   const item = createResumeQueueItem(file, record, 42);
   assert.equal(item.offset, 42);
   assert.equal(item.multipartResume?.checksumSha256Base64, "abc123");
+  assert.ok(item.enqueuedAt >= before && item.enqueuedAt <= Date.now());
 });
 
 test("activeMultipartUploadIds ignores finished queue items", () => {

@@ -39,6 +39,8 @@ export type UploadQueueItem = {
   sourceFileHandle?: FileSystemFileHandle;
   fileName: string;
   destPath: string;
+  /** Epoch ms when the item entered the queue; drives time-sorted panel rows. */
+  enqueuedAt: number;
   overwriteExisting?: boolean;
   status: UploadItemStatus;
   offset: number;
@@ -90,6 +92,7 @@ export function createQueueItem(
     sourceFileHandle,
     fileName: file.name,
     destPath,
+    enqueuedAt: Date.now(),
     status: "pending",
     offset: 0,
     total: file.size,
@@ -108,6 +111,7 @@ export function createResumeQueueItem(
     file,
     fileName: record.fileName,
     destPath: record.destPath,
+    enqueuedAt: Date.now(),
     status: "pending",
     offset: initialOffset,
     total: record.fileSize,

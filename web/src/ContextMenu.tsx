@@ -5,6 +5,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { actionIcon } from "@/actions/icons";
 
 export type ContextMenuAction = {
   id: string;
@@ -40,21 +41,26 @@ export default function ExplorerContextMenu({
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" aria-label={ariaLabel}>
-        {actions.map((action) => (
-          <DropdownMenuItem
-            key={action.id}
-            variant={action.variant}
-            onSelect={() => {
-              onSelect(action.id);
-              onClose();
-            }}
-          >
-            {action.label}
-            {action.shortcut ? (
-              <DropdownMenuShortcut>{action.shortcut}</DropdownMenuShortcut>
-            ) : null}
-          </DropdownMenuItem>
-        ))}
+        {actions.map((action) => {
+          const Icon = actionIcon(action.id);
+          return (
+            <DropdownMenuItem
+              key={action.id}
+              inset={Icon == null}
+              variant={action.variant}
+              onSelect={() => {
+                onSelect(action.id);
+                onClose();
+              }}
+            >
+              {Icon ? <Icon /> : null}
+              {action.label}
+              {action.shortcut ? (
+                <DropdownMenuShortcut>{action.shortcut}</DropdownMenuShortcut>
+              ) : null}
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

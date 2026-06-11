@@ -1,8 +1,10 @@
-import { Info, Play, Trash2, X } from "lucide-react";
+import { Play, Trash2, X } from "lucide-react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -13,23 +15,19 @@ import { FileIcon } from "./FileIcon";
 import { multipartPercent } from "./cloud/s3Multipart";
 import type { MultipartSessionView } from "./cloud/useMultipartSessions";
 import { useTranslation } from "./i18n";
-import type { MessageKey } from "./i18n/messages";
 import { formatRelativeModified, formatSize } from "./listing-format";
 import { useTheme } from "./useTheme";
 import {
-  countUploadsByStatus,
   formatEtaSeconds,
-  UPLOAD_QUEUE_HEADER_STATUS_ORDER,
   uploadPercent,
   uploadProgressVariant,
   type UploadItemStatus,
   type UploadQueueItem,
 } from "./upload-queue";
+import { mergeUploadPanelRows, uploadHeaderSegments } from "./uploadPanelRows";
 
 export type CloudMultipartPanelProps = {
   sessions: MultipartSessionView[];
-  loading: boolean;
-  error: string | null;
   readOnly: boolean;
   onResume: (uploadId: string) => void;
   onAbort: (uploadId: string) => void;
@@ -39,7 +37,9 @@ type UploadPanelProps = {
   items: UploadQueueItem[];
   onClearFinished: () => void;
   onCancel: (queueId: string) => void;
+  onClose?: () => void;
   cloudMultipart?: CloudMultipartPanelProps;
+  onDragHandlePointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
 };
 
 function formatSpeed(bps: number | null): string | null {
@@ -99,31 +99,16 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
   return t("upload.statsBasic", params);
 }
 
-const HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
-  pending: "upload.queue.header.pending",
-  hashing: "upload.queue.header.hashing",
-  active: "upload.queue.header.active",
-  verifying: "upload.queue.header.verifying",
-  awaiting_conflict: "upload.queue.header.awaitingConflict",
-  done: "upload.queue.header.done",
-  failed: "upload.queue.header.failed",
-  cancelled: "upload.queue.header.cancelled",
-};
-
-function queueHeaderTitle(
+function panelHeaderTitle(
   items: UploadQueueItem[],
+  sessionCount: number,
   t: ReturnType<typeof useTranslation>["t"],
 ): string {
-  const counts = countUploadsByStatus(items);
-  const segments = UPLOAD_QUEUE_HEADER_STATUS_ORDER.flatMap((status) => {
-    const count = counts[status];
-    if (!count) {
-      return [];
-    }
-    return [t(HEADER_STATUS_KEYS[status], { count: String(count) })];
-  });
+  const segments = uploadHeaderSegments(items, sessionCount).map((segment) =>
+    t(segment.key, { count: String(segment.count) }),
+  );
   return t("upload.queue.titleWithStatus", {
-    count: String(items.length),
+    count: String(items.length + sessionCount),
     statusSummary: segments.join(" · "),
   });
 }
@@ -143,139 +128,183 @@ function multipartProgressLine(
   });
 }
 
-function MultipartSessionsSection({
-  sessions,
-  loading,
-  error,
-  readOnly,
-  onResume,
-  onAbort,
-}: CloudMultipartPanelProps) {
-  const { t, locale } = useTranslation();
-  const { resolved: iconTheme } = useTheme();
+type QueueRowProps = {
+  item: UploadQueueItem;
+  iconTheme: ReturnType<typeof useTheme>["resolved"];
+  onCancel: (queueId: string) => void;
+};
+
+function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
+  const { t } = useTranslation();
+  const isActive =
+    item.status === "active" ||
+    item.status === "hashing" ||
+    item.status === "verifying";
+  const cancellable =
+    item.status === "pending" ||
+    item.status === "hashing" ||
+    item.status === "active" ||
+    item.status === "awaiting_conflict";
 
   return (
-    <div className="border-t">
-      <div className="flex items-center gap-1.5 px-4 py-3">
-        <h3 className="text-sm font-medium">{t("upload.multipart.title")}</h3>
+    <li
+      className={cn(
+        "space-y-2 px-4 py-3",
+        isActive && "bg-muted/40",
+        item.status === "done" && "opacity-70",
+        item.status === "cancelled" && "opacity-70",
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <FileIcon name={item.fileName} isDir={false} theme={iconTheme} size="xs" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium" title={item.fileName}>
+            {item.fileName}
+          </p>
+          <p className="truncate text-xs text-muted-foreground" title={item.destPath}>
+            {item.destPath}
+          </p>
+        </div>
+        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {statsLine(item, t)}
+        </p>
+        {cancellable ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={t("upload.cancel")}
+            onClick={() => onCancel(item.id)}
+          >
+            <X className="size-4" />
+          </Button>
+        ) : null}
+      </div>
+      {item.status === "failed" && item.error ? (
+        <p className="text-xs text-destructive">{item.error}</p>
+      ) : null}
+      {item.status !== "pending" && item.status !== "awaiting_conflict" ? (
+        <Progress
+          value={item.offset}
+          max={item.total || 1}
+          variant={uploadProgressVariant(item.status)}
+        />
+      ) : null}
+    </li>
+  );
+}
+
+type SessionRowProps = {
+  session: MultipartSessionView;
+  iconTheme: ReturnType<typeof useTheme>["resolved"];
+  readOnly: boolean;
+  onResume: (uploadId: string) => void;
+  onAbort: (uploadId: string) => void;
+};
+
+function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: SessionRowProps) {
+  const { t, locale } = useTranslation();
+  const busy = session.resuming || session.aborting;
+  const startedAt =
+    session.initiated != null
+      ? formatRelativeModified(session.initiated.getTime(), locale)
+      : null;
+  const resumeLabel = session.resuming
+    ? t("upload.multipart.resuming")
+    : t("upload.multipart.resume");
+  const abortLabel = session.aborting
+    ? t("upload.multipart.aborting")
+    : t("upload.multipart.abort");
+  const statsRest = [
+    startedAt ? t("upload.multipart.startedAt", { time: startedAt }) : null,
+    multipartProgressLine(session, t),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <li className="space-y-2 px-4 py-3">
+      <div className="flex items-center gap-2">
+        <FileIcon name={session.fileName} isDir={false} theme={iconTheme} size="xs" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium" title={session.fileName}>
+            {session.fileName}
+          </p>
+          <p className="truncate text-xs text-muted-foreground" title={session.destPath}>
+            {session.destPath}
+          </p>
+        </div>
+        <p className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+          {!session.canResume ? (
+            <Badge
+              variant="secondary"
+              className="shrink-0 font-normal"
+              title={t("upload.multipart.remoteOnly")}
+            >
+              {t("upload.multipart.remote")}
+            </Badge>
+          ) : null}
+          <span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  tabIndex={0}
+                  className="cursor-help underline decoration-dotted underline-offset-2"
+                >
+                  {t("upload.status.unfinished")}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                {t("upload.multipart.description")}
+              </TooltipContent>
+            </Tooltip>
+            {` · ${statsRest}`}
+          </span>
+        </p>
+        {session.canResume && !readOnly ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                disabled={busy}
+                aria-label={resumeLabel}
+                onClick={() => onResume(session.uploadId)}
+              >
+                <Play className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{resumeLabel}</TooltipContent>
+          </Tooltip>
+        ) : null}
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               type="button"
-              className="inline-flex text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none"
-              aria-label={t("upload.multipart.description")}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+              disabled={busy}
+              aria-label={abortLabel}
+              onClick={() => onAbort(session.uploadId)}
             >
-              <Info className="size-3.5" />
-            </button>
+              <Trash2 className="size-4" />
+            </Button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs">
-            {t("upload.multipart.description")}
-          </TooltipContent>
+          <TooltipContent side="top">{abortLabel}</TooltipContent>
         </Tooltip>
       </div>
-      {loading ? (
-        <p className="px-4 pb-3 text-xs text-muted-foreground">{t("upload.multipart.loading")}</p>
+      {session.bytesUploaded != null && session.totalBytes != null ? (
+        <Progress
+          value={session.bytesUploaded}
+          max={session.totalBytes || 1}
+          variant="local"
+        />
       ) : null}
-      {error ? (
-        <p className="px-4 pb-3 text-xs text-destructive">{error}</p>
-      ) : null}
-      {!loading && !error && sessions.length === 0 ? (
-        <p className="px-4 pb-3 text-xs text-muted-foreground">{t("upload.multipart.empty")}</p>
-      ) : null}
-      {sessions.length > 0 ? (
-        <ul className="max-h-48 divide-y overflow-y-auto border-t">
-          {sessions.map((session) => {
-            const busy = session.resuming || session.aborting;
-            const startedAt =
-              session.initiated != null
-                ? formatRelativeModified(session.initiated.getTime(), locale)
-                : null;
-            const resumeLabel = session.resuming
-              ? t("upload.multipart.resuming")
-              : t("upload.multipart.resume");
-            const abortLabel = session.aborting
-              ? t("upload.multipart.aborting")
-              : t("upload.multipart.abort");
-            return (
-              <li key={session.uploadId} className="space-y-2 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <FileIcon
-                    name={session.fileName}
-                    isDir={false}
-                    theme={iconTheme}
-                    size="xs"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium" title={session.fileName}>
-                      {session.fileName}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground" title={session.destPath}>
-                      {session.destPath}
-                    </p>
-                  </div>
-                  {session.canResume && !readOnly ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          disabled={busy}
-                          aria-label={resumeLabel}
-                          onClick={() => onResume(session.uploadId)}
-                        >
-                          <Play className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">{resumeLabel}</TooltipContent>
-                    </Tooltip>
-                  ) : null}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                        disabled={busy}
-                        aria-label={abortLabel}
-                        onClick={() => onAbort(session.uploadId)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">{abortLabel}</TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground tabular-nums">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    {startedAt ? (
-                      <span className="truncate">
-                        {t("upload.multipart.startedAt", { time: startedAt })}
-                      </span>
-                    ) : null}
-                    {!session.canResume ? (
-                      <Badge
-                        variant="secondary"
-                        className="shrink-0 font-normal"
-                        title={t("upload.multipart.remoteOnly")}
-                      >
-                        {t("upload.multipart.remote")}
-                      </Badge>
-                    ) : null}
-                  </span>
-                  <span className="shrink-0">{multipartProgressLine(session, t)}</span>
-                </div>
-                {session.bytesUploaded != null && session.totalBytes != null ? (
-                  <Progress value={session.bytesUploaded} max={session.totalBytes || 1} />
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </div>
+    </li>
   );
 }
 
@@ -283,10 +312,14 @@ export default function UploadPanel({
   items,
   onClearFinished,
   onCancel,
+  onClose,
   cloudMultipart,
+  onDragHandlePointerDown,
 }: UploadPanelProps) {
   const { t } = useTranslation();
   const { resolved: iconTheme } = useTheme();
+  const sessions = cloudMultipart?.sessions ?? [];
+  const rows = mergeUploadPanelRows(items, sessions);
   const finishedCount = items.filter(
     (item) =>
       item.status === "done" ||
@@ -295,84 +328,73 @@ export default function UploadPanel({
   ).length;
 
   const headerTitle =
-    items.length > 0 ? queueHeaderTitle(items, t) : t("upload.tray.title");
+    rows.length > 0
+      ? panelHeaderTitle(items, sessions.length, t)
+      : t("upload.tray.title");
 
   return (
-    <div className="flex w-full flex-col" aria-label={headerTitle}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <h2 className="text-sm font-medium">{headerTitle}</h2>
-        {finishedCount > 0 ? (
-          <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
-            {t("upload.clearFinished")}
-          </Button>
-        ) : null}
+    <div className="flex h-full min-h-0 w-full flex-col" aria-label={headerTitle}>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3">
+        <h2
+          className={cn(
+            "min-w-0 flex-1 truncate text-sm font-medium",
+            onDragHandlePointerDown && "cursor-grab touch-none select-none active:cursor-grabbing",
+          )}
+          title={headerTitle}
+          aria-label={onDragHandlePointerDown ? t("upload.tray.dragHandle") : undefined}
+          onPointerDown={onDragHandlePointerDown}
+        >
+          {headerTitle}
+        </h2>
+        <div className="flex shrink-0 items-center gap-1">
+          {finishedCount > 0 ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
+              {t("upload.clearFinished")}
+            </Button>
+          ) : null}
+          {onClose ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label={t("upload.tray.close")}
+              onClick={onClose}
+            >
+              <X className="size-4" />
+            </Button>
+          ) : null}
+        </div>
       </div>
-      {items.length > 0 ? (
-        <ul className="max-h-64 divide-y overflow-y-auto">
-            {items.map((item) => {
-              const isActive =
-                item.status === "active" ||
-                item.status === "hashing" ||
-                item.status === "verifying";
-              return (
-                <li
-                  key={item.id}
-                  className={cn(
-                    "space-y-2 px-4 py-3",
-                    isActive && "bg-muted/40",
-                    item.status === "done" && "opacity-70",
-                    item.status === "cancelled" && "opacity-70",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileIcon
-                      name={item.fileName}
-                      isDir={false}
-                      theme={iconTheme}
-                      size="xs"
-                    />
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium" title={item.fileName}>
-                      {item.fileName}
-                    </p>
-                    <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                      {statsLine(item, t)}
-                    </p>
-                    {item.status === "pending" ||
-                    item.status === "hashing" ||
-                    item.status === "active" ||
-                    item.status === "awaiting_conflict" ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        aria-label={t("upload.cancel")}
-                        onClick={() => onCancel(item.id)}
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                  {item.status === "failed" && item.error ? (
-                    <p className="text-xs text-destructive">{item.error}</p>
-                  ) : null}
-                  {item.status !== "pending" && item.status !== "awaiting_conflict" ? (
-                    <Progress
-                      value={item.offset}
-                      max={item.total || 1}
-                      variant={uploadProgressVariant(item.status)}
-                    />
-                  ) : null}
-                </li>
-              );
-            })}
-        </ul>
-      ) : cloudMultipart ? null : (
+      {rows.length > 0 ? (
+        <ScrollArea className="min-h-0 flex-1">
+          <ul className="divide-y">
+            {rows.map((row) =>
+              row.kind === "queue" ? (
+                <QueueRow
+                  key={row.item.id}
+                  item={row.item}
+                  iconTheme={iconTheme}
+                  onCancel={onCancel}
+                />
+              ) : cloudMultipart ? (
+                <SessionRow
+                  key={row.session.uploadId}
+                  session={row.session}
+                  iconTheme={iconTheme}
+                  readOnly={cloudMultipart.readOnly}
+                  onResume={cloudMultipart.onResume}
+                  onAbort={cloudMultipart.onAbort}
+                />
+              ) : null,
+            )}
+          </ul>
+        </ScrollArea>
+      ) : (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">
           {t("upload.tray.empty")}
         </p>
       )}
-      {cloudMultipart ? <MultipartSessionsSection {...cloudMultipart} /> : null}
     </div>
   );
 }

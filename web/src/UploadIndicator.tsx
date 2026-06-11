@@ -2,16 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "./i18n";
 import { formatSize } from "./listing-format";
+import UploadFloatingPanel from "./UploadFloatingPanel";
 import UploadPanel, { type CloudMultipartPanelProps } from "./UploadPanel";
 import { formatEtaSeconds, type UploadQueueItem } from "./upload-queue";
+import { isUploadTraySheetLayout } from "./uploadTrayGeometry";
 import {
   aggregateUploadStats,
   initialTrayAutoOpenState,
@@ -33,6 +31,20 @@ function formatSpeed(bps: number | null): string | null {
   return `${formatSize(Math.round(bps), false)}/s`;
 }
 
+function useUploadTraySheetLayout(): boolean {
+  const [sheetLayout, setSheetLayout] = useState(() =>
+    typeof window === "undefined" ? false : isUploadTraySheetLayout(),
+  );
+
+  useEffect(() => {
+    const onResize = () => setSheetLayout(isUploadTraySheetLayout());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return sheetLayout;
+}
+
 export default function UploadIndicator({
   items,
   onClearFinished,
@@ -43,8 +55,10 @@ export default function UploadIndicator({
   const stats = useMemo(() => aggregateUploadStats(items), [items]);
   const attention = uploadTrayAttention(stats);
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const sheetLayout = useUploadTraySheetLayout();
 
-  // Auto-open the popover once each time a fresh batch of work begins; it
+  // Auto-open the tray once each time a fresh batch of work begins; it
   // re-arms only after the queue fully drains (see reduceTrayAutoOpen).
   const autoOpenRef = useRef(initialTrayAutoOpenState);
   const hasPendingWork = stats.hasPendingWork;
@@ -81,47 +95,77 @@ export default function UploadIndicator({
     label = t("upload.tray.recent", { count: String(stats.finished) });
   }
 
+  const closePanel = () => setOpen(false);
+  const panel = (
+    <UploadPanel
+      items={items}
+      onClearFinished={onClearFinished}
+      onCancel={onCancel}
+      onClose={closePanel}
+      cloudMultipart={cloudMultipart}
+    />
+  );
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-7 shrink-0 gap-1.5 px-2 text-xs font-medium",
-            stats.hasInFlight && "text-foreground",
-          )}
-          aria-label={t("upload.tray.label")}
-        >
-          <span className="relative flex items-center">
-            <Upload className="size-4" />
-            {attention ? (
-              <span
-                className={cn(
-                  "absolute -top-1 -right-1 size-2 rounded-full ring-2 ring-card",
-                  stats.failed > 0 ? "bg-destructive" : "bg-amber-500",
-                )}
-                aria-hidden
-              />
-            ) : null}
-          </span>
-          {label ? <span className="tabular-nums">{label}</span> : null}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        side="top"
-        align="end"
-        sideOffset={8}
-        className="w-[min(28rem,92vw)] overflow-hidden p-0"
+    <>
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "h-7 shrink-0 gap-1.5 px-2 text-xs font-medium",
+          stats.hasInFlight && "text-foreground",
+        )}
+        aria-label={t("upload.tray.label")}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
       >
-        <UploadPanel
-          items={items}
-          onClearFinished={onClearFinished}
-          onCancel={onCancel}
-          cloudMultipart={cloudMultipart}
-        />
-      </PopoverContent>
-    </Popover>
+        <span className="relative flex items-center">
+          <Upload className="size-4" />
+          {attention ? (
+            <span
+              className={cn(
+                "absolute -top-1 -right-1 size-2 rounded-full ring-2 ring-card",
+                stats.failed > 0 ? "bg-destructive" : "bg-amber-500",
+              )}
+              aria-hidden
+            />
+          ) : null}
+        </span>
+        {label ? <span className="tabular-nums">{label}</span> : null}
+      </Button>
+
+      {sheetLayout ? (
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetContent
+            side="bottom"
+            showCloseButton={false}
+            className="flex h-[min(70vh,40rem)] flex-col gap-0 overflow-hidden p-0"
+            onInteractOutside={(event) => event.preventDefault()}
+            onPointerDownOutside={(event) => event.preventDefault()}
+          >
+            {panel}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <UploadFloatingPanel
+          open={open}
+          anchorRef={triggerRef}
+          onClose={closePanel}
+        >
+          {({ onDragHandlePointerDown }) => (
+            <UploadPanel
+              items={items}
+              onClearFinished={onClearFinished}
+              onCancel={onCancel}
+              onClose={closePanel}
+              cloudMultipart={cloudMultipart}
+              onDragHandlePointerDown={onDragHandlePointerDown}
+            />
+          )}
+        </UploadFloatingPanel>
+      )}
+    </>
   );
 }
