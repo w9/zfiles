@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** wrap `CommandList` with shadcn [ScrollArea](https://ui.shadcn.com/docs/components/radix/scroll-area) (300px cap) for styled palette scrolling. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. **Current cycle:** add instant (0-delay) tooltips on every **Keep both** conflict button showing the resolved basename (async `findKeepBothPath` with loading placeholder). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -156,5 +156,9 @@ Dual-mode refactor is **complete**. **Current cycle:** wrap `CommandList` with s
 - [x] `MenuBar.tsx`: icon + label + shortcut; `inset` when no icon
 - [x] `ContextMenu.tsx`: same icon layout for context-menu actions
 - [x] Run `pnpm test`
-- [ ] `CommandList`: wrap with shadcn `ScrollArea` (`max-h-[300px]`); drop native `overflow-y-auto`
+- [x] `CommandList`: wrap with shadcn `ScrollArea` (`max-h-[300px]`); drop native `overflow-y-auto`
+- [x] Run `pnpm test` + `cargo test`
+- [ ] i18n: `upload.conflict.keepBothTooltip` + `keepBothTooltipLoading` across all 14 locales
+- [ ] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
+- [ ] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
 - [ ] Run `pnpm test` + `cargo test`
