@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Floating upload tray is **complete**. **Current cycle:** add a header × close button to the upload panel (floating + sheet) and a subtle wide drop shadow on the floating shell. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** gitignore `web/tsconfig.tsbuildinfo`. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -68,3 +68,4 @@ Dual-mode refactor is **complete**. Floating upload tray is **complete**. **Curr
 - [x] `UploadFloatingPanel.tsx`: subtle wide drop shadow on the shell
 - [x] i18n (14 locales): `upload.tray.close`
 - [x] Run `pnpm test`
+- [ ] `.gitignore`: ignore `web/tsconfig.tsbuildinfo`
