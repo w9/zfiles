@@ -116,7 +116,7 @@ Questions, reviews, planning, and read-only investigation are always allowed wit
 When working on the React explorer under `web/`:
 
 1. **Tailwind CSS** — Use Tailwind CSS for all web UI styling. Prefer utility classes and design tokens over bespoke CSS files; keep custom CSS limited to globals, third-party overrides, or cases Tailwind cannot express cleanly.
-2. **shadcn/ui** — Always prefer [shadcn/ui](https://ui.shadcn.com/) components whenever applicable. Check the [components index](https://ui.shadcn.com/docs/components) before deciding to build your own. When no shadcn component fits, build custom components following shadcn conventions: composable primitives, `cn()` for class merging, accessible Radix-style patterns, and consistent variant/size APIs.
+2. **shadcn/ui** — Always prefer [shadcn/ui](https://ui.shadcn.com/) components whenever applicable. Check the [components index](https://ui.shadcn.com/docs/components) before deciding to build your own. When adding or updating a component, consult the latest docs for stock styling and APIs — training data may be outdated. When no shadcn component fits, build custom components following shadcn conventions: composable primitives, `cn()` for class merging, accessible Radix-style patterns, and consistent variant/size APIs.
 3. **i18n** — All user-visible UI strings must go through the i18n layer. Ship **English** and **Simplified Chinese** (`zh-CN`) from the start; do not hardcode display text in components.
 
 ## Key references

@@ -165,4 +165,4 @@ Dual-mode refactor is **complete**. **Current cycle:** extend `AGENTS.md` shadcn
 - [x] `command.tsx`: re-sync shadcn dialog Command styles; `CommandDialog` `sm:max-w-sm`; revert `CommandList` native scroll
 - [x] `CommandPalette.tsx`: drop redundant `<Command>` wrapper (styled by `CommandDialog`)
 - [x] Run `pnpm test` + `cargo test`
-- [ ] `AGENTS.md`: remind agents to check latest shadcn docs for stock styling (training data may be outdated)
+- [x] `AGENTS.md`: remind agents to check latest shadcn docs for stock styling (training data may be outdated)
