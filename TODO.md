@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** merge the cloud "Unfinished uploads" section into the main uploads list — one merged list sorted newest-first by time (queue items gain `enqueuedAt`; sessions use S3 `initiated`), section header removed, row visuals unified (file icon + name + dest path on all rows, right-aligned stats, compact action buttons, progress bar). Session rows show an "Unfinished" status word carrying the old ⓘ description as a tooltip plus their started-time; the panel header summary counts unfinished sessions; inline loading/error/empty lines are dropped (errors already toast; the tray-wide empty state covers empty). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload-list merge cycle is **complete**. **Current cycle:** replace the upload tray popover's native `overflow-y-auto` list with shadcn `ScrollArea` — styled scrollbar, header stays fixed, list body scrolls inside `max-h-80`. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -168,9 +168,11 @@ Dual-mode refactor is **complete**. **Current cycle:** merge the cloud "Unfinish
 - [x] `AGENTS.md`: aggressive streamline — each rule stated once; fold Task tracking, AQ, scope gate, and Key references into a tighter structure; drop "Common mistakes" (unique nuances folded into the main rules)
 - [x] `AGENTS.md`: approved relaxations — `cargo fmt`/`clippy` only for Rust-touching commits; patch bump only for shipped-behavior commits; Verify = suites covering what the cycle touched
 - [x] Run `cargo test`; hold the AGENTS.md implementation commit for user review
-- [ ] `upload-queue.ts`: add required `enqueuedAt` to `UploadQueueItem` (set in `createQueueItem`/`createResumeQueueItem`); update unit tests
-- [ ] `uploadPanelRows.ts`: merged queue+session row model sorted newest-first by time + header segments with unfinished count; unit tests; register test file in `pnpm test` script
-- [ ] `UploadPanel.tsx`: render one merged list — unified rows (icon, name + dest path, right stats, action buttons, progress); session rows get "Unfinished" status word with description tooltip + started-time + Remote badge in stats; drop section header/ⓘ/loading/error/empty lines
-- [ ] Slim `CloudMultipartPanelProps` (drop `loading`/`error`); update `UploadIndicator` + `ExplorerApp` wiring
-- [ ] i18n (14 locales): add `upload.status.unfinished` + `upload.queue.header.unfinished`; remove `upload.multipart.title`/`infoLabel`/`loading`/`empty`
-- [ ] Run `pnpm test`; fix failures
+- [x] `upload-queue.ts`: add required `enqueuedAt` to `UploadQueueItem` (set in `createQueueItem`/`createResumeQueueItem`); update unit tests
+- [x] `uploadPanelRows.ts`: merged queue+session row model sorted newest-first by time + header segments with unfinished count; unit tests; register test file in `pnpm test` script
+- [x] `UploadPanel.tsx`: render one merged list — unified rows (icon, name + dest path, right stats, action buttons, progress); session rows get "Unfinished" status word with description tooltip + started-time + Remote badge in stats; drop section header/ⓘ/loading/error/empty lines
+- [x] Slim `CloudMultipartPanelProps` (drop `loading`/`error`); update `UploadIndicator` + `ExplorerApp` wiring
+- [x] i18n (14 locales): add `upload.status.unfinished` + `upload.queue.header.unfinished`; remove `upload.multipart.title`/`infoLabel`/`loading`/`empty`
+- [x] Run `pnpm test`; fix failures
+- [ ] `UploadPanel.tsx`: wrap merged `<ul>` in shadcn `ScrollArea` (`max-h-80`); drop native `overflow-y-auto` on the list
+- [ ] Run `pnpm test`
