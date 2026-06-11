@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** make the cloud “Unfinished uploads” (multipart) section elegant inside the uploads popover — rename the heading, tuck the long description into an info (ⓘ) tooltip, unify each session row with the active-queue rows (file icon + name + single stats line + single progress bar), replace the wrapping text buttons with compact Resume/Abort icon buttons + tooltips, and surface started-time + percent (with a Remote badge for abort-only sessions). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
+Dual-mode refactor is **complete**. **Current cycle:** strengthen the `AGENTS.md` frontend guidance — always prefer shadcn/ui components when applicable, and check the shadcn components index before building custom components. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary.
 
 ## TODO List
 
@@ -145,3 +145,4 @@ Dual-mode refactor is **complete**. **Current cycle:** make the cloud “Unfinis
 - [x] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
 - [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
 - [x] Run `pnpm test` + `cargo test`; fix any failures
+- [ ] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
