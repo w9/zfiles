@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. **Current cycle:** action icons in menubar and context menu — same `actionIcon()` map as the palette where a distinct icon exists; `inset` text-only rows otherwise; destructive variant styling preserved. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. **Current cycle:** wrap `CommandList` with shadcn [ScrollArea](https://ui.shadcn.com/docs/components/radix/scroll-area) (300px cap) for styled palette scrolling. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -152,7 +152,9 @@ Dual-mode refactor is **complete**. **Current cycle:** action icons in menubar a
 - [x] Replace `KeybindingKbd` with `formatKeybindingLabel` + surface `*Shortcut` in palette, menubar, toolbar
 - [x] Arg-prompt palette step: same shadcn item layout; update e2e shortcut assertions
 - [x] Run `pnpm test` + `cargo test`
-- [ ] `icons.ts`: expand built-in action map; `actionIcon()` returns null when no icon (palette keeps Terminal fallback)
-- [ ] `MenuBar.tsx`: icon + label + shortcut; `inset` when no icon
-- [ ] `ContextMenu.tsx`: same icon layout for context-menu actions
-- [ ] Run `pnpm test`
+- [x] `icons.ts`: expand built-in action map; `actionIcon()` returns null when no icon (palette keeps Terminal fallback)
+- [x] `MenuBar.tsx`: icon + label + shortcut; `inset` when no icon
+- [x] `ContextMenu.tsx`: same icon layout for context-menu actions
+- [x] Run `pnpm test`
+- [ ] `CommandList`: wrap with shadcn `ScrollArea` (`max-h-[300px]`); drop native `overflow-y-auto`
+- [ ] Run `pnpm test` + `cargo test`
