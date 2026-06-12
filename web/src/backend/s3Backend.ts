@@ -11,6 +11,7 @@ import { runS3FileAction } from "./s3FileOperations";
 import type { RunActionParams } from "./runActionParams";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { XhrHttpHandler } from "@aws-sdk/xhr-http-handler";
 
 import {
   computeMultipartPartSize,
@@ -83,6 +84,8 @@ function createS3Client(config: S3ConnectionConfig): S3Client {
     // AWS SDK v3.729+ defaults to CRC checksums on uploads; R2 does not implement them.
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
+    // Fetch has no upload progress; XhrHttpHandler enables lib-storage httpUploadProgress.
+    requestHandler: new XhrHttpHandler({}),
   };
   if (config.endpoint) {
     clientConfig.endpoint = config.endpoint;

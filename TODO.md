@@ -4,45 +4,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 
 ## TODO List
 
-- [x] `SlideshowOverlay`: letterbox backdrop click calls `onOpenChange(false)`; image click unchanged
-- [x] E2E: slideshow closes on letterbox backdrop click
-- [x] Run `pnpm test`
-- [x] `useSlideshowIntervalInput`: Enter confirm + Escape cancel (overlay opts)
-- [x] Wire overlay interval input; `pnpm test`
-- [x] `useChromeAutoHide`: lock auto-hide while focused (force-show; restart 2s timer on unlock)
-- [x] Wire overlay `onFocus`/`onBlur` (typing target) to chrome lock; `pnpm test`
-- [x] `isPointerOverChrome` helper (top/bottom hover zones) + unit tests
-- [x] `useChromeAutoHide`: multi-reason lock (focus + hover); visible while any active
-- [x] Overlay `onMouseMove`: hover-zone → chrome lock; restart 2s timer on leave; `pnpm test`
-- [x] `uploadTray.ts`: `aggregateUploadStats` (counts by status, in-flight, percent, combined speed/ETA, recent/history count) + `uploadTrayAttention` (paused/failed flag) + unit tests; register test file in `pnpm test` script
-- [x] `uploadTray.ts`: `reduceTrayAutoOpen` (auto-open once per batch when pending work appears, re-arm after the queue drains) + unit tests
-- [x] Add non-modal shadcn/Radix `popover` primitive (`components/ui/popover.tsx`)
-- [x] `UploadIndicator.tsx`: always-visible status-bar pill — quiet icon + recent count when idle, live aggregate progress + speed/ETA when active, paused/failed attention flag; auto-open wiring
-- [x] Move `UploadPanel` into the popover body (combined list: active on top, finished dimmed below; empty state; Clear-finished; cloud multipart section); wire indicator + popover into `StatusBar`/`ExplorerApp`; remove the flow-block placement
-- [x] i18n: add uploads tray/indicator keys across all 14 locales
-- [x] Run `pnpm test` + `cargo test`; fix any failures (`pnpm build`/`tsc` has 8 pre-existing errors on `main`, unrelated to this cycle)
-- [x] `s3Multipart.ts`: pure `multipartPercent(session)` helper (null when size unknown) + unit test in `cloud/s3Multipart.test.ts`
-- [x] `MultipartSessionsSection` header: rename heading to “Unfinished uploads”; move the description into an info (ⓘ) tooltip beside it
-- [x] Unify session rows with the active-queue rows — file icon + name + dest, single stats line, single progress bar; add file icons to the active-queue rows too (via `useTheme`)
-- [x] Resume/Abort as compact icon buttons (Play/Trash2) with tooltips; show “started ‹relative time›” and a “Remote” badge for abort-only (non-resumable) sessions
-- [x] i18n: retranslate `upload.multipart.title` → “Unfinished uploads” and add `upload.multipart.startedAt` + `upload.multipart.remote` across all 14 locales
-- [x] Run `pnpm test` + `cargo test`; fix any failures
-- [x] `AGENTS.md`: strengthen the shadcn/ui rule — always prefer shadcn components when applicable; check the [components index](https://ui.shadcn.com/docs/components) before building custom
-- [x] `command.tsx`: match shadcn `CommandDialog` composition (no auto-wrap sizing overrides); palette uses explicit `<Command>`
-- [x] `CommandPalette.tsx`: shadcn docs layout — icons, `CommandSeparator`, `CommandShortcut`, hide unavailable, no × button
-- [x] `searchActions`: available actions only; update unit tests (drop disabled `paletteWhen` palette rows)
-- [x] Replace `KeybindingKbd` with `formatKeybindingLabel` + surface `*Shortcut` in palette, menubar, toolbar
-- [x] Arg-prompt palette step: same shadcn item layout; update e2e shortcut assertions
-- [x] Run `pnpm test` + `cargo test`
-- [x] `icons.ts`: expand built-in action map; `actionIcon()` returns null when no icon (palette keeps Terminal fallback)
-- [x] `MenuBar.tsx`: icon + label + shortcut; `inset` when no icon
-- [x] `ContextMenu.tsx`: same icon layout for context-menu actions
-- [x] Run `pnpm test`
-- [x] `CommandList`: wrap with shadcn `ScrollArea` (`max-h-[300px]`); drop native `overflow-y-auto`
-- [x] Run `pnpm test` + `cargo test`
-- [x] i18n: `upload.conflict.keepBothTooltip` + `keepBothTooltipLoading` across all 14 locales
-- [x] `UploadConflictDialog`: async `findKeepBothPath` + 0-delay tooltip (`side="top"`) on Keep both button
-- [x] `ExplorerApp`: pass `backend` into `UploadConflictDialog`
 - [x] Run `pnpm test` + `cargo test`
 - [x] `command.tsx`: shadcn styling — InputGroup input, muted selection, native `no-scrollbar max-h-72` list
 - [x] `CommandDialog`: popover shell (`rounded-xl`, `bg-popover`) to match shadcn palette chrome
@@ -72,7 +33,7 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `UploadPanel.tsx`: inline ~6em progress bar in queue row stats (replaces xx% + full-width row); 0-delay tooltip `xx% (uploaded / total)`; stats show total only; no bar for done/failed/cancelled
 - [x] i18n (14 locales): adjust upload stats strings + add `upload.stats.progressTooltip`
 - [x] Run `pnpm test`
-- [ ] Add `@aws-sdk/xhr-http-handler`; wire `XhrHttpHandler` on whole `S3Client` in `createS3Client`
-- [ ] Restore `@aws-sdk/lib-storage` `Upload` in `s3Backend.upload`; remove `multipartUploadFile` / presigned-XHR path
-- [ ] `resumeMultipartUpload`: parallel missing parts (queue ~4) + aggregated in-flight progress via XhrHttpHandler events; unit tests
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Add `@aws-sdk/xhr-http-handler`; wire `XhrHttpHandler` on whole `S3Client` in `createS3Client`
+- [x] Restore `@aws-sdk/lib-storage` `Upload` in `s3Backend.upload`; remove `multipartUploadFile` / presigned-XHR path
+- [x] `resumeMultipartUpload`: parallel missing parts (queue ~4) + aggregated in-flight progress via XhrHttpHandler events; unit tests
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

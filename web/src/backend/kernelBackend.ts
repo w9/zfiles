@@ -35,6 +35,73 @@ async function headUploadOffset(location: string, signal?: AbortSignal): Promise
   return Number(response.headers.get("Upload-Offset") ?? "0");
 }
 
+type PatchUploadResult = {
+  ok: boolean;
+  status: number;
+  uploadOffset: number;
+};
+
+/** PATCH one chunk with XHR so upload.onprogress fires while bytes are in flight. */
+function patchUploadChunk(
+  location: string,
+  offset: number,
+  chunk: Blob,
+  signal: AbortSignal | undefined,
+  onChunkProgress?: (loaded: number) => void,
+): Promise<PatchUploadResult> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PATCH", location);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("Upload-Offset", String(offset));
+    xhr.setRequestHeader("Content-Type", "application/offset+octet-stream");
+
+    const onAbort = () => {
+      xhr.abort();
+    };
+
+    if (signal) {
+      if (signal.aborted) {
+        reject(new DOMException("Upload aborted", "AbortError"));
+        return;
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onChunkProgress?.(event.loaded);
+      }
+    };
+
+    const cleanup = () => {
+      signal?.removeEventListener("abort", onAbort);
+    };
+
+    xhr.onload = () => {
+      cleanup();
+      const uploadOffset = Number(
+        xhr.getResponseHeader("Upload-Offset") ?? String(offset + chunk.size),
+      );
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        uploadOffset,
+      });
+    };
+    xhr.onerror = () => {
+      cleanup();
+      reject(new Error("upload patch network error"));
+    };
+    xhr.onabort = () => {
+      cleanup();
+      reject(new DOMException("Upload aborted", "AbortError"));
+    };
+
+    xhr.send(chunk);
+  });
+}
+
 export class KernelBackend implements ExplorerBackend {
   readonly mode = "local" as const;
 
@@ -103,14 +170,12 @@ export class KernelBackend implements ExplorerBackend {
     while (offset < file.size) {
       throwIfAborted(signal);
       const chunk = file.slice(offset, offset + UPLOAD_CHUNK_SIZE);
-      const patch = await apiFetch(location, {
-        method: "PATCH",
-        headers: {
-          "Upload-Offset": String(offset),
-          "Content-Type": "application/offset+octet-stream",
-        },
-        body: chunk,
-        signal,
+      const patch = await patchUploadChunk(location, offset, chunk, signal, (loaded) => {
+        onProgress?.({
+          id: uploadId,
+          offset: Math.min(offset + loaded, file.size),
+          length: file.size,
+        });
       });
 
       if (!patch.ok) {
@@ -124,7 +189,7 @@ export class KernelBackend implements ExplorerBackend {
         continue;
       }
 
-      offset = Number(patch.headers.get("Upload-Offset") ?? String(offset + chunk.size));
+      offset = patch.uploadOffset;
       onProgress?.({ id: uploadId, offset, length: file.size });
     }
 
