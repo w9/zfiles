@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** complete. **Next:** deferred items below. Recent: status bar shortcut hints, Space → Slideshow in table view (grid parity), e2e slideshow close fix. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** platform-aware status-bar shortcut hints — `⌘`/`⇧` icons on macOS (matching menus), `Ctrl`/`Shift` elsewhere; i18n templates with `{{shiftClick}}` and `{{commandPalette}}` placeholders. **Next:** deferred items below. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -57,3 +57,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `StatusBar.tsx`: render centered `shortcuts.hint` between backend status and selection/upload cluster
 - [x] `e2e/tests/smoke.spec.ts`: assert status bar shows shortcut hint text
 - [x] Run `pnpm test`
+
+- [ ] `keybindings.ts`: export `keyPartLabel` + `shortcutsHintParams` (platform-aware `{{shiftClick}}`, `{{commandPalette}}`)
+- [ ] `keybindingDisplay.ts`: reuse `keyPartLabel`; unit tests for macOS icons vs Linux Ctrl
+- [ ] i18n (14 locales): `shortcuts.hint` — replace hardcoded Ctrl/Shift chords with placeholders
+- [ ] `StatusBar.tsx`: pass `shortcutsHintParams()` into `t("shortcuts.hint")`; relax e2e assertion
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
