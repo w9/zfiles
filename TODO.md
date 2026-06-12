@@ -63,3 +63,7 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] i18n (14 locales): `shortcuts.hint` — replace hardcoded Ctrl/Shift chords with placeholders
 - [x] `StatusBar.tsx`: pass `shortcutsHintParams()` into `t("shortcuts.hint")`; relax e2e assertion
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `s3MultipartUpload.ts`: unified `uploadMultipartFile` (create/list/upload missing parts/complete); PutObject fast path; checksum fields at Complete
+- [ ] `s3Backend.ts`: route fresh + resume through unified engine; drop lib-storage; persist session on `onUploadCreated`
+- [ ] Remove `@aws-sdk/lib-storage`; unit tests for upload helpers; run `pnpm test`; bump patch version
