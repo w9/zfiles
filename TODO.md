@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine for fresh + resume uploads is **complete** (`@aws-sdk/lib-storage` removed). **Current cycle:** per-key shortcut chips — render shortcut surfaces (menu bar, context menu, command palette, toolbar tooltips) as per-key shadcn `Kbd` chips via `chordToKbdLabels`, gap-separated without `+`, dropping `tracking-widest` so spelled-out keys like `Enter` keep normal letter-spacing. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine for fresh + resume uploads is **complete** (`@aws-sdk/lib-storage` removed). Per-key shortcut chips are **complete**. **Current cycle:** upgrade GitHub Actions to Node 24–compatible action versions (`checkout`, `setup-node`, `pnpm/action-setup`, `rust-cache`) to silence CI deprecation warnings ahead of the June/September 2026 runner cutover. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -75,3 +75,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] Remove `tracking-widest` from shortcut slots: `menubar.tsx`, `dropdown-menu.tsx`, `context-menu.tsx`, `command.tsx`
 - [x] `e2e/tests/smoke.spec.ts`: assert per-key kbd chips (`Ctrl`, `P`) instead of `Ctrl+P` text; run the spec
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `.github/workflows/{ci,release,nightly}.yml`: bump `actions/checkout`, `actions/setup-node`, `pnpm/action-setup` to `@v5` (Node 24 runtime)
+- [ ] `.github/workflows/{ci,release,nightly}.yml`: pin `Swatinem/rust-cache@v2.9.0` (Node 24 runtime)
