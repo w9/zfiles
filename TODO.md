@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** fix flaky slideshow e2e close step (chrome hover zone intercepts top-left click). Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** wire `shortcuts.hint` into the status bar (i18n key exists but was never rendered). **Next:** bind Space → Slideshow in table/list view when focused row is an image (grid parity); Space does nothing for non-images; update `shortcuts.hint` copy in all locales. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -44,3 +44,16 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `s3XhrUploadProgress.ts` + test: import `HttpRequest` from `@smithy/core/protocols`; cast `XhrHttpHandler` for EventEmitter `on`/`off`
 - [x] `upload-queue.ts` + `UploadButton.tsx`: normalize enqueue/onSelect to `DroppedUploadFile[]` (fix union destructuring + button callback)
 - [x] Run `pnpm test` + `pnpm build`
+
+- [x] `keybindings.ts`: Space → `viewer.slideshow` when `file-list` + image (grid and table); drop Space → `selection.toggle`
+- [x] `builtins.ts`: remove `defaultKeybinding: "Space"` from `selection.toggle`
+- [x] `keybindings.test.ts`: cover table-view slideshow + no toggle fallback
+- [x] i18n (14 locales): `shortcuts.hint` — Space opens slideshow for images (not toggle)
+- [x] Run `pnpm test`
+
+- [x] `e2e/tests/smoke.spec.ts`: close slideshow with Escape instead of top-left click (chrome hover zone blocks letterbox)
+- [x] Run e2e slideshow smoke test locally
+
+- [ ] `StatusBar.tsx`: render centered `shortcuts.hint` between backend status and selection/upload cluster
+- [ ] `e2e/tests/smoke.spec.ts`: assert status bar shows shortcut hint text
+- [ ] Run `pnpm test`
