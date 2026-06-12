@@ -102,7 +102,7 @@ export const vi: Record<MessageKey, string> = {
   "selection.copyPaths": "Sao chép đường dẫn",
   "selection.clear": "Xóa",
   "shortcuts.hint":
-    "Phím tắt: h/j/k/l hoặc mũi tên điều hướng (lưới); j/k hoặc ↑↓ (bảng); Enter mở, Backspace lên, Space trình chiếu (ảnh), Shift+nhấp chọn dải, Ctrl+P bảng lệnh",
+    "Phím tắt: h/j/k/l hoặc mũi tên điều hướng (lưới); j/k hoặc ↑↓ (bảng); Enter mở, Backspace lên, Space trình chiếu (ảnh), {{shiftClick}}nhấp chọn dải, {{commandPalette}} bảng lệnh",
   "listing.empty": "Thư mục này trống",
   "listing.label": "Danh sách thư mục",
   "listing.column.name": "Tên",

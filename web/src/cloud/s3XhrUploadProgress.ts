@@ -6,7 +6,9 @@ export type SmithyHttpRequest = {
   query?: Record<string, string | string[] | undefined>;
 };
 
-export const RESUME_UPLOAD_QUEUE_SIZE = 4;
+export const MULTIPART_UPLOAD_QUEUE_SIZE = 4;
+/** @deprecated Use MULTIPART_UPLOAD_QUEUE_SIZE */
+export const RESUME_UPLOAD_QUEUE_SIZE = MULTIPART_UPLOAD_QUEUE_SIZE;
 
 export function xhrHttpHandlerFromClient(client: S3Client): XhrHttpHandler | null {
   const handler = client.config.requestHandler;
@@ -57,6 +59,26 @@ export function attachPartUploadProgressListener(
   const emitter = handler as XhrHttpHandler & XhrProgressEmitter;
   const listener = (event: UploadProgressEvent, request: SmithyHttpRequest) => {
     if (uploadPartNumberFromRequest(request) !== partNumber) {
+      return;
+    }
+    if (event.lengthComputable) {
+      onLoaded(event.loaded);
+    }
+  };
+  emitter.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
+  return () => {
+    emitter.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
+  };
+}
+
+/** In-flight progress for single PutObject uploads (no partNumber query param). */
+export function attachGenericUploadProgressListener(
+  handler: XhrHttpHandler,
+  onLoaded: (loaded: number) => void,
+): () => void {
+  const emitter = handler as XhrHttpHandler & XhrProgressEmitter;
+  const listener = (event: UploadProgressEvent, request: SmithyHttpRequest) => {
+    if (uploadPartNumberFromRequest(request) != null) {
       return;
     }
     if (event.lengthComputable) {

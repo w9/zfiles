@@ -68,10 +68,10 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `s3Backend.ts`: route fresh + resume through unified engine; drop lib-storage; persist session on `onUploadCreated`
 - [x] Remove `@aws-sdk/lib-storage`; unit tests for upload helpers; run `pnpm test`; bump patch version
 
-- [ ] `keybindingDisplay.test.ts`: cover spelled-out keys — `Enter` → `["Enter"]`, Linux `Shift+ArrowDown` → `["Shift", "ArrowDown"]`
-- [ ] `ChordKbd.tsx` (new, `web/src/actions/`): chord → `KbdGroup` of per-key `Kbd` chips via `chordToKbdLabels`; no `+` separators; optional chip className
-- [ ] Wire `ChordKbd` into `MenuBar.tsx` + `CommandPalette.tsx` (preserve selected-row foreground tweak) + `ActionToolbar.tsx` tooltip
-- [ ] `ContextMenu.tsx` + `ExplorerApp.tsx`: pass raw `chord` through `ContextMenuAction` (drop preformatted `shortcut`); render `ChordKbd`
-- [ ] Remove `tracking-widest` from shortcut slots: `menubar.tsx`, `dropdown-menu.tsx`, `context-menu.tsx`, `command.tsx`
-- [ ] `e2e/tests/smoke.spec.ts`: assert per-key kbd chips (`Ctrl`, `P`) instead of `Ctrl+P` text; run the spec
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `keybindingDisplay.test.ts`: cover spelled-out keys — `Enter` → `["Enter"]`, Linux `Shift+ArrowDown` → `["Shift", "ArrowDown"]`
+- [x] `ChordKbd.tsx` (new, `web/src/actions/`): chord → `KbdGroup` of per-key `Kbd` chips via `chordToKbdLabels`; no `+` separators; optional chip className
+- [x] Wire `ChordKbd` into `MenuBar.tsx` + `CommandPalette.tsx` (preserve selected-row foreground tweak) + `ActionToolbar.tsx` tooltip
+- [x] `ContextMenu.tsx` + `ExplorerApp.tsx`: pass raw `chord` through `ContextMenuAction` (drop preformatted `shortcut`); render `ChordKbd`
+- [x] Remove `tracking-widest` from shortcut slots: `menubar.tsx`, `dropdown-menu.tsx`, `context-menu.tsx`, `command.tsx`
+- [x] `e2e/tests/smoke.spec.ts`: assert per-key kbd chips (`Ctrl`, `P`) instead of `Ctrl+P` text; run the spec
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

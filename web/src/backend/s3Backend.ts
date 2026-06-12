@@ -9,7 +9,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { runS3FileAction } from "./s3FileOperations";
 import type { RunActionParams } from "./runActionParams";
-import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { XhrHttpHandler } from "@aws-sdk/xhr-http-handler";
 
@@ -31,7 +30,7 @@ import {
 } from "../cloud/s3Multipart";
 import {
   abortMultipartUpload,
-  resumeMultipartUpload,
+  uploadMultipartFile,
 } from "../cloud/s3MultipartUpload";
 import {
   explorerPathFromCommonPrefix,
@@ -84,7 +83,7 @@ function createS3Client(config: S3ConnectionConfig): S3Client {
     // AWS SDK v3.729+ defaults to CRC checksums on uploads; R2 does not implement them.
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
-    // Fetch has no upload progress; XhrHttpHandler enables lib-storage httpUploadProgress.
+    // Fetch has no upload progress; XhrHttpHandler enables in-flight upload progress events.
     requestHandler: new XhrHttpHandler({}),
   };
   if (config.endpoint) {
@@ -306,7 +305,7 @@ export class S3Backend implements ExplorerBackend {
     callbacks?.onUploadStart?.();
     const key = record.objectKey;
     try {
-      await resumeMultipartUpload(
+      await uploadMultipartFile(
         this.client,
         {
           bucket: this.config.bucket,
@@ -317,15 +316,17 @@ export class S3Backend implements ExplorerBackend {
           contentType: file.type || undefined,
           checksumAlgorithm: checksumValidation ? "SHA256" : undefined,
         },
-        (loaded, total) => {
-          onProgress?.({
-            id: key,
-            offset: loaded,
-            length: total,
-            multipartUploadId: record.uploadId,
-          });
+        {
+          onProgress: (loaded, total) => {
+            onProgress?.({
+              id: key,
+              offset: loaded,
+              length: total,
+              multipartUploadId: record.uploadId,
+            });
+          },
+          signal,
         },
-        signal,
       );
     } catch (err) {
       if (!isUploadAbortError(err)) {
@@ -386,61 +387,63 @@ export class S3Backend implements ExplorerBackend {
     callbacks?.onUploadStart?.();
     const key = keyForExplorerPath(this.config.prefix, destPath);
     const partSize = computeMultipartPartSize(file.size);
-    const uploadParams: Upload["params"] = {
-      Bucket: this.config.bucket,
-      Key: key,
-      Body: file,
-      ContentType: file.type || undefined,
-    };
-    if (checksumValidation) {
-      uploadParams.ChecksumAlgorithm = "SHA256";
-    }
-    const upload = new Upload({
-      client: this.client,
-      params: uploadParams,
-      partSize,
-      leavePartsOnError: true,
-    });
-    let sessionSaved = false;
+    let activeUploadId: string | null = null;
     const onAbort = () => {
-      void upload.abort();
+      if (activeUploadId) {
+        void abortMultipartUpload(
+          this.client,
+          this.config.bucket,
+          key,
+          activeUploadId,
+        ).catch(() => {});
+      }
     };
     signal?.addEventListener("abort", onAbort, { once: true });
-    upload.on("httpUploadProgress", (progress) => {
-      if (upload.uploadId && !sessionSaved) {
-        sessionSaved = true;
-        this.persistMultipartRecord(
-          file,
-          destPath,
-          key,
-          upload.uploadId,
-          partSize,
-          checksumValidation,
-          checksum ?? undefined,
-        );
-      }
-      if (progress.loaded == null) {
-        return;
-      }
-      onProgress?.({
-        id: key,
-        offset: progress.loaded,
-        length: progress.total ?? file.size,
-        multipartUploadId: upload.uploadId,
-      });
-    });
     try {
-      await upload.done();
-      if (upload.uploadId) {
-        removeMultipartRecord(multipartSessionScopeId(this.config), upload.uploadId);
+      const { uploadId } = await uploadMultipartFile(
+        this.client,
+        {
+          bucket: this.config.bucket,
+          objectKey: key,
+          body: file,
+          partSize,
+          contentType: file.type || undefined,
+          checksumAlgorithm: checksumValidation ? "SHA256" : undefined,
+        },
+        {
+          onUploadCreated: (createdUploadId) => {
+            activeUploadId = createdUploadId;
+            this.persistMultipartRecord(
+              file,
+              destPath,
+              key,
+              createdUploadId,
+              partSize,
+              checksumValidation,
+              checksum ?? undefined,
+            );
+          },
+          onProgress: (loaded, total) => {
+            onProgress?.({
+              id: key,
+              offset: loaded,
+              length: total,
+              multipartUploadId: activeUploadId ?? undefined,
+            });
+          },
+          signal,
+        },
+      );
+      if (uploadId) {
+        removeMultipartRecord(multipartSessionScopeId(this.config), uploadId);
       }
     } catch (err) {
-      if (!isUploadAbortError(err) && upload.uploadId) {
+      if (!isUploadAbortError(err) && activeUploadId) {
         this.persistMultipartRecord(
           file,
           destPath,
           key,
-          upload.uploadId,
+          activeUploadId,
           partSize,
           checksumValidation,
           checksum ?? undefined,

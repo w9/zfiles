@@ -1,7 +1,9 @@
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
   type CompletedPart,
+  PutObjectCommand,
   type S3Client,
   UploadPartCommand,
 } from "@aws-sdk/client-s3";
@@ -9,16 +11,71 @@ import {
 import { listUploadedParts, type ListedPart } from "./s3Multipart";
 import {
   aggregateMultipartBytesInFlight,
+  attachGenericUploadProgressListener,
   attachPartUploadProgressListener,
-  RESUME_UPLOAD_QUEUE_SIZE,
+  MULTIPART_UPLOAD_QUEUE_SIZE,
   runWithConcurrency,
   xhrHttpHandlerFromClient,
 } from "./s3XhrUploadProgress";
+
+export const MAX_MULTIPART_PARTS = 10_000;
 
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw new DOMException("Upload aborted", "AbortError");
   }
+}
+
+export function missingPartNumbers(
+  expectedParts: number,
+  completedPartNumbers: ReadonlySet<number>,
+): number[] {
+  const missing: number[] = [];
+  for (let partNumber = 1; partNumber <= expectedParts; partNumber += 1) {
+    if (!completedPartNumbers.has(partNumber)) {
+      missing.push(partNumber);
+    }
+  }
+  return missing;
+}
+
+export function canUseSinglePutUpload(
+  totalBytes: number,
+  partSize: number,
+  existingPartCount: number,
+  hasUploadId: boolean,
+): boolean {
+  return !hasUploadId && existingPartCount === 0 && totalBytes <= partSize;
+}
+
+type ChecksumPartFields = Pick<
+  CompletedPart,
+  "ChecksumCRC32" | "ChecksumCRC32C" | "ChecksumSHA1" | "ChecksumSHA256"
+>;
+
+export function toCompletedPart(
+  part: Pick<ListedPart, "PartNumber" | "ETag"> & Partial<ChecksumPartFields>,
+): CompletedPart {
+  if (part.PartNumber == null || !part.ETag) {
+    throw new Error("completed part is missing PartNumber or ETag");
+  }
+  return {
+    PartNumber: part.PartNumber,
+    ETag: part.ETag,
+    ...(part.ChecksumCRC32 ? { ChecksumCRC32: part.ChecksumCRC32 } : {}),
+    ...(part.ChecksumCRC32C ? { ChecksumCRC32C: part.ChecksumCRC32C } : {}),
+    ...(part.ChecksumSHA1 ? { ChecksumSHA1: part.ChecksumSHA1 } : {}),
+    ...(part.ChecksumSHA256 ? { ChecksumSHA256: part.ChecksumSHA256 } : {}),
+  };
+}
+
+function checksumFieldsFromPart(part: Partial<ChecksumPartFields>): Partial<ChecksumPartFields> {
+  return {
+    ...(part.ChecksumCRC32 ? { ChecksumCRC32: part.ChecksumCRC32 } : {}),
+    ...(part.ChecksumCRC32C ? { ChecksumCRC32C: part.ChecksumCRC32C } : {}),
+    ...(part.ChecksumSHA1 ? { ChecksumSHA1: part.ChecksumSHA1 } : {}),
+    ...(part.ChecksumSHA256 ? { ChecksumSHA256: part.ChecksumSHA256 } : {}),
+  };
 }
 
 export async function abortMultipartUpload(
@@ -36,39 +93,121 @@ export async function abortMultipartUpload(
   );
 }
 
-export async function resumeMultipartUpload(
+export type MultipartUploadParams = {
+  bucket: string;
+  objectKey: string;
+  body: File;
+  partSize: number;
+  contentType?: string;
+  checksumAlgorithm?: "SHA256";
+  /** When set, continue an existing multipart session instead of creating one. */
+  uploadId?: string;
+};
+
+export type MultipartUploadOptions = {
+  onProgress?: (loaded: number, total: number) => void;
+  onUploadCreated?: (uploadId: string) => void;
+  signal?: AbortSignal;
+};
+
+async function uploadSinglePut(
   client: S3Client,
-  params: {
-    bucket: string;
-    objectKey: string;
-    uploadId: string;
-    body: File;
-    partSize: number;
-    contentType?: string;
-    checksumAlgorithm?: "SHA256";
-  },
+  params: MultipartUploadParams,
   onProgress?: (loaded: number, total: number) => void,
   signal?: AbortSignal,
 ): Promise<void> {
   throwIfAborted(signal);
-  const existingParts = await listUploadedParts(
-    client,
-    params.bucket,
-    params.objectKey,
-    params.uploadId,
-  );
+  const totalBytes = params.body.size;
+  onProgress?.(0, totalBytes);
+
+  const xhrHandler = xhrHttpHandlerFromClient(client);
+  let detachProgress: (() => void) | undefined;
+  if (xhrHandler) {
+    detachProgress = attachGenericUploadProgressListener(xhrHandler, (loaded) => {
+      onProgress?.(Math.min(loaded, totalBytes), totalBytes);
+    });
+  }
+
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: params.bucket,
+        Key: params.objectKey,
+        Body: params.body,
+        ContentType: params.contentType,
+        ...(params.checksumAlgorithm
+          ? { ChecksumAlgorithm: params.checksumAlgorithm }
+          : {}),
+      }),
+      signal ? { abortSignal: signal } : undefined,
+    );
+    onProgress?.(totalBytes, totalBytes);
+  } finally {
+    detachProgress?.();
+  }
+}
+
+export async function uploadMultipartFile(
+  client: S3Client,
+  params: MultipartUploadParams,
+  options?: MultipartUploadOptions,
+): Promise<{ uploadId: string }> {
+  throwIfAborted(options?.signal);
+  const totalBytes = params.body.size;
+  const expectedParts = Math.ceil(totalBytes / params.partSize);
+  if (expectedParts > MAX_MULTIPART_PARTS) {
+    throw new Error(`upload exceeds ${MAX_MULTIPART_PARTS} parts`);
+  }
+
+  let uploadId = params.uploadId;
+  let existingParts: ListedPart[] = [];
+  if (uploadId) {
+    existingParts = await listUploadedParts(
+      client,
+      params.bucket,
+      params.objectKey,
+      uploadId,
+    );
+  }
+
+  if (
+    canUseSinglePutUpload(
+      totalBytes,
+      params.partSize,
+      existingParts.length,
+      uploadId != null,
+    )
+  ) {
+    await uploadSinglePut(client, params, options?.onProgress, options?.signal);
+    return { uploadId: "" };
+  }
+
+  if (!uploadId) {
+    const createResult = await client.send(
+      new CreateMultipartUploadCommand({
+        Bucket: params.bucket,
+        Key: params.objectKey,
+        ContentType: params.contentType,
+        ...(params.checksumAlgorithm
+          ? { ChecksumAlgorithm: params.checksumAlgorithm }
+          : {}),
+      }),
+      options?.signal ? { abortSignal: options.signal } : undefined,
+    );
+    uploadId = createResult.UploadId;
+    if (!uploadId) {
+      throw new Error("CreateMultipartUpload missing UploadId");
+    }
+    options?.onUploadCreated?.(uploadId);
+  }
+
   const completedByNumber = new Map(
     existingParts.map((part) => [part.PartNumber ?? 0, part]),
   );
-
-  const totalBytes = params.body.size;
-  const expectedParts = Math.ceil(totalBytes / params.partSize);
-  const missingParts: number[] = [];
-  for (let partNumber = 1; partNumber <= expectedParts; partNumber += 1) {
-    if (!completedByNumber.has(partNumber)) {
-      missingParts.push(partNumber);
-    }
-  }
+  const missingParts = missingPartNumbers(
+    expectedParts,
+    new Set(completedByNumber.keys()),
+  );
 
   let initialBytesCompleted = existingParts.reduce((sum, part) => sum + (part.Size ?? 0), 0);
   const finishedPartBytes = new Map<number, number>();
@@ -80,7 +219,7 @@ export async function resumeMultipartUpload(
     for (const size of finishedPartBytes.values()) {
       committed += size;
     }
-    onProgress?.(
+    options?.onProgress?.(
       aggregateMultipartBytesInFlight(committed, inFlightLoadedByPart),
       totalBytes,
     );
@@ -89,7 +228,7 @@ export async function resumeMultipartUpload(
   reportProgress();
 
   const uploadMissingPart = async (partNumber: number): Promise<ListedPart> => {
-    throwIfAborted(signal);
+    throwIfAborted(options?.signal);
     const start = (partNumber - 1) * params.partSize;
     const end = Math.min(start + params.partSize, totalBytes);
     const chunk = params.body.slice(start, end);
@@ -108,12 +247,14 @@ export async function resumeMultipartUpload(
         new UploadPartCommand({
           Bucket: params.bucket,
           Key: params.objectKey,
-          UploadId: params.uploadId,
+          UploadId: uploadId,
           PartNumber: partNumber,
           Body: body,
-          ...(params.checksumAlgorithm ? { ChecksumAlgorithm: params.checksumAlgorithm } : {}),
+          ...(params.checksumAlgorithm
+            ? { ChecksumAlgorithm: params.checksumAlgorithm }
+            : {}),
         }),
-        signal ? { abortSignal: signal } : undefined,
+        options?.signal ? { abortSignal: options.signal } : undefined,
       );
 
       if (!partResult.ETag) {
@@ -128,6 +269,7 @@ export async function resumeMultipartUpload(
         PartNumber: partNumber,
         ETag: partResult.ETag,
         Size: chunk.size,
+        ...checksumFieldsFromPart(partResult),
       };
     } finally {
       detachProgress?.();
@@ -137,20 +279,28 @@ export async function resumeMultipartUpload(
 
   const uploadedParts = await runWithConcurrency(
     missingParts,
-    RESUME_UPLOAD_QUEUE_SIZE,
+    MULTIPART_UPLOAD_QUEUE_SIZE,
     uploadMissingPart,
   );
 
   const allParts: ListedPart[] = [...existingParts, ...uploadedParts];
   allParts.sort((a, b) => (a.PartNumber ?? 0) - (b.PartNumber ?? 0));
+
+  if (allParts.length !== expectedParts) {
+    throw new Error(`expected ${expectedParts} parts but have ${allParts.length}`);
+  }
+
   await client.send(
     new CompleteMultipartUploadCommand({
       Bucket: params.bucket,
       Key: params.objectKey,
-      UploadId: params.uploadId,
+      UploadId: uploadId,
       MultipartUpload: {
-        Parts: allParts.map(({ PartNumber, ETag }) => ({ PartNumber, ETag })),
+        Parts: allParts.map((part) => toCompletedPart(part)),
       },
     }),
+    options?.signal ? { abortSignal: options.signal } : undefined,
   );
+
+  return { uploadId };
 }

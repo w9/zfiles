@@ -11,10 +11,11 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+import ChordKbd from "./ChordKbd";
 import { actionIconWithFallback } from "./icons";
 import { searchActions } from "./search";
 import { isActionAvailable } from "./dispatch";
-import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
+import { keybindingForAction } from "./keybindings";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
 import type { ActionDefinition, KeybindingDefinition } from "./types";
@@ -147,7 +148,14 @@ export default function CommandPalette({
             >
               <Icon />
               <span>{labelForKey(pendingAction.nameKey)}</span>
-              {chord ? <CommandShortcut>{formatKeybindingLabel(chord)}</CommandShortcut> : null}
+              {chord ? (
+                <CommandShortcut>
+                  <ChordKbd
+                    chord={chord}
+                    className="group-data-[selected=true]/command-item:text-foreground"
+                  />
+                </CommandShortcut>
+              ) : null}
             </CommandItem>
           </CommandList>
         </Command>
@@ -202,7 +210,12 @@ export default function CommandPalette({
                       <Icon />
                       <span>{labelForKey(action.nameKey)}</span>
                       {chord ? (
-                        <CommandShortcut>{formatKeybindingLabel(chord)}</CommandShortcut>
+                        <CommandShortcut>
+                          <ChordKbd
+                            chord={chord}
+                            className="group-data-[selected=true]/command-item:text-foreground"
+                          />
+                        </CommandShortcut>
                       ) : null}
                     </CommandItem>
                   );

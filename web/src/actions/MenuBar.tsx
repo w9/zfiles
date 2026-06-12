@@ -6,9 +6,10 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from "@/components/ui/menubar";
+import ChordKbd from "./ChordKbd";
 import { isActionAvailable } from "./dispatch";
 import { actionIcon } from "./icons";
-import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
+import { keybindingForAction } from "./keybindings";
 import { MENU_CATEGORIES } from "./surfaces";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
@@ -79,7 +80,9 @@ export default function MenuBar({
                     {Icon ? <Icon /> : null}
                     {label}
                     {chord ? (
-                      <MenubarShortcut>{formatKeybindingLabel(chord)}</MenubarShortcut>
+                      <MenubarShortcut>
+                        <ChordKbd chord={chord} />
+                      </MenubarShortcut>
                     ) : null}
                   </MenubarItem>
                 );

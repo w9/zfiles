@@ -5,12 +5,13 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ChordKbd from "@/actions/ChordKbd";
 import { actionIcon } from "@/actions/icons";
 
 export type ContextMenuAction = {
   id: string;
   label: string;
-  shortcut?: string | null;
+  chord?: string | null;
   variant?: "default" | "destructive";
 };
 
@@ -55,8 +56,10 @@ export default function ExplorerContextMenu({
             >
               {Icon ? <Icon /> : null}
               {action.label}
-              {action.shortcut ? (
-                <DropdownMenuShortcut>{action.shortcut}</DropdownMenuShortcut>
+              {action.chord ? (
+                <DropdownMenuShortcut>
+                  <ChordKbd chord={action.chord} />
+                </DropdownMenuShortcut>
               ) : null}
             </DropdownMenuItem>
           );

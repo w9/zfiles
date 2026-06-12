@@ -31,10 +31,7 @@ import MenuBar from "../actions/MenuBar";
 import ActionToolbar from "../actions/ActionToolbar";
 import { actionsForContext } from "../actions/dispatch";
 import { type ContextKeys } from "../actions/contextKeys";
-import {
-  formatKeybindingLabel,
-  keybindingChordForContext,
-} from "../actions/keybindings";
+import { keybindingChordForContext } from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
 import { isImagePath } from "../imagePaths";
 import {
@@ -960,7 +957,7 @@ export default function ExplorerApp() {
         return {
           id: action.id,
           label: actionLabel(action.nameKey),
-          shortcut: chord ? formatKeybindingLabel(chord) : null,
+          chord,
           variant: action.destructive ? "destructive" : "default",
         };
       });

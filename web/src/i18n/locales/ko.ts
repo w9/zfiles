@@ -102,7 +102,7 @@ export const ko: Record<MessageKey, string> = {
   "selection.copyPaths": "경로 복사",
   "selection.clear": "지우기",
   "shortcuts.hint":
-    "단축키: 그리드는 h/j/k/l 또는 방향키로 이동, 테이블은 j/k 또는 ↑↓; Enter 열기, Backspace 위로, Space 슬라이드쇼(이미지), Shift+클릭 범위, Ctrl+P 명령 팔레트",
+    "단축키: 그리드는 h/j/k/l 또는 방향키로 이동, 테이블은 j/k 또는 ↑↓; Enter 열기, Backspace 위로, Space 슬라이드쇼(이미지), {{shiftClick}}클릭 범위, {{commandPalette}} 명령 팔레트",
   "listing.empty": "이 폴더는 비어 있습니다",
   "listing.label": "디렉터리 목록",
   "listing.column.name": "이름",

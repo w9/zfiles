@@ -217,25 +217,45 @@ export function keybindingChordForContext(
   return options.defaultKeybinding ?? null;
 }
 
+export function keyPartLabel(
+  part: string,
+  platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
+): string {
+  const isMac = platform.toLowerCase().includes("mac");
+  switch (part) {
+    case "Mod":
+      return isMac ? "⌘" : "Ctrl";
+    case "Shift":
+      return isMac ? "⇧" : "Shift";
+    case "Alt":
+      return isMac ? "⌥" : "Alt";
+    case "Space":
+      return "Space";
+    default:
+      return part;
+  }
+}
+
+export function shiftClickModifierPrefix(
+  platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
+): string {
+  return `${keyPartLabel("Shift", platform)}+`;
+}
+
+export function shortcutsHintParams(
+  platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
+): Record<string, string> {
+  return {
+    shiftClick: shiftClickModifierPrefix(platform),
+    commandPalette: formatKeybindingLabel("Mod+P", platform),
+  };
+}
+
 export function formatKeybindingLabel(
   chord: string,
   platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
 ): string {
   const isMac = platform.toLowerCase().includes("mac");
-  const parts = parseKeyChord(chord);
-  const labels = parts.map((part) => {
-    switch (part) {
-      case "Mod":
-        return isMac ? "⌘" : "Ctrl";
-      case "Shift":
-        return isMac ? "⇧" : "Shift";
-      case "Alt":
-        return isMac ? "⌥" : "Alt";
-      case "Space":
-        return "Space";
-      default:
-        return part;
-    }
-  });
+  const labels = parseKeyChord(chord).map((part) => keyPartLabel(part, platform));
   return isMac ? labels.join("") : labels.join("+");
 }

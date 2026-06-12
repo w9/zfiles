@@ -98,7 +98,7 @@ export const zhTW: Record<MessageKey, string> = {
   "selection.copyPaths": "複製路徑",
   "selection.clear": "清除",
   "shortcuts.hint":
-    "快速鍵：格狀檢視 h/j/k/l 或方向鍵導覽；表格檢視 j/k 或 ↑↓；Enter 開啟，Backspace 返回上層，Space 投影片（圖片），Shift+點擊 範圍選取，Ctrl+P 命令選擇區",
+    "快速鍵：格狀檢視 h/j/k/l 或方向鍵導覽；表格檢視 j/k 或 ↑↓；Enter 開啟，Backspace 返回上層，Space 投影片（圖片），{{shiftClick}}點擊 範圍選取，{{commandPalette}} 命令選擇區",
   "listing.empty": "此資料夾是空的",
   "listing.label": "目錄清單",
   "listing.column.name": "名稱",

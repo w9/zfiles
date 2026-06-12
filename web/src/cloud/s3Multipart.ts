@@ -173,6 +173,10 @@ export async function listUploadedParts(
         PartNumber: part.PartNumber,
         ETag: part.ETag,
         Size: part.Size,
+        ...(part.ChecksumCRC32 ? { ChecksumCRC32: part.ChecksumCRC32 } : {}),
+        ...(part.ChecksumCRC32C ? { ChecksumCRC32C: part.ChecksumCRC32C } : {}),
+        ...(part.ChecksumSHA1 ? { ChecksumSHA1: part.ChecksumSHA1 } : {}),
+        ...(part.ChecksumSHA256 ? { ChecksumSHA256: part.ChecksumSHA256 } : {}),
       });
     }
 

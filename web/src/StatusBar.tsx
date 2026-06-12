@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import BackendStatus from "./BackendStatus";
+import { shortcutsHintParams } from "./actions/keybindings";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
@@ -41,7 +42,7 @@ export default function StatusBar({
     >
       <BackendStatus status={backendStatus} kernelVersion={kernelVersion} compact />
       <p className="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground">
-        {t("shortcuts.hint")}
+        {t("shortcuts.hint", shortcutsHintParams())}
       </p>
       <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
         {cutStatusText ? (

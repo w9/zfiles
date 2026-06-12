@@ -102,7 +102,7 @@ export const de: Record<MessageKey, string> = {
   "selection.copyPaths": "Pfade kopieren",
   "selection.clear": "Löschen",
   "shortcuts.hint":
-    "Tastenkürzel: h/j/k/l oder Pfeile navigieren (Raster); j/k oder ↑↓ (Tabelle); Enter öffnen, Rücktaste hoch, Leertaste Diashow (Bilder), Umschalt+Klick Bereich, Strg+P Befehlspalette",
+    "Tastenkürzel: h/j/k/l oder Pfeile navigieren (Raster); j/k oder ↑↓ (Tabelle); Enter öffnen, Rücktaste hoch, Leertaste Diashow (Bilder), {{shiftClick}}Klick Bereich, {{commandPalette}} Befehlspalette",
   "listing.empty": "Dieser Ordner ist leer",
   "listing.label": "Verzeichnisliste",
   "listing.column.name": "Name",

@@ -5,10 +5,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import ChordKbd from "./ChordKbd";
 import { isActionAvailable } from "./dispatch";
 import { explainActionUnavailable } from "./explainWhenFailure";
 import { actionIconWithFallback } from "./icons";
-import { formatKeybindingLabel, keybindingForAction } from "./keybindings";
+import { keybindingForAction } from "./keybindings";
 import { DEFAULT_TOOLBAR_ACTIONS } from "./surfaces";
 import type { ActionRegistry } from "./registry";
 import type { ContextKeys } from "./contextKeys";
@@ -67,11 +68,7 @@ export default function ActionToolbar({
             <TooltipContent side="bottom" className="flex max-w-xs flex-col gap-1">
               <span className="flex items-center gap-2">
                 {label}
-                {chord ? (
-                  <span className="text-xs tracking-widest text-background/70">
-                    {formatKeybindingLabel(chord)}
-                  </span>
-                ) : null}
+                {chord ? <ChordKbd chord={chord} /> : null}
               </span>
               {!available && unavailableReason ? (
                 <span className="text-background/80">{unavailableReason}</span>

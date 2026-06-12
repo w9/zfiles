@@ -81,7 +81,7 @@ test("status bar shows connected backend status", async ({ page }) => {
 test("status bar shows keyboard shortcut hints", async ({ page }) => {
   await page.goto("/");
   const statusBar = page.getByRole("contentinfo", { name: "Status bar" });
-  await expect(statusBar).toContainText(/Ctrl\+P command palette/i);
+  await expect(statusBar).toContainText(/command palette/i);
 });
 
 test("theme toggle switches color theme", async ({ page }) => {
@@ -178,11 +178,13 @@ test("menu bar and toolbar expose built-in action surfaces", async ({ page }) =>
   await page.getByRole("menubar").getByRole("menuitem", { name: "View" }).click();
   const commandPaletteItem = page.getByRole("menuitem", { name: "Command Palette" });
   await expect(commandPaletteItem).toBeVisible();
-  await expect(commandPaletteItem).toContainText("Ctrl+P");
+  await expect(commandPaletteItem.locator('[data-slot="kbd"]')).toHaveText(["Ctrl", "P"]);
   await page.keyboard.press("Control+P");
   const palette = page.getByRole("dialog");
   await expect(palette).toBeVisible();
-  await expect(palette.getByText("Ctrl+P").first()).toBeVisible();
+  await expect(
+    palette.locator('[data-slot="kbd-group"]').filter({ hasText: "Ctrl" }).first(),
+  ).toBeVisible();
 });
 
 test("listing shows data table column headers", async ({ page }) => {

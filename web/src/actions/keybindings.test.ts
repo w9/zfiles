@@ -9,6 +9,7 @@ import {
   formatKeybindingLabel,
   keybindingForAction,
   keybindingChordForContext,
+  shortcutsHintParams,
 } from "./keybindings";
 import { defaultContextKeys } from "./contextKeys";
 import { evaluateWhen } from "./when";
@@ -59,6 +60,20 @@ test("keybindingForAction prefers configured binding over action default", () =>
 test("formatKeybindingLabel renders platform-specific modifiers", () => {
   assert.equal(formatKeybindingLabel("Mod+P", "MacIntel"), "⌘P");
   assert.equal(formatKeybindingLabel("Mod+Shift+P", "Linux x86_64"), "Ctrl+Shift+P");
+});
+
+test("shortcutsHintParams uses modifier icons on macOS", () => {
+  assert.deepEqual(shortcutsHintParams("MacIntel"), {
+    shiftClick: "⇧+",
+    commandPalette: "⌘P",
+  });
+});
+
+test("shortcutsHintParams uses Ctrl labels elsewhere", () => {
+  assert.deepEqual(shortcutsHintParams("Linux x86_64"), {
+    shiftClick: "Shift+",
+    commandPalette: "Ctrl+P",
+  });
 });
 
 test("matchKeybinding matches Mod+A select-all chord", () => {

@@ -101,7 +101,7 @@ export const es: Record<MessageKey, string> = {
   "selection.copyPaths": "Copiar rutas",
   "selection.clear": "Borrar",
   "shortcuts.hint":
-    "Atajos: h/j/k/l o flechas navegan (cuadrícula); j/k o ↑↓ (tabla); Enter abrir, Retroceso subir, Espacio presentación (imágenes), Mayús+clic rango, Ctrl+P paleta de comandos",
+    "Atajos: h/j/k/l o flechas navegan (cuadrícula); j/k o ↑↓ (tabla); Enter abrir, Retroceso subir, Espacio presentación (imágenes), {{shiftClick}}clic rango, {{commandPalette}} paleta de comandos",
   "listing.empty": "Esta carpeta está vacía",
   "listing.label": "Listado del directorio",
   "listing.column.name": "Nombre",
