@@ -36,13 +36,11 @@ export async function pickFileForMultipartResume(
   const storedHandle = await getStoredFileHandle(scopeId, record.uploadId);
   if (storedHandle) {
     try {
-      if ("queryPermission" in storedHandle && "requestPermission" in storedHandle) {
-        const permission = await storedHandle.queryPermission({ mode: "read" });
-        if (permission !== "granted") {
-          const requested = await storedHandle.requestPermission({ mode: "read" });
-          if (requested !== "granted") {
-            throw new DOMException("File handle permission denied", "NotAllowedError");
-          }
+      const permission = await storedHandle.queryPermission({ mode: "read" });
+      if (permission !== "granted") {
+        const requested = await storedHandle.requestPermission({ mode: "read" });
+        if (requested !== "granted") {
+          throw new DOMException("File handle permission denied", "NotAllowedError");
         }
       }
       const file = await storedHandle.getFile();

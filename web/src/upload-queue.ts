@@ -12,6 +12,7 @@ import {
   pathExistsAsFile,
   type UploadConflictResolution,
 } from "./upload-conflict";
+import type { DroppedUploadFile } from "./useGlobalFileDrop";
 
 export type UploadItemStatus =
   | "pending"
@@ -354,18 +355,16 @@ export function useUploadQueue({
 
   const enqueue = useCallback(
     (
-      dropped:
-        | { file: File; sourceHandle?: FileSystemFileHandle | null }[]
-        | FileList
-        | File[]
-        | null,
+      dropped: DroppedUploadFile[] | FileList | File[] | null,
       basePath: string,
     ) => {
       if (!dropped || readOnly) {
         return;
       }
-      const list = Array.isArray(dropped)
-        ? dropped
+      const list: DroppedUploadFile[] = Array.isArray(dropped)
+        ? dropped.length > 0 && dropped[0] instanceof File
+          ? (dropped as File[]).map((file) => ({ file, sourceHandle: null }))
+          : (dropped as DroppedUploadFile[])
         : Array.from(dropped).map((file) => ({ file, sourceHandle: null }));
       if (list.length === 0) {
         return;

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** fix CI `pnpm build` TypeScript errors from XHR upload progress + File System Access API typings. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** CI TypeScript fix — complete. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -40,7 +40,7 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `GridListing.tsx`: selected/focus-selected card classes — outset `shadow-[0_0_0_2px_var(--primary)]` instead of inset
 - [x] Run `pnpm test`
 
-- [ ] `file-system-access.d.ts`: augment `DataTransferItem`, `FileSystemHandle`, `Window` for picker/handle APIs used by drag-drop and resume
-- [ ] `s3XhrUploadProgress.ts` + test: import `HttpRequest` from `@smithy/core/protocols`; cast `XhrHttpHandler` for EventEmitter `on`/`off`
-- [ ] `upload-queue.ts` + `UploadButton.tsx`: normalize enqueue/onSelect to `DroppedUploadFile[]` (fix union destructuring + button callback)
-- [ ] Run `pnpm test` + `pnpm build`
+- [x] `file-system-access.d.ts`: augment `DataTransferItem`, `FileSystemHandle`, `Window` for picker/handle APIs used by drag-drop and resume
+- [x] `s3XhrUploadProgress.ts` + test: import `HttpRequest` from `@smithy/core/protocols`; cast `XhrHttpHandler` for EventEmitter `on`/`off`
+- [x] `upload-queue.ts` + `UploadButton.tsx`: normalize enqueue/onSelect to `DroppedUploadFile[]` (fix union destructuring + button callback)
+- [x] Run `pnpm test` + `pnpm build`

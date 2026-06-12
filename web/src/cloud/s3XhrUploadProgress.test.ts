@@ -1,20 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { HttpRequest } from "@smithy/types";
-
 import {
   aggregateMultipartBytesInFlight,
   runWithConcurrency,
+  type SmithyHttpRequest,
   uploadPartNumberFromRequest,
 } from "./s3XhrUploadProgress";
 
 test("uploadPartNumberFromRequest reads partNumber query param", () => {
   assert.equal(
-    uploadPartNumberFromRequest({ query: { partNumber: "3" } } as HttpRequest),
+    uploadPartNumberFromRequest({ query: { partNumber: "3" } } as SmithyHttpRequest),
     3,
   );
-  assert.equal(uploadPartNumberFromRequest({ query: {} } as HttpRequest), null);
+  assert.equal(uploadPartNumberFromRequest({ query: {} } as SmithyHttpRequest), null);
 });
 
 test("aggregateMultipartBytesInFlight sums committed and in-flight bytes", () => {

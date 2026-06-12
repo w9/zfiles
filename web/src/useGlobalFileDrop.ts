@@ -29,7 +29,7 @@ export async function extractDroppedUploadFiles(
         try {
           const handle = await item.getAsFileSystemHandle();
           if (handle.kind === "file") {
-            sourceHandle = handle;
+            sourceHandle = handle as FileSystemFileHandle;
           }
         } catch {
           // Fall back to File-only resume (picker on first resume).

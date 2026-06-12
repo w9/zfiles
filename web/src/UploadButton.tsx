@@ -8,10 +8,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { DroppedUploadFile } from "@/useGlobalFileDrop";
 
 type UploadButtonProps = {
   disabled?: boolean;
-  onSelect: (files: FileList | null) => void;
+  onSelect: (dropped: DroppedUploadFile[]) => void;
 };
 
 export default function UploadButton({ disabled = false, onSelect }: UploadButtonProps) {
@@ -46,7 +47,12 @@ export default function UploadButton({ disabled = false, onSelect }: UploadButto
           tabIndex={-1}
           aria-hidden
           onChange={(event) => {
-            onSelect(event.target.files);
+            const files = event.target.files;
+            if (files && files.length > 0) {
+              onSelect(
+                Array.from(files).map((file) => ({ file, sourceHandle: null })),
+              );
+            }
             event.target.value = "";
           }}
         />

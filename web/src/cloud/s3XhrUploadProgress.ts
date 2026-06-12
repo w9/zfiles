@@ -1,6 +1,10 @@
 import type { S3Client } from "@aws-sdk/client-s3";
 import { XhrHttpHandler } from "@aws-sdk/xhr-http-handler";
-import type { HttpRequest } from "@smithy/types";
+
+/** Minimal shape used to read S3 UploadPart query params from Smithy requests. */
+export type SmithyHttpRequest = {
+  query?: Record<string, string | string[] | undefined>;
+};
 
 export const RESUME_UPLOAD_QUEUE_SIZE = 4;
 
@@ -12,7 +16,7 @@ export function xhrHttpHandlerFromClient(client: S3Client): XhrHttpHandler | nul
   return null;
 }
 
-export function uploadPartNumberFromRequest(request: HttpRequest): number | null {
+export function uploadPartNumberFromRequest(request: SmithyHttpRequest): number | null {
   const raw = request.query?.partNumber ?? request.query?.["partNumber"];
   if (raw == null) {
     return null;
@@ -34,12 +38,24 @@ export function aggregateMultipartBytesInFlight(
 
 type UploadProgressEvent = { loaded: number; lengthComputable: boolean };
 
+type XhrProgressEmitter = {
+  on(
+    event: typeof XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+    listener: (event: UploadProgressEvent, request: SmithyHttpRequest) => void,
+  ): void;
+  off(
+    event: typeof XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+    listener: (event: UploadProgressEvent, request: SmithyHttpRequest) => void,
+  ): void;
+};
+
 export function attachPartUploadProgressListener(
   handler: XhrHttpHandler,
   partNumber: number,
   onLoaded: (loaded: number) => void,
 ): () => void {
-  const listener = (event: UploadProgressEvent, request: HttpRequest) => {
+  const emitter = handler as XhrHttpHandler & XhrProgressEmitter;
+  const listener = (event: UploadProgressEvent, request: SmithyHttpRequest) => {
     if (uploadPartNumberFromRequest(request) !== partNumber) {
       return;
     }
@@ -47,9 +63,9 @@ export function attachPartUploadProgressListener(
       onLoaded(event.loaded);
     }
   };
-  handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
+  emitter.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
   return () => {
-    handler.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
+    emitter.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, listener);
   };
 }
 
