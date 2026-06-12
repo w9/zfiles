@@ -79,4 +79,4 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `.github/workflows/{ci,release,nightly}.yml`: bump `actions/checkout`, `actions/setup-node`, `pnpm/action-setup` to `@v5` (Node 24 runtime)
 - [x] `.github/workflows/{ci,release,nightly}.yml`: pin `Swatinem/rust-cache@v2.9.0` (Node 24 runtime)
 
-- [ ] `AGENTS.md`: add commit-scope rule under "Before every commit" — commit only this conversation's changes; never include outside edits unless the user explicitly asks
+- [x] `AGENTS.md`: add commit-scope rule under "Before every commit" — commit only this conversation's changes; never include outside edits unless the user explicitly asks

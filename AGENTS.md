@@ -20,6 +20,7 @@ Do not skip or reorder steps.
 
 ### Before every commit
 
+- **Commit scope** — commit only changes made in the current chat conversation. Never include edits made outside it (by the user or another session) unless the user explicitly asks.
 - **Commits touching Rust** (`src/`, `tests/`, `Cargo.*`, Rust helpers under `e2e/`): run `cargo fmt` and `cargo clippy -- -D warnings` first and fix every warning — CI fails on either. Doc-, TODO-, and web-only commits may skip both.
 - **Commits changing shipped behavior** (code or assets, not docs/TODO): bump the **patch** version in [Cargo.toml](Cargo.toml) `[package].version` in the same commit, so `zfiles --version` tracks the latest released change. Patch only, unless the user explicitly asks for minor/major; no standalone version-only commits.
 
