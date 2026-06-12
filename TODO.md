@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine for fresh + resume uploads is **complete** (`@aws-sdk/lib-storage` removed). Per-key shortcut chips are **complete**. GitHub Actions Node 24 upgrade is **complete**. **Current cycle:** add a commit-scope rule to `AGENTS.md` ("Before every commit"): commit only changes made by the current conversation, never outside edits unless the user explicitly asks. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine for fresh + resume uploads is **complete** (`@aws-sdk/lib-storage` removed). Per-key shortcut chips are **complete**. GitHub Actions Node 24 upgrade is **complete**. AGENTS.md commit-scope rule is **complete**. **Current cycle:** wire built-in file-operation shortcuts (F2, Mod+C/X/V, Delete) into `defaultKeybindings()` so keyboard dispatch matches menu/palette labels. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -80,3 +80,7 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `.github/workflows/{ci,release,nightly}.yml`: pin `Swatinem/rust-cache@v2.9.0` (Node 24 runtime)
 
 - [x] `AGENTS.md`: add commit-scope rule under "Before every commit" — commit only this conversation's changes; never include outside edits unless the user explicitly asks
+
+- [ ] `keybindings.test.ts`: cover Delete, F2, Mod+C/X/V dispatch via `defaultKeybindings()`
+- [ ] `keybindings.ts`: register file.rename (F2), file.copy/cut/delete, file.paste in `defaultKeybindings()` with action `when` clauses
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
