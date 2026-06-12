@@ -41,9 +41,9 @@ type GridListingProps = {
 };
 
 const GRID_ITEM_SELECTED_CLASS =
-  "shadow-[inset_0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
+  "shadow-[0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS =
-  "shadow-[inset_0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
+  "shadow-[0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 
 const VIEWPORT_PADDING_PX = 12;

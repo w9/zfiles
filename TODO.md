@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** revert custom presigned-XHR multipart uploader; restore `@aws-sdk/lib-storage` for fresh S3 uploads with `XhrHttpHandler` on the whole `S3Client`; parallel resume of missing parts (~4) with aggregated in-flight progress via the same handler. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** grid view selected-card outline — inset box-shadow → outset. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -37,3 +37,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] Restore `@aws-sdk/lib-storage` `Upload` in `s3Backend.upload`; remove `multipartUploadFile` / presigned-XHR path
 - [x] `resumeMultipartUpload`: parallel missing parts (queue ~4) + aggregated in-flight progress via XhrHttpHandler events; unit tests
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `GridListing.tsx`: selected/focus-selected card classes — outset `shadow-[0_0_0_2px_var(--primary)]` instead of inset
+- [x] Run `pnpm test`
