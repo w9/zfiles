@@ -1,4 +1,4 @@
-import { Play, Trash2, X } from "lucide-react";
+import { Pause, Play, Trash2, X } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,8 @@ type UploadPanelProps = {
   items: UploadQueueItem[];
   onClearFinished: () => void;
   onCancel: (queueId: string) => void;
+  onPause: (queueId: string) => void;
+  onResume: (queueId: string) => void;
   onClose?: () => void;
   cloudMultipart?: CloudMultipartPanelProps;
   onDragHandlePointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
@@ -64,6 +66,8 @@ function statusLabel(
       return t("upload.status.active");
     case "verifying":
       return t("upload.status.verifying");
+    case "paused":
+      return t("upload.status.paused");
     case "done":
       return t("upload.status.done");
     case "failed":
@@ -164,18 +168,22 @@ type QueueRowProps = {
   item: UploadQueueItem;
   iconTheme: ReturnType<typeof useTheme>["resolved"];
   onCancel: (queueId: string) => void;
+  onPause: (queueId: string) => void;
+  onResume: (queueId: string) => void;
 };
 
-function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
+function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProps) {
   const { t } = useTranslation();
   const isActive =
     item.status === "active" ||
     item.status === "hashing" ||
     item.status === "verifying";
+  const isPaused = item.status === "paused";
   const cancellable =
     item.status === "pending" ||
     item.status === "hashing" ||
     item.status === "active" ||
+    item.status === "paused" ||
     item.status === "awaiting_conflict";
 
   return (
@@ -183,6 +191,7 @@ function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
       className={cn(
         "space-y-2 px-4 py-3",
         isActive && "bg-muted/40",
+        isPaused && "bg-muted/20",
         item.status === "done" && "opacity-70",
         item.status === "cancelled" && "opacity-70",
       )}
@@ -200,6 +209,30 @@ function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
         <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
         </div>
+        {item.status === "active" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={t("upload.pause")}
+            onClick={() => onPause(item.id)}
+          >
+            <Pause className="size-4" />
+          </Button>
+        ) : null}
+        {item.status === "paused" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={t("upload.resume")}
+            onClick={() => onResume(item.id)}
+          >
+            <Play className="size-4" />
+          </Button>
+        ) : null}
         {cancellable ? (
           <Button
             type="button"
@@ -337,6 +370,8 @@ export default function UploadPanel({
   items,
   onClearFinished,
   onCancel,
+  onPause,
+  onResume,
   onClose,
   cloudMultipart,
   onDragHandlePointerDown,
@@ -401,6 +436,8 @@ export default function UploadPanel({
                   item={row.item}
                   iconTheme={iconTheme}
                   onCancel={onCancel}
+                  onPause={onPause}
+                  onResume={onResume}
                 />
               ) : cloudMultipart ? (
                 <SessionRow

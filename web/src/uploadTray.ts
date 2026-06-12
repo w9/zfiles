@@ -7,8 +7,10 @@ export type UploadTrayStats = {
   hashing: number;
   verifying: number;
   pending: number;
-  /** Awaiting a conflict decision — paused, needs the user. */
-  paused: number;
+  /** User-paused mid-transfer uploads. */
+  userPaused: number;
+  /** Awaiting a conflict decision — needs the user. */
+  awaitingConflict: number;
   failed: number;
   done: number;
   cancelled: number;
@@ -17,7 +19,7 @@ export type UploadTrayStats = {
   /** done + failed + cancelled — the reachable history. */
   finished: number;
   hasInFlight: boolean;
-  /** in-flight, queued, or paused — a batch is still ongoing. */
+  /** in-flight, queued, user-paused, or awaiting conflict — a batch is still ongoing. */
   hasPendingWork: boolean;
   activeBytesTotal: number;
   activeBytesUploaded: number;
@@ -34,6 +36,7 @@ function emptyStatusCounts(): Record<UploadItemStatus, number> {
     hashing: 0,
     active: 0,
     verifying: 0,
+    paused: 0,
     awaiting_conflict: 0,
     done: 0,
     failed: 0,
@@ -61,9 +64,11 @@ export function aggregateUploadStats(items: UploadQueueItem[]): UploadTrayStats 
   }
 
   const inFlight = counts.active + counts.hashing + counts.verifying;
-  const paused = counts.awaiting_conflict;
+  const userPaused = counts.paused;
+  const awaitingConflict = counts.awaiting_conflict;
   const finished = counts.done + counts.failed + counts.cancelled;
-  const hasPendingWork = inFlight > 0 || counts.pending > 0 || paused > 0;
+  const hasPendingWork =
+    inFlight > 0 || counts.pending > 0 || userPaused > 0 || awaitingConflict > 0;
 
   const percent =
     activeBytesTotal > 0
@@ -80,7 +85,8 @@ export function aggregateUploadStats(items: UploadQueueItem[]): UploadTrayStats 
     hashing: counts.hashing,
     verifying: counts.verifying,
     pending: counts.pending,
-    paused,
+    userPaused,
+    awaitingConflict,
     failed: counts.failed,
     done: counts.done,
     cancelled: counts.cancelled,
@@ -96,9 +102,9 @@ export function aggregateUploadStats(items: UploadQueueItem[]): UploadTrayStats 
   };
 }
 
-/** Whether the queue holds something needing the user: paused or failed items. */
+/** Whether the queue holds something needing the user: paused, conflict, or failed items. */
 export function uploadTrayAttention(stats: UploadTrayStats): boolean {
-  return stats.paused > 0 || stats.failed > 0;
+  return stats.userPaused > 0 || stats.awaitingConflict > 0 || stats.failed > 0;
 }
 
 /**

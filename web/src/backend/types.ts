@@ -29,10 +29,21 @@ export type UploadProgress = {
   multipartUploadId?: string;
 };
 
+export type TusUploadResume = {
+  location: string;
+  checksumSha256Base64: string;
+};
+
 export type UploadCallbacks = {
   onHashing?: () => void;
   onUploadStart?: () => void;
   onVerifying?: () => void;
+  /** Local tus: emitted after upload create so pause/resume can skip re-hash. */
+  onTransferSession?: (session: {
+    backendUploadId: string;
+    tusLocation: string;
+    checksumSha256Base64: string;
+  }) => void;
 };
 
 export type ListResult = {
@@ -64,6 +75,7 @@ export interface ExplorerBackend {
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
     callbacks?: UploadCallbacks,
+    tusResume?: TusUploadResume,
   ): Promise<void>;
   runAction(params: RunActionParams): Promise<void>;
   fetchHealth(): Promise<HealthInfo | null>;

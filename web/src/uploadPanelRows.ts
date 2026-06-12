@@ -40,6 +40,7 @@ export const UPLOAD_HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
   hashing: "upload.queue.header.hashing",
   active: "upload.queue.header.active",
   verifying: "upload.queue.header.verifying",
+  paused: "upload.queue.header.paused",
   awaiting_conflict: "upload.queue.header.awaitingConflict",
   done: "upload.queue.header.done",
   failed: "upload.queue.header.failed",

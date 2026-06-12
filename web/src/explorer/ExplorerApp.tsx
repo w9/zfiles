@@ -255,6 +255,8 @@ export default function ExplorerApp() {
     enqueueResume,
     applyRemoteProgress,
     cancelUpload,
+    pauseUpload,
+    resumeUpload,
     resolveUploadConflict,
     clearFinished: clearFinishedUploads,
     conflictItem: uploadConflictItem,
@@ -1299,6 +1301,8 @@ export default function ExplorerApp() {
               items={uploadItems}
               onClearFinished={clearFinishedUploads}
               onCancel={cancelUpload}
+              onPause={pauseUpload}
+              onResume={resumeUpload}
               cloudMultipart={
                 multipartSessions.enabled
                   ? {

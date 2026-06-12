@@ -68,6 +68,13 @@ export function readScopedMultipartRecords(scopeId: string): MultipartSessionRec
   return readStore()[scopeId] ?? [];
 }
 
+export function findMultipartRecord(
+  scopeId: string,
+  uploadId: string,
+): MultipartSessionRecord | undefined {
+  return readScopedMultipartRecords(scopeId).find((entry) => entry.uploadId === uploadId);
+}
+
 export function upsertMultipartRecord(scopeId: string, record: MultipartSessionRecord): void {
   const store = readStore();
   const existing = store[scopeId] ?? [];

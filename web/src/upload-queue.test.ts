@@ -9,6 +9,8 @@ import {
   createResumeQueueItem,
   formatEtaSeconds,
   isUploadAbortError,
+  isUploadPauseError,
+  multipartResumeFromRecord,
   PROGRESS_UI_MIN_INTERVAL_MS,
   shouldCommitProgressUi,
   uploadPercent,
@@ -65,6 +67,33 @@ test("applyProgressUpdate computes speed and eta from samples", () => {
 test("isUploadAbortError detects abort errors", () => {
   assert.equal(isUploadAbortError(new DOMException("x", "AbortError")), true);
   assert.equal(isUploadAbortError(new Error("x")), false);
+});
+
+test("isUploadPauseError detects pause errors", () => {
+  assert.equal(isUploadPauseError(new DOMException("x", "PauseError")), true);
+  assert.equal(isUploadPauseError(new DOMException("x", "AbortError")), false);
+});
+
+test("multipartResumeFromRecord copies session fields", () => {
+  const record = {
+    uploadId: "u1",
+    objectKey: "k1",
+    destPath: "f.bin",
+    fileName: "f.bin",
+    fileSize: 10,
+    fileLastModified: 1,
+    partSize: 5_242_880,
+    checksumValidation: true,
+    checksumSha256Base64: "digest",
+    createdAt: new Date().toISOString(),
+  };
+  assert.deepEqual(multipartResumeFromRecord(record), {
+    uploadId: "u1",
+    objectKey: "k1",
+    partSize: 5_242_880,
+    checksumValidation: true,
+    checksumSha256Base64: "digest",
+  });
 });
 
 test("shouldCommitProgressUi allows first update and 1 fps thereafter", () => {

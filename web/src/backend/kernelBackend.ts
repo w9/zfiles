@@ -9,6 +9,7 @@ import type {
   FileStat,
   HealthInfo,
   ListResult,
+  TusUploadResume,
   UploadCallbacks,
   UploadProgress,
 } from "./types";
@@ -134,37 +135,57 @@ export class KernelBackend implements ExplorerBackend {
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
     callbacks?: UploadCallbacks,
+    tusResume?: TusUploadResume,
   ): Promise<void> {
     throwIfAborted(signal);
-    callbacks?.onHashing?.();
-    const checksum = await sha256Base64(
-      file,
-      UPLOAD_CHUNK_SIZE,
-      signal,
-      (offset, total) => {
-        onProgress?.({ id: "hashing", offset, length: total });
-      },
-    );
-    callbacks?.onUploadStart?.();
-    const create = await apiFetch("/api/upload", {
-      method: "POST",
-      headers: {
-        "Upload-Length": String(file.size),
-        "Upload-Metadata": encodeUploadMetadata(destPath, checksum),
-      },
-      signal,
-    });
 
-    if (!create.ok) {
-      throw new Error(`upload create failed: HTTP ${create.status}`);
+    let checksum: string;
+    let location: string;
+    let uploadId: string;
+
+    if (tusResume) {
+      checksum = tusResume.checksumSha256Base64;
+      location = tusResume.location;
+      uploadId = location.split("/").pop() ?? location;
+      callbacks?.onUploadStart?.();
+    } else {
+      callbacks?.onHashing?.();
+      checksum = await sha256Base64(
+        file,
+        UPLOAD_CHUNK_SIZE,
+        signal,
+        (offset, total) => {
+          onProgress?.({ id: "hashing", offset, length: total });
+        },
+      );
+      callbacks?.onUploadStart?.();
+      const create = await apiFetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Upload-Length": String(file.size),
+          "Upload-Metadata": encodeUploadMetadata(destPath, checksum),
+        },
+        signal,
+      });
+
+      if (!create.ok) {
+        throw new Error(`upload create failed: HTTP ${create.status}`);
+      }
+
+      const createLocation = create.headers.get("location");
+      if (!createLocation) {
+        throw new Error("upload create missing location header");
+      }
+
+      location = createLocation;
+      uploadId = location.split("/").pop() ?? location;
+      callbacks?.onTransferSession?.({
+        backendUploadId: uploadId,
+        tusLocation: location,
+        checksumSha256Base64: checksum,
+      });
     }
 
-    const location = create.headers.get("location");
-    if (!location) {
-      throw new Error("upload create missing location header");
-    }
-
-    const uploadId = location.split("/").pop() ?? location;
     let offset = await headUploadOffset(location, signal);
 
     while (offset < file.size) {

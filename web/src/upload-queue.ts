@@ -3,10 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { S3Backend } from "./backend/s3Backend";
 import { storeFileHandle } from "./cloud/multipartFileHandles";
 import {
+  findMultipartRecord,
   multipartSessionScopeId,
   type MultipartSessionRecord,
 } from "./cloud/multipartSessions";
-import type { ExplorerBackend, UploadProgress } from "./backend/types";
+import type { ExplorerBackend, TusUploadResume, UploadProgress } from "./backend/types";
 import {
   findKeepBothPath,
   pathExistsAsFile,
@@ -19,6 +20,7 @@ export type UploadItemStatus =
   | "hashing"
   | "active"
   | "verifying"
+  | "paused"
   | "awaiting_conflict"
   | "done"
   | "failed"
@@ -31,6 +33,13 @@ export function isUploadAbortError(err: unknown): boolean {
     return true;
   }
   return err instanceof Error && err.name === "AbortError";
+}
+
+export function isUploadPauseError(err: unknown): boolean {
+  if (err instanceof DOMException && err.name === "PauseError") {
+    return true;
+  }
+  return err instanceof Error && err.name === "PauseError";
 }
 
 export type UploadQueueItem = {
@@ -50,6 +59,8 @@ export type UploadQueueItem = {
   etaSeconds: number | null;
   error?: string;
   backendUploadId?: string;
+  /** Local tus session fields preserved when paused mid-transfer. */
+  tusResume?: TusUploadResume;
   multipartUpload?: {
     uploadId: string;
     objectKey: string;
@@ -184,12 +195,57 @@ export const UPLOAD_QUEUE_HEADER_STATUS_ORDER: UploadItemStatus[] = [
   "active",
   "hashing",
   "verifying",
+  "paused",
   "awaiting_conflict",
   "pending",
   "done",
   "failed",
   "cancelled",
 ];
+
+/** Build multipart resume metadata from a persisted session record. */
+export function multipartResumeFromRecord(
+  record: MultipartSessionRecord,
+): NonNullable<UploadQueueItem["multipartResume"]> {
+  return {
+    uploadId: record.uploadId,
+    objectKey: record.objectKey,
+    partSize: record.partSize,
+    checksumValidation: record.checksumValidation,
+    checksumSha256Base64: record.checksumSha256Base64,
+  };
+}
+
+export function enrichPausedItemForResume(
+  item: UploadQueueItem,
+  backend: ExplorerBackend,
+): UploadQueueItem {
+  if (item.status !== "paused") {
+    return item;
+  }
+  const base: UploadQueueItem = {
+    ...item,
+    status: "pending",
+    speedBps: null,
+    etaSeconds: null,
+  };
+  if (item.multipartResume) {
+    return base;
+  }
+  if (backend.mode === "s3" && item.multipartUpload) {
+    const scopeId = multipartSessionScopeId(
+      (backend as S3Backend).connectionConfig,
+    );
+    const record = findMultipartRecord(scopeId, item.multipartUpload.uploadId);
+    if (record) {
+      return {
+        ...base,
+        multipartResume: multipartResumeFromRecord(record),
+      };
+    }
+  }
+  return base;
+}
 
 export function countUploadsByStatus(items: UploadQueueItem[]): Partial<Record<UploadItemStatus, number>> {
   const counts: Partial<Record<UploadItemStatus, number>> = {};
@@ -278,6 +334,7 @@ export function useUploadQueue({
   const progressFlushTimerRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const abortControllersRef = useRef(new Map<string, AbortController>());
   const cancelledIdsRef = useRef(new Set<string>());
+  const pausedIdsRef = useRef(new Set<string>());
   const applyToAllResolutionRef = useRef<UploadConflictResolution | null>(null);
   const workerRef = useRef(false);
 
@@ -436,6 +493,24 @@ export function useUploadQueue({
       cancelledIdsRef.current.delete(queueId);
       return;
     }
+    if (item.status === "paused") {
+      cancelledIdsRef.current.delete(queueId);
+      const multipart = item.multipartUpload;
+      if (backend.mode === "s3" && multipart) {
+        void (backend as S3Backend)
+          .abortMultipartSession(multipart.objectKey, multipart.uploadId)
+          .then(() => onMultipartSessionFinished?.(multipart.uploadId))
+          .catch(() => {});
+      }
+      setItems((prev) =>
+        prev.map((entry) =>
+          entry.id === queueId
+            ? { ...entry, status: "cancelled" as const, speedBps: null, etaSeconds: null }
+            : entry,
+        ),
+      );
+      return;
+    }
     if (
       item.status === "active" ||
       item.status === "hashing" ||
@@ -451,6 +526,31 @@ export function useUploadQueue({
       }
     }
   }, [backend, clearProgressFlush, onMultipartSessionFinished]);
+
+  const pauseUpload = useCallback((queueId: string) => {
+    const item = itemsRef.current.find((entry) => entry.id === queueId);
+    if (!item || item.status !== "active") {
+      return;
+    }
+    pausedIdsRef.current.add(queueId);
+    clearProgressFlush(queueId);
+    abortControllersRef.current
+      .get(queueId)
+      ?.abort(new DOMException("Upload paused", "PauseError"));
+  }, [clearProgressFlush]);
+
+  const resumeUpload = useCallback(
+    (queueId: string) => {
+      setItems((prev) =>
+        prev.map((entry) =>
+          entry.id === queueId && entry.status === "paused"
+            ? enrichPausedItemForResume(entry, backend)
+            : entry,
+        ),
+      );
+    },
+    [backend],
+  );
 
   const resolveUploadConflict = useCallback(
     (queueId: string, resolution: UploadConflictResolution, applyToAll: boolean) => {
@@ -609,12 +709,13 @@ export function useUploadQueue({
         setItems(next);
       };
 
-      const beginUploadPhase = () => {
+      const beginUploadPhase = (resetOffset: boolean) => {
         samplesRef.current.set(queueId, []);
         lastProgressUiAtRef.current.delete(queueId);
+        const current = itemsRef.current.find((item) => item.id === queueId);
         patchQueueItem({
           status: "active",
-          offset: 0,
+          offset: resetOffset ? 0 : (current?.offset ?? 0),
           speedBps: null,
           etaSeconds: null,
         });
@@ -640,7 +741,9 @@ export function useUploadQueue({
               abortController.abort();
               return;
             }
-            beginUploadPhase();
+            const current = itemsRef.current.find((item) => item.id === queueId);
+            const isResume = !!(current?.tusResume || current?.multipartResume);
+            beginUploadPhase(!isResume);
           },
           onVerifying: () => {
             samplesRef.current.set(queueId, []);
@@ -651,6 +754,26 @@ export function useUploadQueue({
               speedBps: null,
               etaSeconds: null,
             });
+          },
+          onTransferSession: (session: {
+            backendUploadId: string;
+            tusLocation: string;
+            checksumSha256Base64: string;
+          }) => {
+            const next = itemsRef.current.map((item) =>
+              item.id === queueId
+                ? {
+                    ...item,
+                    backendUploadId: session.backendUploadId,
+                    tusResume: {
+                      location: session.tusLocation,
+                      checksumSha256Base64: session.checksumSha256Base64,
+                    },
+                  }
+                : item,
+            );
+            itemsRef.current = next;
+            setItems(next);
           },
         };
         const onUploadProgress = (progress: UploadProgress) => {
@@ -728,6 +851,15 @@ export function useUploadQueue({
             abortController.signal,
             uploadCallbacks,
           );
+        } else if (ready.tusResume && backend.mode === "local") {
+          await backend.upload(
+            ready.file,
+            uploadDestPath,
+            onUploadProgress,
+            abortController.signal,
+            uploadCallbacks,
+            ready.tusResume,
+          );
         } else {
           await backend.upload(
             ready.file,
@@ -759,11 +891,23 @@ export function useUploadQueue({
       } catch (err) {
         clearProgressFlush(queueId);
         const active = itemsRef.current.find((item) => item.id === queueId);
+        const wasPaused =
+          pausedIdsRef.current.has(queueId) || isUploadPauseError(err);
+        pausedIdsRef.current.delete(queueId);
         const wasCancelled =
-          cancelledIdsRef.current.has(queueId) || isUploadAbortError(err);
+          !wasPaused &&
+          (cancelledIdsRef.current.has(queueId) || isUploadAbortError(err));
         cancelledIdsRef.current.delete(queueId);
 
-        if (wasCancelled) {
+        if (wasPaused) {
+          const pausedItem: UploadQueueItem = {
+            ...(active ?? pending),
+            status: "paused",
+            speedBps: null,
+            etaSeconds: null,
+          };
+          commitProgressItem(queueId, pausedItem, true);
+        } else if (wasCancelled) {
           const cancelledItem: UploadQueueItem = {
             ...(active ?? pending),
             status: "cancelled",
@@ -809,6 +953,8 @@ export function useUploadQueue({
     enqueue,
     enqueueResume,
     cancelUpload,
+    pauseUpload,
+    resumeUpload,
     resolveUploadConflict,
     applyRemoteProgress,
     clearFinished,

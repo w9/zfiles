@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, and file-operation keybindings are **complete**. **Current cycle:** per-row **Pause / Resume** on active byte transfer — local tus and cloud S3; pause preserves session/progress; cancel still aborts and clears; not pausable while hashing/verifying or pending. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, and file-operation keybindings are **complete**. **Current cycle:** per-row upload **Pause / Resume** is **complete** (local tus + cloud S3). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -85,10 +85,10 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `keybindings.ts`: register file.rename (F2), file.copy/cut/delete, file.paste in `defaultKeybindings()` with action `when` clauses
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `upload-queue.ts`: add `paused` status + `pauseUpload`/`resumeUpload`; pause aborts in-flight transfer without S3 session teardown; resume re-queues with preserved offset/session; unit tests
-- [ ] `kernelBackend.ts`: resume tus PATCH from stored upload id + checksum (skip re-hash); wire paused-item resume in upload worker
-- [ ] `UploadPanel.tsx` + `ExplorerApp`: per-row Pause (active only) and Resume (paused) buttons; Cancel unchanged
-- [ ] `uploadTray.ts` + `uploadPanelRows.ts`: track user-paused separately from `awaiting_conflict` in stats/header segments
-- [ ] i18n (14 locales): `upload.pause`, `upload.resume`, `upload.status.paused`, queue header key
-- [ ] S3 paused resume: rebuild `multipartResume` from persisted session + queue `multipartUpload` state
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `upload-queue.ts`: add `paused` status + `pauseUpload`/`resumeUpload`; pause aborts in-flight transfer without S3 session teardown; resume re-queues with preserved offset/session; unit tests
+- [x] `kernelBackend.ts`: resume tus PATCH from stored upload id + checksum (skip re-hash); wire paused-item resume in upload worker
+- [x] `UploadPanel.tsx` + `ExplorerApp`: per-row Pause (active only) and Resume (paused) buttons; Cancel unchanged
+- [x] `uploadTray.ts` + `uploadPanelRows.ts`: track user-paused separately from `awaiting_conflict` in stats/header segments
+- [x] i18n (14 locales): `upload.pause`, `upload.resume`, `upload.status.paused`, queue header key
+- [x] S3 paused resume: rebuild `multipartResume` from persisted session + queue `multipartUpload` state
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

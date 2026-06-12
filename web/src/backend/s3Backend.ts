@@ -52,6 +52,7 @@ import type {
   FileStat,
   HealthInfo,
   ListResult,
+  TusUploadResume,
   UploadCallbacks,
   UploadProgress,
 } from "./types";
@@ -63,6 +64,14 @@ function isUploadAbortError(err: unknown): boolean {
     return true;
   }
   return err instanceof Error && err.name === "AbortError";
+}
+
+function isUploadPauseAbort(signal?: AbortSignal): boolean {
+  const reason = signal?.reason;
+  if (reason instanceof DOMException && reason.name === "PauseError") {
+    return true;
+  }
+  return reason instanceof Error && reason.name === "PauseError";
 }
 
 function keyForExplorerPath(bucketPrefix: string, explorerPath: string): string {
@@ -366,6 +375,7 @@ export class S3Backend implements ExplorerBackend {
     onProgress?: (progress: UploadProgress) => void,
     signal?: AbortSignal,
     callbacks?: UploadCallbacks,
+    _tusResume?: TusUploadResume,
   ): Promise<void> {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
@@ -389,6 +399,9 @@ export class S3Backend implements ExplorerBackend {
     const partSize = computeMultipartPartSize(file.size);
     let activeUploadId: string | null = null;
     const onAbort = () => {
+      if (isUploadPauseAbort(signal)) {
+        return;
+      }
       if (activeUploadId) {
         void abortMultipartUpload(
           this.client,

@@ -21,6 +21,8 @@ type UploadIndicatorProps = {
   items: UploadQueueItem[];
   onClearFinished: () => void;
   onCancel: (queueId: string) => void;
+  onPause: (queueId: string) => void;
+  onResume: (queueId: string) => void;
   cloudMultipart?: CloudMultipartPanelProps;
 };
 
@@ -49,6 +51,8 @@ export default function UploadIndicator({
   items,
   onClearFinished,
   onCancel,
+  onPause,
+  onResume,
   cloudMultipart,
 }: UploadIndicatorProps) {
   const { t } = useTranslation();
@@ -85,8 +89,10 @@ export default function UploadIndicator({
       parts.push(`~${eta}`);
     }
     label = parts.join(" · ");
-  } else if (stats.paused > 0) {
-    label = t("upload.tray.paused", { count: String(stats.paused) });
+  } else if (stats.userPaused > 0) {
+    label = t("upload.tray.paused", { count: String(stats.userPaused) });
+  } else if (stats.awaitingConflict > 0) {
+    label = t("upload.tray.awaitingConflict", { count: String(stats.awaitingConflict) });
   } else if (stats.pending > 0) {
     label = t("upload.tray.queued", { count: String(stats.pending) });
   } else if (stats.failed > 0) {
@@ -101,6 +107,8 @@ export default function UploadIndicator({
       items={items}
       onClearFinished={onClearFinished}
       onCancel={onCancel}
+      onPause={onPause}
+      onResume={onResume}
       onClose={closePanel}
       cloudMultipart={cloudMultipart}
     />
@@ -159,6 +167,8 @@ export default function UploadIndicator({
               items={items}
               onClearFinished={onClearFinished}
               onCancel={onCancel}
+              onPause={onPause}
+              onResume={onResume}
               onClose={closePanel}
               cloudMultipart={cloudMultipart}
               onDragHandlePointerDown={onDragHandlePointerDown}

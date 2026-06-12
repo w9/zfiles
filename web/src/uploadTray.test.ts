@@ -35,15 +35,17 @@ test("aggregateUploadStats counts statuses, in-flight and history", () => {
     makeItem("hashing"),
     makeItem("verifying"),
     makeItem("pending"),
+    makeItem("paused"),
     makeItem("awaiting_conflict"),
     makeItem("done"),
     makeItem("failed"),
     makeItem("cancelled"),
   ]);
-  assert.equal(stats.total, 8);
+  assert.equal(stats.total, 9);
   assert.equal(stats.inFlight, 3);
   assert.equal(stats.pending, 1);
-  assert.equal(stats.paused, 1);
+  assert.equal(stats.userPaused, 1);
+  assert.equal(stats.awaitingConflict, 1);
   assert.equal(stats.finished, 3);
   assert.equal(stats.hasInFlight, true);
   assert.equal(stats.hasPendingWork, true);
@@ -71,7 +73,16 @@ test("aggregateUploadStats has no live transfer figures when idle", () => {
   assert.equal(stats.finished, 1);
 });
 
-test("hasPendingWork stays true while only a paused item remains", () => {
+test("hasPendingWork stays true while only a user-paused item remains", () => {
+  const stats = aggregateUploadStats([
+    makeItem("paused"),
+    makeItem("done"),
+  ]);
+  assert.equal(stats.hasInFlight, false);
+  assert.equal(stats.hasPendingWork, true);
+});
+
+test("hasPendingWork stays true while only a conflict item remains", () => {
   const stats = aggregateUploadStats([
     makeItem("awaiting_conflict"),
     makeItem("done"),
@@ -80,9 +91,13 @@ test("hasPendingWork stays true while only a paused item remains", () => {
   assert.equal(stats.hasPendingWork, true);
 });
 
-test("uploadTrayAttention flags paused and failed uploads", () => {
+test("uploadTrayAttention flags user-paused, conflict, and failed uploads", () => {
   assert.equal(uploadTrayAttention(aggregateUploadStats([makeItem("active")])), false);
   assert.equal(uploadTrayAttention(aggregateUploadStats([makeItem("done")])), false);
+  assert.equal(
+    uploadTrayAttention(aggregateUploadStats([makeItem("paused")])),
+    true,
+  );
   assert.equal(
     uploadTrayAttention(aggregateUploadStats([makeItem("awaiting_conflict")])),
     true,
