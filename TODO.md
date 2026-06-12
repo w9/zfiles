@@ -76,5 +76,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `e2e/tests/smoke.spec.ts`: assert per-key kbd chips (`Ctrl`, `P`) instead of `Ctrl+P` text; run the spec
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `.github/workflows/{ci,release,nightly}.yml`: bump `actions/checkout`, `actions/setup-node`, `pnpm/action-setup` to `@v5` (Node 24 runtime)
-- [ ] `.github/workflows/{ci,release,nightly}.yml`: pin `Swatinem/rust-cache@v2.9.0` (Node 24 runtime)
+- [x] `.github/workflows/{ci,release,nightly}.yml`: bump `actions/checkout`, `actions/setup-node`, `pnpm/action-setup` to `@v5` (Node 24 runtime)
+- [x] `.github/workflows/{ci,release,nightly}.yml`: pin `Swatinem/rust-cache@v2.9.0` (Node 24 runtime)
