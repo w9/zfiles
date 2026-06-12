@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** unified in-house S3 multipart engine for fresh + resume uploads; drop `@aws-sdk/lib-storage`; carry checksum fields through Complete; PutObject fast path for small fresh files. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine for fresh + resume uploads is **complete** (`@aws-sdk/lib-storage` removed). **Current cycle:** per-key shortcut chips — render shortcut surfaces (menu bar, context menu, command palette, toolbar tooltips) as per-key shadcn `Kbd` chips via `chordToKbdLabels`, gap-separated without `+`, dropping `tracking-widest` so spelled-out keys like `Enter` keep normal letter-spacing. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -64,6 +64,14 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `StatusBar.tsx`: pass `shortcutsHintParams()` into `t("shortcuts.hint")`; relax e2e assertion
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `s3MultipartUpload.ts`: unified `uploadMultipartFile` (create/list/upload missing parts/complete); PutObject fast path; checksum fields at Complete
-- [ ] `s3Backend.ts`: route fresh + resume through unified engine; drop lib-storage; persist session on `onUploadCreated`
-- [ ] Remove `@aws-sdk/lib-storage`; unit tests for upload helpers; run `pnpm test`; bump patch version
+- [x] `s3MultipartUpload.ts`: unified `uploadMultipartFile` (create/list/upload missing parts/complete); PutObject fast path; checksum fields at Complete
+- [x] `s3Backend.ts`: route fresh + resume through unified engine; drop lib-storage; persist session on `onUploadCreated`
+- [x] Remove `@aws-sdk/lib-storage`; unit tests for upload helpers; run `pnpm test`; bump patch version
+
+- [ ] `keybindingDisplay.test.ts`: cover spelled-out keys — `Enter` → `["Enter"]`, Linux `Shift+ArrowDown` → `["Shift", "ArrowDown"]`
+- [ ] `ChordKbd.tsx` (new, `web/src/actions/`): chord → `KbdGroup` of per-key `Kbd` chips via `chordToKbdLabels`; no `+` separators; optional chip className
+- [ ] Wire `ChordKbd` into `MenuBar.tsx` + `CommandPalette.tsx` (preserve selected-row foreground tweak) + `ActionToolbar.tsx` tooltip
+- [ ] `ContextMenu.tsx` + `ExplorerApp.tsx`: pass raw `chord` through `ContextMenuAction` (drop preformatted `shortcut`); render `ChordKbd`
+- [ ] Remove `tracking-widest` from shortcut slots: `menubar.tsx`, `dropdown-menu.tsx`, `context-menu.tsx`, `command.tsx`
+- [ ] `e2e/tests/smoke.spec.ts`: assert per-key kbd chips (`Ctrl`, `P`) instead of `Ctrl+P` text; run the spec
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
