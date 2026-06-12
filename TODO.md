@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** unify S3 fresh+resume uploads on one in-house multipart engine; PutObject fast path for small files; checksum carry-through to CompleteMultipartUpload (fixes AWS resume with validation on); drop `@aws-sdk/lib-storage`. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** unified in-house S3 multipart engine for fresh + resume uploads; drop `@aws-sdk/lib-storage`; carry checksum fields through Complete; PutObject fast path for small fresh files. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -63,10 +63,3 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] i18n (14 locales): `shortcuts.hint` — replace hardcoded Ctrl/Shift chords with placeholders
 - [x] `StatusBar.tsx`: pass `shortcutsHintParams()` into `t("shortcuts.hint")`; relax e2e assertion
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
-- [ ] `s3Multipart.ts`: carry checksum members through `listUploadedParts`; unit test in `s3Multipart.test.ts`
-- [ ] `s3XhrUploadProgress.ts`: `attachPutObjectProgressListener`; rename queue constant; unit tests
-- [ ] `s3MultipartUpload.ts`: unified `multipartUpload()` (PutObject fast path, parallel parts, checksum Complete); drop `resumeMultipartUpload`
-- [ ] `s3MultipartUpload.test.ts`: small fresh, large fresh, resume, pre-aborted signal
-- [ ] `s3Backend.ts`: route `upload()` + `resumeUpload()` through `multipartUpload`; drop lib-storage
-- [ ] `pnpm remove @aws-sdk/lib-storage`; bump patch version in `Cargo.toml`
-- [ ] Run `pnpm test` + `pnpm exec tsc --noEmit`
