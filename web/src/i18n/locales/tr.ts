@@ -102,7 +102,7 @@ export const tr: Record<MessageKey, string> = {
   "selection.copyPaths": "Yolları kopyala",
   "selection.clear": "Temizle",
   "shortcuts.hint":
-    "Kısayollar: ızgara h/j/k/l veya oklarla gezinir; tablo j/k veya ↑↓; Enter aç, Geri Sil yukarı, Boşluk değiştir, Shift+tıklama aralık, Ctrl+P komut paleti",
+    "Kısayollar: ızgara h/j/k/l veya oklarla gezinir; tablo j/k veya ↑↓; Enter aç, Geri Sil yukarı, Boşluk slayt gösterisi (görseller), Shift+tıklama aralık, Ctrl+P komut paleti",
   "listing.empty": "Bu klasör boş",
   "listing.label": "Dizin listesi",
   "listing.column.name": "Ad",

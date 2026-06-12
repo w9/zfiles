@@ -102,7 +102,7 @@ export const ja: Record<MessageKey, string> = {
   "selection.copyPaths": "パスをコピー",
   "selection.clear": "クリア",
   "shortcuts.hint":
-    "ショートカット：グリッドは h/j/k/l または矢印キーで移動、テーブルは j/k または ↑↓；Enter 開く、Backspace 上へ、Space 切り替え、Shift+クリック 範囲選択、Ctrl+P コマンドパレット",
+    "ショートカット：グリッドは h/j/k/l または矢印キーで移動、テーブルは j/k または ↑↓；Enter 開く、Backspace 上へ、Space スライドショー（画像）、Shift+クリック 範囲選択、Ctrl+P コマンドパレット",
   "listing.empty": "このフォルダーは空です",
   "listing.label": "ディレクトリ一覧",
   "listing.column.name": "名前",

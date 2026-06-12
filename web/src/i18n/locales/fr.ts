@@ -102,7 +102,7 @@ export const fr: Record<MessageKey, string> = {
   "selection.copyPaths": "Copier les chemins",
   "selection.clear": "Effacer",
   "shortcuts.hint":
-    "Raccourcis : h/j/k/l ou flèches naviguent (grille) ; j/k ou ↑↓ (tableau) ; Entrée ouvrir, Retour arrière remonter, Espace basculer, Maj+clic plage, Ctrl+P palette de commandes",
+    "Raccourcis : h/j/k/l ou flèches naviguent (grille) ; j/k ou ↑↓ (tableau) ; Entrée ouvrir, Retour arrière remonter, Espace diaporama (images), Maj+clic plage, Ctrl+P palette de commandes",
   "listing.empty": "Ce dossier est vide",
   "listing.label": "Liste du répertoire",
   "listing.column.name": "Nom",

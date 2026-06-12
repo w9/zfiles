@@ -40,7 +40,10 @@ export default function StatusBar({
       aria-label={t("statusBar.label")}
     >
       <BackendStatus status={backendStatus} kernelVersion={kernelVersion} compact />
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+      <p className="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground">
+        {t("shortcuts.hint")}
+      </p>
+      <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
         {cutStatusText ? (
           <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
         ) : null}

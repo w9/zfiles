@@ -102,7 +102,7 @@ export const pt: Record<MessageKey, string> = {
   "selection.copyPaths": "Copiar caminhos",
   "selection.clear": "Limpar",
   "shortcuts.hint":
-    "Atalhos: h/j/k/l ou setas navegam (grade); j/k ou ↑↓ (tabela); Enter abrir, Backspace subir, Espaço alternar, Shift+clique intervalo, Ctrl+P paleta de comandos",
+    "Atalhos: h/j/k/l ou setas navegam (grade); j/k ou ↑↓ (tabela); Enter abrir, Backspace subir, Espaço apresentação (imagens), Shift+clique intervalo, Ctrl+P paleta de comandos",
   "listing.empty": "Esta pasta está vazia",
   "listing.label": "Listagem do diretório",
   "listing.column.name": "Nome",

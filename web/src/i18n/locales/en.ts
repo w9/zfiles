@@ -100,7 +100,7 @@ export const en = {
   "selection.copyPaths": "Copy paths",
   "selection.clear": "Clear",
   "shortcuts.hint":
-    "Shortcuts: h/j/k/l or arrows navigate (grid); j/k or ↑↓ (table); Enter open, Backspace up, Space toggle, Shift+click range, Ctrl+P command palette",
+    "Shortcuts: h/j/k/l or arrows navigate (grid); j/k or ↑↓ (table); Enter open, Backspace up, Space slideshow (images), Shift+click range, Ctrl+P command palette",
   "listing.empty": "This folder is empty",
   "listing.label": "Directory listing",
   "listing.column.name": "Name",

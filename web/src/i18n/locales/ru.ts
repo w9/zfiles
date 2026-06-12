@@ -102,7 +102,7 @@ export const ru: Record<MessageKey, string> = {
   "selection.copyPaths": "Копировать пути",
   "selection.clear": "Очистить",
   "shortcuts.hint":
-    "Горячие клавиши: h/j/k/l или стрелки — навигация (сетка); j/k или ↑↓ (таблица); Enter открыть, Backspace вверх, Пробел переключить, Shift+клик диапазон, Ctrl+P палитра команд",
+    "Горячие клавиши: h/j/k/l или стрелки — навигация (сетка); j/k или ↑↓ (таблица); Enter открыть, Backspace вверх, Пробел слайд-шоу (изображения), Shift+клик диапазон, Ctrl+P палитра команд",
   "listing.empty": "Эта папка пуста",
   "listing.label": "Список каталога",
   "listing.column.name": "Имя",

@@ -98,7 +98,7 @@ export const zhCN: Record<MessageKey, string> = {
   "selection.copyPaths": "复制路径",
   "selection.clear": "清除",
   "shortcuts.hint":
-    "快捷键：网格视图 h/j/k/l 或方向键导航；表格视图 j/k 或 ↑↓；Enter 打开，Backspace 返回上级，Space 切换选择，Shift+点击 范围选择，Ctrl+P 命令面板",
+    "快捷键：网格视图 h/j/k/l 或方向键导航；表格视图 j/k 或 ↑↓；Enter 打开，Backspace 返回上级，Space 幻灯片（图片），Shift+点击 范围选择，Ctrl+P 命令面板",
   "listing.empty": "此文件夹为空",
   "listing.label": "目录列表",
   "listing.column.name": "名称",

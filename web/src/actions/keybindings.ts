@@ -142,9 +142,8 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     {
       key: "Space",
       command: "viewer.slideshow",
-      when: `${gridView} && preview.is-image == true`,
+      when: `${fileList} && preview.is-image == true`,
     },
-    { key: "Space", command: "selection.toggle", when: fileList },
     {
       key: "Mod+A",
       command: "selection.select-all",

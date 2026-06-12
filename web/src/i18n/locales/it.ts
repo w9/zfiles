@@ -102,7 +102,7 @@ export const it: Record<MessageKey, string> = {
   "selection.copyPaths": "Copia percorsi",
   "selection.clear": "Cancella",
   "shortcuts.hint":
-    "Scorciatoie: h/j/k/l o frecce navigano (griglia); j/k o ↑↓ (tabella); Invio apri, Backspace su, Spazio attiva/disattiva, Maiusc+clic intervallo, Ctrl+P palette comandi",
+    "Scorciatoie: h/j/k/l o frecce navigano (griglia); j/k o ↑↓ (tabella); Invio apri, Backspace su, Spazio presentazione (immagini), Maiusc+clic intervallo, Ctrl+P palette comandi",
   "listing.empty": "Questa cartella è vuota",
   "listing.label": "Elenco della directory",
   "listing.column.name": "Nome",

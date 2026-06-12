@@ -10,6 +10,8 @@ import {
   keybindingForAction,
   keybindingChordForContext,
 } from "./keybindings";
+import { defaultContextKeys } from "./contextKeys";
+import { evaluateWhen } from "./when";
 
 test("parseKeyChord normalizes mod shift and key", () => {
   assert.deepEqual(parseKeyChord("Mod+P"), ["Mod", "P"]);
@@ -110,7 +112,7 @@ test("matchKeybinding matches grid-only horizontal navigation", () => {
   assert.equal(matchKeybinding(bindings, event, tableAvailable), null);
 });
 
-test("matchKeybinding prefers grid slideshow over selection toggle on Space", () => {
+test("matchKeybinding matches Space slideshow when image focused in file list", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -119,33 +121,29 @@ test("matchKeybinding prefers grid slideshow over selection toggle on Space", ()
     altKey: false,
     shiftKey: false,
   } as KeyboardEvent;
-  const gridImageAvailable = (binding: { when?: string }) => {
-    if (binding.command === "viewer.slideshow") {
-      return binding.when?.includes("listing.view == 'grid'") ?? false;
-    }
-    if (binding.command === "selection.toggle") {
-      return binding.when?.includes("focus.pane == 'file-list'") ?? false;
-    }
-    return false;
-  };
+  const bindingAvailable = (binding: { when?: string }) =>
+    evaluateWhen(binding.when, {
+      ...defaultContextKeys(),
+      "preview.is-image": true,
+    });
   assert.equal(
-    matchKeybinding(bindings, event, gridImageAvailable)?.command,
+    matchKeybinding(bindings, event, bindingAvailable)?.command,
     "viewer.slideshow",
   );
+});
 
-  const tableAvailable = (binding: { when?: string }) => {
-    if (binding.command === "viewer.slideshow") {
-      return false;
-    }
-    if (binding.command === "selection.toggle") {
-      return binding.when?.includes("focus.pane == 'file-list'") ?? false;
-    }
-    return false;
-  };
-  assert.equal(
-    matchKeybinding(bindings, event, tableAvailable)?.command,
-    "selection.toggle",
-  );
+test("matchKeybinding ignores Space when non-image focused in file list", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: " ",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const bindingAvailable = (binding: { when?: string }) =>
+    evaluateWhen(binding.when, defaultContextKeys());
+  assert.equal(matchKeybinding(bindings, event, bindingAvailable), null);
 });
 
 test("keybindingChordForContext prefers binding whose when matches context", () => {
@@ -170,11 +168,11 @@ test("keybindingChordForContext prefers binding whose when matches context", () 
     keybindingChordForContext("viewer.slideshow", bindings, tableContext, {
       defaultKeybinding: "Space",
     }),
-    null,
+    "Space",
   );
   assert.equal(
     keybindingChordForContext("selection.toggle", bindings, tableContext),
-    "Space",
+    null,
   );
 });
 

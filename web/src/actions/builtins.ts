@@ -154,7 +154,6 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       nameKey: "actions.selection.toggle.name",
       categoryKey: "actions.selection.category",
       when: "focus.pane == 'file-list'",
-      defaultKeybinding: "Space",
       contexts: ["file-list"],
       handler: async () => {
         const deps = getDeps();

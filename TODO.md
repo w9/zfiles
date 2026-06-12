@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** wire `shortcuts.hint` into the status bar (i18n key exists but was never rendered). **Next:** bind Space → Slideshow in table/list view when focused row is an image (grid parity); Space does nothing for non-images; update `shortcuts.hint` copy in all locales. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** complete. **Next:** deferred items below. Recent: status bar shortcut hints, Space → Slideshow in table view (grid parity), e2e slideshow close fix. Deferred: status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -54,6 +54,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `e2e/tests/smoke.spec.ts`: close slideshow with Escape instead of top-left click (chrome hover zone blocks letterbox)
 - [x] Run e2e slideshow smoke test locally
 
-- [ ] `StatusBar.tsx`: render centered `shortcuts.hint` between backend status and selection/upload cluster
-- [ ] `e2e/tests/smoke.spec.ts`: assert status bar shows shortcut hint text
-- [ ] Run `pnpm test`
+- [x] `StatusBar.tsx`: render centered `shortcuts.hint` between backend status and selection/upload cluster
+- [x] `e2e/tests/smoke.spec.ts`: assert status bar shows shortcut hint text
+- [x] Run `pnpm test`

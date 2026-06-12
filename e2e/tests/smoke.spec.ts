@@ -78,6 +78,12 @@ test("status bar shows connected backend status", async ({ page }) => {
   );
 });
 
+test("status bar shows keyboard shortcut hints", async ({ page }) => {
+  await page.goto("/");
+  const statusBar = page.getByRole("contentinfo", { name: "Status bar" });
+  await expect(statusBar).toContainText(/Ctrl\+P command palette/i);
+});
+
 test("theme toggle switches color theme", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.setItem("zfiles-theme", "light"));
@@ -287,7 +293,7 @@ test("slideshow opens for image preview", async ({ page }) => {
     const slideshow = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
     await expect(slideshow).toBeVisible();
     await expect(slideshow.getByRole("button", { name: "Play" })).toBeEnabled();
-    await page.mouse.click(8, 8);
+    await page.keyboard.press("Escape");
     await expect(slideshow).not.toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");

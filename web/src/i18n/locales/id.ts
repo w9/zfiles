@@ -102,7 +102,7 @@ export const id: Record<MessageKey, string> = {
   "selection.copyPaths": "Salin jalur",
   "selection.clear": "Hapus",
   "shortcuts.hint":
-    "Pintasan: h/j/k/l atau panah navigasi (grid); j/k atau ↑↓ (tabel); Enter buka, Backspace naik, Spasi alihkan, Shift+klik rentang, Ctrl+P palet perintah",
+    "Pintasan: h/j/k/l atau panah navigasi (grid); j/k atau ↑↓ (tabel); Enter buka, Backspace naik, Spasi tayangan slide (gambar), Shift+klik rentang, Ctrl+P palet perintah",
   "listing.empty": "Folder ini kosong",
   "listing.label": "Daftar direktori",
   "listing.column.name": "Nama",
