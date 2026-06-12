@@ -53,9 +53,10 @@ export const ru: Record<MessageKey, string> = {
   "upload.status.unfinished": "Не завершено",
   "upload.cancel": "Отменить загрузку",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "Перетащите ещё файлы, чтобы добавить в очередь",
   "upload.dropMoreActive":
     "Загружается {{active}} · {{pending}} в очереди — перетащите, чтобы добавить",

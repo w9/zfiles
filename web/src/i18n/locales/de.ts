@@ -53,9 +53,10 @@ export const de: Record<MessageKey, string> = {
   "upload.status.unfinished": "Unfertig",
   "upload.cancel": "Upload abbrechen",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}} %",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}} % · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}} % · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "{{percent}} % ({{uploaded}} / {{total}})",
   "upload.dropMore": "Weitere Dateien ablegen, um sie zur Warteschlange hinzuzufügen",
   "upload.dropMoreActive":
     "{{active}} werden hochgeladen · {{pending}} in Warteschlange — zum Hinzufügen ablegen",

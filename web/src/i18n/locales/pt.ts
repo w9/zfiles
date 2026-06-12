@@ -53,9 +53,10 @@ export const pt: Record<MessageKey, string> = {
   "upload.status.unfinished": "Não concluído",
   "upload.cancel": "Cancelar envio",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "Solte mais arquivos para adicionar à fila",
   "upload.dropMoreActive":
     "Enviando {{active}} · {{pending}} na fila — solte para adicionar mais",

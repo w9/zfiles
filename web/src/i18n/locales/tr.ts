@@ -53,9 +53,10 @@ export const tr: Record<MessageKey, string> = {
   "upload.status.unfinished": "Tamamlanmamış",
   "upload.cancel": "Yüklemeyi iptal et",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · %{{percent}}",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · %{{percent}} · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · %{{percent}} · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "%{{percent}} ({{uploaded}} / {{total}})",
   "upload.dropMore": "Sıraya eklemek için daha fazla dosya bırakın",
   "upload.dropMoreActive":
     "{{active}} yükleniyor · {{pending}} sırada — eklemek için bırakın",

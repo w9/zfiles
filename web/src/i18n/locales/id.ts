@@ -53,9 +53,10 @@ export const id: Record<MessageKey, string> = {
   "upload.status.unfinished": "Belum selesai",
   "upload.cancel": "Batalkan unggahan",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "Letakkan lebih banyak berkas untuk menambah ke antrean",
   "upload.dropMoreActive":
     "Mengunggah {{active}} · {{pending}} dalam antrean — letakkan untuk menambah",

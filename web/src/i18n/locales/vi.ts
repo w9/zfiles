@@ -53,9 +53,10 @@ export const vi: Record<MessageKey, string> = {
   "upload.status.unfinished": "Chưa hoàn tất",
   "upload.cancel": "Hủy tải lên",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · ~{{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · ~{{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "Thả thêm tệp để thêm vào hàng đợi",
   "upload.dropMoreActive":
     "Đang tải lên {{active}} · {{pending}} đang chờ — thả để thêm",

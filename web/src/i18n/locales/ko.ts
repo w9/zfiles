@@ -53,9 +53,10 @@ export const ko: Record<MessageKey, string> = {
   "upload.status.unfinished": "미완료",
   "upload.cancel": "업로드 취소",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · 약 {{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · 약 {{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "파일을 더 끌어다 놓아 대기열에 추가",
   "upload.dropMoreActive":
     "{{active}}개 업로드 중 · {{pending}}개 대기 중 — 끌어다 놓아 추가하세요",

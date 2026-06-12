@@ -73,14 +73,27 @@ function statusLabel(
   }
 }
 
-function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["t"]): string {
+function isTerminalUploadStatus(status: UploadItemStatus): boolean {
+  return status === "done" || status === "failed" || status === "cancelled";
+}
+
+type QueueRowStatsProps = {
+  item: UploadQueueItem;
+};
+
+function QueueRowStats({ item }: QueueRowStatsProps) {
+  const { t } = useTranslation();
   const status = statusLabel(item.status, t);
 
   if (item.status === "pending" || item.status === "awaiting_conflict") {
-    return t("upload.statsQueued", {
-      status,
-      size: formatSize(item.total, false),
-    });
+    return (
+      <span className="truncate">
+        {t("upload.statsQueued", {
+          status,
+          size: formatSize(item.total, false),
+        })}
+      </span>
+    );
   }
 
   const uploaded = formatSize(item.offset, false);
@@ -88,15 +101,34 @@ function statsLine(item: UploadQueueItem, t: ReturnType<typeof useTranslation>["
   const percent = String(uploadPercent(item));
   const speed = formatSpeed(item.speedBps);
   const eta = formatEtaSeconds(item.etaSeconds);
-  const params = { status, uploaded, total, percent, speed: speed ?? "", eta: eta ?? "" };
+  const head = t("upload.statsBasic", { status, total });
 
-  if (speed && eta) {
-    return t("upload.statsFull", params);
+  if (isTerminalUploadStatus(item.status)) {
+    return <span className="truncate">{head}</span>;
   }
-  if (speed) {
-    return t("upload.statsSpeed", params);
-  }
-  return t("upload.statsBasic", params);
+
+  return (
+    <span className="flex shrink-0 items-center gap-1.5">
+      <span className="truncate">{head}</span>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <span className="inline-flex shrink-0">
+            <Progress
+              value={item.offset}
+              max={item.total || 1}
+              variant={uploadProgressVariant(item.status)}
+              className="h-1.5 w-[6em]"
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          {t("upload.stats.progressTooltip", { percent, uploaded, total })}
+        </TooltipContent>
+      </Tooltip>
+      {speed ? <span className="shrink-0">{t("upload.statsSpeed", { speed })}</span> : null}
+      {speed && eta ? <span className="shrink-0">{t("upload.statsFull", { eta })}</span> : null}
+    </span>
+  );
 }
 
 function panelHeaderTitle(
@@ -165,9 +197,9 @@ function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
             {item.destPath}
           </p>
         </div>
-        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
-          {statsLine(item, t)}
-        </p>
+        <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          <QueueRowStats item={item} />
+        </div>
         {cancellable ? (
           <Button
             type="button"
@@ -183,13 +215,6 @@ function QueueRow({ item, iconTheme, onCancel }: QueueRowProps) {
       </div>
       {item.status === "failed" && item.error ? (
         <p className="text-xs text-destructive">{item.error}</p>
-      ) : null}
-      {item.status !== "pending" && item.status !== "awaiting_conflict" ? (
-        <Progress
-          value={item.offset}
-          max={item.total || 1}
-          variant={uploadProgressVariant(item.status)}
-        />
       ) : null}
     </li>
   );

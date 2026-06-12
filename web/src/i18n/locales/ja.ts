@@ -53,9 +53,10 @@ export const ja: Record<MessageKey, string> = {
   "upload.status.unfinished": "未完了",
   "upload.cancel": "アップロードをキャンセル",
   "upload.statsQueued": "{{status}} · {{size}}",
-  "upload.statsBasic": "{{status}} · {{uploaded}} / {{total}} · {{percent}}%",
-  "upload.statsSpeed": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}}",
-  "upload.statsFull": "{{status}} · {{uploaded}} / {{total}} · {{percent}}% · {{speed}} · 約 {{eta}}",
+  "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsSpeed": " · {{speed}}",
+  "upload.statsFull": " · 約 {{eta}}",
+  "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
   "upload.dropMore": "さらにファイルをドロップしてキューに追加",
   "upload.dropMoreActive":
     "{{active}} 件アップロード中 · {{pending}} 件待機中 — ドロップして追加できます",
