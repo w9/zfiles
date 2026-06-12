@@ -191,14 +191,28 @@ test("keybindingChordForContext prefers binding whose when matches context", () 
   );
 });
 
-test("keybindingChordForContext falls back to action default when unbound in merged list", () => {
+test("keybindingChordForContext returns merged default when when matches", () => {
   const bindings = defaultKeybindings();
-  const context = { "focus.pane": "file-list" };
+  const context = {
+    "focus.pane": "file-list",
+    "server.read-only": false,
+  };
   assert.equal(
     keybindingChordForContext("file.copy", bindings, context, {
       defaultKeybinding: "Mod+C",
     }),
     "Mod+C",
+  );
+});
+
+test("keybindingChordForContext falls back to action default when unbound in merged list", () => {
+  const bindings = defaultKeybindings();
+  const context = { "focus.pane": "file-list", "selection.count": 1 };
+  assert.equal(
+    keybindingChordForContext("selection.copy-paths", bindings, context, {
+      defaultKeybinding: "Mod+Shift+C",
+    }),
+    "Mod+Shift+C",
   );
 });
 
@@ -243,4 +257,114 @@ test("matchKeybinding matches arrow up/down in file list", () => {
     (item) => item.when?.includes("focus.pane == 'file-list'") ?? false,
   );
   assert.equal(binding?.command, "selection.move-down");
+});
+
+test("matchKeybinding matches built-in file operation shortcuts", () => {
+  const bindings = defaultKeybindings();
+  const context = {
+    ...defaultContextKeys(),
+    "focus.pane": "file-list",
+    "server.read-only": false,
+    "selection.count": 1,
+    "clipboard.count": 1,
+  };
+  const bindingAvailable = (binding: { when?: string }) =>
+    evaluateWhen(binding.when, context);
+
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "Delete",
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    )?.command,
+    "file.delete",
+  );
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "F2",
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    )?.command,
+    "file.rename",
+  );
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "c",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    )?.command,
+    "file.copy",
+  );
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "x",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    )?.command,
+    "file.cut",
+  );
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "v",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    )?.command,
+    "file.paste",
+  );
+});
+
+test("matchKeybinding ignores file delete on read-only server", () => {
+  const bindings = defaultKeybindings();
+  const context = {
+    ...defaultContextKeys(),
+    "focus.pane": "file-list",
+    "server.read-only": true,
+    "selection.count": 1,
+  };
+  const bindingAvailable = (binding: { when?: string }) =>
+    evaluateWhen(binding.when, context);
+  assert.equal(
+    matchKeybinding(
+      bindings,
+      {
+        key: "Delete",
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      } as KeyboardEvent,
+      bindingAvailable,
+    ),
+    null,
+  );
 });

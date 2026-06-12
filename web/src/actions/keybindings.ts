@@ -79,6 +79,9 @@ export function matchKeybinding(
 export function defaultKeybindings(): KeybindingDefinition[] {
   const fileList = "focus.pane == 'file-list'";
   const gridView = `${fileList} && listing.view == 'grid'`;
+  const fileListWritable = `${fileList} && server.read-only == false`;
+  const fileSelectionOps =
+    "(focus.pane == 'file-list' || selection.count > 0) && server.read-only == false";
   return [
     { key: "Mod+P", command: "view.open-command-palette" },
     { key: "J", command: "selection.move-down", when: fileList },
@@ -151,6 +154,15 @@ export function defaultKeybindings(): KeybindingDefinition[] {
         "focus.pane == 'file-list' && listing.loaded == true && listing.visible-count > 0",
     },
     { key: "Escape", command: "selection.clear", when: "selection.count > 0" },
+    { key: "F2", command: "file.rename", when: fileListWritable },
+    { key: "Mod+C", command: "file.copy", when: fileSelectionOps },
+    { key: "Mod+X", command: "file.cut", when: fileSelectionOps },
+    {
+      key: "Mod+V",
+      command: "file.paste",
+      when: "clipboard.count > 0 && server.read-only == false",
+    },
+    { key: "Delete", command: "file.delete", when: fileSelectionOps },
   ];
 }
 

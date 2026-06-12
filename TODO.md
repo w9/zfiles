@@ -81,6 +81,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 
 - [x] `AGENTS.md`: add commit-scope rule under "Before every commit" — commit only this conversation's changes; never include outside edits unless the user explicitly asks
 
-- [ ] `keybindings.test.ts`: cover Delete, F2, Mod+C/X/V dispatch via `defaultKeybindings()`
-- [ ] `keybindings.ts`: register file.rename (F2), file.copy/cut/delete, file.paste in `defaultKeybindings()` with action `when` clauses
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `keybindings.test.ts`: cover Delete, F2, Mod+C/X/V dispatch via `defaultKeybindings()`
+- [x] `keybindings.ts`: register file.rename (F2), file.copy/cut/delete, file.paste in `defaultKeybindings()` with action `when` clauses
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
