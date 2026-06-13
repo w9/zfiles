@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** default Shadcn/Radix tooltips to **dismiss when the pointer leaves the trigger** (`disableHoverableContent` on the shared provider/wrapper); per-tooltip opt-out when hoverable content is needed later. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, per-row Pause/Resume, and tooltip pointer-leave dismiss are **complete**. **Current cycle:** replace native HTML `title=` hover hints with a shared Shadcn `TruncatedTextTooltip` helper (GridListing rules: always on hover, 1000ms delay); migrate all eight sites plus VirtualListing name column. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -104,3 +104,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 
 - [x] `tooltip.tsx`: default `disableHoverableContent={true}` on `TooltipProvider` (and `Tooltip` root wrapper) so pointer-leave dismisses; allow per-tooltip opt-out via prop
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `truncated-text-tooltip.tsx`: shared helper — Shadcn Tooltip, 1000ms delay, break-all content (match GridListing)
+- [ ] `UploadPanel.tsx`: replace five `title=` hints (queue/session fileName + destPath, panel header)
+- [ ] `VirtualListing.tsx`: name column + modified column; `GridListing.tsx`: adopt shared helper
+- [ ] `FileIcon.tsx` symlink badge + `BackendStatus.tsx` conditional hint — drop native `title=`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
