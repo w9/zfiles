@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** replace inline/bottom upload **Progress** bars with a left-to-right **row background fill** (queue + multipart rows); show **percent in stats text**; plain background when no byte progress. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** collapse multipart session **Remote** badge, remote-only hint, and inline **Progress unknown** into the **Unfinished** tooltip (multi-paragraph); inline stats keep **Started {{time}}** and known progress only. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -93,7 +93,11 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] S3 paused resume: rebuild `multipartResume` from persisted session + queue `multipartUpload` state
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadPanel.tsx`: row background progress fill (primary for active/paused, muted for hashing/verifying/local multipart); remove inline + session `Progress` bars; plain bg for pending/terminal/unknown bytes
-- [ ] `UploadPanel.tsx`: show upload percent in queue row stats text (drop progress tooltip)
-- [ ] i18n (14 locales): add `upload.statsWithPercent`; adjust multipart stats if needed
+- [x] `UploadPanel.tsx`: row background progress fill (primary for active/paused, muted for hashing/verifying/local multipart); remove inline + session `Progress` bars; plain bg for pending/terminal/unknown bytes
+- [x] `UploadPanel.tsx`: show upload percent in queue row stats text (drop progress tooltip)
+- [x] i18n (14 locales): add `upload.statsWithPercent`; adjust multipart stats if needed
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadPanel.tsx`: drop Remote badge from session rows; move remote-only + progress-unknown into Unfinished tooltip (multi-paragraph); inline stats = Unfinished · started time · known progress only
+- [ ] i18n (14 locales): keep existing keys; remove unused `upload.multipart.remote` if no longer referenced
 - [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
