@@ -9,11 +9,7 @@ import { useTranslation } from "@/i18n";
 import { shouldDimDotEntry } from "@/listingFilter";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import {
   GRID_GAP_PX,
   computeGridColumnCount,
@@ -223,22 +219,10 @@ export default function GridListing({
                               onCancel={() => onInlineCancel(entry.path, entry.name)}
                             />
                           ) : (
-                            <Tooltip delayDuration={1000}>
-                              <TooltipTrigger asChild>
-                                <span className="block truncate">{entry.name}</span>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                className="break-all"
-                                style={{
-                                  textWrap: "wrap",
-                                  width: "max-content",
-                                  maxWidth: "20rem",
-                                }}
-                              >
-                                {entry.name}
-                              </TooltipContent>
-                            </Tooltip>
+                            <TruncatedTextTooltip
+                              text={entry.name}
+                              className="block truncate"
+                            />
                           )}
                         </div>
                       </button>

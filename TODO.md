@@ -105,8 +105,8 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `tooltip.tsx`: default `disableHoverableContent={true}` on `TooltipProvider` (and `Tooltip` root wrapper) so pointer-leave dismisses; allow per-tooltip opt-out via prop
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `truncated-text-tooltip.tsx`: shared helper — Shadcn Tooltip, 1000ms delay, break-all content (match GridListing)
-- [ ] `UploadPanel.tsx`: replace five `title=` hints (queue/session fileName + destPath, panel header)
-- [ ] `VirtualListing.tsx`: name column + modified column; `GridListing.tsx`: adopt shared helper
-- [ ] `FileIcon.tsx` symlink badge + `BackendStatus.tsx` conditional hint — drop native `title=`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `truncated-text-tooltip.tsx`: shared helper — Shadcn Tooltip, 1000ms delay, break-all content (match GridListing)
+- [x] `UploadPanel.tsx`: replace five `title=` hints (queue/session fileName + destPath, panel header)
+- [x] `VirtualListing.tsx`: name column + modified column; `GridListing.tsx`: adopt shared helper
+- [x] `FileIcon.tsx` symlink badge + `BackendStatus.tsx` conditional hint — drop native `title=`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

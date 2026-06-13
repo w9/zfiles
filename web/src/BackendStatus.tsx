@@ -1,4 +1,5 @@
 import { backendStatusMessage, useTranslation } from "@/i18n";
+import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import { cn } from "@/lib/utils";
 import { type BackendStatus } from "./useBackendStatus";
 
@@ -40,7 +41,13 @@ export default function BackendStatus({
         )}
         aria-hidden="true"
       />
-      <span title={hoverTitle}>{label}</span>
+      {hoverTitle ? (
+        <TruncatedTextTooltip as="span" text={hoverTitle} delayDuration={0}>
+          {label}
+        </TruncatedTextTooltip>
+      ) : (
+        <span>{label}</span>
+      )}
     </div>
   );
 }

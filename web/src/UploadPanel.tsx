@@ -3,6 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import {
   Tooltip,
   TooltipContent,
@@ -229,12 +230,16 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
         <div className="relative flex items-center gap-2">
         <FileIcon name={item.fileName} isDir={false} theme={iconTheme} size="xs" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium" title={item.fileName}>
-            {item.fileName}
-          </p>
-          <p className="truncate text-xs text-muted-foreground" title={item.destPath}>
-            {item.destPath}
-          </p>
+          <TruncatedTextTooltip
+            as="p"
+            text={item.fileName}
+            className="truncate text-sm font-medium"
+          />
+          <TruncatedTextTooltip
+            as="p"
+            text={item.destPath}
+            className="truncate text-xs text-muted-foreground"
+          />
         </div>
         <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
@@ -338,12 +343,16 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
         <div className="relative flex items-center gap-2">
         <FileIcon name={session.fileName} isDir={false} theme={iconTheme} size="xs" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium" title={session.fileName}>
-            {session.fileName}
-          </p>
-          <p className="truncate text-xs text-muted-foreground" title={session.destPath}>
-            {session.destPath}
-          </p>
+          <TruncatedTextTooltip
+            as="p"
+            text={session.fileName}
+            className="truncate text-sm font-medium"
+          />
+          <TruncatedTextTooltip
+            as="p"
+            text={session.destPath}
+            className="truncate text-xs text-muted-foreground"
+          />
         </div>
         <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <Tooltip>
@@ -434,17 +443,16 @@ export default function UploadPanel({
   return (
     <div className="flex h-full min-h-0 w-full flex-col" aria-label={headerTitle}>
       <div className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3">
-        <h2
+        <TruncatedTextTooltip
+          as="h2"
+          text={headerTitle}
           className={cn(
             "min-w-0 flex-1 truncate text-sm font-medium",
             onDragHandlePointerDown && "cursor-grab touch-none select-none active:cursor-grabbing",
           )}
-          title={headerTitle}
           aria-label={onDragHandlePointerDown ? t("upload.tray.dragHandle") : undefined}
           onPointerDown={onDragHandlePointerDown}
-        >
-          {headerTitle}
-        </h2>
+        />
         <div className="flex shrink-0 items-center gap-1">
           {finishedCount > 0 ? (
             <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>

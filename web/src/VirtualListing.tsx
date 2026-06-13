@@ -18,6 +18,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import InlineNameInput from "@/explorer/InlineNameInput";
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
@@ -357,7 +358,10 @@ export default function VirtualListing({
                           onCancel={() => onInlineCancel(entry.path, entry.name)}
                         />
                       ) : (
-                        <span className="min-w-0 truncate">{entry.name}</span>
+                        <TruncatedTextTooltip
+                          text={entry.name}
+                          className="min-w-0 truncate"
+                        />
                       )}
                     </>
                   ) : (
@@ -389,10 +393,12 @@ export default function VirtualListing({
                         >
                           {isName ? (
                             content
-                          ) : (
-                            <span className={CELL_TEXT} title={modifiedTitle}>
+                          ) : modifiedTitle ? (
+                            <TruncatedTextTooltip text={modifiedTitle} className={CELL_TEXT}>
                               {content}
-                            </span>
+                            </TruncatedTextTooltip>
+                          ) : (
+                            <span className={CELL_TEXT}>{content}</span>
                           )}
                         </div>
                       </div>

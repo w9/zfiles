@@ -2,6 +2,7 @@ import { CornerUpRight } from "lucide-react";
 
 import { resolveFileIconUrl, type FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
+import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import { cn } from "@/lib/utils";
 
 type FileIconProps = {
@@ -69,16 +70,17 @@ export function FileIcon({
         height={resolvedSize}
       />
       {isSymlink ? (
-        <span
+        <TruncatedTextTooltip
+          as="span"
+          text={t("fileIcon.symlink")}
           className={cn(
             "absolute -right-0.5 -top-0.5 flex items-center justify-center rounded-full bg-background text-primary ring-1 ring-border",
             BADGE_CLASS[badgeScale],
           )}
-          title={t("fileIcon.symlink")}
           aria-hidden
         >
           <CornerUpRight className={BADGE_ICON_CLASS[badgeScale]} strokeWidth={2.5} />
-        </span>
+        </TruncatedTextTooltip>
       ) : null}
     </span>
   );
