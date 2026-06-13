@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, and file-operation keybindings are **complete**. **Current cycle:** per-row upload **Pause / Resume** is **complete** (local tus + cloud S3). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** replace inline/bottom upload **Progress** bars with a left-to-right **row background fill** (queue + multipart rows); show **percent in stats text**; plain background when no byte progress. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -92,3 +92,8 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] i18n (14 locales): `upload.pause`, `upload.resume`, `upload.status.paused`, queue header key
 - [x] S3 paused resume: rebuild `multipartResume` from persisted session + queue `multipartUpload` state
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadPanel.tsx`: row background progress fill (primary for active/paused, muted for hashing/verifying/local multipart); remove inline + session `Progress` bars; plain bg for pending/terminal/unknown bytes
+- [ ] `UploadPanel.tsx`: show upload percent in queue row stats text (drop progress tooltip)
+- [ ] i18n (14 locales): add `upload.statsWithPercent`; adjust multipart stats if needed
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
