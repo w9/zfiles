@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** collapse multipart session **Remote** badge, remote-only hint, and inline **Progress unknown** into the **Unfinished** tooltip (multi-paragraph); inline stats keep **Started {{time}}** and known progress only. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, and per-row Pause/Resume are **complete**. **Current cycle:** default Shadcn/Radix tooltips to **dismiss when the pointer leaves the trigger** (`disableHoverableContent` on the shared provider/wrapper); per-tooltip opt-out when hoverable content is needed later. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -101,3 +101,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `UploadPanel.tsx`: drop Remote badge from session rows; move remote-only + progress-unknown into Unfinished tooltip (multi-paragraph); inline stats = Unfinished · started time · known progress only
 - [x] i18n (14 locales): keep existing keys; remove unused `upload.multipart.remote` if no longer referenced
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `tooltip.tsx`: default `disableHoverableContent={true}` on `TooltipProvider` (and `Tooltip` root wrapper) so pointer-leave dismisses; allow per-tooltip opt-out via prop
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
