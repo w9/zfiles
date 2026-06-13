@@ -78,7 +78,6 @@ export const ko: Record<MessageKey, string> = {
   "upload.status.paused": "일시정지",
   "upload.multipart.panelTitle": "업로드",
   "upload.multipart.startedAt": "시작됨 {{time}}",
-  "upload.multipart.remote": "원격",
   "upload.multipart.description":
     "버킷의 세션 목록입니다. 이 브라우저에서 시작한 업로드만 재개할 수 있습니다.",
   "upload.multipart.progressUnknown": "진행률 알 수 없음",

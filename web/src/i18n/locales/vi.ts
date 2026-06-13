@@ -78,7 +78,6 @@ export const vi: Record<MessageKey, string> = {
   "upload.status.paused": "Đã tạm dừng",
   "upload.multipart.panelTitle": "Tải lên",
   "upload.multipart.startedAt": "Bắt đầu {{time}}",
-  "upload.multipart.remote": "Từ xa",
   "upload.multipart.description":
     "Phiên được liệt kê từ bucket của bạn. Chỉ có thể tiếp tục các tải lên bắt đầu trong trình duyệt này.",
   "upload.multipart.progressUnknown": "Tiến độ không rõ",

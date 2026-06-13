@@ -78,7 +78,6 @@ export const de: Record<MessageKey, string> = {
   "upload.status.paused": "Pausiert",
   "upload.multipart.panelTitle": "Uploads",
   "upload.multipart.startedAt": "Gestartet {{time}}",
-  "upload.multipart.remote": "Extern",
   "upload.multipart.description":
     "Sitzungen aus Ihrem Bucket. Fortsetzen ist nur für in diesem Browser gestartete Uploads möglich.",
   "upload.multipart.progressUnknown": "Fortschritt unbekannt",

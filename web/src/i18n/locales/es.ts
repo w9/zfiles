@@ -77,7 +77,6 @@ export const es: Record<MessageKey, string> = {
   "upload.status.paused": "En pausa",
   "upload.multipart.panelTitle": "Subidas",
   "upload.multipart.startedAt": "Iniciado {{time}}",
-  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sesiones listadas desde su bucket. Reanudar solo está disponible para subidas iniciadas en este navegador.",
   "upload.multipart.progressUnknown": "Progreso desconocido",

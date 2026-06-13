@@ -78,7 +78,6 @@ export const it: Record<MessageKey, string> = {
   "upload.status.paused": "In pausa",
   "upload.multipart.panelTitle": "Caricamenti",
   "upload.multipart.startedAt": "Avviato {{time}}",
-  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sessioni elencate dal bucket. La ripresa è disponibile solo per caricamenti avviati in questo browser.",
   "upload.multipart.progressUnknown": "Avanzamento sconosciuto",

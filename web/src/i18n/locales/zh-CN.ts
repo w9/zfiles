@@ -76,7 +76,6 @@ export const zhCN: Record<MessageKey, string> = {
   "upload.status.paused": "已暂停",
   "upload.multipart.panelTitle": "上传",
   "upload.multipart.startedAt": "开始于 {{time}}",
-  "upload.multipart.remote": "远程",
   "upload.multipart.description": "列出存储桶中的会话。仅可恢复本浏览器中开始的上传。",
   "upload.multipart.progressUnknown": "进度未知",
   "upload.multipart.progressKnown": "{{uploaded}} / {{total}} · {{percent}}%",

@@ -78,7 +78,6 @@ export const tr: Record<MessageKey, string> = {
   "upload.status.paused": "Duraklatıldı",
   "upload.multipart.panelTitle": "Yüklemeler",
   "upload.multipart.startedAt": "Başladı {{time}}",
-  "upload.multipart.remote": "Uzak",
   "upload.multipart.description":
     "Kovadan listelenen oturumlar. Yalnızca bu tarayıcıda başlatılan yüklemeler sürdürülebilir.",
   "upload.multipart.progressUnknown": "İlerleme bilinmiyor",

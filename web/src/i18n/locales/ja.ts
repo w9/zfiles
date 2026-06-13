@@ -78,7 +78,6 @@ export const ja: Record<MessageKey, string> = {
   "upload.status.paused": "一時停止",
   "upload.multipart.panelTitle": "アップロード",
   "upload.multipart.startedAt": "開始: {{time}}",
-  "upload.multipart.remote": "リモート",
   "upload.multipart.description":
     "バケットのセッション一覧。このブラウザで開始したアップロードのみ再開できます。",
   "upload.multipart.progressUnknown": "進捗不明",

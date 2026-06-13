@@ -76,7 +76,6 @@ export const en = {
   "upload.status.paused": "Paused",
   "upload.multipart.panelTitle": "Uploads",
   "upload.multipart.startedAt": "Started {{time}}",
-  "upload.multipart.remote": "Remote",
   "upload.multipart.description":
     "Sessions listed from your bucket. Resume is available only for uploads started in this browser.",
   "upload.multipart.progressUnknown": "Progress unknown",

@@ -98,6 +98,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] i18n (14 locales): add `upload.statsWithPercent`; adjust multipart stats if needed
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadPanel.tsx`: drop Remote badge from session rows; move remote-only + progress-unknown into Unfinished tooltip (multi-paragraph); inline stats = Unfinished · started time · known progress only
-- [ ] i18n (14 locales): keep existing keys; remove unused `upload.multipart.remote` if no longer referenced
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `UploadPanel.tsx`: drop Remote badge from session rows; move remote-only + progress-unknown into Unfinished tooltip (multi-paragraph); inline stats = Unfinished · started time · known progress only
+- [x] i18n (14 locales): keep existing keys; remove unused `upload.multipart.remote` if no longer referenced
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

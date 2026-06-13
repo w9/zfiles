@@ -76,7 +76,6 @@ export const zhTW: Record<MessageKey, string> = {
   "upload.status.paused": "已暫停",
   "upload.multipart.panelTitle": "上傳",
   "upload.multipart.startedAt": "開始於 {{time}}",
-  "upload.multipart.remote": "遠端",
   "upload.multipart.description": "列出儲存貯體中的工作階段。僅可恢復本瀏覽器中開始的上傳。",
   "upload.multipart.progressUnknown": "進度未知",
   "upload.multipart.progressKnown": "{{uploaded}} / {{total}} · {{percent}}%",

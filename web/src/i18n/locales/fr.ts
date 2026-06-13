@@ -78,7 +78,6 @@ export const fr: Record<MessageKey, string> = {
   "upload.status.paused": "En pause",
   "upload.multipart.panelTitle": "Téléversements",
   "upload.multipart.startedAt": "Démarré {{time}}",
-  "upload.multipart.remote": "Distant",
   "upload.multipart.description":
     "Sessions listées depuis votre bucket. La reprise n'est disponible que pour les téléversements démarrés dans ce navigateur.",
   "upload.multipart.progressUnknown": "Progression inconnue",

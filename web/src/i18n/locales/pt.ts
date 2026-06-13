@@ -78,7 +78,6 @@ export const pt: Record<MessageKey, string> = {
   "upload.status.paused": "Em pausa",
   "upload.multipart.panelTitle": "Envios",
   "upload.multipart.startedAt": "Iniciado {{time}}",
-  "upload.multipart.remote": "Remoto",
   "upload.multipart.description":
     "Sessões listadas do seu bucket. Retomar só está disponível para envios iniciados neste navegador.",
   "upload.multipart.progressUnknown": "Progresso desconhecido",

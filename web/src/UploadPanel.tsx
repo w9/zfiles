@@ -1,7 +1,6 @@
 import { Pause, Play, Trash2, X } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -165,19 +164,24 @@ function panelHeaderTitle(
   });
 }
 
-function multipartProgressLine(
+function multipartProgressKnownLine(
   session: MultipartSessionView,
   t: ReturnType<typeof useTranslation>["t"],
-): string {
+): string | null {
   const percent = multipartPercent(session);
   if (percent == null || session.bytesUploaded == null || session.totalBytes == null) {
-    return t("upload.multipart.progressUnknown");
+    return null;
   }
   return t("upload.multipart.progressKnown", {
     uploaded: formatSize(session.bytesUploaded, false),
     total: formatSize(session.totalBytes, false),
     percent: String(percent),
   });
+}
+
+function multipartProgressUnknown(session: MultipartSessionView): boolean {
+  const percent = multipartPercent(session);
+  return percent == null || session.bytesUploaded == null || session.totalBytes == null;
 }
 
 type QueueRowProps = {
@@ -309,7 +313,7 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
     : t("upload.multipart.abort");
   const statsRest = [
     startedAt ? t("upload.multipart.startedAt", { time: startedAt }) : null,
-    multipartProgressLine(session, t),
+    multipartProgressKnownLine(session, t),
   ]
     .filter(Boolean)
     .join(" · ");
@@ -341,32 +345,25 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
             {session.destPath}
           </p>
         </div>
-        <p className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-          {!session.canResume ? (
-            <Badge
-              variant="secondary"
-              className="shrink-0 font-normal"
-              title={t("upload.multipart.remoteOnly")}
-            >
-              {t("upload.multipart.remote")}
-            </Badge>
-          ) : null}
-          <span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  tabIndex={0}
-                  className="cursor-help underline decoration-dotted underline-offset-2"
-                >
-                  {t("upload.status.unfinished")}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
-                {t("upload.multipart.description")}
-              </TooltipContent>
-            </Tooltip>
-            {` · ${statsRest}`}
-          </span>
+        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                tabIndex={0}
+                className="cursor-help underline decoration-dotted underline-offset-2"
+              >
+                {t("upload.status.unfinished")}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs space-y-2">
+              <p>{t("upload.multipart.description")}</p>
+              {!session.canResume ? <p>{t("upload.multipart.remoteOnly")}</p> : null}
+              {multipartProgressUnknown(session) ? (
+                <p>{t("upload.multipart.progressUnknown")}</p>
+              ) : null}
+            </TooltipContent>
+          </Tooltip>
+          {statsRest ? ` · ${statsRest}` : null}
         </p>
         {session.canResume && !readOnly ? (
           <Tooltip>

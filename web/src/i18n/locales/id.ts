@@ -78,7 +78,6 @@ export const id: Record<MessageKey, string> = {
   "upload.status.paused": "Dijeda",
   "upload.multipart.panelTitle": "Unggahan",
   "upload.multipart.startedAt": "Dimulai {{time}}",
-  "upload.multipart.remote": "Jarak jauh",
   "upload.multipart.description":
     "Sesi dari bucket Anda. Lanjutkan hanya tersedia untuk unggahan yang dimulai di browser ini.",
   "upload.multipart.progressUnknown": "Progres tidak diketahui",

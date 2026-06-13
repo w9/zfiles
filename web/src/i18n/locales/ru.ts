@@ -78,7 +78,6 @@ export const ru: Record<MessageKey, string> = {
   "upload.status.paused": "На паузе",
   "upload.multipart.panelTitle": "Загрузки",
   "upload.multipart.startedAt": "Начато {{time}}",
-  "upload.multipart.remote": "Удалённо",
   "upload.multipart.description":
     "Сеансы из вашего бакета. Возобновление доступно только для загрузок, начатых в этом браузере.",
   "upload.multipart.progressUnknown": "Прогресс неизвестен",
