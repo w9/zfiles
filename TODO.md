@@ -102,5 +102,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] i18n (14 locales): keep existing keys; remove unused `upload.multipart.remote` if no longer referenced
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `tooltip.tsx`: default `disableHoverableContent={true}` on `TooltipProvider` (and `Tooltip` root wrapper) so pointer-leave dismisses; allow per-tooltip opt-out via prop
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `tooltip.tsx`: default `disableHoverableContent={true}` on `TooltipProvider` (and `Tooltip` root wrapper) so pointer-leave dismisses; allow per-tooltip opt-out via prop
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
