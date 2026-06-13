@@ -57,6 +57,7 @@ export const es: Record<MessageKey, string> = {
   "upload.resume": "Reanudar subida",
   "upload.statsQueued": "{{status}} · {{size}}",
   "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsWithPercent": "{{status}} · {{percent}}% · {{total}}",
   "upload.statsSpeed": " · {{speed}}",
   "upload.statsFull": " · ~{{eta}}",
   "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",

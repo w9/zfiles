@@ -56,6 +56,7 @@ export const zhCN: Record<MessageKey, string> = {
   "upload.resume": "恢复上传",
   "upload.statsQueued": "{{status}} · {{size}}",
   "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsWithPercent": "{{status}} · {{percent}}% · {{total}}",
   "upload.statsSpeed": " · {{speed}}",
   "upload.statsFull": " · 约 {{eta}}",
   "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",

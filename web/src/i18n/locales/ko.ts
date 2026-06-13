@@ -57,6 +57,7 @@ export const ko: Record<MessageKey, string> = {
   "upload.resume": "업로드 재개",
   "upload.statsQueued": "{{status}} · {{size}}",
   "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsWithPercent": "{{status}} · {{percent}}% · {{total}}",
   "upload.statsSpeed": " · {{speed}}",
   "upload.statsFull": " · 약 {{eta}}",
   "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",

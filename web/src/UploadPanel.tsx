@@ -3,7 +3,6 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
@@ -81,6 +80,39 @@ function isTerminalUploadStatus(status: UploadItemStatus): boolean {
   return status === "done" || status === "failed" || status === "cancelled";
 }
 
+function queueRowShowsProgress(item: UploadQueueItem): boolean {
+  return (
+    !isTerminalUploadStatus(item.status) &&
+    item.status !== "pending" &&
+    item.status !== "awaiting_conflict" &&
+    item.total > 0
+  );
+}
+
+const rowProgressFillClasses: Record<"upload" | "local", string> = {
+  upload: "bg-primary/20",
+  local: "bg-muted-foreground/25",
+};
+
+type RowProgressBackgroundProps = {
+  percent: number;
+  variant: "upload" | "local";
+};
+
+function RowProgressBackground({ percent, variant }: RowProgressBackgroundProps) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div
+        className={cn(
+          "h-full transition-[width] duration-150 ease-out",
+          rowProgressFillClasses[variant],
+        )}
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
+
 type QueueRowStatsProps = {
   item: UploadQueueItem;
 };
@@ -100,35 +132,19 @@ function QueueRowStats({ item }: QueueRowStatsProps) {
     );
   }
 
-  const uploaded = formatSize(item.offset, false);
   const total = formatSize(item.total, false);
   const percent = String(uploadPercent(item));
   const speed = formatSpeed(item.speedBps);
   const eta = formatEtaSeconds(item.etaSeconds);
-  const head = t("upload.statsBasic", { status, total });
+  const head = t("upload.statsWithPercent", { status, percent, total });
 
   if (isTerminalUploadStatus(item.status)) {
-    return <span className="truncate">{head}</span>;
+    return <span className="truncate">{t("upload.statsBasic", { status, total })}</span>;
   }
 
   return (
     <span className="flex shrink-0 items-center gap-1.5">
       <span className="truncate">{head}</span>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <span className="inline-flex shrink-0">
-            <Progress
-              value={item.offset}
-              max={item.total || 1}
-              variant={uploadProgressVariant(item.status)}
-              className="h-1.5 w-[6em]"
-            />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          {t("upload.stats.progressTooltip", { percent, uploaded, total })}
-        </TooltipContent>
-      </Tooltip>
       {speed ? <span className="shrink-0">{t("upload.statsSpeed", { speed })}</span> : null}
       {speed && eta ? <span className="shrink-0">{t("upload.statsFull", { eta })}</span> : null}
     </span>
@@ -174,11 +190,9 @@ type QueueRowProps = {
 
 function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProps) {
   const { t } = useTranslation();
-  const isActive =
-    item.status === "active" ||
-    item.status === "hashing" ||
-    item.status === "verifying";
-  const isPaused = item.status === "paused";
+  const showProgress = queueRowShowsProgress(item);
+  const progressPercent = uploadPercent(item);
+  const progressVariant = uploadProgressVariant(item.status);
   const cancellable =
     item.status === "pending" ||
     item.status === "hashing" ||
@@ -189,14 +203,26 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
   return (
     <li
       className={cn(
-        "space-y-2 px-4 py-3",
-        isActive && "bg-muted/40",
-        isPaused && "bg-muted/20",
         item.status === "done" && "opacity-70",
         item.status === "cancelled" && "opacity-70",
       )}
     >
-      <div className="flex items-center gap-2">
+      <div
+        className="relative px-4 py-3"
+        {...(showProgress
+          ? {
+              role: "progressbar",
+              "aria-valuemin": 0,
+              "aria-valuemax": item.total,
+              "aria-valuenow": item.offset,
+              "aria-label": item.fileName,
+            }
+          : {})}
+      >
+        {showProgress ? (
+          <RowProgressBackground percent={progressPercent} variant={progressVariant} />
+        ) : null}
+        <div className="relative flex items-center gap-2">
         <FileIcon name={item.fileName} isDir={false} theme={iconTheme} size="xs" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium" title={item.fileName}>
@@ -245,10 +271,11 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
             <X className="size-4" />
           </Button>
         ) : null}
+        </div>
+        {item.status === "failed" && item.error ? (
+          <p className="mt-2 text-xs text-destructive">{item.error}</p>
+        ) : null}
       </div>
-      {item.status === "failed" && item.error ? (
-        <p className="text-xs text-destructive">{item.error}</p>
-      ) : null}
     </li>
   );
 }
@@ -264,6 +291,12 @@ type SessionRowProps = {
 function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: SessionRowProps) {
   const { t, locale } = useTranslation();
   const busy = session.resuming || session.aborting;
+  const sessionPercent = multipartPercent(session);
+  const showProgress =
+    session.bytesUploaded != null &&
+    session.totalBytes != null &&
+    session.totalBytes > 0 &&
+    sessionPercent != null;
   const startedAt =
     session.initiated != null
       ? formatRelativeModified(session.initiated.getTime(), locale)
@@ -282,8 +315,23 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
     .join(" · ");
 
   return (
-    <li className="space-y-2 px-4 py-3">
-      <div className="flex items-center gap-2">
+    <li>
+      <div
+        className="relative px-4 py-3"
+        {...(showProgress
+          ? {
+              role: "progressbar",
+              "aria-valuemin": 0,
+              "aria-valuemax": session.totalBytes ?? undefined,
+              "aria-valuenow": session.bytesUploaded ?? undefined,
+              "aria-label": session.fileName,
+            }
+          : {})}
+      >
+        {showProgress ? (
+          <RowProgressBackground percent={sessionPercent} variant="local" />
+        ) : null}
+        <div className="relative flex items-center gap-2">
         <FileIcon name={session.fileName} isDir={false} theme={iconTheme} size="xs" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium" title={session.fileName}>
@@ -354,14 +402,8 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
           </TooltipTrigger>
           <TooltipContent side="top">{abortLabel}</TooltipContent>
         </Tooltip>
+        </div>
       </div>
-      {session.bytesUploaded != null && session.totalBytes != null ? (
-        <Progress
-          value={session.bytesUploaded}
-          max={session.totalBytes || 1}
-          variant="local"
-        />
-      ) : null}
     </li>
   );
 }

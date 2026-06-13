@@ -57,6 +57,7 @@ export const ja: Record<MessageKey, string> = {
   "upload.resume": "アップロードを再開",
   "upload.statsQueued": "{{status}} · {{size}}",
   "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsWithPercent": "{{status}} · {{percent}}% · {{total}}",
   "upload.statsSpeed": " · {{speed}}",
   "upload.statsFull": " · 約 {{eta}}",
   "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",

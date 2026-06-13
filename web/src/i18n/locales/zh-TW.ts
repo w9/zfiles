@@ -56,6 +56,7 @@ export const zhTW: Record<MessageKey, string> = {
   "upload.resume": "恢復上傳",
   "upload.statsQueued": "{{status}} · {{size}}",
   "upload.statsBasic": "{{status}} · {{total}}",
+  "upload.statsWithPercent": "{{status}} · {{percent}}% · {{total}}",
   "upload.statsSpeed": " · {{speed}}",
   "upload.statsFull": " · 約 {{eta}}",
   "upload.stats.progressTooltip": "{{percent}}% ({{uploaded}} / {{total}})",
