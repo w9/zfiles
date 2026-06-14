@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** on pause, roll back queue progress to resume-start bytes — S3 via ListParts (fallback in-memory committed offset from progress), local tus via HEAD Upload-Offset (fallback 0), hashing/verifying → 0. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. **Current cycle:** persist unfinished upload sessions in `localStorage` (S3 multipart already does; add local tus) so refresh shows resumable sessions — user re-selects the matching file; prune on completion, cancel/abort, and cloud disconnect. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -116,3 +116,10 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `S3Backend.getMultipartBytesUploaded` + `KernelBackend.getTusUploadOffset` helpers
 - [x] Unit tests for committed progress + paused offset resolution
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `tusSessions.ts`: scoped localStorage CRUD + file-match helpers; unit tests
+- [ ] Kernel: `DELETE /api/upload/{id}` to drop in-progress tus spools; integration test
+- [ ] `useTusSessions.ts` + `KernelBackend` list/abort helpers; resume via re-select file picker
+- [ ] `upload-queue.ts`: persist tus on transfer session; remove on done/cancel; tus resume enqueue item
+- [ ] `UploadPanel` + `ExplorerApp`: show local unfinished sessions alongside cloud multipart; clear scoped multipart records on cloud disconnect
+- [ ] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
