@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. **Current cycle:** persist unfinished upload sessions in `localStorage` (S3 multipart already does; add local tus) so refresh shows resumable sessions — user re-selects the matching file; prune on completion, cancel/abort, and cloud disconnect. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. **Current cycle:** harden upload-session persistence from review — finish-path cleanup for fresh tus + S3 uploads, persist `bytesUploaded` on committed-byte changes, prune local-only multipart records when S3 `ListParts` fails. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -123,3 +123,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `upload-queue.ts`: persist tus on transfer session; remove on done/cancel; tus resume enqueue item
 - [x] `UploadPanel` + `ExplorerApp`: show local unfinished sessions alongside cloud multipart; clear scoped multipart records on cloud disconnect
 - [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `upload-queue.ts`: finish-path session cleanup uses active item (fresh tus + S3 multipart); unit test
+- [ ] `upload-queue.ts`: persist multipart `bytesUploaded` on committed-byte changes (not blocked after create)
+- [ ] `s3Backend.ts`: drop local-only multipart records (+ IndexedDB handles) when `ListParts` fails
+- [ ] Unit tests for finish-path ids + stale local record pruning behavior
+- [ ] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
