@@ -109,6 +109,13 @@ export function mergeMultipartSessions(
   return merged;
 }
 
+export function filterMultipartLocalRecords(
+  localRecords: MultipartSessionRecord[],
+  removedUploadIds: ReadonlySet<string>,
+): MultipartSessionRecord[] {
+  return localRecords.filter((record) => !removedUploadIds.has(record.uploadId));
+}
+
 export async function listInProgressMultipartUploads(
   client: S3Client,
   bucket: string,

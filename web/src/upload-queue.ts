@@ -217,6 +217,36 @@ export function activeTusUploadIds(items: UploadQueueItem[]): Set<string> {
   return ids;
 }
 
+/** Session ids to clear from persistence when a queue item finishes successfully. */
+export function finishedUploadSessionIds(item: UploadQueueItem): {
+  multipartUploadId?: string;
+  tusUploadId?: string;
+} {
+  const multipartUploadId =
+    item.multipartResume?.uploadId ?? item.multipartUpload?.uploadId;
+  const tusUploadId =
+    item.backendUploadId ??
+    (item.tusResume ? tusUploadIdFromLocation(item.tusResume.location) : undefined);
+  const result: {
+    multipartUploadId?: string;
+    tusUploadId?: string;
+  } = {};
+  if (multipartUploadId) {
+    result.multipartUploadId = multipartUploadId;
+  }
+  if (tusUploadId) {
+    result.tusUploadId = tusUploadId;
+  }
+  return result;
+}
+
+export function shouldPersistMultipartCommittedBytes(
+  lastPersisted: number | undefined,
+  committedBytes: number,
+): boolean {
+  return lastPersisted !== committedBytes;
+}
+
 export function uploadPercent(item: UploadQueueItem): number {
   if (item.total <= 0) {
     return 0;
@@ -471,7 +501,8 @@ export function useUploadQueue({
             item.multipartResume?.checksumValidation ?? checksumValidation,
           checksumSha256Base64: item.multipartResume?.checksumSha256Base64,
           bytesUploaded: item.committedUploadOffset ?? item.offset,
-          createdAt: new Date().toISOString(),
+          createdAt:
+            findMultipartRecord(scopeId, uploadId)?.createdAt ?? new Date().toISOString(),
         });
       }
     };
@@ -546,7 +577,8 @@ export function useUploadQueue({
   );
 
   const persistedSourceHandlesRef = useRef(new Set<string>());
-  const persistedMultipartRecordsRef = useRef(new Set<string>());
+  const initializedMultipartSessionsRef = useRef(new Set<string>());
+  const lastPersistedCommittedBytesRef = useRef(new Map<string, number>());
 
   const enqueue = useCallback(
     (
@@ -964,10 +996,10 @@ export function useUploadQueue({
             if (!active || backend.mode !== "s3") {
               return;
             }
-            if (persistedMultipartRecordsRef.current.has(session.uploadId)) {
+            if (initializedMultipartSessionsRef.current.has(session.uploadId)) {
               return;
             }
-            persistedMultipartRecordsRef.current.add(session.uploadId);
+            initializedMultipartSessionsRef.current.add(session.uploadId);
             const scopeId = multipartSessionScopeId(
               (backend as S3Backend).connectionConfig,
             );
@@ -1039,34 +1071,40 @@ export function useUploadQueue({
               active.sourceFileHandle,
             );
           }
-          if (
-            progress.multipartUploadId &&
-            backend.mode === "s3" &&
-            !persistedMultipartRecordsRef.current.has(progress.multipartUploadId)
-          ) {
-            persistedMultipartRecordsRef.current.add(progress.multipartUploadId);
+          if (progress.multipartUploadId && backend.mode === "s3") {
             const s3Backend = backend as S3Backend;
             const scopeId = multipartSessionScopeId(s3Backend.connectionConfig);
             const objectKey =
               active.multipartUpload?.objectKey ?? progress.id;
-            const existing = findMultipartRecord(scopeId, progress.multipartUploadId);
-            const checksumValidation = uploadChecksumValidationEnabled(
-              s3Backend.connectionConfig.provider,
-              readUploadChecksumValidation(),
-            );
-            upsertMultipartRecord(scopeId, {
-              uploadId: progress.multipartUploadId,
-              objectKey,
-              destPath: active.destPath,
-              fileName: active.fileName,
-              fileSize: active.total,
-              fileLastModified: active.file.lastModified,
-              partSize: existing?.partSize ?? computeMultipartPartSize(active.total),
-              checksumValidation,
-              checksumSha256Base64: existing?.checksumSha256Base64,
-              bytesUploaded: progress.committedOffset ?? progress.offset,
-              createdAt: existing?.createdAt ?? new Date().toISOString(),
-            });
+            const committedBytes = progress.committedOffset ?? progress.offset;
+            const uploadId = progress.multipartUploadId;
+            if (
+              shouldPersistMultipartCommittedBytes(
+                lastPersistedCommittedBytesRef.current.get(uploadId),
+                committedBytes,
+              )
+            ) {
+              lastPersistedCommittedBytesRef.current.set(uploadId, committedBytes);
+              const existing = findMultipartRecord(scopeId, uploadId);
+              const checksumValidation = uploadChecksumValidationEnabled(
+                s3Backend.connectionConfig.provider,
+                readUploadChecksumValidation(),
+              );
+              upsertMultipartRecord(scopeId, {
+                uploadId,
+                objectKey,
+                destPath: active.destPath,
+                fileName: active.fileName,
+                fileSize: active.total,
+                fileLastModified: active.file.lastModified,
+                partSize: existing?.partSize ?? computeMultipartPartSize(active.total),
+                checksumValidation:
+                  existing?.checksumValidation ?? checksumValidation,
+                checksumSha256Base64: existing?.checksumSha256Base64,
+                bytesUploaded: committedBytes,
+                createdAt: existing?.createdAt ?? new Date().toISOString(),
+              });
+            }
           }
           const updated = ingestProgress(
             queueId,
@@ -1136,14 +1174,13 @@ export function useUploadQueue({
         commitProgressItem(queueId, finalItem, true);
         samplesRef.current.delete(queueId);
         lastProgressUiAtRef.current.delete(queueId);
-        if (ready.multipartResume?.uploadId) {
-          onMultipartSessionFinished?.(ready.multipartResume.uploadId);
+        const finishedItem = active ?? ready;
+        const { multipartUploadId, tusUploadId } = finishedUploadSessionIds(finishedItem);
+        if (multipartUploadId) {
+          onMultipartSessionFinished?.(multipartUploadId);
         }
-        const finishedTusUploadId =
-          ready.backendUploadId ??
-          (ready.tusResume ? tusUploadIdFromLocation(ready.tusResume.location) : undefined);
-        if (finishedTusUploadId) {
-          onTusSessionFinished?.(finishedTusUploadId);
+        if (tusUploadId) {
+          onTusSessionFinished?.(tusUploadId);
         }
         onItemComplete?.();
       } catch (err) {

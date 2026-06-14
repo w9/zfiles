@@ -124,8 +124,8 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `UploadPanel` + `ExplorerApp`: show local unfinished sessions alongside cloud multipart; clear scoped multipart records on cloud disconnect
 - [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `upload-queue.ts`: finish-path session cleanup uses active item (fresh tus + S3 multipart); unit test
-- [ ] `upload-queue.ts`: persist multipart `bytesUploaded` on committed-byte changes (not blocked after create)
-- [ ] `s3Backend.ts`: drop local-only multipart records (+ IndexedDB handles) when `ListParts` fails
-- [ ] Unit tests for finish-path ids + stale local record pruning behavior
-- [ ] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
+- [x] `upload-queue.ts`: finish-path session cleanup uses active item (fresh tus + S3 multipart); unit test
+- [x] `upload-queue.ts`: persist multipart `bytesUploaded` on committed-byte changes (not blocked after create)
+- [x] `s3Backend.ts`: drop local-only multipart records (+ IndexedDB handles) when `ListParts` fails
+- [x] Unit tests for finish-path ids + stale local record pruning behavior
+- [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`

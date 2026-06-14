@@ -20,7 +20,9 @@ import {
   upsertMultipartRecord,
   type MultipartSessionRecord,
 } from "../cloud/multipartSessions";
+import { removeStoredFileHandle } from "../cloud/multipartFileHandles";
 import {
+  filterMultipartLocalRecords,
   listInProgressMultipartUploads,
   listUploadedParts,
   mergeMultipartSessions,
@@ -255,6 +257,7 @@ export class S3Backend implements ExplorerBackend {
     const localRecords = readScopedMultipartRecords(scopeId);
     const bytesUploadedByUploadId = new Map<string, number>();
     const listedUploadIds = new Set(listed.map((upload) => upload.uploadId));
+    const removedLocalUploadIds = new Set<string>();
     await Promise.all([
       ...listed.map(async (upload) => {
         const parts = await listUploadedParts(
@@ -277,13 +280,15 @@ export class S3Backend implements ExplorerBackend {
             );
             bytesUploadedByUploadId.set(record.uploadId, multipartBytesUploaded(parts));
           } catch {
-            // Upload may have been aborted server-side; fall back to stored progress.
+            removedLocalUploadIds.add(record.uploadId);
+            removeMultipartRecord(scopeId, record.uploadId);
+            await removeStoredFileHandle(scopeId, record.uploadId);
           }
         }),
     ]);
     return mergeMultipartSessions(
       listed,
-      localRecords,
+      filterMultipartLocalRecords(localRecords, removedLocalUploadIds),
       this.config.prefix,
       bytesUploadedByUploadId,
     );

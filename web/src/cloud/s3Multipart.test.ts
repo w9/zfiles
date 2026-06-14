@@ -12,6 +12,7 @@ import {
   mergeMultipartSessions,
   multipartBytesUploaded,
   multipartPercent,
+  filterMultipartLocalRecords,
   type ListedPart,
 } from "./s3Multipart";
 
@@ -160,4 +161,35 @@ test("mergeMultipartSessions falls back to stored local bytes when S3 map is emp
   const merged = mergeMultipartSessions([], localRecords, "data/", new Map());
   assert.equal(merged[0]?.bytesUploaded, 250);
   assert.equal(merged[0]?.totalBytes, 1_000);
+});
+
+test("filterMultipartLocalRecords drops removed upload ids before merge", () => {
+  const localRecords: MultipartSessionRecord[] = [
+    {
+      uploadId: "keep",
+      objectKey: "data/keep.bin",
+      destPath: "keep.bin",
+      fileName: "keep.bin",
+      fileSize: 100,
+      fileLastModified: 1,
+      partSize: 5 * 1024 * 1024,
+      checksumValidation: false,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    {
+      uploadId: "gone",
+      objectKey: "data/gone.bin",
+      destPath: "gone.bin",
+      fileName: "gone.bin",
+      fileSize: 200,
+      fileLastModified: 2,
+      partSize: 5 * 1024 * 1024,
+      checksumValidation: false,
+      createdAt: "2026-01-02T00:00:00.000Z",
+    },
+  ];
+  const filtered = filterMultipartLocalRecords(localRecords, new Set(["gone"]));
+  const merged = mergeMultipartSessions([], filtered, "data/", new Map());
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0]?.uploadId, "keep");
 });

@@ -7,6 +7,7 @@ import {
   countUploadsByStatus,
   createQueueItem,
   createResumeQueueItem,
+  finishedUploadSessionIds,
   formatEtaSeconds,
   isUploadAbortError,
   isUploadPauseError,
@@ -14,6 +15,7 @@ import {
   PROGRESS_UI_MIN_INTERVAL_MS,
   resolvePausedUploadOffset,
   shouldCommitProgressUi,
+  shouldPersistMultipartCommittedBytes,
   uploadPercent,
   uploadProgressVariant,
   uploadStatusForProgress,
@@ -242,4 +244,35 @@ test("activeMultipartUploadIds ignores finished queue items", () => {
   const done = { ...active, id: "done", status: "done" as const };
   const ids = activeMultipartUploadIds([active, done]);
   assert.deepEqual([...ids], ["upload-active"]);
+});
+
+test("finishedUploadSessionIds reads active queue state after transfer session", () => {
+  const file = new File(["x"], "a.txt");
+  const base = createQueueItem(file, "a.txt");
+  assert.deepEqual(finishedUploadSessionIds(base), {});
+
+  const tusActive = {
+    ...base,
+    backendUploadId: "tus-1",
+    tusResume: {
+      location: "/api/upload/tus-1",
+      checksumSha256Base64: "digest",
+    },
+  };
+  assert.deepEqual(finishedUploadSessionIds(tusActive), { tusUploadId: "tus-1" });
+
+  const multipartActive = {
+    ...base,
+    multipartUpload: { uploadId: "mp-1", objectKey: "photos/a.txt" },
+  };
+  assert.deepEqual(finishedUploadSessionIds(multipartActive), {
+    multipartUploadId: "mp-1",
+  });
+});
+
+test("shouldPersistMultipartCommittedBytes skips duplicate committed writes", () => {
+  assert.equal(shouldPersistMultipartCommittedBytes(undefined, 0), true);
+  assert.equal(shouldPersistMultipartCommittedBytes(0, 0), false);
+  assert.equal(shouldPersistMultipartCommittedBytes(0, 5_242_880), true);
+  assert.equal(shouldPersistMultipartCommittedBytes(5_242_880, 5_242_880), false);
 });
