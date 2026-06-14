@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified in-house S3 multipart engine is **complete**. Per-key shortcut chips, GitHub Actions Node 24, AGENTS.md commit-scope rule, file-operation keybindings, per-row Pause/Resume, and tooltip pointer-leave dismiss are **complete**. **Current cycle:** replace native HTML `title=` hover hints with a shared Shadcn `TruncatedTextTooltip` helper (GridListing rules: always on hover, 1000ms delay); migrate all eight sites plus VirtualListing name column. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Current cycle:** on pause, roll back queue progress to resume-start bytes — S3 via ListParts (fallback in-memory committed offset from progress), local tus via HEAD Upload-Offset (fallback 0), hashing/verifying → 0. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -110,3 +110,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Unified 
 - [x] `VirtualListing.tsx`: name column + modified column; `GridListing.tsx`: adopt shared helper
 - [x] `FileIcon.tsx` symlink badge + `BackendStatus.tsx` conditional hint — drop native `title=`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadProgress` + multipart `onProgress`: pass committed bytes (excluding in-flight part data)
+- [ ] `upload-queue.ts`: track `committedUploadOffset`; `resolvePausedUploadOffset` (ListParts / HEAD / hashing→0); apply on pause
+- [ ] `S3Backend.getMultipartBytesUploaded` + `KernelBackend.getTusUploadOffset` helpers
+- [ ] Unit tests for committed progress + paused offset resolution
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
