@@ -27,6 +27,8 @@ export type UploadProgress = {
   offset: number;
   length?: number;
   multipartUploadId?: string;
+  /** Bytes durably stored on the server (excludes in-flight part data). */
+  committedOffset?: number;
 };
 
 export type TusUploadResume = {

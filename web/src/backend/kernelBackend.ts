@@ -129,6 +129,10 @@ export class KernelBackend implements ExplorerBackend {
     return `/api/file?path=${encodeURIComponent(path)}`;
   }
 
+  async getTusUploadOffset(location: string): Promise<number> {
+    return headUploadOffset(location);
+  }
+
   async upload(
     file: File,
     destPath: string,
@@ -196,6 +200,7 @@ export class KernelBackend implements ExplorerBackend {
           id: uploadId,
           offset: Math.min(offset + loaded, file.size),
           length: file.size,
+          committedOffset: offset,
         });
       });
 
@@ -211,7 +216,12 @@ export class KernelBackend implements ExplorerBackend {
       }
 
       offset = patch.uploadOffset;
-      onProgress?.({ id: uploadId, offset, length: file.size });
+      onProgress?.({
+        id: uploadId,
+        offset,
+        length: file.size,
+        committedOffset: offset,
+      });
     }
 
     callbacks?.onVerifying?.();

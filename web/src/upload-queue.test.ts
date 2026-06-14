@@ -12,10 +12,12 @@ import {
   isUploadPauseError,
   multipartResumeFromRecord,
   PROGRESS_UI_MIN_INTERVAL_MS,
+  resolvePausedUploadOffset,
   shouldCommitProgressUi,
   uploadPercent,
   uploadProgressVariant,
   uploadStatusForProgress,
+  type UploadQueueItem,
 } from "./upload-queue";
 
 test("createQueueItem starts pending with file size as total", () => {
@@ -62,6 +64,77 @@ test("applyProgressUpdate computes speed and eta from samples", () => {
   assert.equal(second.item.offset, 5_000);
   assert.ok(second.item.speedBps != null && second.item.speedBps >= 4_900);
   assert.ok(second.item.etaSeconds != null && second.item.etaSeconds > 0);
+});
+
+test("applyProgressUpdate stores committed upload offset when provided", () => {
+  const file = new File([new Uint8Array(10_000)], "big.bin");
+  const item = createQueueItem(file, "big.bin");
+  const { item: updated } = applyProgressUpdate(item, 900, 10_000, 1_000, [], undefined, 500);
+  assert.equal(updated.offset, 900);
+  assert.equal(updated.committedUploadOffset, 500);
+});
+
+test("resolvePausedUploadOffset rolls hashing and verifying to zero", async () => {
+  const file = new File(["x"], "a.txt");
+  const base = createQueueItem(file, "a.txt");
+  const backend = { mode: "local" as const };
+  assert.equal(
+    await resolvePausedUploadOffset({ ...base, status: "hashing", offset: 500 }, backend),
+    0,
+  );
+  assert.equal(
+    await resolvePausedUploadOffset({ ...base, status: "verifying", offset: 500 }, backend),
+    0,
+  );
+});
+
+test("resolvePausedUploadOffset uses ListParts for s3 multipart uploads", async () => {
+  const file = new File(["x"], "a.txt");
+  const item: UploadQueueItem = {
+    ...createQueueItem(file, "a.txt"),
+    status: "active",
+    offset: 900,
+    committedUploadOffset: 500,
+    multipartUpload: { uploadId: "u1", objectKey: "photos/a.txt" },
+  };
+  const backend = {
+    mode: "s3" as const,
+    getMultipartBytesUploaded: async () => 524_288,
+  };
+  assert.equal(await resolvePausedUploadOffset(item, backend as never), 524_288);
+});
+
+test("resolvePausedUploadOffset falls back to committed bytes when ListParts fails", async () => {
+  const file = new File(["x"], "a.txt");
+  const item: UploadQueueItem = {
+    ...createQueueItem(file, "a.txt"),
+    status: "active",
+    offset: 900,
+    committedUploadOffset: 500,
+    multipartUpload: { uploadId: "u1", objectKey: "photos/a.txt" },
+  };
+  const backend = {
+    mode: "s3" as const,
+    getMultipartBytesUploaded: async () => {
+      throw new Error("network");
+    },
+  };
+  assert.equal(await resolvePausedUploadOffset(item, backend as never), 500);
+});
+
+test("resolvePausedUploadOffset uses tus HEAD offset for local uploads", async () => {
+  const file = new File(["x"], "a.txt");
+  const item: UploadQueueItem = {
+    ...createQueueItem(file, "a.txt"),
+    status: "active",
+    offset: 900,
+    tusResume: { location: "/api/upload/abc", checksumSha256Base64: "digest" },
+  };
+  const backend = {
+    mode: "local" as const,
+    getTusUploadOffset: async () => 256_000,
+  };
+  assert.equal(await resolvePausedUploadOffset(item, backend as never), 256_000);
 });
 
 test("isUploadAbortError detects abort errors", () => {
@@ -148,6 +221,7 @@ test("createResumeQueueItem seeds offset and carries stored checksum", () => {
   const before = Date.now();
   const item = createResumeQueueItem(file, record, 42);
   assert.equal(item.offset, 42);
+  assert.equal(item.committedUploadOffset, 42);
   assert.equal(item.multipartResume?.checksumSha256Base64, "abc123");
   assert.ok(item.enqueuedAt >= before && item.enqueuedAt <= Date.now());
 });

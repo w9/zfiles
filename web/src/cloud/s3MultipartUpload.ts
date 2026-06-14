@@ -105,7 +105,7 @@ export type MultipartUploadParams = {
 };
 
 export type MultipartUploadOptions = {
-  onProgress?: (loaded: number, total: number) => void;
+  onProgress?: (loaded: number, total: number, committedBytes: number) => void;
   onUploadCreated?: (uploadId: string) => void;
   signal?: AbortSignal;
 };
@@ -113,18 +113,19 @@ export type MultipartUploadOptions = {
 async function uploadSinglePut(
   client: S3Client,
   params: MultipartUploadParams,
-  onProgress?: (loaded: number, total: number) => void,
+  onProgress?: (loaded: number, total: number, committedBytes: number) => void,
   signal?: AbortSignal,
 ): Promise<void> {
   throwIfAborted(signal);
   const totalBytes = params.body.size;
-  onProgress?.(0, totalBytes);
+  onProgress?.(0, totalBytes, 0);
 
   const xhrHandler = xhrHttpHandlerFromClient(client);
   let detachProgress: (() => void) | undefined;
   if (xhrHandler) {
     detachProgress = attachGenericUploadProgressListener(xhrHandler, (loaded) => {
-      onProgress?.(Math.min(loaded, totalBytes), totalBytes);
+      const reported = Math.min(loaded, totalBytes);
+      onProgress?.(reported, totalBytes, 0);
     });
   }
 
@@ -141,7 +142,7 @@ async function uploadSinglePut(
       }),
       signal ? { abortSignal: signal } : undefined,
     );
-    onProgress?.(totalBytes, totalBytes);
+    onProgress?.(totalBytes, totalBytes, totalBytes);
   } finally {
     detachProgress?.();
   }
@@ -222,6 +223,7 @@ export async function uploadMultipartFile(
     options?.onProgress?.(
       aggregateMultipartBytesInFlight(committed, inFlightLoadedByPart),
       totalBytes,
+      committed,
     );
   };
 

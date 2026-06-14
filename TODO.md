@@ -111,8 +111,8 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. **Curren
 - [x] `FileIcon.tsx` symlink badge + `BackendStatus.tsx` conditional hint — drop native `title=`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadProgress` + multipart `onProgress`: pass committed bytes (excluding in-flight part data)
-- [ ] `upload-queue.ts`: track `committedUploadOffset`; `resolvePausedUploadOffset` (ListParts / HEAD / hashing→0); apply on pause
-- [ ] `S3Backend.getMultipartBytesUploaded` + `KernelBackend.getTusUploadOffset` helpers
-- [ ] Unit tests for committed progress + paused offset resolution
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `UploadProgress` + multipart `onProgress`: pass committed bytes (excluding in-flight part data)
+- [x] `upload-queue.ts`: track `committedUploadOffset`; `resolvePausedUploadOffset` (ListParts / HEAD / hashing→0); apply on pause
+- [x] `S3Backend.getMultipartBytesUploaded` + `KernelBackend.getTusUploadOffset` helpers
+- [x] Unit tests for committed progress + paused offset resolution
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { KernelBackend } from "./backend/kernelBackend";
 import type { S3Backend } from "./backend/s3Backend";
 import { storeFileHandle } from "./cloud/multipartFileHandles";
 import {
@@ -55,6 +56,8 @@ export type UploadQueueItem = {
   status: UploadItemStatus;
   offset: number;
   total: number;
+  /** Bytes durably on the server during active transfer; used when pause ListParts/HEAD fails. */
+  committedUploadOffset?: number;
   speedBps: number | null;
   etaSeconds: number | null;
   error?: string;
@@ -126,6 +129,7 @@ export function createResumeQueueItem(
     enqueuedAt: Date.now(),
     status: "pending",
     offset: initialOffset,
+    committedUploadOffset: initialOffset,
     total: record.fileSize,
     speedBps: null,
     etaSeconds: null,
@@ -247,6 +251,34 @@ export function enrichPausedItemForResume(
   return base;
 }
 
+/** Bytes the next resume would start from; matches server/part truth per AQ. */
+export async function resolvePausedUploadOffset(
+  item: UploadQueueItem,
+  backend: ExplorerBackend,
+): Promise<number> {
+  if (item.status === "hashing" || item.status === "verifying") {
+    return 0;
+  }
+  if (backend.mode === "s3" && item.multipartUpload) {
+    try {
+      return await (backend as S3Backend).getMultipartBytesUploaded(
+        item.multipartUpload.objectKey,
+        item.multipartUpload.uploadId,
+      );
+    } catch {
+      return item.committedUploadOffset ?? 0;
+    }
+  }
+  if (backend.mode === "local" && item.tusResume?.location) {
+    try {
+      return await (backend as KernelBackend).getTusUploadOffset(item.tusResume.location);
+    } catch {
+      return 0;
+    }
+  }
+  return item.committedUploadOffset ?? 0;
+}
+
 export function countUploadsByStatus(items: UploadQueueItem[]): Partial<Record<UploadItemStatus, number>> {
   const counts: Partial<Record<UploadItemStatus, number>> = {};
   for (const item of items) {
@@ -262,6 +294,7 @@ export function applyProgressUpdate(
   now: number,
   samples: ProgressSample[],
   backendUploadId?: string,
+  committedUploadOffset?: number,
 ): { item: UploadQueueItem; samples: ProgressSample[] } {
   const length = total ?? item.total;
   const trimmed = [...samples, { time: now, offset }].filter(
@@ -290,6 +323,8 @@ export function applyProgressUpdate(
       speedBps,
       etaSeconds,
       backendUploadId: backendUploadId ?? item.backendUploadId,
+      committedUploadOffset:
+        committedUploadOffset ?? item.committedUploadOffset,
     },
     samples: trimmed,
   };
@@ -392,6 +427,7 @@ export function useUploadQueue({
       offset: number,
       total: number | undefined,
       backendUploadId?: string,
+      committedUploadOffset?: number,
     ) => {
       const samples = samplesRef.current.get(queueId) ?? [];
       const { item: updated, samples: nextSamples } = applyProgressUpdate(
@@ -401,6 +437,7 @@ export function useUploadQueue({
         Date.now(),
         samples,
         backendUploadId,
+        committedUploadOffset,
       );
       samplesRef.current.set(queueId, nextSamples);
       return updated;
@@ -464,6 +501,7 @@ export function useUploadQueue({
         progress.offset,
         progress.length,
         progress.id,
+        progress.committedOffset,
       );
       commitProgressItem(active.id, updated, false);
     },
@@ -827,6 +865,7 @@ export function useUploadQueue({
             progress.offset,
             progress.length,
             progress.id,
+            progress.committedOffset,
           );
           commitProgressItem(queueId, updated, false);
         };
@@ -900,9 +939,13 @@ export function useUploadQueue({
         cancelledIdsRef.current.delete(queueId);
 
         if (wasPaused) {
+          const source = active ?? pending;
+          const effectiveOffset = await resolvePausedUploadOffset(source, backend);
           const pausedItem: UploadQueueItem = {
-            ...(active ?? pending),
+            ...source,
             status: "paused",
+            offset: effectiveOffset,
+            committedUploadOffset: effectiveOffset,
             speedBps: null,
             etaSeconds: null,
           };

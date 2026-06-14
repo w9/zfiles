@@ -279,6 +279,16 @@ export class S3Backend implements ExplorerBackend {
     await abortMultipartUpload(this.client, this.config.bucket, objectKey, uploadId);
   }
 
+  async getMultipartBytesUploaded(objectKey: string, uploadId: string): Promise<number> {
+    const parts = await listUploadedParts(
+      this.client,
+      this.config.bucket,
+      objectKey,
+      uploadId,
+    );
+    return multipartBytesUploaded(parts);
+  }
+
   async resumeUpload(
     file: File,
     record: MultipartSessionRecord,
@@ -326,12 +336,13 @@ export class S3Backend implements ExplorerBackend {
           checksumAlgorithm: checksumValidation ? "SHA256" : undefined,
         },
         {
-          onProgress: (loaded, total) => {
+          onProgress: (loaded, total, committedBytes) => {
             onProgress?.({
               id: key,
               offset: loaded,
               length: total,
               multipartUploadId: record.uploadId,
+              committedOffset: committedBytes,
             });
           },
           signal,
@@ -436,12 +447,13 @@ export class S3Backend implements ExplorerBackend {
               checksum ?? undefined,
             );
           },
-          onProgress: (loaded, total) => {
+          onProgress: (loaded, total, committedBytes) => {
             onProgress?.({
               id: key,
               offset: loaded,
               length: total,
               multipartUploadId: activeUploadId ?? undefined,
+              committedOffset: committedBytes,
             });
           },
           signal,
