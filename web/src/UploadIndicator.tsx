@@ -23,6 +23,8 @@ type UploadIndicatorProps = {
   onCancel: (queueId: string) => void;
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
+  unfinishedSessions?: CloudMultipartPanelProps;
+  /** @deprecated Use unfinishedSessions */
   cloudMultipart?: CloudMultipartPanelProps;
 };
 
@@ -53,8 +55,10 @@ export default function UploadIndicator({
   onCancel,
   onPause,
   onResume,
+  unfinishedSessions,
   cloudMultipart,
 }: UploadIndicatorProps) {
+  const sessionPanel = unfinishedSessions ?? cloudMultipart;
   const { t } = useTranslation();
   const stats = useMemo(() => aggregateUploadStats(items), [items]);
   const attention = uploadTrayAttention(stats);
@@ -110,7 +114,8 @@ export default function UploadIndicator({
       onPause={onPause}
       onResume={onResume}
       onClose={closePanel}
-      cloudMultipart={cloudMultipart}
+      unfinishedSessions={sessionPanel}
+      cloudMultipart={sessionPanel}
     />
   );
 
@@ -170,7 +175,8 @@ export default function UploadIndicator({
               onPause={onPause}
               onResume={onResume}
               onClose={closePanel}
-              cloudMultipart={cloudMultipart}
+              unfinishedSessions={sessionPanel}
+              cloudMultipart={sessionPanel}
               onDragHandlePointerDown={onDragHandlePointerDown}
             />
           )}

@@ -52,6 +52,8 @@ export const it: Record<MessageKey, string> = {
   "upload.status.failed": "Non riuscito",
   "upload.status.cancelled": "Annullato",
   "upload.status.unfinished": "Non completato",
+  "upload.unfinished.description":
+    "Seleziona di nuovo lo stesso file su questo dispositivo per riprendere da dove avevi interrotto.",
   "upload.cancel": "Annulla caricamento",
   "upload.pause": "Metti in pausa",
   "upload.resume": "Riprendi",

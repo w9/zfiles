@@ -52,6 +52,8 @@ export const de: Record<MessageKey, string> = {
   "upload.status.failed": "Fehlgeschlagen",
   "upload.status.cancelled": "Abgebrochen",
   "upload.status.unfinished": "Unfertig",
+  "upload.unfinished.description":
+    "Wählen Sie dieselbe Datei auf diesem Gerät erneut aus, um dort fortzufahren, wo Sie aufgehört haben.",
   "upload.cancel": "Upload abbrechen",
   "upload.pause": "Upload pausieren",
   "upload.resume": "Upload fortsetzen",

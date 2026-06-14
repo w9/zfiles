@@ -133,6 +133,15 @@ export class KernelBackend implements ExplorerBackend {
     return headUploadOffset(location);
   }
 
+  async abortTusSession(uploadId: string): Promise<void> {
+    const response = await apiFetch(`/api/upload/${encodeURIComponent(uploadId)}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(`upload delete failed: HTTP ${response.status}`);
+    }
+  }
+
   async upload(
     file: File,
     destPath: string,

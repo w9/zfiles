@@ -13,6 +13,8 @@ export type MultipartSessionRecord = {
   checksumValidation: boolean;
   /** SHA-256 digest (base64) from the initial upload hashing pass; reused on resume. */
   checksumSha256Base64?: string;
+  /** Last known committed upload offset; used before S3 ListParts on refresh. */
+  bytesUploaded?: number;
   createdAt: string;
 };
 
@@ -81,6 +83,15 @@ export function upsertMultipartRecord(scopeId: string, record: MultipartSessionR
   const next = existing.filter((entry) => entry.uploadId !== record.uploadId);
   next.push(record);
   store[scopeId] = next;
+  writeStore(store);
+}
+
+export function clearScopedMultipartRecords(scopeId: string): void {
+  const store = readStore();
+  if (!(scopeId in store)) {
+    return;
+  }
+  delete store[scopeId];
   writeStore(store);
 }
 

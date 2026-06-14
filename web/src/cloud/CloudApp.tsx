@@ -17,6 +17,12 @@ import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
 import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
 import { readBootParamsFromUrl, stripCredentialParamsFromUrl } from "./bootParams";
+import {
+  clearScopedMultipartRecords,
+  multipartSessionScopeId,
+  readScopedMultipartRecords,
+} from "./multipartSessions";
+import { removeStoredFileHandle } from "./multipartFileHandles";
 import { clearSessionConfig, loadSessionConfig } from "./credentials";
 
 function backendFromSession(): S3Backend | null {
@@ -49,8 +55,18 @@ export default function CloudApp() {
   const [backend, setBackend] = useState<S3Backend | null>(() => backendFromSession());
 
   const onDisconnect = useCallback(() => {
-    clearSessionConfig();
-    setBackend(null);
+    setBackend((current) => {
+      if (current) {
+        const scopeId = multipartSessionScopeId(current.connectionConfig);
+        const records = readScopedMultipartRecords(scopeId);
+        clearScopedMultipartRecords(scopeId);
+        void Promise.all(
+          records.map((record) => removeStoredFileHandle(scopeId, record.uploadId)),
+        );
+      }
+      clearSessionConfig();
+      return null;
+    });
   }, []);
 
   if (!backend) {

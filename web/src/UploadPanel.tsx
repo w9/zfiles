@@ -11,11 +11,14 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { FileIcon } from "./FileIcon";
-import { multipartPercent } from "./cloud/s3Multipart";
-import type { MultipartSessionView } from "./cloud/useMultipartSessions";
 import { useTranslation } from "./i18n";
 import { formatRelativeModified, formatSize } from "./listing-format";
 import { useTheme } from "./useTheme";
+import {
+  unfinishedSessionPercent,
+  unfinishedSessionProgressUnknown,
+  type UnfinishedSessionView,
+} from "./unfinishedUploadSessions";
 import {
   formatEtaSeconds,
   uploadPercent,
@@ -25,12 +28,15 @@ import {
 } from "./upload-queue";
 import { mergeUploadPanelRows, uploadHeaderSegments } from "./uploadPanelRows";
 
-export type CloudMultipartPanelProps = {
-  sessions: MultipartSessionView[];
+export type UnfinishedSessionsPanelProps = {
+  sessions: UnfinishedSessionView[];
   readOnly: boolean;
   onResume: (uploadId: string) => void;
   onAbort: (uploadId: string) => void;
 };
+
+/** @deprecated Use UnfinishedSessionsPanelProps */
+export type CloudMultipartPanelProps = UnfinishedSessionsPanelProps;
 
 type UploadPanelProps = {
   items: UploadQueueItem[];
@@ -39,7 +45,9 @@ type UploadPanelProps = {
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
   onClose?: () => void;
-  cloudMultipart?: CloudMultipartPanelProps;
+  unfinishedSessions?: UnfinishedSessionsPanelProps;
+  /** @deprecated Use unfinishedSessions */
+  cloudMultipart?: UnfinishedSessionsPanelProps;
   onDragHandlePointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
 };
 
@@ -165,11 +173,11 @@ function panelHeaderTitle(
   });
 }
 
-function multipartProgressKnownLine(
-  session: MultipartSessionView,
+function sessionProgressKnownLine(
+  session: UnfinishedSessionView,
   t: ReturnType<typeof useTranslation>["t"],
 ): string | null {
-  const percent = multipartPercent(session);
+  const percent = unfinishedSessionPercent(session);
   if (percent == null || session.bytesUploaded == null || session.totalBytes == null) {
     return null;
   }
@@ -180,9 +188,8 @@ function multipartProgressKnownLine(
   });
 }
 
-function multipartProgressUnknown(session: MultipartSessionView): boolean {
-  const percent = multipartPercent(session);
-  return percent == null || session.bytesUploaded == null || session.totalBytes == null;
+function sessionProgressUnknown(session: UnfinishedSessionView): boolean {
+  return unfinishedSessionProgressUnknown(session);
 }
 
 type QueueRowProps = {
@@ -290,7 +297,7 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
 }
 
 type SessionRowProps = {
-  session: MultipartSessionView;
+  session: UnfinishedSessionView;
   iconTheme: ReturnType<typeof useTheme>["resolved"];
   readOnly: boolean;
   onResume: (uploadId: string) => void;
@@ -300,7 +307,7 @@ type SessionRowProps = {
 function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: SessionRowProps) {
   const { t, locale } = useTranslation();
   const busy = session.resuming || session.aborting;
-  const sessionPercent = multipartPercent(session);
+  const sessionPercent = unfinishedSessionPercent(session);
   const showProgress =
     session.bytesUploaded != null &&
     session.totalBytes != null &&
@@ -318,7 +325,7 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
     : t("upload.multipart.abort");
   const statsRest = [
     startedAt ? t("upload.multipart.startedAt", { time: startedAt }) : null,
-    multipartProgressKnownLine(session, t),
+    sessionProgressKnownLine(session, t),
   ]
     .filter(Boolean)
     .join(" · ");
@@ -365,9 +372,13 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
               </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs space-y-2">
-              <p>{t("upload.multipart.description")}</p>
+              <p>
+                {session.canResume
+                  ? t("upload.unfinished.description")
+                  : t("upload.multipart.description")}
+              </p>
               {!session.canResume ? <p>{t("upload.multipart.remoteOnly")}</p> : null}
-              {multipartProgressUnknown(session) ? (
+              {sessionProgressUnknown(session) ? (
                 <p>{t("upload.multipart.progressUnknown")}</p>
               ) : null}
             </TooltipContent>
@@ -421,12 +432,14 @@ export default function UploadPanel({
   onPause,
   onResume,
   onClose,
+  unfinishedSessions,
   cloudMultipart,
   onDragHandlePointerDown,
 }: UploadPanelProps) {
   const { t } = useTranslation();
   const { resolved: iconTheme } = useTheme();
-  const sessions = cloudMultipart?.sessions ?? [];
+  const sessionPanel = unfinishedSessions ?? cloudMultipart;
+  const sessions = sessionPanel?.sessions ?? [];
   const rows = mergeUploadPanelRows(items, sessions);
   const finishedCount = items.filter(
     (item) =>
@@ -486,14 +499,14 @@ export default function UploadPanel({
                   onPause={onPause}
                   onResume={onResume}
                 />
-              ) : cloudMultipart ? (
+              ) : sessionPanel ? (
                 <SessionRow
                   key={row.session.uploadId}
                   session={row.session}
                   iconTheme={iconTheme}
-                  readOnly={cloudMultipart.readOnly}
-                  onResume={cloudMultipart.onResume}
-                  onAbort={cloudMultipart.onAbort}
+                  readOnly={sessionPanel.readOnly}
+                  onResume={sessionPanel.onResume}
+                  onAbort={sessionPanel.onAbort}
                 />
               ) : null,
             )}

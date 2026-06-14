@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { MultipartSessionView } from "./cloud/useMultipartSessions";
+import type { UnfinishedSessionView } from "./unfinishedUploadSessions";
 import { createQueueItem, type UploadItemStatus, type UploadQueueItem } from "./upload-queue";
 import { mergeUploadPanelRows, uploadHeaderSegments } from "./uploadPanelRows";
 
@@ -20,19 +20,19 @@ function queueItem(
 function session(
   uploadId: string,
   initiated: Date | undefined,
-): MultipartSessionView {
+): UnfinishedSessionView {
   return {
     uploadId,
-    objectKey: `prefix/${uploadId}`,
     destPath: `dest/${uploadId}`,
     fileName: `${uploadId}.bin`,
     initiated,
     bytesUploaded: null,
     totalBytes: null,
     canResume: false,
-    localRecord: null,
     resuming: false,
     aborting: false,
+    remoteOnly: true,
+    progressUnknown: true,
   };
 }
 

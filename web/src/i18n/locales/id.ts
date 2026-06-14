@@ -52,6 +52,8 @@ export const id: Record<MessageKey, string> = {
   "upload.status.failed": "Gagal",
   "upload.status.cancelled": "Dibatalkan",
   "upload.status.unfinished": "Belum selesai",
+  "upload.unfinished.description":
+    "Pilih kembali file yang sama di perangkat ini untuk melanjutkan dari titik terakhir.",
   "upload.cancel": "Batalkan unggahan",
   "upload.pause": "Jeda unggahan",
   "upload.resume": "Lanjutkan unggahan",

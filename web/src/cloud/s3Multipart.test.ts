@@ -141,3 +141,23 @@ test("mergeMultipartSessions includes stale local records without S3 listing", (
   assert.equal(merged[0]?.canResume, true);
   assert.equal(merged[0]?.bytesUploaded, null);
 });
+
+test("mergeMultipartSessions falls back to stored local bytes when S3 map is empty", () => {
+  const localRecords: MultipartSessionRecord[] = [
+    {
+      uploadId: "local-only",
+      objectKey: "data/local.bin",
+      destPath: "local.bin",
+      fileName: "local.bin",
+      fileSize: 1_000,
+      fileLastModified: 2,
+      partSize: 5 * 1024 * 1024,
+      checksumValidation: false,
+      bytesUploaded: 250,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+  ];
+  const merged = mergeMultipartSessions([], localRecords, "data/", new Map());
+  assert.equal(merged[0]?.bytesUploaded, 250);
+  assert.equal(merged[0]?.totalBytes, 1_000);
+});

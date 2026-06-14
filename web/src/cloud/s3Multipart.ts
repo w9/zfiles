@@ -64,7 +64,10 @@ export function mergeMultipartSessions(
     const mapped = explorerPathFromObjectKey(bucketPrefix, upload.objectKey);
     const destPath = localRecord?.destPath ?? mapped?.path ?? upload.objectKey;
     const fileName = localRecord?.fileName ?? mapped?.name ?? upload.objectKey.split("/").pop() ?? upload.objectKey;
-    const bytesUploaded = bytesUploadedByUploadId.get(upload.uploadId) ?? null;
+    const bytesUploaded =
+      bytesUploadedByUploadId.get(upload.uploadId) ??
+      localRecord?.bytesUploaded ??
+      null;
 
     return {
       uploadId: upload.uploadId,
@@ -89,7 +92,8 @@ export function mergeMultipartSessions(
       destPath: record.destPath,
       fileName: record.fileName,
       initiated: new Date(record.createdAt),
-      bytesUploaded: bytesUploadedByUploadId.get(record.uploadId) ?? null,
+      bytesUploaded:
+        bytesUploadedByUploadId.get(record.uploadId) ?? record.bytesUploaded ?? null,
       totalBytes: record.fileSize,
       canResume: true,
       localRecord: record,

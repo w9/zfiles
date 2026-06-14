@@ -166,6 +166,15 @@ impl StateStore {
         self.with_lock(|| self.load_record(id))
     }
 
+    pub fn abort_upload(&self, id: &str) -> Result<()> {
+        self.with_lock(|| {
+            if self.load_record(id)?.is_none() {
+                anyhow::bail!("upload not found");
+            }
+            self.remove_upload_artifacts(id)
+        })
+    }
+
     pub fn append_upload(&self, id: &str, data: &[u8]) -> Result<UploadRecord> {
         self.with_lock(|| {
             let record = self

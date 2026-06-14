@@ -117,9 +117,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] Unit tests for committed progress + paused offset resolution
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `tusSessions.ts`: scoped localStorage CRUD + file-match helpers; unit tests
-- [ ] Kernel: `DELETE /api/upload/{id}` to drop in-progress tus spools; integration test
-- [ ] `useTusSessions.ts` + `KernelBackend` list/abort helpers; resume via re-select file picker
-- [ ] `upload-queue.ts`: persist tus on transfer session; remove on done/cancel; tus resume enqueue item
-- [ ] `UploadPanel` + `ExplorerApp`: show local unfinished sessions alongside cloud multipart; clear scoped multipart records on cloud disconnect
-- [ ] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
+- [x] `tusSessions.ts`: scoped localStorage CRUD + file-match helpers; unit tests
+- [x] Kernel: `DELETE /api/upload/{id}` to drop in-progress tus spools; integration test
+- [x] `useTusSessions.ts` + `KernelBackend` list/abort helpers; resume via re-select file picker
+- [x] `upload-queue.ts`: persist tus on transfer session; remove on done/cancel; tus resume enqueue item
+- [x] `UploadPanel` + `ExplorerApp`: show local unfinished sessions alongside cloud multipart; clear scoped multipart records on cloud disconnect
+- [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`

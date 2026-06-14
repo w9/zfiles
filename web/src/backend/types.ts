@@ -46,6 +46,14 @@ export type UploadCallbacks = {
     tusLocation: string;
     checksumSha256Base64: string;
   }) => void;
+  /** Cloud S3: emitted after CreateMultipartUpload so the queue can persist resume metadata. */
+  onMultipartSession?: (session: {
+    uploadId: string;
+    objectKey: string;
+    partSize: number;
+    checksumValidation: boolean;
+    checksumSha256Base64?: string;
+  }) => void;
 };
 
 export type ListResult = {

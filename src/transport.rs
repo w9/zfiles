@@ -82,7 +82,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/metadata", get(stat_path))
         .route("/api/file", get(download_file))
         .route("/api/upload", post(create_upload))
-        .route("/api/upload/{id}", head(head_upload).patch(patch_upload))
+        .route(
+            "/api/upload/{id}",
+            head(head_upload).patch(patch_upload).delete(delete_upload),
+        )
         .route("/api/ws", get(ws_upgrade))
         .fallback(static_or_index)
         .layer(middleware::from_fn_with_state(
@@ -555,6 +558,14 @@ async fn patch_upload(
         HeaderValue::from_str(&updated.offset.to_string()).expect("upload offset fits in header"),
     );
     Ok(response)
+}
+
+async fn delete_upload(
+    State(state): State<AppState>,
+    AxumPath(id): AxumPath<String>,
+) -> Result<StatusCode, AppError> {
+    state.state.abort_upload(&id)?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn ws_upgrade(State(state): State<AppState>, ws: WebSocketUpgrade) -> impl IntoResponse {

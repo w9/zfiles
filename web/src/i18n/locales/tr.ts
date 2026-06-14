@@ -52,6 +52,8 @@ export const tr: Record<MessageKey, string> = {
   "upload.status.failed": "Başarısız",
   "upload.status.cancelled": "İptal edildi",
   "upload.status.unfinished": "Tamamlanmamış",
+  "upload.unfinished.description":
+    "Kaldığınız yerden devam etmek için aynı dosyayı bu cihazda yeniden seçin.",
   "upload.cancel": "Yüklemeyi iptal et",
   "upload.pause": "Yüklemeyi duraklat",
   "upload.resume": "Yüklemeyi sürdür",

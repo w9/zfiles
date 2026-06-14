@@ -52,6 +52,8 @@ export const fr: Record<MessageKey, string> = {
   "upload.status.failed": "Échoué",
   "upload.status.cancelled": "Annulé",
   "upload.status.unfinished": "Inachevé",
+  "upload.unfinished.description":
+    "Resélectionnez le même fichier sur cet appareil pour reprendre là où vous vous êtes arrêté.",
   "upload.cancel": "Annuler le téléversement",
   "upload.pause": "Mettre en pause",
   "upload.resume": "Reprendre",

@@ -52,6 +52,8 @@ export const ja: Record<MessageKey, string> = {
   "upload.status.failed": "失敗",
   "upload.status.cancelled": "キャンセル済み",
   "upload.status.unfinished": "未完了",
+  "upload.unfinished.description":
+    "同じファイルをこのデバイスで再度選択すると、中断したところから再開できます。",
   "upload.cancel": "アップロードをキャンセル",
   "upload.pause": "アップロードを一時停止",
   "upload.resume": "アップロードを再開",

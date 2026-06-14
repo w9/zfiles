@@ -52,6 +52,8 @@ export const ko: Record<MessageKey, string> = {
   "upload.status.failed": "실패",
   "upload.status.cancelled": "취소됨",
   "upload.status.unfinished": "미완료",
+  "upload.unfinished.description":
+    "이 기기에서 같은 파일을 다시 선택하면 중단한 위치부터 이어서 업로드할 수 있습니다.",
   "upload.cancel": "업로드 취소",
   "upload.pause": "업로드 일시정지",
   "upload.resume": "업로드 재개",

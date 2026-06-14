@@ -1,4 +1,4 @@
-import type { MultipartSessionView } from "./cloud/useMultipartSessions";
+import type { UnfinishedSessionView } from "./unfinishedUploadSessions";
 import type { MessageKey } from "./i18n/messages";
 import {
   countUploadsByStatus,
@@ -9,7 +9,7 @@ import {
 
 export type UploadPanelRow =
   | { kind: "queue"; time: number; item: UploadQueueItem }
-  | { kind: "session"; time: number; session: MultipartSessionView };
+  | { kind: "session"; time: number; session: UnfinishedSessionView };
 
 /**
  * One merged panel list: live queue items and unfinished multipart sessions,
@@ -18,7 +18,7 @@ export type UploadPanelRow =
  */
 export function mergeUploadPanelRows(
   items: UploadQueueItem[],
-  sessions: MultipartSessionView[],
+  sessions: UnfinishedSessionView[],
 ): UploadPanelRow[] {
   const rows: UploadPanelRow[] = [
     ...items.map((item) => ({

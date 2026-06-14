@@ -15,7 +15,6 @@ import { XhrHttpHandler } from "@aws-sdk/xhr-http-handler";
 import {
   computeMultipartPartSize,
   multipartSessionScopeId,
-  pruneStaleMultipartRecords,
   readScopedMultipartRecords,
   removeMultipartRecord,
   upsertMultipartRecord,
@@ -253,11 +252,11 @@ export class S3Backend implements ExplorerBackend {
       this.config.bucket,
       this.config.prefix,
     );
-    pruneStaleMultipartRecords(scopeId, new Set(listed.map((upload) => upload.uploadId)));
     const localRecords = readScopedMultipartRecords(scopeId);
     const bytesUploadedByUploadId = new Map<string, number>();
-    await Promise.all(
-      listed.map(async (upload) => {
+    const listedUploadIds = new Set(listed.map((upload) => upload.uploadId));
+    await Promise.all([
+      ...listed.map(async (upload) => {
         const parts = await listUploadedParts(
           this.client,
           this.config.bucket,
@@ -266,7 +265,22 @@ export class S3Backend implements ExplorerBackend {
         );
         bytesUploadedByUploadId.set(upload.uploadId, multipartBytesUploaded(parts));
       }),
-    );
+      ...localRecords
+        .filter((record) => !listedUploadIds.has(record.uploadId))
+        .map(async (record) => {
+          try {
+            const parts = await listUploadedParts(
+              this.client,
+              this.config.bucket,
+              record.objectKey,
+              record.uploadId,
+            );
+            bytesUploadedByUploadId.set(record.uploadId, multipartBytesUploaded(parts));
+          } catch {
+            // Upload may have been aborted server-side; fall back to stored progress.
+          }
+        }),
+    ]);
     return mergeMultipartSessions(
       listed,
       localRecords,
@@ -446,6 +460,13 @@ export class S3Backend implements ExplorerBackend {
               checksumValidation,
               checksum ?? undefined,
             );
+            callbacks?.onMultipartSession?.({
+              uploadId: createdUploadId,
+              objectKey: key,
+              partSize,
+              checksumValidation,
+              checksumSha256Base64: checksum ?? undefined,
+            });
           },
           onProgress: (loaded, total, committedBytes) => {
             onProgress?.({

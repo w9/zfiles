@@ -222,3 +222,35 @@ async fn checksum_mismatch_rejects_upload_and_cleans_spool() {
     assert!(!dir.path().join("bad.txt").exists());
     assert!(fs::read_dir(state_dir.join("uploads")).unwrap().count() == 0);
 }
+
+#[tokio::test]
+async fn delete_upload_removes_in_progress_spool() {
+    let dir = tempdir().unwrap();
+    let state_dir = dir.path().join(".state");
+    let server = test_server(dir.path(), &state_dir);
+
+    let create = server
+        .post("/api/upload")
+        .add_header("Upload-Length", "6")
+        .add_header("Upload-Metadata", &upload_metadata("drop.txt", b"abcdef"))
+        .await;
+    create.assert_status(StatusCode::CREATED);
+
+    let location = create
+        .headers()
+        .get("location")
+        .expect("location header")
+        .to_str()
+        .unwrap()
+        .to_string();
+    let upload_id = location.rsplit('/').next().expect("upload id");
+
+    let delete = server.delete(&location).await;
+    delete.assert_status(StatusCode::NO_CONTENT);
+
+    let head = server.method(Method::HEAD, &location).await;
+    head.assert_status(StatusCode::NOT_FOUND);
+
+    assert!(fs::read_dir(state_dir.join("uploads")).unwrap().count() == 0);
+    let _ = upload_id;
+}

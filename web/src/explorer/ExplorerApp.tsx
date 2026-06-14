@@ -52,7 +52,14 @@ import UploadIndicator from "../UploadIndicator";
 import UploadConflictDialog from "../UploadConflictDialog";
 import UploadButton from "../UploadButton";
 import { useMultipartSessions } from "../cloud/useMultipartSessions";
-import { activeMultipartUploadIds, useUploadQueue } from "../upload-queue";
+import type { MultipartSessionView } from "../cloud/useMultipartSessions";
+import type { UnfinishedSessionView } from "../unfinishedUploadSessions";
+import { useTusSessions } from "../local/useTusSessions";
+import {
+  activeMultipartUploadIds,
+  activeTusUploadIds,
+  useUploadQueue,
+} from "../upload-queue";
 import { useGlobalFileDrop } from "../useGlobalFileDrop";
 import { useAppRoute } from "../routing/AppRouteProvider";
 import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
@@ -88,6 +95,25 @@ import { connectionConfigToShareInput } from "../cloud/shareUrl";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
+
+function multipartToUnfinishedSession(session: MultipartSessionView): UnfinishedSessionView {
+  return {
+    uploadId: session.uploadId,
+    destPath: session.destPath,
+    fileName: session.fileName,
+    initiated: session.initiated,
+    bytesUploaded: session.bytesUploaded,
+    totalBytes: session.totalBytes,
+    canResume: session.canResume,
+    resuming: session.resuming,
+    aborting: session.aborting,
+    remoteOnly: !session.canResume,
+    progressUnknown:
+      session.bytesUploaded == null ||
+      session.totalBytes == null ||
+      session.totalBytes <= 0,
+  };
+}
 import PasteDestinationDialog from "./PasteDestinationDialog";
 import PasteConflictDialog from "./PasteConflictDialog";
 import MarqueeOverlay from "./MarqueeOverlay";
@@ -253,6 +279,7 @@ export default function ExplorerApp() {
     items: uploadItems,
     enqueue: enqueueUploads,
     enqueueResume,
+    enqueueTusResume,
     applyRemoteProgress,
     cancelUpload,
     pauseUpload,
@@ -272,9 +299,15 @@ export default function ExplorerApp() {
     onMultipartSessionFinished: (uploadId) => {
       void multipartSessionsRef.current.onUploadSessionFinished(uploadId);
     },
+    onTusSessionFinished: (uploadId) => {
+      void tusSessionsRef.current.onUploadSessionFinished(uploadId);
+    },
   });
 
   const multipartSessionsRef = useRef({
+    onUploadSessionFinished: async (_uploadId: string) => {},
+  });
+  const tusSessionsRef = useRef({
     onUploadSessionFinished: async (_uploadId: string) => {},
   });
   const multipartSessions = useMultipartSessions({
@@ -288,12 +321,58 @@ export default function ExplorerApp() {
   });
   multipartSessionsRef.current = multipartSessions;
 
-  const visibleMultipartSessions = useMemo(() => {
-    const activeUploadIds = activeMultipartUploadIds(uploadItems);
-    return multipartSessions.sessions.filter(
-      (session) => !activeUploadIds.has(session.uploadId),
-    );
-  }, [uploadItems, multipartSessions.sessions]);
+  const tusSessions = useTusSessions({
+    backend,
+    readOnly,
+    onResumeEnqueue: enqueueTusResume,
+    onResumeMismatch: () => {
+      notifyError(t("upload.multipart.fileMismatch"));
+    },
+    onError: (message) => notifyError(message),
+  });
+  tusSessionsRef.current = tusSessions;
+
+  const visibleUnfinishedSessions = useMemo(() => {
+    const activeMultipartIds = activeMultipartUploadIds(uploadItems);
+    const activeTusIds = activeTusUploadIds(uploadItems);
+    const rows: UnfinishedSessionView[] = [];
+    if (multipartSessions.enabled) {
+      rows.push(
+        ...multipartSessions.sessions
+          .filter((session) => !activeMultipartIds.has(session.uploadId))
+          .map(multipartToUnfinishedSession),
+      );
+    }
+    if (tusSessions.enabled) {
+      rows.push(
+        ...tusSessions.sessions.filter((session) => !activeTusIds.has(session.uploadId)),
+      );
+    }
+    const sorted = rows.sort((a, b) => (b.initiated?.getTime() ?? 0) - (a.initiated?.getTime() ?? 0));
+    return sorted;
+  }, [uploadItems, multipartSessions.enabled, multipartSessions.sessions, tusSessions.enabled, tusSessions.sessions]);
+
+  const resumeUnfinishedSession = useCallback(
+    (uploadId: string) => {
+      if (multipartSessions.sessions.some((session) => session.uploadId === uploadId)) {
+        void multipartSessions.resumeSession(uploadId);
+        return;
+      }
+      void tusSessions.resumeSession(uploadId);
+    },
+    [multipartSessions, tusSessions],
+  );
+
+  const abortUnfinishedSession = useCallback(
+    (uploadId: string) => {
+      if (multipartSessions.sessions.some((session) => session.uploadId === uploadId)) {
+        void multipartSessions.abortSession(uploadId);
+        return;
+      }
+      void tusSessions.abortSession(uploadId);
+    },
+    [multipartSessions, tusSessions],
+  );
 
   const handleKernelEvent = useCallback(
     (event: BackendEvent) => {
@@ -1303,13 +1382,13 @@ export default function ExplorerApp() {
               onCancel={cancelUpload}
               onPause={pauseUpload}
               onResume={resumeUpload}
-              cloudMultipart={
-                multipartSessions.enabled
+              unfinishedSessions={
+                multipartSessions.enabled || tusSessions.enabled
                   ? {
-                      sessions: visibleMultipartSessions,
-                      readOnly: multipartSessions.readOnly,
-                      onResume: multipartSessions.resumeSession,
-                      onAbort: multipartSessions.abortSession,
+                      sessions: visibleUnfinishedSessions,
+                      readOnly: readOnly || multipartSessions.readOnly,
+                      onResume: resumeUnfinishedSession,
+                      onAbort: abortUnfinishedSession,
                     }
                   : undefined
               }
