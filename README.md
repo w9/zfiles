@@ -45,7 +45,7 @@ Open the URL from the startup banner (local mode opens your browser by default).
 ## More features
 
 - UI i18n — 14 locales in the header language menu; preference saved in `localStorage`; `?lang=` overrides on load
-- Quick filter in the address bar — case-sensitive toggle, whole-word match, regex mode, Mod+F focus
+- Quick filter in the address bar — type for case-insensitive substring, `/pat` for case-sensitive regex, `/pat/i` for case-insensitive regex; `?` icon shows syntax help (including `/^name$` for whole-name); Mod+F focus, ESC clears; no separate toggles or fade mode
 - Inline rename (F2) and new-folder creation in list and grid views
 - Context menu on rows and empty folder background; right-click outside selection retargets before open
 - Clipboard copy/cut/paste with conflict and destination dialogs; batch paste settings

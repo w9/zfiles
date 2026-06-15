@@ -96,9 +96,6 @@ import {
   isPlainQuickFilterLetterKey,
   nextQuickFilterMatchIndex,
   normalizeQuickFilterQuery,
-  readStoredQuickFilterOptions,
-  storeQuickFilterOptions,
-  type QuickFilterOptions,
 } from "../quickFilter";
 import { sortFileEntries } from "../listingSort";
 import type { ListingColumnLabels } from "../listing-types";
@@ -235,9 +232,6 @@ export default function ExplorerApp() {
     typeof window !== "undefined" ? window.innerWidth : LG_BREAKPOINT_PX,
   );
   const [quickFilter, setQuickFilter] = useState("");
-  const [quickFilterOptions, setQuickFilterOptionsState] = useState<QuickFilterOptions>(
-    () => readStoredQuickFilterOptions(),
-  );
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
   const mainContentRef = useRef<HTMLElement | null>(null);
@@ -254,11 +248,6 @@ export default function ExplorerApp() {
   selectedIndexRef.current = selectedIndex;
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
-
-  const setQuickFilterOptions = useCallback((options: QuickFilterOptions) => {
-    storeQuickFilterOptions(options);
-    setQuickFilterOptionsState(options);
-  }, []);
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
@@ -633,21 +622,11 @@ export default function ExplorerApp() {
   }, [entries, listingSortOrder, quickFilterActive, showDotEntries]);
 
   const quickMatchedEntries = useMemo(
-    () => filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
-    [visibleEntries, quickFilter, quickFilterOptions],
+    () => filterEntriesByQuickFilter(visibleEntries, quickFilter),
+    [visibleEntries, quickFilter],
   );
 
-  const quickFilteredEntries = useMemo(() => {
-    if (quickFilterActive && quickFilterOptions.fadeUnmatched) {
-      return visibleEntries;
-    }
-    return quickMatchedEntries;
-  }, [
-    quickFilterActive,
-    quickFilterOptions.fadeUnmatched,
-    quickMatchedEntries,
-    visibleEntries,
-  ]);
+  const quickFilteredEntries = quickMatchedEntries;
 
   useEffect(() => {
     const onViewportResize = () => setViewportWidth(window.innerWidth);
@@ -818,7 +797,7 @@ export default function ExplorerApp() {
         isDir: entry.is_dir,
         isSymlink: entry.is_symlink,
         quickFilterMatched: quickFilterActive
-          ? entryMatchesQuickFilter(entry.name, quickFilter, quickFilterOptions)
+          ? entryMatchesQuickFilter(entry.name, quickFilter)
           : true,
         size: entry.is_dir ? undefined : entry.size,
         modified: entry.modified,
@@ -876,7 +855,6 @@ export default function ExplorerApp() {
     quickFilteredEntries,
     quickFilterActive,
     quickFilter,
-    quickFilterOptions,
     navigateTo,
     backend,
   ]);
@@ -1065,7 +1043,7 @@ export default function ExplorerApp() {
       "more-to-load": "actions.selection.selectAll.warning.moreToLoad",
     };
     for (const reason of collectSelectAllWarnings({
-      quickFilterActive: quickFilterActive && !quickFilterOptions.fadeUnmatched,
+      quickFilterActive,
       quickFilteredCount: quickMatchedEntries.length,
       visibleEntryCount: visibleEntries.length,
       hasHiddenDotEntries:
@@ -1084,7 +1062,6 @@ export default function ExplorerApp() {
     entries,
     listCursor,
     quickFilterActive,
-    quickFilterOptions.fadeUnmatched,
     quickMatchedEntries.length,
     showDotEntries,
     t,
@@ -1460,15 +1437,12 @@ export default function ExplorerApp() {
           onNavigate={(path) => void navigateTo(path)}
           quickFilterLabel={t("quickFilter.label")}
           quickFilterPlaceholder={t("quickFilter.placeholder")}
-          quickFilterCaseSensitiveLabel={t("quickFilter.caseSensitive")}
-          quickFilterFadeUnmatchedLabel={t("quickFilter.fadeUnmatched")}
-          quickFilterWholeWordLabel={t("quickFilter.wholeWord")}
-          quickFilterRegexLabel={t("quickFilter.regex")}
           quickFilterClearLabel={t("quickFilter.clear")}
+          quickFilterHelpLabel={t("quickFilter.helpLabel")}
+          quickFilterHelpText={t("quickFilter.help")}
+          quickFilterRegexErrorLabel={t("quickFilter.regexError")}
           quickFilterValue={quickFilter}
-          quickFilterOptions={quickFilterOptions}
           onQuickFilterChange={setQuickFilter}
-          onQuickFilterOptionsChange={setQuickFilterOptions}
           onQuickFilterKeyDown={handleQuickFilterKeyDown}
           quickFilterInputRef={quickFilterInputRef}
         />

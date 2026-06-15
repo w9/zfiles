@@ -2,16 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  defaultQuickFilterOptions,
   entryMatchesQuickFilter,
   filterEntriesByQuickFilter,
   firstQuickFilterMatchIndex,
   isPlainQuickFilterLetterKey,
+  isValidQuickFilterRegex,
   nextQuickFilterMatchIndex,
   normalizeQuickFilterQuery,
-  QUICK_FILTER_OPTIONS_STORAGE_KEY,
-  readStoredQuickFilterOptions,
-  storeQuickFilterOptions,
+  parseQuickFilterMode,
 } from "./quickFilter";
 
 test("normalizeQuickFilterQuery trims whitespace", () => {
@@ -19,94 +17,40 @@ test("normalizeQuickFilterQuery trims whitespace", () => {
   assert.equal(normalizeQuickFilterQuery("   "), "");
 });
 
-test("default match is case-insensitive substring", () => {
+test("plain query is case-insensitive substring", () => {
   assert.equal(entryMatchesQuickFilter("Document.pdf", "doc"), true);
   assert.equal(entryMatchesQuickFilter("Document.pdf", "DOC"), true);
   assert.equal(entryMatchesQuickFilter("notes.txt", "doc"), false);
+  assert.equal(entryMatchesQuickFilter("abc", "b"), true);
 });
 
-test("caseSensitive requires exact casing", () => {
-  assert.equal(
-    entryMatchesQuickFilter("Document.pdf", "doc", {
-      caseSensitive: true,
-      wholeWord: false,
-      useRegex: false,
-      fadeUnmatched: false,
-    }),
-    false,
-  );
-  assert.equal(
-    entryMatchesQuickFilter("Document.pdf", "Doc", {
-      caseSensitive: true,
-      wholeWord: false,
-      useRegex: false,
-      fadeUnmatched: false,
-    }),
-    true,
-  );
+test("leading / starts case-sensitive regex (slash consumed)", () => {
+  assert.equal(entryMatchesQuickFilter("file-01.txt", "/^file-"), true);
+  assert.equal(entryMatchesQuickFilter("File-01.txt", "/^file-"), false);
+  assert.equal(entryMatchesQuickFilter("file-01.txt", "/\\d+"), true);
+  // invalid regex after / yields no match
+  assert.equal(entryMatchesQuickFilter("file-01.txt", "/["), false);
 });
 
-test("wholeWord requires full name match", () => {
-  assert.equal(
-    entryMatchesQuickFilter("Document.pdf", "doc", {
-      caseSensitive: false,
-      wholeWord: true,
-      useRegex: false,
-      fadeUnmatched: false,
-    }),
-    false,
-  );
-  assert.equal(
-    entryMatchesQuickFilter("doc", "doc", {
-      caseSensitive: false,
-      wholeWord: true,
-      useRegex: false,
-      fadeUnmatched: false,
-    }),
-    true,
-  );
+test("/.../i suffix enables case-insensitive regex", () => {
+  assert.equal(entryMatchesQuickFilter("File-01.txt", "/^file-/i"), true);
+  assert.equal(entryMatchesQuickFilter("FILE-01.TXT", "/^file-\\d+/i"), true);
+  // without leading /, /i is literal substring
+  assert.equal(entryMatchesQuickFilter("foo/i", "foo/i"), true);
+  assert.equal(entryMatchesQuickFilter("foo/i", "/foo/i"), true); // treated as regex "foo" + ci? wait: query="/foo/i" -> kind regex pattern="foo" ci
+  assert.equal(entryMatchesQuickFilter("FOO", "/foo/i"), true);
 });
 
-test("useRegex supports patterns and invalid regex matches nothing", () => {
-  assert.equal(
-    entryMatchesQuickFilter("file-01.txt", "^file-\\d+", {
-      caseSensitive: false,
-      wholeWord: false,
-      useRegex: true,
-      fadeUnmatched: false,
-    }),
-    true,
-  );
-  assert.equal(
-    entryMatchesQuickFilter("file-01.txt", "[", {
-      caseSensitive: false,
-      wholeWord: false,
-      useRegex: true,
-      fadeUnmatched: false,
-    }),
-    false,
-  );
+test("plain text never treats trailing /i specially", () => {
+  assert.equal(entryMatchesQuickFilter("abc/i", "abc/i"), true);
+  assert.equal(entryMatchesQuickFilter("ABC/I", "abc/i"), true); // ci substr
 });
 
-test("regex wholeWord anchors to full name", () => {
-  assert.equal(
-    entryMatchesQuickFilter("ab", "a", {
-      caseSensitive: false,
-      wholeWord: true,
-      useRegex: true,
-      fadeUnmatched: false,
-    }),
-    false,
-  );
-  assert.equal(
-    entryMatchesQuickFilter("a", "a", {
-      caseSensitive: false,
-      wholeWord: true,
-      useRegex: true,
-      fadeUnmatched: false,
-    }),
-    true,
-  );
+test("regex mode supports user-provided anchors for whole-name match", () => {
+  assert.equal(entryMatchesQuickFilter("ab", "/^a$"), false);
+  assert.equal(entryMatchesQuickFilter("a", "/^a$"), true);
+  assert.equal(entryMatchesQuickFilter("A", "/^a$/i"), true);
+  assert.equal(entryMatchesQuickFilter("abc", "/^ab"), true);
 });
 
 test("filterEntriesByQuickFilter returns all when query empty", () => {
@@ -115,71 +59,44 @@ test("filterEntriesByQuickFilter returns all when query empty", () => {
   assert.deepEqual(filterEntriesByQuickFilter(entries, "  "), entries);
 });
 
-test("filterEntriesByQuickFilter filters by name", () => {
+test("filterEntriesByQuickFilter filters by name (plain)", () => {
   const entries = [{ name: "alpha.txt" }, { name: "beta.txt" }];
   assert.deepEqual(filterEntriesByQuickFilter(entries, "alp"), [
     { name: "alpha.txt" },
   ]);
 });
 
-test("default quick filter options hide unmatched entries", () => {
-  assert.equal(defaultQuickFilterOptions.fadeUnmatched, false);
+test("filterEntriesByQuickFilter filters by regex when query starts with /", () => {
+  const entries = [{ name: "a1.txt" }, { name: "b2.txt" }, { name: "a3.txt" }];
+  assert.deepEqual(
+    filterEntriesByQuickFilter(entries, "/^a\\d"),
+    [{ name: "a1.txt" }, { name: "a3.txt" }],
+  );
 });
 
-test("readStoredQuickFilterOptions ignores invalid stored values", () => {
-  const previousWindow = globalThis.window;
-  globalThis.window = {
-    localStorage: {
-      getItem: () =>
-        JSON.stringify({
-          caseSensitive: true,
-          wholeWord: false,
-          useRegex: "yes",
-          fadeUnmatched: true,
-        }),
-      setItem: () => {},
-    },
-  } as unknown as Window & typeof globalThis;
-  try {
-    assert.deepEqual(readStoredQuickFilterOptions(), {
-      caseSensitive: true,
-      wholeWord: false,
-      useRegex: false,
-      fadeUnmatched: true,
-    });
-  } finally {
-    globalThis.window = previousWindow;
-  }
+test("parseQuickFilterMode detects plain vs regex and /i", () => {
+  assert.deepEqual(parseQuickFilterMode("  doc  "), {
+    kind: "substring",
+    pattern: "doc",
+  });
+  assert.deepEqual(parseQuickFilterMode("/^file-"), {
+    kind: "regex",
+    pattern: "^file-",
+    caseSensitive: true,
+  });
+  assert.deepEqual(parseQuickFilterMode("/foo/i"), {
+    kind: "regex",
+    pattern: "foo",
+    caseSensitive: false,
+  });
+  assert.equal(parseQuickFilterMode(""), null);
+  assert.equal(parseQuickFilterMode("   "), null);
 });
 
-test("storeQuickFilterOptions persists all filter display toggles", () => {
-  const previousWindow = globalThis.window;
-  const storage = new Map<string, string>();
-  globalThis.window = {
-    localStorage: {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => storage.set(key, value),
-    },
-  } as unknown as Window & typeof globalThis;
-  try {
-    storeQuickFilterOptions({
-      caseSensitive: true,
-      wholeWord: true,
-      useRegex: false,
-      fadeUnmatched: true,
-    });
-    assert.equal(
-      storage.get(QUICK_FILTER_OPTIONS_STORAGE_KEY),
-      JSON.stringify({
-        caseSensitive: true,
-        wholeWord: true,
-        useRegex: false,
-        fadeUnmatched: true,
-      }),
-    );
-  } finally {
-    globalThis.window = previousWindow;
-  }
+test("isValidQuickFilterRegex reports compile success", () => {
+  assert.equal(isValidQuickFilterRegex("^a\\d+$"), true);
+  assert.equal(isValidQuickFilterRegex("["), false);
+  assert.equal(isValidQuickFilterRegex(""), true); // empty pattern is valid regex (matches empty)
 });
 
 test("isPlainQuickFilterLetterKey accepts only unmodified letters", () => {
@@ -225,7 +142,7 @@ test("isPlainQuickFilterLetterKey accepts only unmodified letters", () => {
   );
 });
 
-test("quick filter match navigation skips faded nonmatches", () => {
+test("quick filter match navigation skips non-matches", () => {
   const entries = [
     { quickFilterMatched: false },
     { quickFilterMatched: true },

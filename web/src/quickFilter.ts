@@ -1,61 +1,3 @@
-export type QuickFilterOptions = {
-  caseSensitive: boolean;
-  wholeWord: boolean;
-  useRegex: boolean;
-  fadeUnmatched: boolean;
-};
-
-export const QUICK_FILTER_OPTIONS_STORAGE_KEY = "zfiles-quick-filter-options";
-
-export const defaultQuickFilterOptions: QuickFilterOptions = {
-  caseSensitive: false,
-  wholeWord: false,
-  useRegex: false,
-  fadeUnmatched: false,
-};
-
-function parseStoredBoolean(value: unknown, fallback: boolean): boolean {
-  return typeof value === "boolean" ? value : fallback;
-}
-
-export function parseQuickFilterOptions(value: unknown): QuickFilterOptions {
-  if (!value || typeof value !== "object") {
-    return defaultQuickFilterOptions;
-  }
-  const stored = value as Partial<Record<keyof QuickFilterOptions, unknown>>;
-  return {
-    caseSensitive: parseStoredBoolean(
-      stored.caseSensitive,
-      defaultQuickFilterOptions.caseSensitive,
-    ),
-    wholeWord: parseStoredBoolean(stored.wholeWord, defaultQuickFilterOptions.wholeWord),
-    useRegex: parseStoredBoolean(stored.useRegex, defaultQuickFilterOptions.useRegex),
-    fadeUnmatched: parseStoredBoolean(
-      stored.fadeUnmatched,
-      defaultQuickFilterOptions.fadeUnmatched,
-    ),
-  };
-}
-
-export function readStoredQuickFilterOptions(): QuickFilterOptions {
-  if (typeof window === "undefined") {
-    return defaultQuickFilterOptions;
-  }
-  const stored = window.localStorage.getItem(QUICK_FILTER_OPTIONS_STORAGE_KEY);
-  if (!stored) {
-    return defaultQuickFilterOptions;
-  }
-  try {
-    return parseQuickFilterOptions(JSON.parse(stored));
-  } catch {
-    return defaultQuickFilterOptions;
-  }
-}
-
-export function storeQuickFilterOptions(options: QuickFilterOptions): void {
-  window.localStorage.setItem(QUICK_FILTER_OPTIONS_STORAGE_KEY, JSON.stringify(options));
-}
-
 export type QuickFilterKeyEvent = Pick<
   KeyboardEvent,
   "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
@@ -110,58 +52,59 @@ export function normalizeQuickFilterQuery(query: string): string {
   return query.trim();
 }
 
-function buildRegex(
-  pattern: string,
-  options: QuickFilterOptions,
-): RegExp | null {
-  try {
-    const flags = options.caseSensitive ? "" : "i";
-    if (options.wholeWord) {
-      return new RegExp(`^(?:${pattern})$`, flags);
-    }
-    return new RegExp(pattern, flags);
-  } catch {
+export type QuickFilterMode =
+  | { kind: "substring"; pattern: string }
+  | { kind: "regex"; pattern: string; caseSensitive: boolean };
+
+export function parseQuickFilterMode(query: string): QuickFilterMode | null {
+  const normalized = normalizeQuickFilterQuery(query);
+  if (!normalized) {
     return null;
+  }
+  if (normalized.startsWith("/")) {
+    let pattern = normalized.slice(1);
+    let caseSensitive = true;
+    if (pattern.endsWith("/i")) {
+      pattern = pattern.slice(0, -2);
+      caseSensitive = false;
+    }
+    return { kind: "regex", pattern, caseSensitive };
+  }
+  return { kind: "substring", pattern: normalized };
+}
+
+export function isValidQuickFilterRegex(pattern: string): boolean {
+  try {
+    new RegExp(pattern, "");
+    return true;
+  } catch {
+    return false;
   }
 }
 
-export function entryMatchesQuickFilter(
-  name: string,
-  query: string,
-  options: QuickFilterOptions = defaultQuickFilterOptions,
-): boolean {
-  const normalized = normalizeQuickFilterQuery(query);
-  if (!normalized) {
+export function entryMatchesQuickFilter(name: string, query: string): boolean {
+  const mode = parseQuickFilterMode(query);
+  if (!mode) {
     return true;
   }
-
-  if (options.useRegex) {
-    const regex = buildRegex(normalized, options);
-    return regex?.test(name) ?? false;
+  if (mode.kind === "substring") {
+    return name.toLowerCase().includes(mode.pattern.toLowerCase());
   }
-
-  const haystack = options.caseSensitive ? name : name.toLowerCase();
-  const needle = options.caseSensitive
-    ? normalized
-    : normalized.toLowerCase();
-
-  if (options.wholeWord) {
-    return haystack === needle;
+  try {
+    const re = new RegExp(mode.pattern, mode.caseSensitive ? "" : "i");
+    return re.test(name);
+  } catch {
+    return false;
   }
-
-  return haystack.includes(needle);
 }
 
 export function filterEntriesByQuickFilter<T extends { name: string }>(
   entries: T[],
   query: string,
-  options: QuickFilterOptions = defaultQuickFilterOptions,
 ): T[] {
-  const normalized = normalizeQuickFilterQuery(query);
-  if (!normalized) {
+  const mode = parseQuickFilterMode(query);
+  if (!mode) {
     return entries;
   }
-  return entries.filter((entry) =>
-    entryMatchesQuickFilter(entry.name, normalized, options),
-  );
+  return entries.filter((entry) => entryMatchesQuickFilter(entry.name, query));
 }
