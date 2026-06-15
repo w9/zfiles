@@ -45,6 +45,7 @@ type UploadPanelProps = {
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
   onClose?: () => void;
+  onChooseFiles?: () => void;
   unfinishedSessions?: UnfinishedSessionsPanelProps;
   /** @deprecated Use unfinishedSessions */
   cloudMultipart?: UnfinishedSessionsPanelProps;
@@ -441,6 +442,7 @@ export default function UploadPanel({
   onPause,
   onResume,
   onClose,
+  onChooseFiles,
   unfinishedSessions,
   cloudMultipart,
   onDragHandlePointerDown,
@@ -476,6 +478,11 @@ export default function UploadPanel({
           onPointerDown={onDragHandlePointerDown}
         />
         <div className="flex shrink-0 items-center gap-1">
+          {onChooseFiles ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onChooseFiles}>
+              {t("upload.chooseFiles")}
+            </Button>
+          ) : null}
           {finishedCount > 0 ? (
             <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
               {t("upload.clearFinished")}

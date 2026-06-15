@@ -1,6 +1,6 @@
 import type { UploadItemStatus, UploadQueueItem } from "./upload-queue";
 
-/** Aggregate view of the upload queue used by the status-bar indicator. */
+/** Aggregate view of the upload queue used by the header upload button. */
 export type UploadTrayStats = {
   total: number;
   active: number;

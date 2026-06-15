@@ -173,8 +173,8 @@ Upload panel cycle: remove status-bar upload pill; header upload icon opens the 
 - [x] Update e2e smoke tests + any unit tests for status bar / shortcuts listing
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadIndicator.tsx`: header icon trigger (outline, attention dot); hidden file input + `onSelect`; read-only still opens panel
-- [ ] `UploadPanel.tsx`: panel-header Choose files button via `onChooseFiles`
-- [ ] `StatusBar.tsx` + `ExplorerApp.tsx`: remove status-bar upload pill; replace header `UploadButton` with upload tray
-- [ ] Remove unused `UploadButton.tsx` if fully superseded
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `UploadIndicator.tsx`: header icon trigger (outline, attention dot); hidden file input + `onSelect`; read-only still opens panel
+- [x] `UploadPanel.tsx`: panel-header Choose files button via `onChooseFiles`
+- [x] `StatusBar.tsx` + `ExplorerApp.tsx`: remove status-bar upload pill; replace header `UploadButton` with upload tray
+- [x] Remove unused `UploadButton.tsx` if fully superseded
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

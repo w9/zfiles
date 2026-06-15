@@ -55,7 +55,6 @@ import {
 import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
 import UploadIndicator from "../UploadIndicator";
 import UploadConflictDialog from "../UploadConflictDialog";
-import UploadButton from "../UploadButton";
 import { useMultipartSessions } from "../cloud/useMultipartSessions";
 import type { MultipartSessionView } from "../cloud/useMultipartSessions";
 import type { UnfinishedSessionView } from "../unfinishedUploadSessions";
@@ -1247,7 +1246,25 @@ export default function ExplorerApp() {
             ariaLabel={t("actions.menuBar.label")}
           />
           <div className="flex flex-wrap items-center gap-2">
-            <UploadButton disabled={readOnly} onSelect={onUpload} />
+            <UploadIndicator
+              items={uploadItems}
+              onSelect={onUpload}
+              readOnly={readOnly}
+              onClearFinished={clearFinishedUploads}
+              onCancel={cancelUpload}
+              onPause={pauseUpload}
+              onResume={resumeUpload}
+              unfinishedSessions={
+                multipartSessions.enabled || tusSessions.enabled
+                  ? {
+                      sessions: visibleUnfinishedSessions,
+                      readOnly: readOnly || multipartSessions.readOnly,
+                      onResume: resumeUnfinishedSession,
+                      onAbort: abortUnfinishedSession,
+                    }
+                  : undefined
+              }
+            />
             <ShowDotEntriesToggle />
             <ListingViewToggle
               mode={listingViewMode}
@@ -1470,25 +1487,6 @@ export default function ExplorerApp() {
               : null
           }
           onVersionClick={() => setAboutOpen(true)}
-          uploads={
-            <UploadIndicator
-              items={uploadItems}
-              onClearFinished={clearFinishedUploads}
-              onCancel={cancelUpload}
-              onPause={pauseUpload}
-              onResume={resumeUpload}
-              unfinishedSessions={
-                multipartSessions.enabled || tusSessions.enabled
-                  ? {
-                      sessions: visibleUnfinishedSessions,
-                      readOnly: readOnly || multipartSessions.readOnly,
-                      onResume: resumeUnfinishedSession,
-                      onAbort: abortUnfinishedSession,
-                    }
-                  : undefined
-              }
-            />
-          }
         />
       </section>
 

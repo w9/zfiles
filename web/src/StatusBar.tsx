@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import BackendStatus from "./BackendStatus";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -10,7 +8,6 @@ type StatusBarProps = {
   kernelVersion?: string | null;
   selectedCount?: number;
   cutStatusText?: string | null;
-  uploads?: ReactNode;
   onVersionClick?: () => void;
   className?: string;
 };
@@ -20,7 +17,6 @@ export default function StatusBar({
   kernelVersion,
   selectedCount = 0,
   cutStatusText = null,
-  uploads = null,
   onVersionClick,
   className,
 }: StatusBarProps) {
@@ -51,19 +47,16 @@ export default function StatusBar({
           <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
         ) : null}
       </div>
-      <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
-        {uploads}
-        {kernelVersion ? (
-          <button
-            type="button"
-            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            onClick={onVersionClick}
-            aria-label={t("statusBar.openAbout", { version: kernelVersion })}
-          >
-            {t("backend.kernelVersion", { version: kernelVersion })}
-          </button>
-        ) : null}
-      </div>
+      {kernelVersion ? (
+        <button
+          type="button"
+          className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          onClick={onVersionClick}
+          aria-label={t("statusBar.openAbout", { version: kernelVersion })}
+        >
+          {t("backend.kernelVersion", { version: kernelVersion })}
+        </button>
+      ) : null}
     </div>
   );
 }

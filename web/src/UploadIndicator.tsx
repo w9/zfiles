@@ -3,12 +3,16 @@ import { Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "./i18n";
-import { formatSize } from "./listing-format";
 import UploadFloatingPanel from "./UploadFloatingPanel";
 import UploadPanel, { type CloudMultipartPanelProps } from "./UploadPanel";
-import { formatEtaSeconds, type UploadQueueItem } from "./upload-queue";
+import type { DroppedUploadFile } from "./useGlobalFileDrop";
 import { isUploadTraySheetLayout } from "./uploadTrayGeometry";
 import {
   aggregateUploadStats,
@@ -16,24 +20,20 @@ import {
   reduceTrayAutoOpen,
   uploadTrayAttention,
 } from "./uploadTray";
+import type { UploadQueueItem } from "./upload-queue";
 
 type UploadIndicatorProps = {
   items: UploadQueueItem[];
+  onSelect: (dropped: DroppedUploadFile[]) => void;
   onClearFinished: () => void;
   onCancel: (queueId: string) => void;
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
+  readOnly?: boolean;
   unfinishedSessions?: CloudMultipartPanelProps;
   /** @deprecated Use unfinishedSessions */
   cloudMultipart?: CloudMultipartPanelProps;
 };
-
-function formatSpeed(bps: number | null): string | null {
-  if (bps == null || bps <= 0) {
-    return null;
-  }
-  return `${formatSize(Math.round(bps), false)}/s`;
-}
 
 function useUploadTraySheetLayout(): boolean {
   const [sheetLayout, setSheetLayout] = useState(() =>
@@ -51,10 +51,12 @@ function useUploadTraySheetLayout(): boolean {
 
 export default function UploadIndicator({
   items,
+  onSelect,
   onClearFinished,
   onCancel,
   onPause,
   onResume,
+  readOnly = false,
   unfinishedSessions,
   cloudMultipart,
 }: UploadIndicatorProps) {
@@ -64,10 +66,9 @@ export default function UploadIndicator({
   const attention = uploadTrayAttention(stats);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const sheetLayout = useUploadTraySheetLayout();
 
-  // Auto-open the tray once each time a fresh batch of work begins; it
-  // re-arms only after the queue fully drains (see reduceTrayAutoOpen).
   const autoOpenRef = useRef(initialTrayAutoOpenState);
   const hasPendingWork = stats.hasPendingWork;
   useEffect(() => {
@@ -78,76 +79,68 @@ export default function UploadIndicator({
     }
   }, [hasPendingWork]);
 
-  let label: string | null = null;
-  if (stats.hasInFlight) {
-    const parts = [t("upload.tray.uploading", { count: String(stats.inFlight) })];
-    if (stats.percent != null) {
-      parts.push(`${stats.percent}%`);
-    }
-    const speed = formatSpeed(stats.speedBps);
-    if (speed) {
-      parts.push(speed);
-    }
-    const eta = formatEtaSeconds(stats.etaSeconds);
-    if (eta) {
-      parts.push(`~${eta}`);
-    }
-    label = parts.join(" · ");
-  } else if (stats.userPaused > 0) {
-    label = t("upload.tray.paused", { count: String(stats.userPaused) });
-  } else if (stats.awaitingConflict > 0) {
-    label = t("upload.tray.awaitingConflict", { count: String(stats.awaitingConflict) });
-  } else if (stats.pending > 0) {
-    label = t("upload.tray.queued", { count: String(stats.pending) });
-  } else if (stats.failed > 0) {
-    label = t("upload.tray.failed", { count: String(stats.failed) });
-  } else if (stats.finished > 0) {
-    label = t("upload.tray.recent", { count: String(stats.finished) });
-  }
-
+  const openFilePicker = () => inputRef.current?.click();
   const closePanel = () => setOpen(false);
-  const panel = (
-    <UploadPanel
-      items={items}
-      onClearFinished={onClearFinished}
-      onCancel={onCancel}
-      onPause={onPause}
-      onResume={onResume}
-      onClose={closePanel}
-      unfinishedSessions={sessionPanel}
-      cloudMultipart={sessionPanel}
-    />
-  );
+  const panelProps = {
+    items,
+    onClearFinished,
+    onCancel,
+    onPause,
+    onResume,
+    onClose: closePanel,
+    unfinishedSessions: sessionPanel,
+    cloudMultipart: sessionPanel,
+    onChooseFiles: readOnly ? undefined : openFilePicker,
+  };
 
   return (
     <>
-      <Button
-        ref={triggerRef}
-        type="button"
-        variant="ghost"
-        size="sm"
-        className={cn(
-          "h-7 shrink-0 gap-1.5 px-2 text-xs font-medium",
-          stats.hasInFlight && "text-foreground",
-        )}
-        aria-label={t("upload.tray.label")}
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span className="relative flex items-center">
-          <Upload className="size-4" />
-          {attention ? (
-            <span
-              className={cn(
-                "absolute -top-1 -right-1 size-2 rounded-full ring-2 ring-card",
-                stats.failed > 0 ? "bg-destructive" : "bg-amber-500",
-              )}
-              aria-hidden
-            />
-          ) : null}
-        </span>
-        {label ? <span className="tabular-nums">{label}</span> : null}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            ref={triggerRef}
+            type="button"
+            variant="outline"
+            size="icon"
+            className="relative h-8 w-8"
+            aria-label={t("upload.tray.label")}
+            aria-expanded={open}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <Upload className="h-4 w-4" />
+            {attention ? (
+              <span
+                className={cn(
+                  "absolute top-0.5 right-0.5 size-2 rounded-full ring-2 ring-background",
+                  stats.failed > 0 ? "bg-destructive" : "bg-amber-500",
+                )}
+                aria-hidden
+              />
+            ) : null}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("upload.tray.label")}</TooltipContent>
+      </Tooltip>
+
+      {!readOnly ? (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden
+          onChange={(event) => {
+            const files = event.target.files;
+            if (files && files.length > 0) {
+              onSelect(
+                Array.from(files).map((file) => ({ file, sourceHandle: null })),
+              );
+            }
+            event.target.value = "";
+          }}
+        />
+      ) : null}
 
       {sheetLayout ? (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -158,7 +151,7 @@ export default function UploadIndicator({
             onInteractOutside={(event) => event.preventDefault()}
             onPointerDownOutside={(event) => event.preventDefault()}
           >
-            {panel}
+            <UploadPanel {...panelProps} />
           </SheetContent>
         </Sheet>
       ) : (
@@ -169,14 +162,7 @@ export default function UploadIndicator({
         >
           {({ onDragHandlePointerDown }) => (
             <UploadPanel
-              items={items}
-              onClearFinished={onClearFinished}
-              onCancel={onCancel}
-              onPause={onPause}
-              onResume={onResume}
-              onClose={closePanel}
-              unfinishedSessions={sessionPanel}
-              cloudMultipart={sessionPanel}
+              {...panelProps}
               onDragHandlePointerDown={onDragHandlePointerDown}
             />
           )}
