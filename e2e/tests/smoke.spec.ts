@@ -71,8 +71,7 @@ test("explorer lists served files", async ({ page }) => {
 test("status bar shows connected backend status", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("status", { name: /backend connected/i })).toBeVisible();
-  await expect(page.getByRole("status")).not.toContainText(/connected/i);
-  await expect(page.getByRole("status").locator("span").first()).toBeVisible();
+  await expect(page.getByRole("status")).toContainText(/connected/i);
   await expect(page.getByRole("button", { name: /about zfiles/i })).toContainText(/kernel v/i);
 });
 

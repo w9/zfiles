@@ -27,6 +27,7 @@ export default function StatusBar({
       : selectedCount > 1
         ? t("selection.filesSelected", { count: String(selectedCount) })
         : null;
+  const showConnectionStatus = !cutStatusText && !selectionLabel;
 
   return (
     <div
@@ -39,7 +40,11 @@ export default function StatusBar({
       aria-label={t("statusBar.label")}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
+        <BackendStatus
+          status={backendStatus}
+          kernelVersion={kernelVersion}
+          showLabel={showConnectionStatus}
+        />
         {cutStatusText ? (
           <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
         ) : null}

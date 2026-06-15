@@ -186,6 +186,6 @@ Status bar connection text cycle: show short connection labels when no cut/selec
 - [x] Run `pnpm build` + `pnpm test`; bump patch version in `Cargo.toml` to 0.2.16
 - [x] Publish GitHub release v0.2.16; verify Release workflow uploads musl binaries
 
-- [ ] `BackendStatus.tsx` + `StatusBar.tsx`: short connection label when no cut/selection text; muted styling; no dot tooltip while label shown
-- [ ] Update e2e status-bar connected test for idle connection text
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `BackendStatus.tsx` + `StatusBar.tsx`: short connection label when no cut/selection text; muted styling; no dot tooltip while label shown
+- [x] Update e2e status-bar connected test for idle connection text
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
