@@ -1097,7 +1097,7 @@ export default function ExplorerApp() {
 
       const downloadablePaths = filterDownloadablePaths(
         menuContextKeys["selection.paths"],
-        listingEntriesRef.current,
+        entries,
       );
       menuContextKeys = {
         ...menuContextKeys,
@@ -1151,6 +1151,7 @@ export default function ExplorerApp() {
       actionSystem.userKeybindings,
       actionLabel,
       contextKeys,
+      entries,
     ],
   );
   openContextMenuRef.current = openContextMenu;
