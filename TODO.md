@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Status bar rework cycle: dot-only connection indicator with status tooltips; left-aligned selection/cut text; kernel version on the right (click → About); offline red tint; Help menu with Keyboard shortcuts + About dialogs. Deferred: slideshow adjacent-slide prefetch, shared React-level stat hook, global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Upload panel cycle: remove status-bar upload pill; header upload icon opens the tray (attention dot + auto-open preserved); panel header gets Choose files. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -172,3 +172,9 @@ Status bar rework cycle: dot-only connection indicator with status tooltips; lef
 - [x] i18n (14 locales): about, shortcuts dialog, help menu, backend status tooltips; remove status-bar `shortcuts.hint`
 - [x] Update e2e smoke tests + any unit tests for status bar / shortcuts listing
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadIndicator.tsx`: header icon trigger (outline, attention dot); hidden file input + `onSelect`; read-only still opens panel
+- [ ] `UploadPanel.tsx`: panel-header Choose files button via `onChooseFiles`
+- [ ] `StatusBar.tsx` + `ExplorerApp.tsx`: remove status-bar upload pill; replace header `UploadButton` with upload tray
+- [ ] Remove unused `UploadButton.tsx` if fully superseded
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
