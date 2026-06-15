@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Started-elsewhere status + tooltip polish is **complete**. **Current cycle:** session-row Abort button uses `CircleStop` instead of `Trash2`. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy is **complete**. **Current cycle:** session dismiss buttons use X icon (match queue Cancel styling); includes prior started-elsewhere status + tooltip work still uncommitted. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -138,5 +138,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] i18n (14 locales): add `upload.startedElsewhere.description` (why + abort action)
 - [x] Run `pnpm test`
 
-- [ ] `UploadPanel.tsx`: session Abort button icon `Trash2` → `CircleStop`
-- [ ] Run `pnpm test`
+- [ ] `UploadPanel.tsx`: session Abort buttons use X icon; plain ghost styling (match queue Cancel)
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
