@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Release v0.2.16: fix context-menu download path filter TypeScript error (pass `FileEntry[]` not `ListingEntry[]`), bump patch version, publish GitHub release with CI-built musl binaries. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Status bar connection text cycle: show short connection labels when no cut/selection text; hide dot tooltip while text is visible. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -185,3 +185,7 @@ Release v0.2.16: fix context-menu download path filter TypeScript error (pass `F
 - [x] `ExplorerApp.tsx`: pass `entries` (`FileEntry[]`) to `filterDownloadablePaths` instead of `listingEntriesRef`
 - [x] Run `pnpm build` + `pnpm test`; bump patch version in `Cargo.toml` to 0.2.16
 - [x] Publish GitHub release v0.2.16; verify Release workflow uploads musl binaries
+
+- [ ] `BackendStatus.tsx` + `StatusBar.tsx`: short connection label when no cut/selection text; muted styling; no dot tooltip while label shown
+- [ ] Update e2e status-bar connected test for idle connection text
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
