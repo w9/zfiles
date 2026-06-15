@@ -160,7 +160,7 @@ Slideshow/cloud caching cycle: in-memory presigned-URL + stat cache on `S3Backen
 - [x] i18n (14 locales): `actions.selection.copyPath.name`, `actions.selection.download.*`
 - [x] Update e2e preview-image test + context-menu coverage; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `backendObjectCache.ts`: presigned URL expiry parse, stat + download URL caches (TTL, refresh buffer, in-flight dedup, invalidatePath); unit tests
-- [ ] `s3Backend.ts`: wire caches into `stat`/`downloadUrl`; invalidate affected paths on `upload` + `runAction`
-- [ ] `SlideshowOverlay.tsx`: key slideshow `<img>` by `currentPath` instead of `imageUrl`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `backendObjectCache.ts`: presigned URL expiry parse, stat + download URL caches (TTL, refresh buffer, in-flight dedup, invalidatePath); unit tests
+- [x] `s3Backend.ts`: wire caches into `stat`/`downloadUrl`; invalidate affected paths on `upload` + `runAction`
+- [x] `SlideshowOverlay.tsx`: key slideshow `<img>` by `currentPath` instead of `imageUrl`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

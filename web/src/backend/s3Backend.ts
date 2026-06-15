@@ -7,6 +7,10 @@ import {
   S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
+import {
+  BackendObjectCache,
+  pathsAffectedByAction,
+} from "./backendObjectCache";
 import { runS3FileAction } from "./s3FileOperations";
 import type { RunActionParams } from "./runActionParams";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -112,6 +116,7 @@ export class S3Backend implements ExplorerBackend {
   readonly mode = "s3" as const;
   private readonly client: S3Client;
   private readonly config: S3ConnectionConfig;
+  private readonly cache = new BackendObjectCache();
 
   constructor(config: S3ConnectionConfig) {
     this.config = config;
@@ -186,6 +191,22 @@ export class S3Backend implements ExplorerBackend {
   }
 
   async stat(path: string): Promise<FileStat> {
+    const cached = this.cache.getCachedStat(path);
+    if (cached) {
+      return cached;
+    }
+    const inFlight = this.cache.getInFlightStat(path);
+    if (inFlight) {
+      return inFlight;
+    }
+    const promise = this.fetchStat(path).then((result) => {
+      this.cache.setStat(path, result);
+      return result;
+    });
+    return this.cache.trackInFlightStat(path, promise);
+  }
+
+  private async fetchStat(path: string): Promise<FileStat> {
     const key = keyForExplorerPath(this.config.prefix, path);
 
     try {
@@ -236,6 +257,22 @@ export class S3Backend implements ExplorerBackend {
   }
 
   downloadUrl(path: string): Promise<string> {
+    const cached = this.cache.getCachedDownloadUrl(path);
+    if (cached) {
+      return Promise.resolve(cached);
+    }
+    const inFlight = this.cache.getInFlightDownloadUrl(path);
+    if (inFlight) {
+      return inFlight;
+    }
+    const promise = this.signDownloadUrl(path).then((url) => {
+      this.cache.setDownloadUrl(path, url);
+      return url;
+    });
+    return this.cache.trackInFlightDownloadUrl(path, promise);
+  }
+
+  private signDownloadUrl(path: string): Promise<string> {
     const key = keyForExplorerPath(this.config.prefix, path);
     return getSignedUrl(
       this.client,
@@ -506,6 +543,7 @@ export class S3Backend implements ExplorerBackend {
     }
 
     if (!checksumValidation || checksum == null) {
+      this.cache.invalidatePath(destPath);
       return;
     }
 
@@ -515,8 +553,10 @@ export class S3Backend implements ExplorerBackend {
     });
     if (!verified) {
       await this.deleteUploadedObject(key);
+      this.cache.invalidatePath(destPath);
       throw new Error("checksum mismatch");
     }
+    this.cache.invalidatePath(destPath);
   }
 
   private persistMultipartRecord(
@@ -566,6 +606,7 @@ export class S3Backend implements ExplorerBackend {
       this.config.prefix,
       params,
     );
+    this.cache.invalidatePaths(pathsAffectedByAction(params));
   }
 
   async fetchHealth(): Promise<HealthInfo | null> {

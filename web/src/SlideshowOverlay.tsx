@@ -596,7 +596,7 @@ export default function SlideshowOverlay({
               onClickCapture={handleStageClick}
             >
               <img
-                key={imageUrl}
+                key={currentPath}
                 ref={imageRef}
                 src={imageUrl}
                 alt={fileName}
