@@ -12,7 +12,6 @@ export const it: Record<MessageKey, string> = {
   "quickFilter.label": "Filtra file",
   "quickFilter.placeholder": "Filtra…",
   "quickFilter.clear": "Cancella filtro",
-  "quickFilter.helpLabel": "Aiuto sintassi filtro",
   "quickFilter.help": "Testo semplice: corrispondenza sottostringa (senza distinzione maiuscole/minuscole).\n/abc: espressione regolare con distinzione (la / iniziale viene rimossa).\n/abc/i: espressione regolare senza distinzione.\nUsa /^exact$ o /^exact$/i per corrispondenza nome intero.\nESC cancella il filtro.",
   "quickFilter.regexError": "Espressione regolare non valida",
   "quickFilter.empty": "Nessun file corrisponde al filtro",

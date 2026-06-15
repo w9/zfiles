@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowLeft, ArrowRight, HelpCircle, Home, RefreshCw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, RefreshCw, X } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -49,7 +49,6 @@ type ExplorerBreadcrumbProps = {
   quickFilterLabel: string;
   quickFilterPlaceholder: string;
   quickFilterClearLabel: string;
-  quickFilterHelpLabel: string;
   quickFilterHelpText: string;
   quickFilterRegexErrorLabel: string;
   quickFilterValue: string;
@@ -77,7 +76,6 @@ export default function ExplorerBreadcrumb({
   quickFilterLabel,
   quickFilterPlaceholder,
   quickFilterClearLabel,
-  quickFilterHelpLabel,
   quickFilterHelpText,
   quickFilterRegexErrorLabel,
   quickFilterValue,
@@ -263,78 +261,66 @@ export default function ExplorerBreadcrumb({
           </Breadcrumb>
         )}
       </div>
-      <InputGroup
-        className="h-7 min-w-0 shrink-0 rounded-lg pr-1 sm:w-52 md:w-60"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {(() => {
-          const normalized = normalizeQuickFilterQuery(quickFilterValue);
-          const mode = parseQuickFilterMode(quickFilterValue);
-          const hasRegexError =
-            mode?.kind === "regex" && !isValidQuickFilterRegex(mode.pattern);
-          const input = (
-            <InputGroupInput
-              ref={quickFilterInputRef}
-              type="text"
-              aria-label={quickFilterLabel}
-              placeholder={quickFilterPlaceholder}
-              value={quickFilterValue}
-              aria-invalid={hasRegexError || undefined}
-              className="px-2 text-sm"
-              onChange={(event) => onQuickFilterChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  onQuickFilterChange("");
-                  event.currentTarget.blur();
-                  return;
-                }
-                onQuickFilterKeyDown?.(event);
-              }}
-            />
-          );
-          return hasRegexError ? (
-            <Tooltip>
-              <TooltipTrigger asChild>{input}</TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {quickFilterRegexErrorLabel}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            input
-          );
-        })()}
-        <InputGroupAddon align="inline-end" className="gap-0 pr-1">
-          {quickFilterValue.length > 0 ? (
-            <InputGroupButton
-              size="icon-xs"
-              aria-label={quickFilterClearLabel}
-              onClick={() => {
-                onQuickFilterChange("");
-                quickFilterInputRef?.current?.focus();
-              }}
-            >
-              <X className="size-3.5" aria-hidden="true" />
-            </InputGroupButton>
-          ) : null}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="flex size-6 items-center justify-center rounded-[calc(var(--radius)-5px)] text-muted-foreground hover:bg-accent/60"
-                aria-label={quickFilterHelpLabel}
-              >
-                <HelpCircle className="size-3.5" aria-hidden="true" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent
-              side="bottom"
-              className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
-            >
-              {quickFilterHelpText}
-            </TooltipContent>
-          </Tooltip>
-        </InputGroupAddon>
-      </InputGroup>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <InputGroup
+            className="h-7 min-w-0 shrink-0 rounded-lg pr-1 sm:w-52 md:w-60"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {(() => {
+              const mode = parseQuickFilterMode(quickFilterValue);
+              const hasRegexError =
+                mode?.kind === "regex" && !isValidQuickFilterRegex(mode.pattern);
+              return (
+                <InputGroupInput
+                  ref={quickFilterInputRef}
+                  type="text"
+                  aria-label={quickFilterLabel}
+                  placeholder={quickFilterPlaceholder}
+                  value={quickFilterValue}
+                  aria-invalid={hasRegexError || undefined}
+                  className="px-2 text-sm"
+                  onChange={(event) => onQuickFilterChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      onQuickFilterChange("");
+                      event.currentTarget.blur();
+                      return;
+                    }
+                    onQuickFilterKeyDown?.(event);
+                  }}
+                />
+              );
+            })()}
+            <InputGroupAddon align="inline-end" className="gap-0 pr-1">
+              {quickFilterValue.length > 0 ? (
+                <InputGroupButton
+                  size="icon-xs"
+                  aria-label={quickFilterClearLabel}
+                  onClick={() => {
+                    onQuickFilterChange("");
+                    quickFilterInputRef?.current?.focus();
+                  }}
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </InputGroupButton>
+              ) : null}
+            </InputGroupAddon>
+          </InputGroup>
+        </TooltipTrigger>
+        <TooltipContent
+          side="bottom"
+          className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
+        >
+          {(() => {
+            const mode = parseQuickFilterMode(quickFilterValue);
+            const hasRegexError =
+              mode?.kind === "regex" && !isValidQuickFilterRegex(mode.pattern);
+            return hasRegexError ? quickFilterRegexErrorLabel : quickFilterHelpText;
+          })()}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 }

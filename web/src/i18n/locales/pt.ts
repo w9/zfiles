@@ -12,7 +12,6 @@ export const pt: Record<MessageKey, string> = {
   "quickFilter.label": "Filtrar arquivos",
   "quickFilter.placeholder": "Filtrar…",
   "quickFilter.clear": "Limpar filtro",
-  "quickFilter.helpLabel": "Ajuda de sintaxe do filtro",
   "quickFilter.help": "Texto simples: correspondência de substring (sem diferenciar maiúsculas).\n/abc: expressão regular sensível a maiúsculas (a / inicial é removida).\n/abc/i: expressão regular sem diferenciar maiúsculas.\nUse /^exact$ ou /^exact$/i para correspondência de nome completo.\nESC limpa o filtro.",
   "quickFilter.regexError": "Expressão regular inválida",
   "quickFilter.empty": "Nenhum arquivo corresponde ao filtro",

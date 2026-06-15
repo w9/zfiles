@@ -12,7 +12,6 @@ export const ru: Record<MessageKey, string> = {
   "quickFilter.label": "Фильтровать файлы",
   "quickFilter.placeholder": "Фильтр…",
   "quickFilter.clear": "Очистить фильтр",
-  "quickFilter.helpLabel": "Справка по синтаксису фильтра",
   "quickFilter.help": "Обычный текст: регистронезависимое совпадение подстроки.\n/abc: регистрозависимое регулярное выражение (ведущий / убирается).\n/abc/i: регистронезависимое регулярное выражение.\nИспользуйте /^exact$ или /^exact$/i для полного совпадения имени.\nESC очищает фильтр.",
   "quickFilter.regexError": "Неверное регулярное выражение",
   "quickFilter.empty": "Нет файлов, соответствующих фильтру",

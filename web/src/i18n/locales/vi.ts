@@ -12,7 +12,6 @@ export const vi: Record<MessageKey, string> = {
   "quickFilter.label": "Lọc tệp",
   "quickFilter.placeholder": "Lọc…",
   "quickFilter.clear": "Xóa bộ lọc",
-  "quickFilter.helpLabel": "Trợ giúp cú pháp bộ lọc",
   "quickFilter.help": "Văn bản thường: khớp chuỗi con (không phân biệt hoa thường).\n/abc: biểu thức chính quy phân biệt hoa thường (dấu / đầu bị bỏ).\n/abc/i: biểu thức chính quy không phân biệt hoa thường.\nDùng /^exact$ hoặc /^exact$/i để khớp toàn bộ tên.\nESC xóa bộ lọc.",
   "quickFilter.regexError": "Biểu thức chính quy không hợp lệ",
   "quickFilter.empty": "Không có tệp nào khớp với bộ lọc",

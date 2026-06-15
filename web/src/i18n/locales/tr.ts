@@ -12,7 +12,6 @@ export const tr: Record<MessageKey, string> = {
   "quickFilter.label": "Dosyaları filtrele",
   "quickFilter.placeholder": "Filtrele…",
   "quickFilter.clear": "Filtreyi temizle",
-  "quickFilter.helpLabel": "Filtre sözdizimi yardımı",
   "quickFilter.help": "Düz metin: büyük/küçük harfe duyarsız alt dize eşleşmesi.\n/abc: büyük/küçük harfe duyarlı regex (baştaki / kaldırılır).\n/abc/i: büyük/küçük harfe duyarsız regex.\nTam ad eşleşmesi için /^exact$ veya /^exact$/i kullan.\nESC filtreyi temizler.",
   "quickFilter.regexError": "Geçersiz düzenli ifade",
   "quickFilter.empty": "Filtreyle eşleşen dosya yok",

@@ -12,7 +12,6 @@ export const zhTW: Record<MessageKey, string> = {
   "quickFilter.label": "篩選檔案",
   "quickFilter.placeholder": "篩選…",
   "quickFilter.clear": "清除篩選",
-  "quickFilter.helpLabel": "篩選語法說明",
   "quickFilter.help": "純文字：不分大小寫的子字串比對。\n/abc：大小寫敏感的正規表示式（前導 / 會移除）。\n/abc/i：不分大小寫的正規表示式。\n使用 /^exact$ 或 /^exact$/i 進行完整名稱比對。\nESC 清除篩選。",
   "quickFilter.regexError": "正規表示式無效",
   "quickFilter.empty": "沒有符合篩選條件的檔案",

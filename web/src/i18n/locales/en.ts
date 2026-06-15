@@ -12,7 +12,6 @@ export const en = {
   "quickFilter.label": "Filter files",
   "quickFilter.placeholder": "Filter…",
   "quickFilter.clear": "Clear filter",
-  "quickFilter.helpLabel": "Filter syntax help",
   "quickFilter.help": "Plain text: case-insensitive substring match.\n/abc: case-sensitive regex (leading / is removed from the pattern).\n/abc/i: case-insensitive regex.\nUse /^exact$ or /^exact$/i for whole-name match.\nESC clears the filter.",
   "quickFilter.regexError": "Invalid regular expression",
   "quickFilter.empty": "No files match the filter",

@@ -12,7 +12,6 @@ export const de: Record<MessageKey, string> = {
   "quickFilter.label": "Dateien filtern",
   "quickFilter.placeholder": "Filtern…",
   "quickFilter.clear": "Filter löschen",
-  "quickFilter.helpLabel": "Filter-Syntaxhilfe",
   "quickFilter.help": "Einfacher Text: Teilstring-Vergleich (Groß-/Kleinschreibung wird ignoriert).\n/abc: regulärer Ausdruck mit Groß-/Kleinschreibung (führendes / wird entfernt).\n/abc/i: regulärer Ausdruck ohne Groß-/Kleinschreibung.\n/^exact$ oder /^exact$/i für exakten Namen verwenden.\nESC löscht den Filter.",
   "quickFilter.regexError": "Ungültiger regulärer Ausdruck",
   "quickFilter.empty": "Keine Dateien entsprechen dem Filter",

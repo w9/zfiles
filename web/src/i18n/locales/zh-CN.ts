@@ -12,7 +12,6 @@ export const zhCN: Record<MessageKey, string> = {
   "quickFilter.label": "筛选文件",
   "quickFilter.placeholder": "筛选…",
   "quickFilter.clear": "清除筛选",
-  "quickFilter.helpLabel": "筛选语法帮助",
   "quickFilter.help": "纯文本：不区分大小写的子串匹配。\n/abc：大小写敏感的正则（前导 / 会被移除）。\n/abc/i：不区分大小写的正则。\n使用 /^exact$ 或 /^exact$/i 进行全名匹配。\nESC 清除筛选。",
   "quickFilter.regexError": "正则表达式无效",
   "quickFilter.empty": "没有匹配筛选条件的文件",

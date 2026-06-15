@@ -12,7 +12,6 @@ export const ja: Record<MessageKey, string> = {
   "quickFilter.label": "ファイルを絞り込む",
   "quickFilter.placeholder": "絞り込み…",
   "quickFilter.clear": "絞り込みをクリア",
-  "quickFilter.helpLabel": "フィルターの構文ヘルプ",
   "quickFilter.help": "プレーンテキスト：大文字・小文字を区別しない部分一致。\n/abc：大文字・小文字を区別する正規表現（先頭の / は除去）。\n/abc/i：大文字・小文字を区別しない正規表現。\n完全一致は /^exact$ または /^exact$/i を使用。\nESC でフィルターをクリア。",
   "quickFilter.regexError": "正規表現が無効です",
   "quickFilter.empty": "絞り込み条件に一致するファイルがありません",

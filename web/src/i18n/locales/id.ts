@@ -12,7 +12,6 @@ export const id: Record<MessageKey, string> = {
   "quickFilter.label": "Saring berkas",
   "quickFilter.placeholder": "Saring…",
   "quickFilter.clear": "Hapus filter",
-  "quickFilter.helpLabel": "Bantuan sintaks filter",
   "quickFilter.help": "Teks biasa: pencocokan substring (tidak peka huruf besar/kecil).\n/abc: regex peka huruf (garis miring awal dihapus).\n/abc/i: regex tidak peka huruf.\nGunakan /^exact$ atau /^exact$/i untuk cocok nama utuh.\nESC hapus filter.",
   "quickFilter.regexError": "Ekspresi reguler tidak valid",
   "quickFilter.empty": "Tidak ada berkas yang cocok dengan filter",

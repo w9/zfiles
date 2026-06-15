@@ -12,7 +12,6 @@ export const fr: Record<MessageKey, string> = {
   "quickFilter.label": "Filtrer les fichiers",
   "quickFilter.placeholder": "Filtrer…",
   "quickFilter.clear": "Effacer le filtre",
-  "quickFilter.helpLabel": "Aide à la syntaxe du filtre",
   "quickFilter.help": "Texte brut : correspondance de sous-chaîne (insensible à la casse).\n/abc : expression régulière sensible à la casse (le / de tête est retiré).\n/abc/i : expression régulière insensible à la casse.\nUtilisez /^exact$ ou /^exact$/i pour une correspondance de nom entier.\nESC efface le filtre.",
   "quickFilter.regexError": "Expression régulière invalide",
   "quickFilter.empty": "Aucun fichier ne correspond au filtre",
