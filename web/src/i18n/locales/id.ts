@@ -12,6 +12,7 @@ export const id: Record<MessageKey, string> = {
   "quickFilter.label": "Saring berkas",
   "quickFilter.placeholder": "Saring…",
   "quickFilter.caseSensitive": "Peka huruf besar/kecil",
+  "quickFilter.fadeUnmatched": "Pudarkan yang tidak cocok",
   "quickFilter.wholeWord": "Cocokkan seluruh nama",
   "quickFilter.regex": "Gunakan ekspresi reguler",
   "quickFilter.clear": "Hapus filter",

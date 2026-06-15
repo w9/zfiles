@@ -12,6 +12,7 @@ export const zhCN: Record<MessageKey, string> = {
   "quickFilter.label": "筛选文件",
   "quickFilter.placeholder": "筛选…",
   "quickFilter.caseSensitive": "区分大小写",
+  "quickFilter.fadeUnmatched": "淡化未匹配项",
   "quickFilter.wholeWord": "完整匹配名称",
   "quickFilter.regex": "使用正则表达式",
   "quickFilter.clear": "清除筛选",

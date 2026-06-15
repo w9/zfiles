@@ -12,6 +12,7 @@ export const ru: Record<MessageKey, string> = {
   "quickFilter.label": "Фильтровать файлы",
   "quickFilter.placeholder": "Фильтр…",
   "quickFilter.caseSensitive": "Учитывать регистр",
+  "quickFilter.fadeUnmatched": "Затенять несовпадения",
   "quickFilter.wholeWord": "Целое имя",
   "quickFilter.regex": "Использовать регулярное выражение",
   "quickFilter.clear": "Очистить фильтр",

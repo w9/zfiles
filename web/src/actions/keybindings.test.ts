@@ -93,18 +93,42 @@ test("matchKeybinding matches Mod+A select-all chord", () => {
   assert.equal(binding?.command, "selection.select-all");
 });
 
-test("matchKeybinding matches shift-extended selection chords", () => {
+test("default movement keybindings use arrow keys only", () => {
   const bindings = defaultKeybindings();
-  const event = {
-    key: "j",
-    ctrlKey: false,
-    metaKey: false,
-    altKey: false,
-    shiftKey: true,
-  } as KeyboardEvent;
-  const binding = matchKeybinding(bindings, event, () => true);
-  assert.equal(binding?.command, "selection.move-down");
-  assert.equal(binding?.args?.extendRange, true);
+  const movementKeys = bindings
+    .filter((binding) => binding.command.startsWith("selection.move-"))
+    .map((binding) => binding.key)
+    .sort();
+  assert.deepEqual(movementKeys, [
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowUp",
+    "Shift+ArrowDown",
+    "Shift+ArrowLeft",
+    "Shift+ArrowRight",
+    "Shift+ArrowUp",
+  ]);
+});
+
+test("matchKeybinding ignores vim-style movement keys", () => {
+  const bindings = defaultKeybindings();
+  for (const key of ["h", "j", "k", "l"]) {
+    assert.equal(
+      matchKeybinding(
+        bindings,
+        {
+          key,
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          shiftKey: false,
+        } as KeyboardEvent,
+        () => true,
+      ),
+      null,
+    );
+  }
 });
 
 test("matchKeybinding matches grid-only horizontal navigation", () => {

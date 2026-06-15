@@ -12,6 +12,7 @@ export const tr: Record<MessageKey, string> = {
   "quickFilter.label": "Dosyaları filtrele",
   "quickFilter.placeholder": "Filtrele…",
   "quickFilter.caseSensitive": "Büyük/küçük harf duyarlı",
+  "quickFilter.fadeUnmatched": "Eşleşmeyenleri soluk göster",
   "quickFilter.wholeWord": "Tam adı eşleştir",
   "quickFilter.regex": "Düzenli ifade kullan",
   "quickFilter.clear": "Filtreyi temizle",

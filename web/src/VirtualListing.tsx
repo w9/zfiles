@@ -308,6 +308,7 @@ export default function VirtualListing({
                   LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
                   isCut && LISTING_ROW_CUT_CLASS,
+                  entry.quickFilterMatched === false && "opacity-40",
                   isSelected &&
                     (isFocused
                       ? LISTING_ROW_FOCUS_SELECTED_CLASS

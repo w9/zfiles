@@ -12,6 +12,7 @@ export const ja: Record<MessageKey, string> = {
   "quickFilter.label": "ファイルを絞り込む",
   "quickFilter.placeholder": "絞り込み…",
   "quickFilter.caseSensitive": "大文字と小文字を区別",
+  "quickFilter.fadeUnmatched": "一致しない項目を薄く表示",
   "quickFilter.wholeWord": "名前全体に一致",
   "quickFilter.regex": "正規表現を使用",
   "quickFilter.clear": "絞り込みをクリア",

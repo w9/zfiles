@@ -12,6 +12,7 @@ export const vi: Record<MessageKey, string> = {
   "quickFilter.label": "Lọc tệp",
   "quickFilter.placeholder": "Lọc…",
   "quickFilter.caseSensitive": "Phân biệt chữ hoa/thường",
+  "quickFilter.fadeUnmatched": "Làm mờ mục không khớp",
   "quickFilter.wholeWord": "Khớp toàn bộ tên",
   "quickFilter.regex": "Dùng biểu thức chính quy",
   "quickFilter.clear": "Xóa bộ lọc",

@@ -7,6 +7,7 @@ export type ListingEntry = {
   path: string;
   isDir: boolean;
   isSymlink?: boolean;
+  quickFilterMatched?: boolean;
   size?: number;
   modified?: unknown;
   onSelect: (event: React.MouseEvent, displayIndex: number) => void;

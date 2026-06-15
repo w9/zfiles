@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import type { SortingState } from "@tanstack/react-table";
 
 import { Settings } from "lucide-react";
@@ -83,9 +90,14 @@ import {
   type SelectAllWarningReason,
 } from "./listingSelectAll";
 import {
-  defaultQuickFilterOptions,
+  entryMatchesQuickFilter,
   filterEntriesByQuickFilter,
+  firstQuickFilterMatchIndex,
+  isPlainQuickFilterLetterKey,
+  nextQuickFilterMatchIndex,
   normalizeQuickFilterQuery,
+  readStoredQuickFilterOptions,
+  storeQuickFilterOptions,
   type QuickFilterOptions,
 } from "../quickFilter";
 import { sortFileEntries } from "../listingSort";
@@ -167,6 +179,16 @@ function contextMenuActionLabel(
   return defaultLabel;
 }
 
+function isNativeTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  return (
+    target.isContentEditable ||
+    target.closest("input, textarea, select, [contenteditable='true']") != null
+  );
+}
+
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
   const onCloudDisconnect = useCloudDisconnect();
@@ -213,8 +235,8 @@ export default function ExplorerApp() {
     typeof window !== "undefined" ? window.innerWidth : LG_BREAKPOINT_PX,
   );
   const [quickFilter, setQuickFilter] = useState("");
-  const [quickFilterOptions, setQuickFilterOptions] = useState<QuickFilterOptions>(
-    defaultQuickFilterOptions,
+  const [quickFilterOptions, setQuickFilterOptionsState] = useState<QuickFilterOptions>(
+    () => readStoredQuickFilterOptions(),
   );
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
@@ -232,6 +254,11 @@ export default function ExplorerApp() {
   selectedIndexRef.current = selectedIndex;
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
+
+  const setQuickFilterOptions = useCallback((options: QuickFilterOptions) => {
+    storeQuickFilterOptions(options);
+    setQuickFilterOptionsState(options);
+  }, []);
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
@@ -605,11 +632,22 @@ export default function ExplorerApp() {
     return filterDotEntries(sorted, showDotEntries);
   }, [entries, listingSortOrder, quickFilterActive, showDotEntries]);
 
-  const quickFilteredEntries = useMemo(
-    () =>
-      filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
+  const quickMatchedEntries = useMemo(
+    () => filterEntriesByQuickFilter(visibleEntries, quickFilter, quickFilterOptions),
     [visibleEntries, quickFilter, quickFilterOptions],
   );
+
+  const quickFilteredEntries = useMemo(() => {
+    if (quickFilterActive && quickFilterOptions.fadeUnmatched) {
+      return visibleEntries;
+    }
+    return quickMatchedEntries;
+  }, [
+    quickFilterActive,
+    quickFilterOptions.fadeUnmatched,
+    quickMatchedEntries,
+    visibleEntries,
+  ]);
 
   useEffect(() => {
     const onViewportResize = () => setViewportWidth(window.innerWidth);
@@ -718,35 +756,6 @@ export default function ExplorerApp() {
   }, [currentPath]);
 
   useEffect(() => {
-    if (!quickFilterActive) {
-      return;
-    }
-    const visiblePaths = new Set(quickFilteredEntries.map((entry) => entry.path));
-    setSelectedPaths((prev) => {
-      const next = new Set([...prev].filter((path) => visiblePaths.has(path)));
-      if (next.size === prev.size) {
-        return prev;
-      }
-      return next;
-    });
-    const primary = selectedPathRef.current;
-    if (primary && !visiblePaths.has(primary)) {
-      const fallback = quickFilteredEntries[0]?.path ?? null;
-      setSelectedPath(fallback);
-      const fallbackIndex = quickFilteredEntries.findIndex(
-        (entry) => entry.path === fallback,
-      );
-      if (fallbackIndex >= 0) {
-        setSelectedIndex(fallbackIndex);
-        selectionAnchorRef.current = fallbackIndex;
-      } else {
-        setSelectedIndex(0);
-        selectionAnchorRef.current = 0;
-      }
-    }
-  }, [quickFilterActive, quickFilteredEntries]);
-
-  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (slideshowOpen) {
         return;
@@ -759,11 +768,7 @@ export default function ExplorerApp() {
         return;
       }
       const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.closest("input, textarea, select, [contenteditable='true']"))
-      ) {
+      if (isNativeTypingTarget(target)) {
         return;
       }
       event.preventDefault();
@@ -775,6 +780,35 @@ export default function ExplorerApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [slideshowOpen]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        slideshowOpen ||
+        previewSheetOpen ||
+        focusPane !== "file-list" ||
+        !isPlainQuickFilterLetterKey(event) ||
+        isNativeTypingTarget(event.target)
+      ) {
+        return;
+      }
+      const target = event.target;
+      const targetElement = target instanceof HTMLElement ? target : null;
+      const targetInListingArea =
+        !targetElement ||
+        targetElement === document.body ||
+        mainContentRef.current?.contains(targetElement);
+      if (!targetInListingArea) {
+        return;
+      }
+
+      event.preventDefault();
+      quickFilterInputRef.current?.focus();
+      setQuickFilter((current) => `${current}${event.key}`);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [focusPane, previewSheetOpen, slideshowOpen]);
+
   const listingEntries = useMemo((): Array<ListingEntry> => {
     return quickFilteredEntries.map((entry) => {
       const listingEntry: ListingEntry = {
@@ -783,6 +817,9 @@ export default function ExplorerApp() {
         path: entry.path,
         isDir: entry.is_dir,
         isSymlink: entry.is_symlink,
+        quickFilterMatched: quickFilterActive
+          ? entryMatchesQuickFilter(entry.name, quickFilter, quickFilterOptions)
+          : true,
         size: entry.is_dir ? undefined : entry.size,
         modified: entry.modified,
         onSelect: (event, displayIndex) => {
@@ -835,7 +872,14 @@ export default function ExplorerApp() {
       };
       return listingEntry;
     });
-  }, [quickFilteredEntries, navigateTo, backend]);
+  }, [
+    quickFilteredEntries,
+    quickFilterActive,
+    quickFilter,
+    quickFilterOptions,
+    navigateTo,
+    backend,
+  ]);
 
   const listingColumnLabels = useMemo(
     (): ListingColumnLabels => ({
@@ -908,31 +952,57 @@ export default function ExplorerApp() {
     }
   }, [activeListingEntries]);
 
+  useEffect(() => {
+    if (!quickFilterActive) {
+      return;
+    }
+    const matchIndex = firstQuickFilterMatchIndex(activeListingEntries);
+    if (matchIndex >= 0) {
+      const match = activeListingEntries[matchIndex]!;
+      setSelectedIndex(matchIndex);
+      setSelectedPath(match.path);
+      setSelectedPaths(new Set([match.path]));
+      selectionAnchorRef.current = matchIndex;
+      return;
+    }
+
+    setSelectedPaths((prev) => {
+      const displayPaths = new Set(activeListingEntries.map((entry) => entry.path));
+      const next = new Set([...prev].filter((path) => displayPaths.has(path)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [activeListingEntries, quickFilter, quickFilterActive]);
+
+  const selectListingIndex = useCallback(
+    (index: number, options?: { extendRange?: boolean }) => {
+      const rows = listingEntriesRef.current;
+      const entry = rows[index];
+      if (!entry) {
+        return;
+      }
+      setSelectedIndex(index);
+      if (options?.extendRange) {
+        setSelectedPaths(pathsInIndexRange(rows, selectionAnchorRef.current, index));
+        setSelectedPath(entry.path);
+        return;
+      }
+      setSelectedPaths(new Set([entry.path]));
+      setSelectedPath(entry.path);
+      selectionAnchorRef.current = index;
+    },
+    [],
+  );
+
   const moveSelectedIndex = useCallback(
     (
       updater: number | ((index: number) => number),
       options?: { extendRange?: boolean },
     ) => {
-      setSelectedIndex((prev) => {
-        const next = typeof updater === "function" ? updater(prev) : updater;
-        const rows = listingEntriesRef.current;
-        const entry = rows[next];
-        if (options?.extendRange) {
-          setSelectedPaths(
-            pathsInIndexRange(rows, selectionAnchorRef.current, next),
-          );
-          if (entry?.path) {
-            setSelectedPath(entry.path);
-          }
-        } else if (entry?.path) {
-          setSelectedPaths(new Set([entry.path]));
-          setSelectedPath(entry.path);
-          selectionAnchorRef.current = next;
-        }
-        return next;
-      });
+      const previous = selectedIndexRef.current;
+      const next = typeof updater === "function" ? updater(previous) : updater;
+      selectListingIndex(next, options);
     },
-    [],
+    [selectListingIndex],
   );
 
   const activateSelected = useCallback(() => {
@@ -941,6 +1011,44 @@ export default function ExplorerApp() {
       selected.onActivate();
     }
   }, []);
+
+  const activateQuickFilterSelection = useCallback(() => {
+    const selected = listingEntriesRef.current[selectedIndexRef.current];
+    if (!selected || (quickFilterActive && selected.quickFilterMatched === false)) {
+      return;
+    }
+    selected.onActivate();
+  }, [quickFilterActive]);
+
+  const moveQuickFilterSelection = useCallback(
+    (direction: "up" | "down") => {
+      const nextIndex = nextQuickFilterMatchIndex(
+        listingEntriesRef.current,
+        selectedIndexRef.current,
+        direction,
+      );
+      if (nextIndex < 0) {
+        return;
+      }
+      selectListingIndex(nextIndex);
+    },
+    [selectListingIndex],
+  );
+
+  const handleQuickFilterKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        activateQuickFilterSelection();
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        moveQuickFilterSelection(event.key === "ArrowDown" ? "down" : "up");
+      }
+    },
+    [activateQuickFilterSelection, moveQuickFilterSelection],
+  );
 
   const selectAllVisible = useCallback(() => {
     const rows = listingEntriesRef.current;
@@ -957,8 +1065,8 @@ export default function ExplorerApp() {
       "more-to-load": "actions.selection.selectAll.warning.moreToLoad",
     };
     for (const reason of collectSelectAllWarnings({
-      quickFilterActive,
-      quickFilteredCount: quickFilteredEntries.length,
+      quickFilterActive: quickFilterActive && !quickFilterOptions.fadeUnmatched,
+      quickFilteredCount: quickMatchedEntries.length,
       visibleEntryCount: visibleEntries.length,
       hasHiddenDotEntries:
         !showDotEntries && entries.some((entry) => isDotEntryName(entry.name)),
@@ -976,7 +1084,8 @@ export default function ExplorerApp() {
     entries,
     listCursor,
     quickFilterActive,
-    quickFilteredEntries.length,
+    quickFilterOptions.fadeUnmatched,
+    quickMatchedEntries.length,
     showDotEntries,
     t,
     visibleEntries.length,
@@ -1352,6 +1461,7 @@ export default function ExplorerApp() {
           quickFilterLabel={t("quickFilter.label")}
           quickFilterPlaceholder={t("quickFilter.placeholder")}
           quickFilterCaseSensitiveLabel={t("quickFilter.caseSensitive")}
+          quickFilterFadeUnmatchedLabel={t("quickFilter.fadeUnmatched")}
           quickFilterWholeWordLabel={t("quickFilter.wholeWord")}
           quickFilterRegexLabel={t("quickFilter.regex")}
           quickFilterClearLabel={t("quickFilter.clear")}
@@ -1359,6 +1469,7 @@ export default function ExplorerApp() {
           quickFilterOptions={quickFilterOptions}
           onQuickFilterChange={setQuickFilter}
           onQuickFilterOptionsChange={setQuickFilterOptions}
+          onQuickFilterKeyDown={handleQuickFilterKeyDown}
           quickFilterInputRef={quickFilterInputRef}
         />
       </section>

@@ -12,6 +12,7 @@ export const ko: Record<MessageKey, string> = {
   "quickFilter.label": "파일 필터링",
   "quickFilter.placeholder": "필터…",
   "quickFilter.caseSensitive": "대소문자 구분",
+  "quickFilter.fadeUnmatched": "일치하지 않는 항목 흐리게",
   "quickFilter.wholeWord": "전체 이름 일치",
   "quickFilter.regex": "정규식 사용",
   "quickFilter.clear": "필터 지우기",

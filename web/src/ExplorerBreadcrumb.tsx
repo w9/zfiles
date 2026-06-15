@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CaseSensitive,
+  Eye,
   Home,
   RefreshCw,
   Regex,
@@ -49,6 +50,7 @@ type ExplorerBreadcrumbProps = {
   quickFilterLabel: string;
   quickFilterPlaceholder: string;
   quickFilterCaseSensitiveLabel: string;
+  quickFilterFadeUnmatchedLabel: string;
   quickFilterWholeWordLabel: string;
   quickFilterRegexLabel: string;
   quickFilterClearLabel: string;
@@ -56,6 +58,7 @@ type ExplorerBreadcrumbProps = {
   quickFilterOptions: QuickFilterOptions;
   onQuickFilterChange: (value: string) => void;
   onQuickFilterOptionsChange: (options: QuickFilterOptions) => void;
+  onQuickFilterKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   quickFilterInputRef?: RefObject<HTMLInputElement | null>;
 };
 
@@ -78,6 +81,7 @@ export default function ExplorerBreadcrumb({
   quickFilterLabel,
   quickFilterPlaceholder,
   quickFilterCaseSensitiveLabel,
+  quickFilterFadeUnmatchedLabel,
   quickFilterWholeWordLabel,
   quickFilterRegexLabel,
   quickFilterClearLabel,
@@ -85,6 +89,7 @@ export default function ExplorerBreadcrumb({
   quickFilterOptions,
   onQuickFilterChange,
   onQuickFilterOptionsChange,
+  onQuickFilterKeyDown,
   quickFilterInputRef,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
@@ -292,7 +297,9 @@ export default function ExplorerBreadcrumb({
               event.preventDefault();
               onQuickFilterChange("");
               event.currentTarget.blur();
+              return;
             }
+            onQuickFilterKeyDown?.(event);
           }}
         />
         <InputGroupAddon align="inline-end" className="gap-0 pr-1">
@@ -319,6 +326,18 @@ export default function ExplorerBreadcrumb({
             onClick={() => toggleOption("caseSensitive")}
           >
             <CaseSensitive className="size-3.5" aria-hidden="true" />
+          </InputGroupButton>
+          <InputGroupButton
+            size="icon-xs"
+            aria-label={quickFilterFadeUnmatchedLabel}
+            aria-pressed={quickFilterOptions.fadeUnmatched}
+            className={cn(
+              quickFilterOptions.fadeUnmatched &&
+                "bg-accent text-accent-foreground",
+            )}
+            onClick={() => toggleOption("fadeUnmatched")}
+          >
+            <Eye className="size-3.5" aria-hidden="true" />
           </InputGroupButton>
           <InputGroupButton
             size="icon-xs"

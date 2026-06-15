@@ -84,20 +84,6 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     "(focus.pane == 'file-list' || selection.count > 0) && server.read-only == false";
   return [
     { key: "Mod+P", command: "view.open-command-palette" },
-    { key: "J", command: "selection.move-down", when: fileList },
-    { key: "K", command: "selection.move-up", when: fileList },
-    {
-      key: "Shift+J",
-      command: "selection.move-down",
-      when: fileList,
-      args: { extendRange: true },
-    },
-    {
-      key: "Shift+K",
-      command: "selection.move-up",
-      when: fileList,
-      args: { extendRange: true },
-    },
     { key: "ArrowDown", command: "selection.move-down", when: fileList },
     { key: "ArrowUp", command: "selection.move-up", when: fileList },
     {
@@ -110,20 +96,6 @@ export function defaultKeybindings(): KeybindingDefinition[] {
       key: "Shift+ArrowUp",
       command: "selection.move-up",
       when: fileList,
-      args: { extendRange: true },
-    },
-    { key: "H", command: "selection.move-left", when: gridView },
-    { key: "L", command: "selection.move-right", when: gridView },
-    {
-      key: "Shift+H",
-      command: "selection.move-left",
-      when: gridView,
-      args: { extendRange: true },
-    },
-    {
-      key: "Shift+L",
-      command: "selection.move-right",
-      when: gridView,
       args: { extendRange: true },
     },
     { key: "ArrowLeft", command: "selection.move-left", when: gridView },

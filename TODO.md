@@ -190,10 +190,10 @@ Keyboard filter cycle: remove vim-style list shortcuts, route plain letter keys 
 - [x] Update e2e status-bar connected test for idle connection text
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Frontend tests: cover removal of h/j/k/l list navigation, letter-to-filter routing, filtered focus/Enter/arrow behavior, and fade-nonmatches mode
-- [ ] Remove h/j/k/l movement shortcuts so list navigation uses arrow keys only
-- [ ] Route plain unmodified letter keys in the explorer/list area to the filter box without stealing input/dialog typing
-- [ ] Keep filter-driven focus on the first matching item; make Enter in the filter open the focused match; make Up/Down move between matches while retaining input focus
-- [ ] Add a persisted fade-nonmatches filter display option beside case-insensitive filtering; default it off and skip faded nonmatches during filter navigation
-- [ ] i18n (14 locales): add labels/help text for the new fade-nonmatches setting
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Frontend tests: cover removal of h/j/k/l list navigation, letter-to-filter routing, filtered focus/Enter/arrow behavior, and fade-nonmatches mode
+- [x] Remove h/j/k/l movement shortcuts so list navigation uses arrow keys only
+- [x] Route plain unmodified letter keys in the explorer/list area to the filter box without stealing input/dialog typing
+- [x] Keep filter-driven focus on the first matching item; make Enter in the filter open the focused match; make Up/Down move between matches while retaining input focus
+- [x] Add a persisted fade-nonmatches filter display option beside case-insensitive filtering; default it off and skip faded nonmatches during filter navigation
+- [x] i18n (14 locales): add labels/help text for the new fade-nonmatches setting
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

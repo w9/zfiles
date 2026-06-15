@@ -182,6 +182,7 @@ export default function GridListing({
                           "absolute inset-0 flex select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                           dimmed && "opacity-70",
                           isCut && GRID_ITEM_CUT_CLASS,
+                          entry.quickFilterMatched === false && "opacity-40",
                           isSelected &&
                             (isFocused
                               ? GRID_ITEM_FOCUS_SELECTED_CLASS

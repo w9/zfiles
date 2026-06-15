@@ -12,6 +12,7 @@ export const zhTW: Record<MessageKey, string> = {
   "quickFilter.label": "篩選檔案",
   "quickFilter.placeholder": "篩選…",
   "quickFilter.caseSensitive": "區分大小寫",
+  "quickFilter.fadeUnmatched": "淡化未符合項目",
   "quickFilter.wholeWord": "完整比對名稱",
   "quickFilter.regex": "使用規則運算式",
   "quickFilter.clear": "清除篩選",

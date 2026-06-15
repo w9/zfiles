@@ -59,7 +59,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       nameKey: "actions.selection.moveDown.name",
       categoryKey: "actions.selection.category",
       when: "focus.pane == 'file-list'",
-      defaultKeybinding: "J",
+      defaultKeybinding: "ArrowDown",
       contexts: ["file-list"],
       handler: async (_context, args) => {
         moveSelection(getDeps, "down", args);
@@ -70,7 +70,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       nameKey: "actions.selection.moveUp.name",
       categoryKey: "actions.selection.category",
       when: "focus.pane == 'file-list'",
-      defaultKeybinding: "K",
+      defaultKeybinding: "ArrowUp",
       contexts: ["file-list"],
       handler: async (_context, args) => {
         moveSelection(getDeps, "up", args);
@@ -81,7 +81,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       nameKey: "actions.selection.moveLeft.name",
       categoryKey: "actions.selection.category",
       when: "focus.pane == 'file-list' && listing.view == 'grid'",
-      defaultKeybinding: "H",
+      defaultKeybinding: "ArrowLeft",
       contexts: ["file-list"],
       handler: async (_context, args) => {
         moveSelection(getDeps, "left", args);
@@ -92,7 +92,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       nameKey: "actions.selection.moveRight.name",
       categoryKey: "actions.selection.category",
       when: "focus.pane == 'file-list' && listing.view == 'grid'",
-      defaultKeybinding: "L",
+      defaultKeybinding: "ArrowRight",
       contexts: ["file-list"],
       handler: async (_context, args) => {
         moveSelection(getDeps, "right", args);

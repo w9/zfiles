@@ -12,6 +12,7 @@ export const it: Record<MessageKey, string> = {
   "quickFilter.label": "Filtra file",
   "quickFilter.placeholder": "Filtra…",
   "quickFilter.caseSensitive": "Maiuscole/minuscole",
+  "quickFilter.fadeUnmatched": "Attenua non corrispondenti",
   "quickFilter.wholeWord": "Nome intero",
   "quickFilter.regex": "Usa espressione regolare",
   "quickFilter.clear": "Cancella filtro",

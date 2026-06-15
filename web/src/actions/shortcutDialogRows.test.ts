@@ -31,7 +31,8 @@ test("shortcutDialogRows lists registered keybindings with action labels", () =>
   );
 
   assert.ok(rows.some((row) => row.chord === "Mod+P"));
-  assert.ok(rows.some((row) => row.chord === "J"));
+  assert.ok(rows.some((row) => row.chord === "ArrowDown"));
+  assert.equal(rows.some((row) => row.chord === "J"), false);
   assert.equal(
     rows.find((row) => row.chord === "Mod+P")?.actionLabel,
     "actions.view.openCommandPalette.name",

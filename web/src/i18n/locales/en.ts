@@ -12,6 +12,7 @@ export const en = {
   "quickFilter.label": "Filter files",
   "quickFilter.placeholder": "Filter…",
   "quickFilter.caseSensitive": "Match case",
+  "quickFilter.fadeUnmatched": "Fade nonmatches",
   "quickFilter.wholeWord": "Match whole name",
   "quickFilter.regex": "Use regular expression",
   "quickFilter.clear": "Clear filter",
