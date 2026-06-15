@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Slideshow/cloud caching cycle: in-memory presigned-URL + stat cache on `S3Backend` (TTL + in-flight dedup, invalidate on upload/file ops); slideshow `<img>` keyed by path not URL. Deferred: adjacent-slide prefetch, shared React-level stat hook, global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Status bar rework cycle: dot-only connection indicator with status tooltips; left-aligned selection/cut text; kernel version on the right (click → About); offline red tint; Help menu with Keyboard shortcuts + About dialogs. Deferred: slideshow adjacent-slide prefetch, shared React-level stat hook, global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -164,3 +164,11 @@ Slideshow/cloud caching cycle: in-memory presigned-URL + stat cache on `S3Backen
 - [x] `s3Backend.ts`: wire caches into `stat`/`downloadUrl`; invalidate affected paths on `upload` + `runAction`
 - [x] `SlideshowOverlay.tsx`: key slideshow `<img>` by `currentPath` instead of `imageUrl`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `BackendStatus.tsx` + `StatusBar.tsx`: dot-only indicator; status tooltips on dot; left cluster (dot, cut, selection); right (uploads, clickable kernel version); offline-only red tint
+- [ ] `AboutDialog.tsx` + `KeyboardShortcutsDialog.tsx`: barebone About (name, app + kernel version, tagline, MIT); shortcuts list — all merged keybindings grouped by action category with `ChordKbd`
+- [ ] Help actions (`help.open-about`, `help.open-keyboard-shortcuts`), `actions.help.category` in `surfaces.ts`; wire dialogs + menu in `ExplorerApp`
+- [ ] `vite.config.ts` + `vite.cloud.config.ts`: define app version from `Cargo.toml` for About dialog
+- [ ] i18n (14 locales): about, shortcuts dialog, help menu, backend status tooltips; remove status-bar `shortcuts.hint`
+- [ ] Update e2e smoke tests + any unit tests for status bar / shortcuts listing
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
