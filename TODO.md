@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Context menu + preview panel cycle: Copy path / Download after file ops; preview pane metadata-only (no inline image or download link). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Slideshow/cloud caching cycle: in-memory presigned-URL + stat cache on `S3Backend` (TTL + in-flight dedup, invalidate on upload/file ops); slideshow `<img>` keyed by path not URL. Deferred: adjacent-slide prefetch, shared React-level stat hook, global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -159,3 +159,8 @@ Context menu + preview panel cycle: Copy path / Download after file ops; preview
 - [x] `downloadPaths.ts` + `ExplorerApp` wiring: `selection.file-count` context key, dynamic menu labels, multi-download confirm dialog
 - [x] i18n (14 locales): `actions.selection.copyPath.name`, `actions.selection.download.*`
 - [x] Update e2e preview-image test + context-menu coverage; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `backendObjectCache.ts`: presigned URL expiry parse, stat + download URL caches (TTL, refresh buffer, in-flight dedup, invalidatePath); unit tests
+- [ ] `s3Backend.ts`: wire caches into `stat`/`downloadUrl`; invalidate affected paths on `upload` + `runAction`
+- [ ] `SlideshowOverlay.tsx`: key slideshow `<img>` by `currentPath` instead of `imageUrl`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
