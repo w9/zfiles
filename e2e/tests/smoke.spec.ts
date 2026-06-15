@@ -71,17 +71,17 @@ test("explorer lists served files", async ({ page }) => {
 test("status bar shows connected backend status", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("status", { name: /backend connected/i })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText(/connected/i);
-  await expect(page.getByRole("status").locator("span[title]")).toHaveAttribute(
-    "title",
-    /kernel v/i,
-  );
+  await expect(page.getByRole("status")).not.toContainText(/connected/i);
+  await expect(page.getByRole("status").locator("span").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /about zfiles/i })).toContainText(/kernel v/i);
 });
 
-test("status bar shows keyboard shortcut hints", async ({ page }) => {
+test("status bar opens keyboard shortcuts from Help menu", async ({ page }) => {
   await page.goto("/");
-  const statusBar = page.getByRole("contentinfo", { name: "Status bar" });
-  await expect(statusBar).toContainText(/command palette/i);
+  await page.getByRole("menuitem", { name: "Help" }).click();
+  await page.getByRole("menuitem", { name: "Keyboard shortcuts…" }).click();
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await expect(page.getByText("Command Palette")).toBeVisible();
 });
 
 test("theme toggle switches color theme", async ({ page }) => {
@@ -132,9 +132,8 @@ test("header shows offline backend status after server stops", async ({ page }) 
     await expect(page.getByRole("status", { name: /backend connection lost/i })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByRole("status").locator("span[title]")).toHaveAttribute(
-      "title",
-      /can't reach the zfiles server/i,
+    await expect(page.getByRole("contentinfo", { name: "Status bar" })).toHaveClass(
+      /bg-destructive/,
     );
   } finally {
     offlineServer.kill("SIGTERM");

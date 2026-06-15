@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/tooltip";
 import CommandPalette from "../actions/CommandPalette";
 import { ActionArgPromptDialog, ActionConfirmDialog } from "../actions/ActionDialogs";
+import AboutDialog from "../AboutDialog";
+import KeyboardShortcutsDialog from "../KeyboardShortcutsDialog";
 import MenuBar from "../actions/MenuBar";
 import ActionToolbar from "../actions/ActionToolbar";
 import { actionsForContext } from "../actions/dispatch";
@@ -205,6 +207,8 @@ export default function ExplorerApp() {
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
   const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
   const [mainContentWidth, setMainContentWidth] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth : LG_BREAKPOINT_PX,
@@ -1045,6 +1049,10 @@ export default function ExplorerApp() {
     () => ({
       openPreviewSheet: () => setPreviewSheetOpen(true),
     }),
+    () => ({
+      openAbout: () => setAboutOpen(true),
+      openKeyboardShortcuts: () => setKeyboardShortcutsOpen(true),
+    }),
   );
   confirmMessageRef.current = actionSystem.confirmMessage;
 
@@ -1461,6 +1469,7 @@ export default function ExplorerApp() {
                 : t("clipboard.cutMany", { count: String(fileOps.cutPaths.length) })
               : null
           }
+          onVersionClick={() => setAboutOpen(true)}
           uploads={
             <UploadIndicator
               items={uploadItems}
@@ -1509,6 +1518,20 @@ export default function ExplorerApp() {
         argPromptTitle={t("actions.palette.argPromptTitle")}
         argPromptPlaceholder={t("actions.palette.argPromptPlaceholder")}
         labelForKey={actionLabel}
+      />
+
+      <AboutDialog
+        open={aboutOpen}
+        kernelVersion={kernelVersion}
+        onOpenChange={setAboutOpen}
+      />
+
+      <KeyboardShortcutsDialog
+        open={keyboardShortcutsOpen}
+        actions={actionSystem.registry.list()}
+        keybindings={actionSystem.keybindings}
+        labelForKey={actionLabel}
+        onOpenChange={setKeyboardShortcutsOpen}
       />
 
       {fileOps.pasteDestContext ? (

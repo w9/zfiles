@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
 import { createBuiltinActions } from "./builtins";
+import { createHelpActions, type HelpActionDeps } from "./helpActions";
 import { createImageViewerActions, type ImageViewerActionDeps } from "./imageViewerActions";
 import { createPreviewActions, type PreviewActionDeps } from "./previewActions";
 import type { KeybindingDefinition } from "./types";
@@ -49,6 +50,7 @@ export function useActionSystem(
   deps: Omit<BuiltinActionDeps, "openCommandPalette">,
   imageViewerDeps?: () => ImageViewerActionDeps,
   previewActionDeps?: () => PreviewActionDeps,
+  helpActionDeps?: () => HelpActionDeps,
 ) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [userKeybindings, setUserKeybindings] = useState<KeybindingDefinition[]>([]);
@@ -62,6 +64,8 @@ export function useActionSystem(
   imageViewerDepsRef.current = imageViewerDeps;
   const previewActionDepsRef = useRef(previewActionDeps);
   previewActionDepsRef.current = previewActionDeps;
+  const helpActionDepsRef = useRef(helpActionDeps);
+  helpActionDepsRef.current = helpActionDeps;
 
   if (!registryRef.current) {
     const registry = new ActionRegistry();
@@ -82,6 +86,11 @@ export function useActionSystem(
       for (const action of createPreviewActions(
         () => previewActionDepsRef.current!(),
       )) {
+        registry.register(action);
+      }
+    }
+    if (helpActionDepsRef.current) {
+      for (const action of createHelpActions(() => helpActionDepsRef.current!())) {
         registry.register(action);
       }
     }

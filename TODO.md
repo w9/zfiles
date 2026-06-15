@@ -165,10 +165,10 @@ Status bar rework cycle: dot-only connection indicator with status tooltips; lef
 - [x] `SlideshowOverlay.tsx`: key slideshow `<img>` by `currentPath` instead of `imageUrl`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `BackendStatus.tsx` + `StatusBar.tsx`: dot-only indicator; status tooltips on dot; left cluster (dot, cut, selection); right (uploads, clickable kernel version); offline-only red tint
-- [ ] `AboutDialog.tsx` + `KeyboardShortcutsDialog.tsx`: barebone About (name, app + kernel version, tagline, MIT); shortcuts list — all merged keybindings grouped by action category with `ChordKbd`
-- [ ] Help actions (`help.open-about`, `help.open-keyboard-shortcuts`), `actions.help.category` in `surfaces.ts`; wire dialogs + menu in `ExplorerApp`
-- [ ] `vite.config.ts` + `vite.cloud.config.ts`: define app version from `Cargo.toml` for About dialog
-- [ ] i18n (14 locales): about, shortcuts dialog, help menu, backend status tooltips; remove status-bar `shortcuts.hint`
-- [ ] Update e2e smoke tests + any unit tests for status bar / shortcuts listing
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `BackendStatus.tsx` + `StatusBar.tsx`: dot-only indicator; status tooltips on dot; left cluster (dot, cut, selection); right (uploads, clickable kernel version); offline-only red tint
+- [x] `AboutDialog.tsx` + `KeyboardShortcutsDialog.tsx`: barebone About (name, app + kernel version, tagline, MIT); shortcuts list — all merged keybindings grouped by action category with `ChordKbd`
+- [x] Help actions (`help.open-about`, `help.open-keyboard-shortcuts`), `actions.help.category` in `surfaces.ts`; wire dialogs + menu in `ExplorerApp`
+- [x] `vite.config.ts` + `vite.cloud.config.ts`: define app version from `Cargo.toml` for About dialog
+- [x] i18n (14 locales): about, shortcuts dialog, help menu, backend status tooltips; remove status-bar `shortcuts.hint`
+- [x] Update e2e smoke tests + any unit tests for status bar / shortcuts listing
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

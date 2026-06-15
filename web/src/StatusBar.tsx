@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import BackendStatus from "./BackendStatus";
-import { shortcutsHintParams } from "./actions/keybindings";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
@@ -12,6 +11,7 @@ type StatusBarProps = {
   selectedCount?: number;
   cutStatusText?: string | null;
   uploads?: ReactNode;
+  onVersionClick?: () => void;
   className?: string;
 };
 
@@ -21,6 +21,7 @@ export default function StatusBar({
   selectedCount = 0,
   cutStatusText = null,
   uploads = null,
+  onVersionClick,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
@@ -34,24 +35,34 @@ export default function StatusBar({
   return (
     <div
       className={cn(
-        "flex h-9 shrink-0 items-center justify-between gap-3 overflow-hidden rounded-xl bg-card px-3",
+        "flex h-9 shrink-0 items-center gap-3 overflow-hidden rounded-xl bg-card px-3",
+        backendStatus === "offline" && "bg-destructive/10",
         className,
       )}
       role="contentinfo"
       aria-label={t("statusBar.label")}
     >
-      <BackendStatus status={backendStatus} kernelVersion={kernelVersion} compact />
-      <p className="min-w-0 flex-1 truncate text-center text-xs text-muted-foreground">
-        {t("shortcuts.hint", shortcutsHintParams())}
-      </p>
-      <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
         {cutStatusText ? (
           <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
         ) : null}
         {selectionLabel ? (
           <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
         ) : null}
+      </div>
+      <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
         {uploads}
+        {kernelVersion ? (
+          <button
+            type="button"
+            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            onClick={onVersionClick}
+            aria-label={t("statusBar.openAbout", { version: kernelVersion })}
+          >
+            {t("backend.kernelVersion", { version: kernelVersion })}
+          </button>
+        ) : null}
       </div>
     </div>
   );

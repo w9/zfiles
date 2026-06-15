@@ -1,53 +1,53 @@
 import { backendStatusMessage, useTranslation } from "@/i18n";
-import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { type BackendStatus } from "./useBackendStatus";
 
 type BackendStatusProps = {
   status: BackendStatus;
   kernelVersion?: string | null;
-  compact?: boolean;
 };
 
-export default function BackendStatus({
-  status,
-  kernelVersion,
-  compact = false,
-}: BackendStatusProps) {
+export default function BackendStatus({ status, kernelVersion }: BackendStatusProps) {
   const { locale, t } = useTranslation();
   const label = backendStatusMessage(locale, status);
-  const hoverTitle =
+  const tooltipText =
     status === "connected" && kernelVersion
-      ? t("backend.kernelVersion", { version: kernelVersion })
-      : status === "offline"
-        ? t("backend.offlineHint")
-        : undefined;
+      ? t("backend.connectedTooltip", { version: kernelVersion })
+      : status === "connected"
+        ? t("backend.connectedBrief")
+        : status === "connecting"
+          ? t("backend.connectingTooltip")
+          : status === "offline"
+            ? t("backend.offlineHint")
+            : label;
 
   return (
     <div
-      className={cn(
-        "inline-flex items-center gap-2 text-muted-foreground",
-        compact ? "text-xs" : "text-sm",
-      )}
+      className="inline-flex shrink-0 items-center"
       role="status"
       aria-label={t("backend.status", { status: label })}
     >
-      <span
-        className={cn(
-          "size-2 shrink-0 rounded-full",
-          status === "connected" && "bg-success",
-          status === "connecting" && "bg-warning",
-          status === "offline" && "bg-destructive",
-        )}
-        aria-hidden="true"
-      />
-      {hoverTitle ? (
-        <TruncatedTextTooltip as="span" text={hoverTitle} delayDuration={0}>
-          {label}
-        </TruncatedTextTooltip>
-      ) : (
-        <span>{label}</span>
-      )}
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <span
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              status === "connected" && "bg-success",
+              status === "connecting" && "bg-warning",
+              status === "offline" && "bg-destructive",
+            )}
+            tabIndex={0}
+          />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-wrap">
+          {tooltipText}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 }

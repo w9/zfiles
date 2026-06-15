@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
+import { readZfilesVersion } from "./viteZfilesVersion";
+
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 // The cloud entry source is index.cloud.html (the local build owns index.html),
@@ -69,6 +71,7 @@ export default defineConfig({
   },
   define: {
     "import.meta.env.VITE_BOOT_MODE": JSON.stringify("cloud"),
+    __ZFILES_VERSION__: JSON.stringify(readZfilesVersion()),
   },
   build: {
     outDir: "dist-cloud",
