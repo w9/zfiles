@@ -184,4 +184,4 @@ Release v0.2.16: fix context-menu download path filter TypeScript error (pass `F
 
 - [x] `ExplorerApp.tsx`: pass `entries` (`FileEntry[]`) to `filterDownloadablePaths` instead of `listingEntriesRef`
 - [x] Run `pnpm build` + `pnpm test`; bump patch version in `Cargo.toml` to 0.2.16
-- [ ] Publish GitHub release v0.2.16; verify Release workflow uploads musl binaries
+- [x] Publish GitHub release v0.2.16; verify Release workflow uploads musl binaries
