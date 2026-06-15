@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Upload button pressed-state cycle: accent fill + `aria-pressed` while the upload panel is open. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Release v0.2.16: fix context-menu download path filter TypeScript error (pass `FileEntry[]` not `ListingEntry[]`), bump patch version, publish GitHub release with CI-built musl binaries. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -181,3 +181,7 @@ Upload button pressed-state cycle: accent fill + `aria-pressed` while the upload
 
 - [x] `UploadIndicator.tsx`: accent pressed styling when panel open; `aria-pressed={open}` alongside `aria-expanded`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerApp.tsx`: pass `entries` (`FileEntry[]`) to `filterDownloadablePaths` instead of `listingEntriesRef`
+- [ ] Run `pnpm build` + `pnpm test`; bump patch version in `Cargo.toml` to 0.2.16
+- [ ] Publish GitHub release v0.2.16; verify Release workflow uploads musl binaries
