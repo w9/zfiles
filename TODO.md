@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy + dismiss X icon are **complete**. Duplicate unfinished upload session fix is **complete** (dedupe by objectKey, one local record per key, abort orphans on new upload). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Slideshow polish cycle: slide counter in top chrome, listing-order path sort, persisted “start at active item” setting (default off), sync explorer focus on slide change without collapsing multi-select. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -147,3 +147,9 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] Instrument `listMultipartSessions` / `mergeMultipartSessions` / `visibleUnfinishedSessions` with debug logs (sessionId `cf55cc`)
 - [x] Reproduce duplicate Unfinished + Started elsewhere rows; analyze logs and fix root cause
 - [x] Verify fix with post-fix logs; remove instrumentation; run `pnpm test`
+
+- [ ] `slideshowSettings.ts` + provider + Settings toggle: persisted `startAtActiveItem` (default off); unit tests
+- [ ] `getImagePaths` / open helper: sort slideshow paths by listing order; resolve start index (first vs active)
+- [ ] `SlideshowOverlay.tsx`: show `slideshow.counter` beside filename; `onCurrentPathChange` syncs explorer focus only
+- [ ] i18n (14 locales): `settings.slideshow.startAtActiveItem.*`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
