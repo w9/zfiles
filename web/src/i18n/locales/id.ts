@@ -52,6 +52,9 @@ export const id: Record<MessageKey, string> = {
   "upload.status.failed": "Gagal",
   "upload.status.cancelled": "Dibatalkan",
   "upload.status.unfinished": "Belum selesai",
+  "upload.status.startedElsewhere": "Dimulai di tempat lain",
+  "upload.startedElsewhere.description":
+    "Unggahan ini dimulai di browser atau tab lain. Tidak dapat dilanjutkan di sini — gunakan Batalkan untuk membatalkan unggahan yang sedang berjalan.",
   "upload.unfinished.description":
     "Pilih kembali file yang sama di perangkat ini untuk melanjutkan dari titik terakhir.",
   "upload.cancel": "Batalkan unggahan",

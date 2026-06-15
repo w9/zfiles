@@ -1,4 +1,4 @@
-import { Pause, Play, Trash2, X } from "lucide-react";
+import { Pause, Play, X } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -251,41 +251,47 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
         <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
         </div>
-        {item.status === "active" ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            aria-label={t("upload.pause")}
-            onClick={() => onPause(item.id)}
-          >
-            <Pause className="size-4" />
-          </Button>
-        ) : null}
-        {item.status === "paused" ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            aria-label={t("upload.resume")}
-            onClick={() => onResume(item.id)}
-          >
-            <Play className="size-4" />
-          </Button>
-        ) : null}
-        {cancellable ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            aria-label={t("upload.cancel")}
-            onClick={() => onCancel(item.id)}
-          >
-            <X className="size-4" />
-          </Button>
+        {item.status === "active" ||
+        item.status === "paused" ||
+        cancellable ? (
+          <div className="flex shrink-0 items-center gap-0.5">
+            {item.status === "active" ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label={t("upload.pause")}
+                onClick={() => onPause(item.id)}
+              >
+                <Pause className="size-4" />
+              </Button>
+            ) : null}
+            {item.status === "paused" ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label={t("upload.resume")}
+                onClick={() => onResume(item.id)}
+              >
+                <Play className="size-4" />
+              </Button>
+            ) : null}
+            {cancellable ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label={t("upload.cancel")}
+                onClick={() => onCancel(item.id)}
+              >
+                <X className="size-4" />
+              </Button>
+            ) : null}
+          </div>
         ) : null}
         </div>
         {item.status === "failed" && item.error ? (
@@ -368,24 +374,43 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                 tabIndex={0}
                 className="cursor-help underline decoration-dotted underline-offset-2"
               >
-                {t("upload.status.unfinished")}
+                {session.canResume
+                  ? t("upload.status.unfinished")
+                  : t("upload.status.startedElsewhere")}
               </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs space-y-2">
               <p>
                 {session.canResume
                   ? t("upload.unfinished.description")
-                  : t("upload.multipart.description")}
+                  : t("upload.startedElsewhere.description")}
               </p>
-              {!session.canResume ? <p>{t("upload.multipart.remoteOnly")}</p> : null}
-              {sessionProgressUnknown(session) ? (
+              {session.canResume && sessionProgressUnknown(session) ? (
                 <p>{t("upload.multipart.progressUnknown")}</p>
               ) : null}
             </TooltipContent>
           </Tooltip>
           {statsRest ? ` · ${statsRest}` : null}
         </p>
-        {session.canResume && !readOnly ? (
+        <div className="flex shrink-0 items-center gap-0.5">
+          {session.canResume && !readOnly ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  disabled={busy}
+                  aria-label={resumeLabel}
+                  onClick={() => onResume(session.uploadId)}
+                >
+                  <Play className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{resumeLabel}</TooltipContent>
+            </Tooltip>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -394,31 +419,15 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                 size="icon"
                 className="h-8 w-8 shrink-0"
                 disabled={busy}
-                aria-label={resumeLabel}
-                onClick={() => onResume(session.uploadId)}
+                aria-label={abortLabel}
+                onClick={() => onAbort(session.uploadId)}
               >
-                <Play className="size-4" />
+                <X className="size-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top">{resumeLabel}</TooltipContent>
+            <TooltipContent side="top">{abortLabel}</TooltipContent>
           </Tooltip>
-        ) : null}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-              disabled={busy}
-              aria-label={abortLabel}
-              onClick={() => onAbort(session.uploadId)}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{abortLabel}</TooltipContent>
-        </Tooltip>
+        </div>
         </div>
       </div>
     </li>

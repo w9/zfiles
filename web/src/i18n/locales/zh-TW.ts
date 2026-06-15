@@ -51,6 +51,9 @@ export const zhTW: Record<MessageKey, string> = {
   "upload.status.failed": "失敗",
   "upload.status.cancelled": "已取消",
   "upload.status.unfinished": "未完成",
+  "upload.status.startedElsewhere": "在其他地方開始",
+  "upload.startedElsewhere.description":
+    "此上傳在其他瀏覽器或分頁中開始。無法在此處恢復，請使用「中止」取消進行中的上傳。",
   "upload.unfinished.description": "重新選擇此裝置上的相同檔案即可從上次中斷處繼續。",
   "upload.cancel": "取消上傳",
   "upload.pause": "暫停上傳",

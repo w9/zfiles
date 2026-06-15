@@ -52,6 +52,9 @@ export const tr: Record<MessageKey, string> = {
   "upload.status.failed": "Başarısız",
   "upload.status.cancelled": "İptal edildi",
   "upload.status.unfinished": "Tamamlanmamış",
+  "upload.status.startedElsewhere": "Başka yerde başlatıldı",
+  "upload.startedElsewhere.description":
+    "Bu yükleme başka bir tarayıcıda veya sekmede başlatıldı. Burada devam ettirilemez — devam eden yüklemeyi iptal etmek için Durdur'u kullanın.",
   "upload.unfinished.description":
     "Kaldığınız yerden devam etmek için aynı dosyayı bu cihazda yeniden seçin.",
   "upload.cancel": "Yüklemeyi iptal et",

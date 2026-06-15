@@ -52,6 +52,9 @@ export const ja: Record<MessageKey, string> = {
   "upload.status.failed": "失敗",
   "upload.status.cancelled": "キャンセル済み",
   "upload.status.unfinished": "未完了",
+  "upload.status.startedElsewhere": "他で開始",
+  "upload.startedElsewhere.description":
+    "このアップロードは別のブラウザまたはタブで開始されました。ここでは再開できません。「中止」で進行中のアップロードをキャンセルしてください。",
   "upload.unfinished.description":
     "同じファイルをこのデバイスで再度選択すると、中断したところから再開できます。",
   "upload.cancel": "アップロードをキャンセル",

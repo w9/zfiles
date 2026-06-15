@@ -52,6 +52,9 @@ export const es: Record<MessageKey, string> = {
   "upload.status.failed": "Fallida",
   "upload.status.cancelled": "Cancelada",
   "upload.status.unfinished": "Sin terminar",
+  "upload.status.startedElsewhere": "Iniciada en otro lugar",
+  "upload.startedElsewhere.description":
+    "Esta subida se inició en otro navegador o pestaña. No se puede reanudar aquí; use Abortar para cancelar la subida en curso.",
   "upload.unfinished.description":
     "Vuelve a seleccionar el mismo archivo en este dispositivo para continuar donde lo dejaste.",
   "upload.cancel": "Cancelar subida",

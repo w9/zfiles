@@ -51,6 +51,9 @@ export const zhCN: Record<MessageKey, string> = {
   "upload.status.failed": "失败",
   "upload.status.cancelled": "已取消",
   "upload.status.unfinished": "未完成",
+  "upload.status.startedElsewhere": "在其他地方开始",
+  "upload.startedElsewhere.description":
+    "此上传在其他浏览器或标签页中开始。无法在此处恢复，请使用“中止”取消进行中的上传。",
   "upload.unfinished.description": "重新选择本设备上的同一文件即可从上次中断处继续。",
   "upload.cancel": "取消上传",
   "upload.pause": "暂停上传",

@@ -52,6 +52,9 @@ export const pt: Record<MessageKey, string> = {
   "upload.status.failed": "Falhou",
   "upload.status.cancelled": "Cancelado",
   "upload.status.unfinished": "Não concluído",
+  "upload.status.startedElsewhere": "Iniciado em outro lugar",
+  "upload.startedElsewhere.description":
+    "Este envio foi iniciado em outro navegador ou aba. Não é possível retomá-lo aqui — use Abortar para cancelar o envio em andamento.",
   "upload.unfinished.description":
     "Selecione novamente o mesmo arquivo neste dispositivo para continuar de onde parou.",
   "upload.cancel": "Cancelar envio",

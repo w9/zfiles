@@ -51,6 +51,9 @@ export const en = {
   "upload.status.failed": "Failed",
   "upload.status.cancelled": "Cancelled",
   "upload.status.unfinished": "Unfinished",
+  "upload.status.startedElsewhere": "Started elsewhere",
+  "upload.startedElsewhere.description":
+    "This upload was started in another browser or tab. You can't resume it here—use Abort to cancel the in-progress upload.",
   "upload.unfinished.description":
     "Re-select the same file on this device to continue where you left off.",
   "upload.cancel": "Cancel upload",

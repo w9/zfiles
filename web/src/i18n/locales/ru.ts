@@ -52,6 +52,9 @@ export const ru: Record<MessageKey, string> = {
   "upload.status.failed": "Ошибка",
   "upload.status.cancelled": "Отменено",
   "upload.status.unfinished": "Не завершено",
+  "upload.status.startedElsewhere": "Начато в другом месте",
+  "upload.startedElsewhere.description":
+    "Эта загрузка была начата в другом браузере или вкладке. Возобновить здесь нельзя — нажмите «Отменить», чтобы прервать загрузку.",
   "upload.unfinished.description":
     "Выберите тот же файл на этом устройстве, чтобы продолжить с места остановки.",
   "upload.cancel": "Отменить загрузку",

@@ -141,5 +141,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `UploadPanel.tsx`: session Abort buttons use X icon; plain ghost styling (match queue Cancel)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadPanel.tsx`: wrap session + queue row icon buttons in `flex gap-0.5 shrink-0` group; keep `gap-2` before the group
-- [ ] Run `pnpm test`
+- [x] `UploadPanel.tsx`: wrap session + queue row icon buttons in `flex gap-0.5 shrink-0` group; keep `gap-2` before the group
+- [x] Run `pnpm test`

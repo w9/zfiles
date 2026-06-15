@@ -52,6 +52,9 @@ export const vi: Record<MessageKey, string> = {
   "upload.status.failed": "Thất bại",
   "upload.status.cancelled": "Đã hủy",
   "upload.status.unfinished": "Chưa hoàn tất",
+  "upload.status.startedElsewhere": "Bắt đầu ở nơi khác",
+  "upload.startedElsewhere.description":
+    "Tải lên này được bắt đầu ở trình duyệt hoặc tab khác. Không thể tiếp tục tại đây — dùng Hủy để hủy tải lên đang diễn ra.",
   "upload.unfinished.description":
     "Chọn lại cùng một tệp trên thiết bị này để tiếp tục từ chỗ đã dừng.",
   "upload.cancel": "Hủy tải lên",
