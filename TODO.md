@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. **Current cycle:** remote-only upload sessions show "Started elsewhere" inline status instead of "Unfinished". Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. **Current cycle:** remote-only upload sessions — "Started elsewhere" inline status + single-paragraph tooltip (`upload.startedElsewhere.description`). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -130,6 +130,10 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] Unit tests for finish-path ids + stale local record pruning behavior
 - [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadPanel.tsx`: remote-only session rows use `upload.status.startedElsewhere` instead of `upload.status.unfinished`
-- [ ] i18n (14 locales): add `upload.status.startedElsewhere`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `UploadPanel.tsx`: remote-only session rows use `upload.status.startedElsewhere` instead of `upload.status.unfinished`
+- [x] i18n (14 locales): add `upload.status.startedElsewhere`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadPanel.tsx`: started-elsewhere tooltip uses `upload.startedElsewhere.description` only (no multipart.description / remoteOnly / progressUnknown)
+- [ ] i18n (14 locales): add `upload.startedElsewhere.description` (why + abort action)
+- [ ] Run `pnpm test`
