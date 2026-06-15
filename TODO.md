@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Slideshow polish cycle: slide counter in top chrome, listing-order path sort, persisted “start at active item” setting (default off), sync explorer focus on slide change without collapsing multi-select. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Context menu + preview panel cycle: Copy path / Download after file ops; preview pane metadata-only (no inline image or download link). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -153,3 +153,9 @@ Slideshow polish cycle: slide counter in top chrome, listing-order path sort, pe
 - [x] `SlideshowOverlay.tsx`: show `slideshow.counter` beside filename; `onCurrentPathChange` syncs explorer focus only
 - [x] i18n (14 locales): `settings.slideshow.startAtActiveItem.*`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `PreviewPane.tsx`: metadata-only for files — remove image preview, “no preview” message, and download link
+- [ ] `selection.copy-paths` + new `selection.download` actions: `context-menu` surface, after file ops; singular/plural copy-path label; download filters non-directories, confirms when multiple files
+- [ ] `downloadPaths.ts` + `ExplorerApp` wiring: `selection.file-count` context key, dynamic menu labels, multi-download confirm dialog
+- [ ] i18n (14 locales): `actions.selection.copyPath.name`, `actions.selection.download.*`
+- [ ] Update e2e preview-image test + context-menu coverage; run `pnpm test`; bump patch version in `Cargo.toml`
