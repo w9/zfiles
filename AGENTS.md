@@ -9,7 +9,7 @@ You are working on **zfiles**, a local file server with a browser-based explorer
 **Hard rule:** do not edit implementation files (`src/`, `web/`, `tests/`, `e2e/`, …) until steps 2–4 are **committed** for *this* request, in *this* session. Nothing carries over: a summarized conversation, an earlier discussion, or TODO edits sitting uncommitted in the same batch do not satisfy steps 2–4. Start a cycle by reading `design/design.md`, `TODO.md`, and `AGENTS.md`; until the planning commit exists, edit only `TODO.md`.
 
 0. **Dirty worktree** — Before AQ, check whether the git worktree is dirty (`git status` shows uncommitted or untracked changes). If it is, use **AskQuestion** to confirm how to proceed:
-   - **(A) Commit outside this conversation** — Pause; the user commits or otherwise clears the worktree on their own. When done, they choose this option again (or otherwise signal ready); re-check `git status` and continue the cycle only if clean.
+   - **(A) Just did it** — The user signals that they have just committed or otherwise cleared the worktree on their own; re-check `git status` and continue the cycle only if clean.
    - **(B) Commit in this conversation** — Commit the outstanding changes in this chat (respecting [commit-scope rules](#before-every-commit)), then continue the cycle.
    - **(C) Stop** — End this cycle without further edits.
    Skip this step when the worktree is clean.
