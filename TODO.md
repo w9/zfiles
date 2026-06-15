@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy + X dismiss icons are **complete** (uncommitted). **Current cycle:** shadcn `ButtonGroup` for upload panel row icon actions (session + queue rows; ghost + separator). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy + dismiss X icon are **complete** (uncommitted). **Current cycle:** group upload row action icon buttons in a tight cluster (`gap-0.5`) for session and queue rows. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -141,6 +141,5 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `UploadPanel.tsx`: session Abort buttons use X icon; plain ghost styling (match queue Cancel)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Add shadcn `button-group.tsx` (`ButtonGroup`, `ButtonGroupSeparator`)
-- [ ] `UploadPanel.tsx`: wrap session + queue row icon actions in ghost `ButtonGroup` (always, including single-button rows)
+- [ ] `UploadPanel.tsx`: wrap session + queue row icon buttons in `flex gap-0.5 shrink-0` group; keep `gap-2` before the group
 - [ ] Run `pnpm test`
