@@ -3,6 +3,7 @@ import {
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
   type CompletedPart,
+  ListMultipartUploadsCommand,
   PutObjectCommand,
   type S3Client,
   UploadPartCommand,
@@ -91,6 +92,42 @@ export async function abortMultipartUpload(
       UploadId: uploadId,
     }),
   );
+}
+
+async function abortInProgressMultipartUploadsForKey(
+  client: S3Client,
+  bucket: string,
+  objectKey: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  let keyMarker: string | undefined;
+  let uploadIdMarker: string | undefined;
+
+  do {
+    const response = await client.send(
+      new ListMultipartUploadsCommand({
+        Bucket: bucket,
+        Prefix: objectKey,
+        KeyMarker: keyMarker,
+        UploadIdMarker: uploadIdMarker,
+      }),
+      signal ? { abortSignal: signal } : undefined,
+    );
+
+    await Promise.all(
+      (response.Uploads ?? [])
+        .filter((upload) => upload.Key === objectKey && upload.UploadId)
+        .map((upload) =>
+          abortMultipartUpload(client, bucket, objectKey, upload.UploadId!),
+        ),
+    );
+
+    if (!response.IsTruncated) {
+      break;
+    }
+    keyMarker = response.NextKeyMarker;
+    uploadIdMarker = response.NextUploadIdMarker;
+  } while (keyMarker && uploadIdMarker);
 }
 
 export type MultipartUploadParams = {
@@ -184,6 +221,12 @@ export async function uploadMultipartFile(
   }
 
   if (!uploadId) {
+    await abortInProgressMultipartUploadsForKey(
+      client,
+      params.bucket,
+      params.objectKey,
+      options?.signal,
+    );
     const createResult = await client.send(
       new CreateMultipartUploadCommand({
         Bucket: params.bucket,

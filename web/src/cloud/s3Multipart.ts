@@ -100,13 +100,21 @@ export function mergeMultipartSessions(
     });
   }
 
-  merged.sort((a, b) => {
+  const objectKeysWithLocal = new Set(
+    merged.filter((session) => session.localRecord != null).map((session) => session.objectKey),
+  );
+  const deduped = merged.filter(
+    (session) =>
+      session.localRecord != null || !objectKeysWithLocal.has(session.objectKey),
+  );
+
+  deduped.sort((a, b) => {
     const aTime = a.initiated?.getTime() ?? 0;
     const bTime = b.initiated?.getTime() ?? 0;
     return bTime - aTime;
   });
 
-  return merged;
+  return deduped;
 }
 
 export function filterMultipartLocalRecords(

@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy + dismiss X icon are **complete**. **Current cycle:** debug duplicate unfinished upload sessions (every "Unfinished" row paired with a "Started elsewhere" row) — instrument merge/list paths, reproduce, fix root cause, verify with logs, remove instrumentation. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. Remote-only session copy + dismiss X icon are **complete**. Duplicate unfinished upload session fix is **complete** (dedupe by objectKey, one local record per key, abort orphans on new upload). Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -144,6 +144,6 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `UploadPanel.tsx`: wrap session + queue row icon buttons in `flex gap-0.5 shrink-0` group; keep `gap-2` before the group
 - [x] Run `pnpm test`
 
-- [ ] Instrument `listMultipartSessions` / `mergeMultipartSessions` / `visibleUnfinishedSessions` with debug logs (sessionId `cf55cc`)
-- [ ] Reproduce duplicate Unfinished + Started elsewhere rows; analyze logs and fix root cause
-- [ ] Verify fix with post-fix logs; remove instrumentation; run `pnpm test`
+- [x] Instrument `listMultipartSessions` / `mergeMultipartSessions` / `visibleUnfinishedSessions` with debug logs (sessionId `cf55cc`)
+- [x] Reproduce duplicate Unfinished + Started elsewhere rows; analyze logs and fix root cause
+- [x] Verify fix with post-fix logs; remove instrumentation; run `pnpm test`

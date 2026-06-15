@@ -80,7 +80,9 @@ export function findMultipartRecord(
 export function upsertMultipartRecord(scopeId: string, record: MultipartSessionRecord): void {
   const store = readStore();
   const existing = store[scopeId] ?? [];
-  const next = existing.filter((entry) => entry.uploadId !== record.uploadId);
+  const next = existing.filter(
+    (entry) => entry.uploadId !== record.uploadId && entry.objectKey !== record.objectKey,
+  );
   next.push(record);
   store[scopeId] = next;
   writeStore(store);

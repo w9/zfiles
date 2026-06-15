@@ -163,6 +163,33 @@ test("mergeMultipartSessions falls back to stored local bytes when S3 map is emp
   assert.equal(merged[0]?.totalBytes, 1_000);
 });
 
+test("mergeMultipartSessions hides remote-only rows when same objectKey has local record", () => {
+  const listed = [
+    {
+      uploadId: "orphan-on-s3",
+      objectKey: "data/same.iso",
+      initiated: new Date("2026-01-03T00:00:00.000Z"),
+    },
+  ];
+  const localRecords: MultipartSessionRecord[] = [
+    {
+      uploadId: "tracked-local",
+      objectKey: "data/same.iso",
+      destPath: "same.iso",
+      fileName: "same.iso",
+      fileSize: 1_000,
+      fileLastModified: 1,
+      partSize: 5 * 1024 * 1024,
+      checksumValidation: false,
+      createdAt: "2026-01-02T00:00:00.000Z",
+    },
+  ];
+  const merged = mergeMultipartSessions(listed, localRecords, "data/", new Map());
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0]?.uploadId, "tracked-local");
+  assert.equal(merged[0]?.canResume, true);
+});
+
 test("filterMultipartLocalRecords drops removed upload ids before merge", () => {
   const localRecords: MultipartSessionRecord[] = [
     {
