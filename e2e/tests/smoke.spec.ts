@@ -153,6 +153,8 @@ test("preview pane shows selected file metadata", async ({ page }) => {
 test("context menu shows built-in file actions", async ({ page }) => {
   await page.goto("/");
   await listingEntry(page, /hello\.txt/).click({ button: "right" });
+  await expect(page.getByRole("menuitem", { name: "Copy Path" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Download hello.txt" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
 });
 
@@ -332,7 +334,9 @@ test("preview pane renders browser-decodable images", async ({ page }) => {
     await page.goto("http://127.0.0.1:9882/");
     await listingEntry(page, "photo.png").click();
     const preview = page.getByRole("complementary", { name: "Preview pane" });
-    await expect(preview.getByRole("img", { name: "photo.png" })).toBeVisible();
+    await expect(preview.getByRole("heading", { name: "photo.png" })).toBeVisible();
+    await expect(preview.getByText("Size", { exact: true })).toBeVisible();
+    await expect(preview.getByRole("img")).not.toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");
   }

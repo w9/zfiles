@@ -1,6 +1,7 @@
 export type ContextKeys = {
   "focus.pane": string;
   "selection.count": number;
+  "selection.file-count": number;
   "selection.paths": string[];
   "current-path": string;
   "connection.online": boolean;
@@ -21,6 +22,7 @@ export function defaultContextKeys(): ContextKeys {
   return {
     "focus.pane": "file-list",
     "selection.count": 0,
+    "selection.file-count": 0,
     "selection.paths": [],
     "current-path": "",
     "connection.online": false,

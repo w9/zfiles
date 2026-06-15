@@ -32,6 +32,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 type ConfirmState = {
   action: ActionDefinition;
+  messageKey?: string;
+  messageParams?: Record<string, string>;
   resolve: (approved: boolean) => void;
 };
 
@@ -114,6 +116,23 @@ export function useActionSystem(
       confirmDestructive: (action: ActionDefinition) =>
         new Promise<boolean>((resolve) => {
           setConfirmState({ action, resolve });
+        }),
+      confirmMessage: (
+        messageKey: string,
+        params?: Record<string, string>,
+      ) =>
+        new Promise<boolean>((resolve) => {
+          setConfirmState({
+            action: {
+              id: "confirm.prompt",
+              nameKey: "actions.confirm.title",
+              categoryKey: "actions.view.category",
+              handler: async () => {},
+            },
+            messageKey,
+            messageParams: params,
+            resolve,
+          });
         }),
       promptArg: (
         action: ActionDefinition,
@@ -198,6 +217,7 @@ export function useActionSystem(
       setPaletteOpen,
       confirmState,
       dismissConfirm,
+      confirmMessage: hooks.confirmMessage,
       argPromptState,
       argPromptValue,
       setArgPromptValue,
@@ -212,6 +232,7 @@ export function useActionSystem(
       paletteOpen,
       confirmState,
       dismissConfirm,
+      hooks.confirmMessage,
       argPromptState,
       argPromptValue,
       dismissArgPrompt,

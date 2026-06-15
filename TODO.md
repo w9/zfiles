@@ -154,8 +154,8 @@ Context menu + preview panel cycle: Copy path / Download after file ops; preview
 - [x] i18n (14 locales): `settings.slideshow.startAtActiveItem.*`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `PreviewPane.tsx`: metadata-only for files — remove image preview, “no preview” message, and download link
-- [ ] `selection.copy-paths` + new `selection.download` actions: `context-menu` surface, after file ops; singular/plural copy-path label; download filters non-directories, confirms when multiple files
-- [ ] `downloadPaths.ts` + `ExplorerApp` wiring: `selection.file-count` context key, dynamic menu labels, multi-download confirm dialog
-- [ ] i18n (14 locales): `actions.selection.copyPath.name`, `actions.selection.download.*`
-- [ ] Update e2e preview-image test + context-menu coverage; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `PreviewPane.tsx`: metadata-only for files — remove image preview, “no preview” message, and download link
+- [x] `selection.copy-paths` + new `selection.download` actions: `context-menu` surface, after file ops; singular/plural copy-path label; download filters non-directories, confirms when multiple files
+- [x] `downloadPaths.ts` + `ExplorerApp` wiring: `selection.file-count` context key, dynamic menu labels, multi-download confirm dialog
+- [x] i18n (14 locales): `actions.selection.copyPath.name`, `actions.selection.download.*`
+- [x] Update e2e preview-image test + context-menu coverage; run `pnpm test`; bump patch version in `Cargo.toml`

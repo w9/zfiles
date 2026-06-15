@@ -63,6 +63,12 @@ export type BuiltinActionDeps = {
   openSettings: () => void;
   toggleShowDotEntries: () => void;
   runBulkAction: (actionId: string, paths: string[]) => Promise<void>;
+  getDownloadablePaths: () => string[];
+  downloadPaths: (paths: string[]) => Promise<void>;
+  confirmAction: (
+    messageKey: string,
+    params?: Record<string, string>,
+  ) => Promise<boolean>;
   getListingPathAt: (index: number) => string | null;
   getOperationTargets: () => string[];
   getPrimaryPath: () => string | null;

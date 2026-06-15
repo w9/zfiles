@@ -4,10 +4,8 @@ import { TriangleAlertIcon } from "lucide-react";
 
 import { messageFromApiResponse } from "./apiError";
 import { useExplorerBackend, type FileStat } from "./backend";
-import { isBrowserPreviewImage } from "./imagePaths";
 import { formatSize } from "./listing-format";
 import { useTranslation } from "@/i18n";
-import { useDownloadUrl } from "./useDownloadUrl";
 import {
   cloudExtraString,
   countDirectoryChildren,
@@ -17,7 +15,6 @@ import {
 } from "./preview-metadata";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type PreviewPaneProps = {
@@ -54,7 +51,6 @@ export default function PreviewPane({
   const [stat, setStat] = useState<FileStat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dirSummary, setDirSummary] = useState<DirectorySummaryState>({ status: "idle" });
-  const downloadUrl = useDownloadUrl(backend, stat && !stat.is_dir ? stat.path : null);
 
   useEffect(() => {
     if (!path) {
@@ -151,7 +147,6 @@ export default function PreviewPane({
     );
   }
 
-  const canPreviewImage = !stat.is_dir && isBrowserPreviewImage(stat.path);
   const typeLabel = stat.is_symlink
     ? t("preview.type.symlink")
     : stat.is_dir
@@ -242,28 +237,6 @@ export default function PreviewPane({
           <MetadataRow label={t("preview.storageClass")}>{storageClass}</MetadataRow>
         ) : null}
       </dl>
-      {!stat.is_dir ? (
-        <div className="space-y-3">
-          {canPreviewImage && downloadUrl ? (
-            <img
-              src={downloadUrl}
-              alt={stat.path.split("/").pop() ?? stat.path}
-              className="max-h-[480px] max-w-full rounded-md border bg-background object-contain"
-            />
-          ) : canPreviewImage ? (
-            <p className="text-sm text-muted-foreground">{t("preview.loading")}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("preview.noPreview")}</p>
-          )}
-          {downloadUrl ? (
-            <Button variant="link" className="h-auto p-0" asChild>
-              <a href={downloadUrl} download={stat.path.split("/").pop()}>
-                {t("preview.download")}
-              </a>
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
     </aside>
   );
 }

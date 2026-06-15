@@ -33,6 +33,8 @@ import { actionsForContext } from "../actions/dispatch";
 import { type ContextKeys } from "../actions/contextKeys";
 import { keybindingChordForContext } from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
+import type { ActionDefinition } from "../actions/types";
+import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
 import { sortPathsByListingOrder } from "../slideshowPathOrder";
 import {
@@ -136,7 +138,33 @@ const CONTEXT_MENU_REQUIRES_ROW = new Set([
   "file.cut",
   "file.delete",
   "selection.copy-paths",
+  "selection.download",
 ]);
+
+function contextMenuActionLabel(
+  action: ActionDefinition,
+  menuContextKeys: ContextKeys,
+  downloadablePaths: string[],
+  t: (key: MessageKey, params?: Record<string, string>) => string,
+  defaultLabel: string,
+): string {
+  if (action.id === "selection.copy-paths") {
+    return t(
+      menuContextKeys["selection.count"] === 1
+        ? "actions.selection.copyPath.name"
+        : "actions.selection.copyPaths.name",
+    );
+  }
+  if (action.id === "selection.download") {
+    if (downloadablePaths.length === 1) {
+      return t("actions.selection.download.nameWithFile", {
+        name: basename(downloadablePaths[0]!),
+      });
+    }
+    return t("actions.selection.download.name");
+  }
+  return defaultLabel;
+}
 
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
@@ -604,10 +632,16 @@ export default function ExplorerApp() {
     [mainContentWidth, viewportWidth],
   );
 
+  const selectedFileCount = useMemo(
+    () => filterDownloadablePaths(Array.from(selectedPaths), entries).length,
+    [selectedPaths, entries],
+  );
+
   const contextKeys = useMemo<ContextKeys>(
     () => ({
       "focus.pane": focusPane,
       "selection.count": selectedPaths.size,
+      "selection.file-count": selectedFileCount,
       "selection.paths": Array.from(selectedPaths),
       "current-path": currentPath,
       "connection.online": backendStatus === "connected",
@@ -626,6 +660,7 @@ export default function ExplorerApp() {
     [
       focusPane,
       selectedPaths,
+      selectedFileCount,
       currentPath,
       backendStatus,
       readOnly,
@@ -944,6 +979,21 @@ export default function ExplorerApp() {
     visibleEntries.length,
   ]);
 
+  const getDownloadablePaths = useCallback(() => {
+    return filterDownloadablePaths(getOperationTargets(), entries);
+  }, [getOperationTargets, entries]);
+
+  const downloadPathsHandler = useCallback(
+    async (paths: string[]) => {
+      await downloadFiles(backend, paths);
+    },
+    [backend],
+  );
+
+  const confirmMessageRef = useRef<
+    (messageKey: string, params?: Record<string, string>) => Promise<boolean>
+  >(async () => false);
+
   const actionSystem = useActionSystem(
     contextKeys,
     {
@@ -959,6 +1009,10 @@ export default function ExplorerApp() {
       toggleMultiSelect,
       clearSelection,
       runBulkAction,
+      getDownloadablePaths,
+      downloadPaths: downloadPathsHandler,
+      confirmAction: (messageKey, params) =>
+        confirmMessageRef.current(messageKey, params),
       getListingPathAt: (index: number) => {
         const row = listingEntriesRef.current[index];
         return row?.path ?? null;
@@ -992,6 +1046,7 @@ export default function ExplorerApp() {
       openPreviewSheet: () => setPreviewSheetOpen(true),
     }),
   );
+  confirmMessageRef.current = actionSystem.confirmMessage;
 
   const openContextMenu = useCallback(
     async (event: React.MouseEvent, path: string | null) => {
@@ -1033,6 +1088,15 @@ export default function ExplorerApp() {
         };
       }
 
+      const downloadablePaths = filterDownloadablePaths(
+        menuContextKeys["selection.paths"],
+        listingEntriesRef.current,
+      );
+      menuContextKeys = {
+        ...menuContextKeys,
+        "selection.file-count": downloadablePaths.length,
+      };
+
       let actions = actionsForContext(
         actionSystem.registry.list(),
         "context-menu",
@@ -1053,7 +1117,13 @@ export default function ExplorerApp() {
         );
         return {
           id: action.id,
-          label: actionLabel(action.nameKey),
+          label: contextMenuActionLabel(
+            action,
+            menuContextKeys,
+            downloadablePaths,
+            (key, params) => t(key, params),
+            actionLabel(action.nameKey),
+          ),
           chord,
           variant: action.destructive ? "destructive" : "default",
         };
@@ -1479,13 +1549,18 @@ export default function ExplorerApp() {
             ? t("file.rename.replace.confirm", {
                 name: fileOps.renameReplace.newName,
               })
-            : actionSystem.confirmState?.action.confirmMessageKey
-              ? t(actionSystem.confirmState.action.confirmMessageKey as MessageKey)
-              : actionSystem.confirmState
-                ? t("actions.confirm.defaultMessage", {
-                    name: actionLabel(actionSystem.confirmState.action.nameKey),
-                  })
-                : ""
+            : actionSystem.confirmState?.messageKey
+              ? t(
+                  actionSystem.confirmState.messageKey as MessageKey,
+                  actionSystem.confirmState.messageParams,
+                )
+              : actionSystem.confirmState?.action.confirmMessageKey
+                ? t(actionSystem.confirmState.action.confirmMessageKey as MessageKey)
+                : actionSystem.confirmState
+                  ? t("actions.confirm.defaultMessage", {
+                      name: actionLabel(actionSystem.confirmState.action.nameKey),
+                    })
+                  : ""
         }
         onCancel={() => {
           if (fileOps.renameReplace) {

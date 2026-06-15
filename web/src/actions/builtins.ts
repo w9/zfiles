@@ -191,21 +191,6 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
     {
-      id: "selection.copy-paths",
-      nameKey: "actions.selection.copyPaths.name",
-      categoryKey: "actions.selection.category",
-      when: "selection.count > 0",
-      whenFailureMessageKey: "actions.whenFailure.selectionRequired",
-      contexts: ["file-list"],
-      handler: async () => {
-        const deps = getDeps();
-        const paths = deps.getOperationTargets();
-        if (paths.length > 0) {
-          await deps.runBulkAction("copy-path", paths);
-        }
-      },
-    },
-    {
       id: "file.new-folder",
       nameKey: "actions.file.newFolder.name",
       categoryKey: "actions.file.category",
@@ -287,6 +272,47 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
           return;
         }
         await deps.runBulkAction("file.delete", paths);
+      },
+    },
+    {
+      id: "selection.copy-paths",
+      nameKey: "actions.selection.copyPaths.name",
+      categoryKey: "actions.selection.category",
+      when: "selection.count > 0",
+      whenFailureMessageKey: "actions.whenFailure.selectionRequired",
+      contexts: ["file-list", "context-menu"],
+      icon: "selection.copy-paths",
+      handler: async () => {
+        const deps = getDeps();
+        const paths = deps.getOperationTargets();
+        if (paths.length > 0) {
+          await deps.runBulkAction("copy-path", paths);
+        }
+      },
+    },
+    {
+      id: "selection.download",
+      nameKey: "actions.selection.download.name",
+      categoryKey: "actions.selection.category",
+      when: "selection.file-count > 0",
+      contexts: ["context-menu"],
+      icon: "selection.download",
+      handler: async () => {
+        const deps = getDeps();
+        const paths = deps.getDownloadablePaths();
+        if (paths.length === 0) {
+          return;
+        }
+        if (paths.length > 1) {
+          const approved = await deps.confirmAction(
+            "actions.selection.download.confirm",
+            { count: String(paths.length) },
+          );
+          if (!approved) {
+            return;
+          }
+        }
+        await deps.downloadPaths(paths);
       },
     },
   ];
