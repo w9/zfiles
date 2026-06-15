@@ -15,7 +15,9 @@ export async function extractDroppedUploadFiles(
 ): Promise<DroppedUploadFile[]> {
   const items = dataTransfer.items;
   if (items && items.length > 0) {
-    const dropped: DroppedUploadFile[] = [];
+    // Read every File synchronously before any await — DataTransfer is cleared
+    // once the drop handler yields (e.g. during getAsFileSystemHandle).
+    const syncEntries: { item: DataTransferItem; file: File }[] = [];
     for (const item of items) {
       if (item.kind !== "file") {
         continue;
@@ -24,20 +26,24 @@ export async function extractDroppedUploadFiles(
       if (!file) {
         continue;
       }
-      let sourceHandle: FileSystemFileHandle | null = null;
-      if ("getAsFileSystemHandle" in item) {
-        try {
-          const handle = await item.getAsFileSystemHandle();
-          if (handle.kind === "file") {
-            sourceHandle = handle as FileSystemFileHandle;
-          }
-        } catch {
-          // Fall back to File-only resume (picker on first resume).
-        }
-      }
-      dropped.push({ file, sourceHandle });
+      syncEntries.push({ item, file });
     }
-    if (dropped.length > 0) {
+    if (syncEntries.length > 0) {
+      const dropped: DroppedUploadFile[] = [];
+      for (const { item, file } of syncEntries) {
+        let sourceHandle: FileSystemFileHandle | null = null;
+        if ("getAsFileSystemHandle" in item) {
+          try {
+            const handle = await item.getAsFileSystemHandle();
+            if (handle.kind === "file") {
+              sourceHandle = handle as FileSystemFileHandle;
+            }
+          } catch {
+            // Fall back to File-only resume (picker on first resume).
+          }
+        }
+        dropped.push({ file, sourceHandle });
+      }
       return dropped;
     }
   }
