@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Upload panel cycle: remove status-bar upload pill; header upload icon opens the tray (attention dot + auto-open preserved); panel header gets Choose files. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Upload button pressed-state cycle: accent fill + `aria-pressed` while the upload panel is open. Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -178,3 +178,6 @@ Upload panel cycle: remove status-bar upload pill; header upload icon opens the 
 - [x] `StatusBar.tsx` + `ExplorerApp.tsx`: remove status-bar upload pill; replace header `UploadButton` with upload tray
 - [x] Remove unused `UploadButton.tsx` if fully superseded
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadIndicator.tsx`: accent pressed styling when panel open; `aria-pressed={open}` alongside `aria-expanded`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
