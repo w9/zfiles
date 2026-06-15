@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils";
 import { normalizeExplorerPath } from "./explorer/path";
 import {
   isValidQuickFilterRegex,
-  normalizeQuickFilterQuery,
   parseQuickFilterMode,
 } from "./quickFilter";
 
@@ -310,7 +309,9 @@ export default function ExplorerBreadcrumb({
           </InputGroup>
         </TooltipTrigger>
         <TooltipContent
-          side="bottom"
+          side="top"
+          sideOffset={6}
+          align="end"
           className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
         >
           {(() => {
