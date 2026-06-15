@@ -179,5 +179,5 @@ Upload button pressed-state cycle: accent fill + `aria-pressed` while the upload
 - [x] Remove unused `UploadButton.tsx` if fully superseded
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `UploadIndicator.tsx`: accent pressed styling when panel open; `aria-pressed={open}` alongside `aria-expanded`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `UploadIndicator.tsx`: accent pressed styling when panel open; `aria-pressed={open}` alongside `aria-expanded`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

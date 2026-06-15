@@ -102,9 +102,13 @@ export default function UploadIndicator({
             type="button"
             variant="outline"
             size="icon"
-            className="relative h-8 w-8"
+            className={cn(
+              "relative h-8 w-8",
+              open && "bg-accent text-accent-foreground",
+            )}
             aria-label={t("upload.tray.label")}
             aria-expanded={open}
+            aria-pressed={open}
             onClick={() => setOpen((value) => !value)}
           >
             <Upload className="h-4 w-4" />
