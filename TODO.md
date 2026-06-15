@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. **Current cycle:** harden upload-session persistence from review — finish-path cleanup for fresh tus + S3 uploads, persist `bytesUploaded` on committed-byte changes, prune local-only multipart records when S3 `ListParts` fails. Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause offset rollback is **complete**. Upload-session persistence hardening is **complete**. **Current cycle:** remote-only upload sessions show "Started elsewhere" inline status instead of "Unfinished". Deferred: global pause-all, status-bar pill attention for unfinished sessions, dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -129,3 +129,7 @@ Dual-mode refactor is **complete**. Upload tray polish is **complete**. Pause of
 - [x] `s3Backend.ts`: drop local-only multipart records (+ IndexedDB handles) when `ListParts` fails
 - [x] Unit tests for finish-path ids + stale local record pruning behavior
 - [x] Run `pnpm test` + `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `UploadPanel.tsx`: remote-only session rows use `upload.status.startedElsewhere` instead of `upload.status.unfinished`
+- [ ] i18n (14 locales): add `upload.status.startedElsewhere`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
