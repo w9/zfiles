@@ -231,6 +231,11 @@ export const pt: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Desativado",
   "settings.slideshow.interval.label": "Intervalo entre slides (segundos)",
   "settings.slideshow.interval.description": "Segundos entre slides durante a reprodução automática.",
+  "settings.slideshow.startAtActiveItem.label": "Começar no item ativo",
+  "settings.slideshow.startAtActiveItem.description":
+    "Abrir a apresentação na imagem focada em vez do primeiro slide.",
+  "settings.slideshow.startAtActiveItem.enabled": "Ativado",
+  "settings.slideshow.startAtActiveItem.disabled": "Desativado",
   "listing.grid.resizeHandle": "Redimensionar todos os cartões",
   "statusBar.label": "Barra de status",
   "error.actionFailed": "Falha na ação: HTTP {{status}}",

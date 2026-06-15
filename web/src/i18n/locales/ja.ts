@@ -230,6 +230,11 @@ export const ja: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "オフ",
   "settings.slideshow.interval.label": "スライド間隔（秒）",
   "settings.slideshow.interval.description": "自動再生時のスライド間の秒数。",
+  "settings.slideshow.startAtActiveItem.label": "アクティブな項目から開始",
+  "settings.slideshow.startAtActiveItem.description":
+    "最初のスライドではなく、フォーカス中の画像からスライドショーを開きます。",
+  "settings.slideshow.startAtActiveItem.enabled": "オン",
+  "settings.slideshow.startAtActiveItem.disabled": "オフ",
   "listing.grid.resizeHandle": "すべてのグリッドカードをリサイズ",
   "statusBar.label": "ステータスバー",
   "error.actionFailed": "操作に失敗しました：HTTP {{status}}",

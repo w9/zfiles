@@ -231,6 +231,11 @@ export const de: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Aus",
   "settings.slideshow.interval.label": "Folienintervall (Sekunden)",
   "settings.slideshow.interval.description": "Sekunden zwischen Folien bei automatischer Wiedergabe.",
+  "settings.slideshow.startAtActiveItem.label": "Beim aktiven Element starten",
+  "settings.slideshow.startAtActiveItem.description":
+    "Diashow auf dem fokussierten Bild statt auf der ersten Folie öffnen.",
+  "settings.slideshow.startAtActiveItem.enabled": "Ein",
+  "settings.slideshow.startAtActiveItem.disabled": "Aus",
   "listing.grid.resizeHandle": "Alle Karten skalieren",
   "statusBar.label": "Statusleiste",
   "error.actionFailed": "Aktion fehlgeschlagen: HTTP {{status}}",

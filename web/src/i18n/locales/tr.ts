@@ -230,6 +230,11 @@ export const tr: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Kapalı",
   "settings.slideshow.interval.label": "Slayt aralığı (saniye)",
   "settings.slideshow.interval.description": "Otomatik oynatmada slaytlar arasındaki saniye.",
+  "settings.slideshow.startAtActiveItem.label": "Etkin öğeden başla",
+  "settings.slideshow.startAtActiveItem.description":
+    "Slayt gösterisini ilk slayt yerine odaklanmış görselde aç.",
+  "settings.slideshow.startAtActiveItem.enabled": "Açık",
+  "settings.slideshow.startAtActiveItem.disabled": "Kapalı",
   "listing.grid.resizeHandle": "Tüm ızgara kartlarını yeniden boyutlandır",
   "statusBar.label": "Durum çubuğu",
   "error.actionFailed": "Eylem başarısız: HTTP {{status}}",

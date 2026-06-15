@@ -230,6 +230,11 @@ export const vi: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Tắt",
   "settings.slideshow.interval.label": "Khoảng cách giữa các slide (giây)",
   "settings.slideshow.interval.description": "Số giây giữa các slide khi tự phát.",
+  "settings.slideshow.startAtActiveItem.label": "Bắt đầu từ mục đang hoạt động",
+  "settings.slideshow.startAtActiveItem.description":
+    "Mở trình chiếu ở ảnh đang được chọn thay vì slide đầu tiên.",
+  "settings.slideshow.startAtActiveItem.enabled": "Bật",
+  "settings.slideshow.startAtActiveItem.disabled": "Tắt",
   "listing.grid.resizeHandle": "Thay đổi kích thước tất cả thẻ lưới",
   "statusBar.label": "Thanh trạng thái",
   "error.actionFailed": "Thao tác thất bại: HTTP {{status}}",

@@ -229,6 +229,11 @@ export const en = {
   "settings.slideshow.autoplay.disabled": "Off",
   "settings.slideshow.interval.label": "Slide interval (seconds)",
   "settings.slideshow.interval.description": "Seconds between slides during autoplay.",
+  "settings.slideshow.startAtActiveItem.label": "Start at active item",
+  "settings.slideshow.startAtActiveItem.description":
+    "Open the slideshow on the focused image instead of the first slide.",
+  "settings.slideshow.startAtActiveItem.enabled": "On",
+  "settings.slideshow.startAtActiveItem.disabled": "Off",
   "listing.grid.resizeHandle": "Resize all grid cards",
   "statusBar.label": "Status bar",
   "error.actionFailed": "Action failed: HTTP {{status}}",

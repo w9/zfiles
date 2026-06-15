@@ -230,6 +230,11 @@ export const ko: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "끄기",
   "settings.slideshow.interval.label": "슬라이드 간격(초)",
   "settings.slideshow.interval.description": "자동 재생 시 슬라이드 사이의 초 단위 시간.",
+  "settings.slideshow.startAtActiveItem.label": "활성 항목에서 시작",
+  "settings.slideshow.startAtActiveItem.description":
+    "첫 슬라이드 대신 포커스된 이미지에서 슬라이드쇼를 엽니다.",
+  "settings.slideshow.startAtActiveItem.enabled": "켜기",
+  "settings.slideshow.startAtActiveItem.disabled": "끄기",
   "listing.grid.resizeHandle": "모든 그리드 카드 크기 조정",
   "statusBar.label": "상태 표시줄",
   "error.actionFailed": "작업 실패: HTTP {{status}}",

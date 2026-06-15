@@ -230,6 +230,11 @@ export const id: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Nonaktif",
   "settings.slideshow.interval.label": "Interval slide (detik)",
   "settings.slideshow.interval.description": "Detik antar slide saat putar otomatis.",
+  "settings.slideshow.startAtActiveItem.label": "Mulai dari item aktif",
+  "settings.slideshow.startAtActiveItem.description":
+    "Buka tayangan slide pada gambar yang difokuskan, bukan slide pertama.",
+  "settings.slideshow.startAtActiveItem.enabled": "Aktif",
+  "settings.slideshow.startAtActiveItem.disabled": "Nonaktif",
   "listing.grid.resizeHandle": "Ubah ukuran semua kartu grid",
   "statusBar.label": "Bilah status",
   "error.actionFailed": "Tindakan gagal: HTTP {{status}}",

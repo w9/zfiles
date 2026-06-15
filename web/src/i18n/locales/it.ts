@@ -231,6 +231,11 @@ export const it: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Disattivo",
   "settings.slideshow.interval.label": "Intervallo tra diapositive (secondi)",
   "settings.slideshow.interval.description": "Secondi tra le diapositive durante la riproduzione automatica.",
+  "settings.slideshow.startAtActiveItem.label": "Inizia dall'elemento attivo",
+  "settings.slideshow.startAtActiveItem.description":
+    "Apri la presentazione sull'immagine focalizzata invece che sulla prima diapositiva.",
+  "settings.slideshow.startAtActiveItem.enabled": "Attivo",
+  "settings.slideshow.startAtActiveItem.disabled": "Disattivo",
   "listing.grid.resizeHandle": "Ridimensiona tutte le schede",
   "statusBar.label": "Barra di stato",
   "error.actionFailed": "Azione non riuscita: HTTP {{status}}",

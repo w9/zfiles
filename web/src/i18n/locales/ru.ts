@@ -230,6 +230,11 @@ export const ru: Record<MessageKey, string> = {
   "settings.slideshow.autoplay.disabled": "Выкл.",
   "settings.slideshow.interval.label": "Интервал между слайдами (секунды)",
   "settings.slideshow.interval.description": "Секунды между слайдами при автовоспроизведении.",
+  "settings.slideshow.startAtActiveItem.label": "Начинать с активного элемента",
+  "settings.slideshow.startAtActiveItem.description":
+    "Открывать слайд-шоу на сфокусированном изображении, а не на первом слайде.",
+  "settings.slideshow.startAtActiveItem.enabled": "Вкл.",
+  "settings.slideshow.startAtActiveItem.disabled": "Выкл.",
   "listing.grid.resizeHandle": "Изменить размер всех карточек",
   "statusBar.label": "Строка состояния",
   "error.actionFailed": "Сбой действия: HTTP {{status}}",

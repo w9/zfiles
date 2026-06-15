@@ -1,5 +1,6 @@
 export const SLIDESHOW_AUTOPLAY_STORAGE_KEY = "zfiles-slideshow-autoplay";
 export const SLIDESHOW_INTERVAL_STORAGE_KEY = "zfiles-slideshow-interval";
+export const SLIDESHOW_START_AT_ACTIVE_STORAGE_KEY = "zfiles-slideshow-start-at-active";
 
 export const SLIDESHOW_INTERVAL_MIN = 0.1;
 export const SLIDESHOW_INTERVAL_MAX = 300;
@@ -29,6 +30,10 @@ export function defaultSlideshowAutoplay(): boolean {
   return false;
 }
 
+export function defaultSlideshowStartAtActiveItem(): boolean {
+  return false;
+}
+
 export function readStoredSlideshowAutoplay(): boolean {
   if (typeof window === "undefined") {
     return defaultSlideshowAutoplay();
@@ -39,6 +44,21 @@ export function readStoredSlideshowAutoplay(): boolean {
 
 export function storeSlideshowAutoplay(enabled: boolean): void {
   window.localStorage.setItem(SLIDESHOW_AUTOPLAY_STORAGE_KEY, enabled ? "true" : "false");
+}
+
+export function readStoredSlideshowStartAtActiveItem(): boolean {
+  if (typeof window === "undefined") {
+    return defaultSlideshowStartAtActiveItem();
+  }
+  const stored = window.localStorage.getItem(SLIDESHOW_START_AT_ACTIVE_STORAGE_KEY);
+  return parseSlideshowAutoplay(stored) ?? defaultSlideshowStartAtActiveItem();
+}
+
+export function storeSlideshowStartAtActiveItem(enabled: boolean): void {
+  window.localStorage.setItem(
+    SLIDESHOW_START_AT_ACTIVE_STORAGE_KEY,
+    enabled ? "true" : "false",
+  );
 }
 
 export function parseSlideshowInterval(value: string | null): number | null {

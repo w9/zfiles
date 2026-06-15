@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -65,6 +66,7 @@ import {
   wheelZoomScale,
   type ZoomMode,
 } from "./slideshowZoom";
+import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
 
 const CHROME_IDLE_MS = 2000;
 const TOOLTIP_DELAY_MS = 1000;
@@ -104,6 +106,7 @@ type SlideshowOverlayProps = {
   paths: string[];
   startPath: string | null;
   onOpenChange: (open: boolean) => void;
+  onCurrentPathChange?: (path: string) => void;
 };
 
 type ChromeLockReason = "focus" | "hover";
@@ -164,11 +167,13 @@ export default function SlideshowOverlay({
   paths,
   startPath,
   onOpenChange,
+  onCurrentPathChange,
 }: SlideshowOverlayProps) {
   const backend = useExplorerBackend();
   const { t, locale } = useTranslation();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
-  const { autoplayOnOpen, intervalSeconds, setIntervalSeconds } = useSlideshowSettings();
+  const { autoplayOnOpen, startAtActiveItem, intervalSeconds, setIntervalSeconds } =
+    useSlideshowSettings();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [zoomMode, setZoomMode] = useState<ZoomMode>("default");
@@ -179,6 +184,7 @@ export default function SlideshowOverlay({
   const [panOffset, setPanOffset] = useState<PanOffset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
   const pinchSessionRef = useRef<PinchSession | null>(null);
   const suppressClickRef = useRef(false);
@@ -192,6 +198,17 @@ export default function SlideshowOverlay({
   const currentPath = paths[index] ?? null;
   const imageUrl = useDownloadUrl(backend, currentPath);
   const fileName = currentPath?.split("/").pop() ?? currentPath ?? "";
+
+  const syncNaturalSizeFromImage = useCallback((img: HTMLImageElement) => {
+    if (img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+      return;
+    }
+    setNaturalSize((prev) =>
+      prev.width === img.naturalWidth && prev.height === img.naturalHeight
+        ? prev
+        : { width: img.naturalWidth, height: img.naturalHeight },
+    );
+  }, []);
 
   const resetSlideView = useCallback(() => {
     setZoomMode("default");
@@ -220,11 +237,18 @@ export default function SlideshowOverlay({
     if (!open || paths.length === 0) {
       return;
     }
-    const startIndex = startPath ? Math.max(0, paths.indexOf(startPath)) : 0;
-    setIndex(startIndex >= 0 ? startIndex : 0);
+    const startIndex = resolveSlideshowStartIndex(paths, startPath, startAtActiveItem);
+    setIndex(startIndex);
     setPlaying(autoplayOnOpen);
     resetSlideView();
-  }, [open, paths, startPath, autoplayOnOpen, resetSlideView]);
+  }, [open, paths, startPath, startAtActiveItem, autoplayOnOpen, resetSlideView]);
+
+  useEffect(() => {
+    if (!open || !currentPath) {
+      return;
+    }
+    onCurrentPathChange?.(currentPath);
+  }, [open, currentPath, onCurrentPathChange]);
 
   useEffect(() => {
     if (!open || !currentPath) {
@@ -313,6 +337,19 @@ export default function SlideshowOverlay({
   }, [open, goNext, goPrev, onOpenChange, bumpActivity]);
 
   const imageScale = effectiveScale(zoomMode, manualScale);
+  const imageSized = naturalSize.width > 0 && naturalSize.height > 0;
+
+  useLayoutEffect(() => {
+    if (!open || !imageUrl) {
+      return;
+    }
+    const img = imageRef.current;
+    if (!img?.complete || img.naturalWidth <= 0) {
+      return;
+    }
+    syncNaturalSizeFromImage(img);
+  }, [open, imageUrl, currentPath, syncNaturalSizeFromImage]);
+
   const zoomPercent = formatZoomPercentage(imageScale);
   const imageOverflows = imageOverflowsViewport(
     naturalSize.width,
@@ -559,22 +596,21 @@ export default function SlideshowOverlay({
               onClickCapture={handleStageClick}
             >
               <img
+                key={imageUrl}
+                ref={imageRef}
                 src={imageUrl}
                 alt={fileName}
                 draggable={false}
                 className="max-w-none select-none"
                 style={{
-                  width: naturalSize.width > 0 ? naturalSize.width : undefined,
-                  height: naturalSize.height > 0 ? naturalSize.height : undefined,
+                  width: imageSized ? naturalSize.width : undefined,
+                  height: imageSized ? naturalSize.height : undefined,
                   transform: `scale(${imageScale})`,
                   transformOrigin: "center center",
+                  opacity: imageSized ? 1 : 0,
                 }}
                 onLoad={(event) => {
-                  const img = event.currentTarget;
-                  setNaturalSize({
-                    width: img.naturalWidth,
-                    height: img.naturalHeight,
-                  });
+                  syncNaturalSizeFromImage(event.currentTarget);
                 }}
               />
             </div>
@@ -592,6 +628,20 @@ export default function SlideshowOverlay({
       >
         <p className="max-w-[min(50vw,32rem)] truncate text-sm font-medium text-white drop-shadow-sm">
           {fileName}
+          {paths.length > 1 ? (
+            <span
+              className="ml-2 text-white/75 tabular-nums"
+              aria-label={t("slideshow.counter", {
+                current: String(index + 1),
+                total: String(paths.length),
+              })}
+            >
+              {t("slideshow.counter", {
+                current: String(index + 1),
+                total: String(paths.length),
+              })}
+            </span>
+          ) : null}
         </p>
 
         <div className="flex flex-wrap items-center justify-end gap-2">

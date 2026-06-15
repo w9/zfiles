@@ -11,13 +11,17 @@ import {
   clampSlideshowInterval,
   readStoredSlideshowAutoplay,
   readStoredSlideshowInterval,
+  readStoredSlideshowStartAtActiveItem,
   storeSlideshowAutoplay,
   storeSlideshowInterval,
+  storeSlideshowStartAtActiveItem,
 } from "./slideshowSettings";
 
 type SlideshowSettingsContextValue = {
   autoplayOnOpen: boolean;
   setAutoplayOnOpen: (value: boolean) => void;
+  startAtActiveItem: boolean;
+  setStartAtActiveItem: (value: boolean) => void;
   intervalSeconds: number;
   setIntervalSeconds: (value: number) => void;
 };
@@ -26,11 +30,19 @@ const SlideshowSettingsContext = createContext<SlideshowSettingsContextValue | n
 
 export function SlideshowSettingsProvider({ children }: { children: ReactNode }) {
   const [autoplayOnOpen, setAutoplayOnOpenState] = useState(readStoredSlideshowAutoplay);
+  const [startAtActiveItem, setStartAtActiveItemState] = useState(
+    readStoredSlideshowStartAtActiveItem,
+  );
   const [intervalSeconds, setIntervalSecondsState] = useState(readStoredSlideshowInterval);
 
   const setAutoplayOnOpen = useCallback((next: boolean) => {
     storeSlideshowAutoplay(next);
     setAutoplayOnOpenState(next);
+  }, []);
+
+  const setStartAtActiveItem = useCallback((next: boolean) => {
+    storeSlideshowStartAtActiveItem(next);
+    setStartAtActiveItemState(next);
   }, []);
 
   const setIntervalSeconds = useCallback((next: number) => {
@@ -43,10 +55,19 @@ export function SlideshowSettingsProvider({ children }: { children: ReactNode })
     () => ({
       autoplayOnOpen,
       setAutoplayOnOpen,
+      startAtActiveItem,
+      setStartAtActiveItem,
       intervalSeconds,
       setIntervalSeconds,
     }),
-    [autoplayOnOpen, intervalSeconds, setAutoplayOnOpen, setIntervalSeconds],
+    [
+      autoplayOnOpen,
+      startAtActiveItem,
+      intervalSeconds,
+      setAutoplayOnOpen,
+      setStartAtActiveItem,
+      setIntervalSeconds,
+    ],
   );
 
   return (

@@ -6,6 +6,7 @@ import {
   SLIDESHOW_INTERVAL_MIN,
   clampSlideshowInterval,
   commitSlideshowIntervalDraft,
+  defaultSlideshowStartAtActiveItem,
   parseSlideshowAutoplay,
   parseSlideshowInterval,
 } from "./slideshowSettings";
@@ -37,4 +38,8 @@ test("commitSlideshowIntervalDraft clamps on blur only", () => {
   assert.equal(commitSlideshowIntervalDraft("0", 4), SLIDESHOW_INTERVAL_MIN);
   assert.equal(commitSlideshowIntervalDraft("", 4), 4);
   assert.equal(commitSlideshowIntervalDraft("nope", 4), 4);
+});
+
+test("defaultSlideshowStartAtActiveItem is false", () => {
+  assert.equal(defaultSlideshowStartAtActiveItem(), false);
 });

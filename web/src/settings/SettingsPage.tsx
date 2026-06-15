@@ -194,6 +194,8 @@ export default function SettingsPage() {
   const {
     autoplayOnOpen,
     setAutoplayOnOpen,
+    startAtActiveItem,
+    setStartAtActiveItem,
     intervalSeconds,
     setIntervalSeconds,
   } = useSlideshowSettings();
@@ -303,6 +305,22 @@ export default function SettingsPage() {
                   options={[
                     { value: "enabled", label: t("settings.slideshow.autoplay.enabled") },
                     { value: "disabled", label: t("settings.slideshow.autoplay.disabled") },
+                  ]}
+                />
+                <SettingsToggleField
+                  label={t("settings.slideshow.startAtActiveItem.label")}
+                  description={t("settings.slideshow.startAtActiveItem.description")}
+                  value={startAtActiveItem ? "enabled" : "disabled"}
+                  onValueChange={(value) => setStartAtActiveItem(value === "enabled")}
+                  options={[
+                    {
+                      value: "enabled",
+                      label: t("settings.slideshow.startAtActiveItem.enabled"),
+                    },
+                    {
+                      value: "disabled",
+                      label: t("settings.slideshow.startAtActiveItem.disabled"),
+                    },
                   ]}
                 />
                 <Field>

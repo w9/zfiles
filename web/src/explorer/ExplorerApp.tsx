@@ -34,6 +34,7 @@ import { type ContextKeys } from "../actions/contextKeys";
 import { keybindingChordForContext } from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
 import { isImagePath } from "../imagePaths";
+import { sortPathsByListingOrder } from "../slideshowPathOrder";
 import {
   canShowInlinePreviewPanel,
   LG_BREAKPOINT_PX,
@@ -533,19 +534,34 @@ export default function ExplorerApp() {
   );
 
   const getImagePaths = useCallback(() => {
+    const listingPaths = listingEntriesRef.current.map((entry) => entry.path);
     const selected = Array.from(selectedPathsRef.current);
     if (selected.length > 0) {
-      return selected.filter(isImagePath);
+      return sortPathsByListingOrder(
+        selected.filter(isImagePath),
+        listingPaths,
+      );
     }
-    return listingEntriesRef.current
-      .filter((entry) => !entry.isDir && isImagePath(entry.path))
-      .map((entry) => entry.path);
+    return sortPathsByListingOrder(
+      listingEntriesRef.current
+        .filter((entry) => !entry.isDir && isImagePath(entry.path))
+        .map((entry) => entry.path),
+      listingPaths,
+    );
   }, []);
 
   const openSlideshow = useCallback((paths: string[], startPath: string | null) => {
     setSlideshowPaths(paths);
     setSlideshowStartPath(startPath);
     setSlideshowOpen(true);
+  }, []);
+
+  const handleSlideshowCurrentPathChange = useCallback((path: string) => {
+    const index = listingEntriesRef.current.findIndex((entry) => entry.path === path);
+    if (index >= 0) {
+      setSelectedIndex(index);
+    }
+    setSelectedPath(path);
   }, []);
 
   const quickFilterActive = normalizeQuickFilterQuery(quickFilter).length > 0;
@@ -1505,6 +1521,7 @@ export default function ExplorerApp() {
         paths={slideshowPaths}
         startPath={slideshowStartPath}
         onOpenChange={setSlideshowOpen}
+        onCurrentPathChange={handleSlideshowCurrentPathChange}
       />
 
       <PreviewSheet

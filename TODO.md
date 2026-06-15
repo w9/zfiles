@@ -148,8 +148,8 @@ Slideshow polish cycle: slide counter in top chrome, listing-order path sort, pe
 - [x] Reproduce duplicate Unfinished + Started elsewhere rows; analyze logs and fix root cause
 - [x] Verify fix with post-fix logs; remove instrumentation; run `pnpm test`
 
-- [ ] `slideshowSettings.ts` + provider + Settings toggle: persisted `startAtActiveItem` (default off); unit tests
-- [ ] `getImagePaths` / open helper: sort slideshow paths by listing order; resolve start index (first vs active)
-- [ ] `SlideshowOverlay.tsx`: show `slideshow.counter` beside filename; `onCurrentPathChange` syncs explorer focus only
-- [ ] i18n (14 locales): `settings.slideshow.startAtActiveItem.*`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `slideshowSettings.ts` + provider + Settings toggle: persisted `startAtActiveItem` (default off); unit tests
+- [x] `getImagePaths` / open helper: sort slideshow paths by listing order; resolve start index (first vs active)
+- [x] `SlideshowOverlay.tsx`: show `slideshow.counter` beside filename; `onCurrentPathChange` syncs explorer focus only
+- [x] i18n (14 locales): `settings.slideshow.startAtActiveItem.*`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
