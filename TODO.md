@@ -253,7 +253,7 @@ Tighten the bind auth gate so `validate()` requires `--token` for any non-loopba
 - [x] `e2e/tests/smoke.spec.ts`: zh-CN locale smoke asserts visible upload tray button (`上传`), not panel-only “选择文件”
 - [x] Run e2e smoke (`pnpm test` in `e2e/`) and confirm both tests pass
 
-- [ ] `cli.rs` `ServeArgs::validate()`: gate the `--token` requirement on `!ip.is_loopback()` (covers `0.0.0.0`/`::` plus specific routable IPs) instead of `is_unspecified()`; reword the bail message to "binding to a non-loopback address requires --token"
-- [ ] `cli.rs` tests: rename `public_bind_requires_token` coverage to assert a specific non-loopback IP (`192.168.1.50`) without token fails, with `--token` passes, the `0.0.0.0` wildcard without token still fails, and a loopback alias (`127.0.0.2`) without token passes
-- [ ] `design/design.md` §6: update the "Auth default policy" row to "Refuse non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`) token-free"
-- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+- [x] `cli.rs` `ServeArgs::validate()`: gate the `--token` requirement on `!ip.is_loopback()` (covers `0.0.0.0`/`::` plus specific routable IPs) instead of `is_unspecified()`; reword the bail message to "binding to a non-loopback address requires --token"
+- [x] `cli.rs` tests: rename `public_bind_requires_token` coverage to assert a specific non-loopback IP (`192.168.1.50`) without token fails, with `--token` passes, the `0.0.0.0` wildcard without token still fails, and a loopback alias (`127.0.0.2`) without token passes
+- [x] `design/design.md` §6: update the "Auth default policy" row to "Refuse non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`) token-free"
+- [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`

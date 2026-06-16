@@ -409,7 +409,7 @@ Detailed acceptance checklist and success metrics for the refactor: [dual_mode_r
 | Topic | Default leaning |
 |-------|-----------------|
 | Default port (local) | Ephemeral with browser auto-open |
-| Auth default policy | Refuse `--host 0.0.0.0` without `--token`; loopback without token |
+| Auth default policy | Refuse any non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`, `::1`) token-free |
 | Local listing pagination | Defer until needed; cloud pagination required at launch |
 | Text file preview | Omit in v1; metadata + download |
 | Slideshow | Keep for client-decodable images in selection/cwd, or cut if blocking |

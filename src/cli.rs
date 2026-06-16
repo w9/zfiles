@@ -204,8 +204,8 @@ impl ServeArgs {
 
     pub fn validate(&self) -> Result<()> {
         let addr = self.listen_addr()?;
-        if addr.ip().is_unspecified() && !self.token {
-            bail!("binding to all interfaces requires --token");
+        if !addr.ip().is_loopback() && !self.token {
+            bail!("binding to a non-loopback address requires --token");
         }
         Ok(())
     }
@@ -273,9 +273,31 @@ mod tests {
     }
 
     #[test]
-    fn public_bind_requires_token() {
+    fn wildcard_bind_requires_token() {
         let cli = Cli::parse_from(["zfiles", "--host", "0.0.0.0", "--port", "8080"]);
         assert!(cli.serve.validate().is_err());
+    }
+
+    #[test]
+    fn specific_non_loopback_bind_requires_token() {
+        let cli = Cli::parse_from(["zfiles", "--host", "192.168.1.50", "--port", "8080"]);
+        assert!(cli.serve.validate().is_err());
+
+        let cli = Cli::parse_from([
+            "zfiles",
+            "--host",
+            "192.168.1.50",
+            "--port",
+            "8080",
+            "--token",
+        ]);
+        assert!(cli.serve.validate().is_ok());
+    }
+
+    #[test]
+    fn loopback_alias_bind_skips_token_requirement() {
+        let cli = Cli::parse_from(["zfiles", "--host", "127.0.0.2", "--port", "8080"]);
+        assert!(cli.serve.validate().is_ok());
     }
 
     #[test]
