@@ -244,7 +244,7 @@ Replace the boxed CLI startup banner with a Vite-inspired layout: versioned head
 - [ ] Verify with post-fix logs, then remove instrumentation
 - [ ] Run targeted web verification for the touched cloud auth path
 
-- [ ] `banner.rs`: Vite-style startup output — `zfiles vX.Y.Z is running`, arrow rows (`Local`/`Share`, `Token`, `Serving`, `Access`, `Mode`, optional dimmed `State`/`Frontend`, public `QR`), raw URL without box; subtle ANSI on TTY
-- [ ] `banner.rs` unit tests: cover local/share wording, token row, read-only mode, dev-frontend dimmed rows, no-color render path
-- [ ] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions for new banner lines
-- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+- [x] `banner.rs`: Vite-style startup output — `zfiles vX.Y.Z is running`, arrow rows (`Local`/`Share`, `Token`, `Serving`, `Access`, `Mode`, optional dimmed `State`/`Frontend`, public `QR`), raw URL without box; subtle ANSI on TTY
+- [x] `banner.rs` unit tests: cover local/share wording, token row, read-only mode, dev-frontend dimmed rows, no-color render path
+- [x] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions for new banner lines
+- [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`

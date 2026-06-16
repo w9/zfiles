@@ -167,7 +167,6 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         root: root.display().to_string(),
         url: explorer_url.clone(),
         token: share_token.clone(),
-        open_browser,
         read_only,
         auto_read_only: layout.auto_read_only,
         state_dir: Some(state_dir.display().to_string()),

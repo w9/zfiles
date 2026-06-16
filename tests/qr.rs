@@ -40,18 +40,14 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         "expected scannable QR in startup output, found {dark_modules} dark modules:\n{output}"
     );
     assert!(
-        output.contains("Share on your network:")
+        output.contains("▸  Share:")
             && output
                 .lines()
-                .map(box_line_content)
                 .any(|line| line.contains("http://") && line.contains("token=")),
         "expected share URL with hex token in startup banner:\n{output}"
     );
-}
-
-fn box_line_content(raw: &str) -> &str {
-    raw.trim()
-        .trim_start_matches('│')
-        .trim_end_matches('│')
-        .trim()
+    assert!(
+        output.contains("▸  QR:") && output.contains("scan below"),
+        "expected QR hint in startup banner:\n{output}"
+    );
 }
