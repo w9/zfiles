@@ -110,6 +110,9 @@ function CloudAppContent() {
       if (!authError || !connectionConfig) {
         return false;
       }
+      if (authExpired) {
+        return true;
+      }
 
       const settings = clearSessionCredentialsPreservingSettings(connectionConfig);
       setPreservedSettings(settings);
@@ -126,7 +129,7 @@ function CloudAppContent() {
       }
       return true;
     },
-    [connectionConfig, openReconnect, t],
+    [authExpired, connectionConfig, openReconnect, t],
   );
 
   useEffect(() => {

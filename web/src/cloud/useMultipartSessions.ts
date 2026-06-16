@@ -58,7 +58,7 @@ export function useMultipartSessions({
   onResumeMismatchRef.current = onResumeMismatch;
 
   const refresh = useCallback(async () => {
-    if (!s3Backend || !scopeId) {
+    if (!s3Backend || !scopeId || cloudAuth.expired) {
       setSessions([]);
       setError(null);
       return;
@@ -86,11 +86,14 @@ export function useMultipartSessions({
     } finally {
       setLoading(false);
     }
-  }, [cloudAuth, s3Backend, scopeId]);
+  }, [cloudAuth.expired, cloudAuth.handleAuthError, s3Backend, scopeId]);
 
   useEffect(() => {
+    if (cloudAuth.expired) {
+      return;
+    }
     void refresh();
-  }, [refresh]);
+  }, [cloudAuth.expired, refresh]);
 
   const resumeSession = useCallback(
     async (uploadId: string) => {

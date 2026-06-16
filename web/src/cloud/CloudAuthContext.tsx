@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useMemo,
   type ReactNode,
 } from "react";
 import { TriangleAlertIcon } from "lucide-react";
@@ -36,14 +37,16 @@ export function CloudAuthProvider({
   onReconnect,
   children,
 }: CloudAuthProviderProps) {
+  const value = useMemo(
+    () => ({
+      expired,
+      handleAuthError,
+      reconnect: onReconnect,
+    }),
+    [expired, handleAuthError, onReconnect],
+  );
   return (
-    <CloudAuthContext.Provider
-      value={{
-        expired,
-        handleAuthError,
-        reconnect: onReconnect,
-      }}
-    >
+    <CloudAuthContext.Provider value={value}>
       {children}
     </CloudAuthContext.Provider>
   );

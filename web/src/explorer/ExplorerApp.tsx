@@ -261,15 +261,18 @@ export default function ExplorerApp() {
 
   const notifyStorageError = useCallback(
     (err: unknown) => {
-      if (cloudAuth.handleAuthError(err)) {
+      if (cloudAuth.expired || cloudAuth.handleAuthError(err)) {
         return;
       }
       notifyError(err instanceof Error ? err.message : String(err));
     },
-    [cloudAuth],
+    [cloudAuth.expired, cloudAuth.handleAuthError],
   );
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
+    if (cloudAuth.expired) {
+      return false;
+    }
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
     const previousPaths = options?.preserveSelection
       ? selectedPathsRef.current.size > 0
@@ -313,10 +316,10 @@ export default function ExplorerApp() {
     } finally {
       setListingLoaded(true);
     }
-  }, [backend, notifyStorageError, t]);
+  }, [backend, cloudAuth.expired, notifyStorageError, t]);
 
   const loadMoreEntries = useCallback(async () => {
-    if (!listCursor || loadingMore) {
+    if (cloudAuth.expired || !listCursor || loadingMore) {
       return;
     }
     setLoadingMore(true);
@@ -329,9 +332,12 @@ export default function ExplorerApp() {
     } finally {
       setLoadingMore(false);
     }
-  }, [backend, listCursor, loadingMore, notifyStorageError]);
+  }, [backend, cloudAuth.expired, listCursor, loadingMore, notifyStorageError]);
 
   useEffect(() => {
+    if (cloudAuth.expired) {
+      return;
+    }
     loadListing(initialPath).catch((err: unknown) => notifyStorageError(err));
     void backend
       .fetchHealth()
@@ -341,7 +347,7 @@ export default function ExplorerApp() {
         }
       })
       .catch(() => {});
-  }, [backend, loadListing, initialPath, notifyStorageError]);
+  }, [backend, cloudAuth.expired, initialPath, loadListing, notifyStorageError]);
 
   const {
     items: uploadItems,

@@ -55,7 +55,7 @@ export default function PreviewPane({
   const [dirSummary, setDirSummary] = useState<DirectorySummaryState>({ status: "idle" });
 
   useEffect(() => {
-    if (!path) {
+    if (!path || cloudAuth.expired) {
       setStat(null);
       setError(null);
       setDirSummary({ status: "idle" });
@@ -83,10 +83,10 @@ export default function PreviewPane({
         }
         setError(err instanceof Error ? err.message : String(err));
       });
-  }, [path, backend, cloudAuth, t]);
+  }, [path, backend, cloudAuth.expired, cloudAuth.handleAuthError, t]);
 
   useEffect(() => {
-    if (!stat?.is_dir) {
+    if (!stat?.is_dir || cloudAuth.expired) {
       setDirSummary({ status: "idle" });
       return;
     }
@@ -120,7 +120,7 @@ export default function PreviewPane({
     return () => {
       cancelled = true;
     };
-  }, [stat?.is_dir, stat?.path, backend, cloudAuth]);
+  }, [stat?.is_dir, stat?.path, backend, cloudAuth.expired, cloudAuth.handleAuthError]);
 
   const shellClass = cn(
     "relative min-h-[320px] overflow-auto rounded-xl border bg-card p-4",
