@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Per-folder view settings (localStorage): table/grid mode, table column sort, and grid card size per directory path; fall back to global defaults when no override. Toolbar view toggle saves per-folder; Shift+toggle invokes a dedicated `view.apply-global-listing-settings` action that promotes the current folder’s effective settings to global and clears all per-folder overrides. Column sort and grid resize always save per-folder only. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
+Reduce virtual listing flicker during fast scrolling by increasing the virtualizer render buffer in table and grid listings, with the grid buffer widened most because each virtual row contains multiple cards. Keep the change local to frontend list rendering and verify with `pnpm test`. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -225,3 +225,7 @@ Per-folder view settings (localStorage): table/grid mode, table column sort, and
 - [x] `ExplorerApp.tsx`: apply effective settings on `currentPath` change; persist view/column-sort/grid-size changes per folder
 - [x] `ListingViewToggle.tsx`: stop writing global directly; pass `{ global: shiftKey }` to parent
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `VirtualListing.tsx`: increase table virtualizer overscan enough to keep rows mounted ahead of fast wheel/trackpad scroll
+- [ ] `GridListing.tsx`: increase grid virtualizer overscan by virtual rows so whole card bands are ready before entering the viewport
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
