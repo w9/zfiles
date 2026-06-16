@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Cloud credential-expiration handling is complete for explicit S3/R2 auth failures: the app now classifies expired/revoked credentials, preserves non-secret reconnect settings, keeps empty successful listings valid, and documents the reconnect flow. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
+Debug the cloud expired-token flow with runtime evidence: instrument connect validation, auth-error classification, session selection, and S3 listing responses to determine whether expired credentials are accepted, hidden, misclassified, or bypassed by an existing session. Keep instrumentation temporary until logs prove the root cause and any fix is verified. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -237,3 +237,9 @@ Cloud credential-expiration handling is complete for explicit S3/R2 auth failure
 - [x] Update connect dialog/reconnect flow to prefill preserved non-secret settings after credential expiration
 - [x] Update cloud credential troubleshooting docs for automatic detection, preserved settings, and reconnect behavior
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] Instrument cloud connect/session/auth-classifier/listing flow for expired-token reproduction (sessionId `7fe669`)
+- [ ] Reproduce expired-token no-error case and classify hypotheses from runtime logs
+- [ ] Fix only the proven root cause while keeping instrumentation active
+- [ ] Verify with post-fix logs, then remove instrumentation
+- [ ] Run targeted web verification for the touched cloud auth path
