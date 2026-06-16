@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import {
   MARQUEE_AUTO_SCROLL_MARGIN_PX,
   MARQUEE_AUTO_SCROLL_STEP_PX,
   MARQUEE_DRAG_THRESHOLD_PX,
   type ClientRect,
+  type ListingMarqueeLayoutResolver,
   type MarqueeModifiers,
+  collectDomEntryRectsFromViewport,
   computeMarqueeSelection,
   findEntryPathAtPoint,
   hitTestEntryPaths,
@@ -18,6 +20,7 @@ export type UseListingMarqueeSelectOptions = {
   selectedPaths: Set<string>;
   enabled?: boolean;
   scrollElementRef: React.RefObject<HTMLElement | null>;
+  layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>;
   onSelectionChange: (paths: Set<string>, primaryPath: string | null) => void;
 };
 
@@ -37,26 +40,18 @@ type DragSession = {
   baseSelection: Set<string>;
   modifiers: MarqueeModifiers;
   lastHoveredPath: string | null;
+  marqueeHits: Set<string>;
 };
 
 function collectEntryRectsFromViewport(
   scrollElement: HTMLElement,
+  layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>,
 ): Array<{ path: string; rect: ClientRect }> {
-  const nodes = scrollElement.querySelectorAll<HTMLElement>(
-    "[data-listing-entry][data-listing-path]",
-  );
-  return Array.from(nodes).map((node) => {
-    const rect = node.getBoundingClientRect();
-    return {
-      path: node.dataset.listingPath ?? "",
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-      },
-    };
-  });
+  const layout = layoutRef?.current;
+  if (layout) {
+    return layout.getEntryRects(scrollElement);
+  }
+  return collectDomEntryRectsFromViewport(scrollElement);
 }
 
 function suppressMarqueeEndClick(
@@ -81,6 +76,7 @@ export function useListingMarqueeSelect({
   selectedPaths,
   enabled = true,
   scrollElementRef,
+  layoutRef,
   onSelectionChange,
 }: UseListingMarqueeSelectOptions): UseListingMarqueeSelectResult {
   const [isActive, setIsActive] = useState(false);
@@ -118,11 +114,20 @@ export function useListingMarqueeSelect({
       );
       setMarqueeRect(marquee);
 
-      const entryRects = collectEntryRectsFromViewport(scrollElement);
+      const entryRects = collectEntryRectsFromViewport(scrollElement, layoutRef);
       const hitPaths = hitTestEntryPaths(marquee, entryRects);
+      for (const path of hitPaths) {
+        session.marqueeHits.add(path);
+      }
+
+      const marqueePaths =
+        session.modifiers.ctrlKey || session.modifiers.metaKey
+          ? hitPaths
+          : session.marqueeHits;
+
       const nextSelection = computeMarqueeSelection(
         session.baseSelection,
-        hitPaths,
+        marqueePaths,
         session.modifiers,
       );
 
@@ -133,7 +138,7 @@ export function useListingMarqueeSelect({
 
       onSelectionChangeRef.current(nextSelection, session.lastHoveredPath);
     },
-    [scrollElementRef],
+    [layoutRef, scrollElementRef],
   );
 
   const startAutoScroll = useCallback(() => {
@@ -216,6 +221,7 @@ export function useListingMarqueeSelect({
           metaKey: event.metaKey,
         },
         lastHoveredPath: null,
+        marqueeHits: new Set(),
       };
       sessionRef.current = session;
 

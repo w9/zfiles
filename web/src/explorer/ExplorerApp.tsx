@@ -136,6 +136,7 @@ function multipartToUnfinishedSession(session: MultipartSessionView): Unfinished
 import PasteDestinationDialog from "./PasteDestinationDialog";
 import PasteConflictDialog from "./PasteConflictDialog";
 import MarqueeOverlay from "./MarqueeOverlay";
+import type { ListingMarqueeLayoutResolver } from "./listingMarqueeSelect";
 import { pathsInIndexRange } from "./listingSelection";
 import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
 import { basename } from "@/fileOperations/paths";
@@ -240,6 +241,7 @@ export default function ExplorerApp() {
   const [quickFilter, setQuickFilter] = useState("");
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
+  const listingMarqueeLayoutRef = useRef<ListingMarqueeLayoutResolver | null>(null);
   const mainContentRef = useRef<HTMLElement | null>(null);
   const selectionAnchorRef = useRef(0);
   const currentPathRef = useRef(currentPath);
@@ -977,6 +979,7 @@ export default function ExplorerApp() {
       activeListingEntries.length > 0 &&
       !gridResizeActive,
     scrollElementRef: listingViewportRef,
+    layoutRef: listingMarqueeLayoutRef,
     onSelectionChange: applyMarqueeSelection,
   });
 
@@ -1556,6 +1559,7 @@ export default function ExplorerApp() {
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
                 listingViewportRef={listingViewportRef}
+                marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 onResizeActiveChange={setGridResizeActive}
@@ -1583,6 +1587,7 @@ export default function ExplorerApp() {
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
                 listingViewportRef={listingViewportRef}
+                marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 onInlineCommit={(path, name) => {

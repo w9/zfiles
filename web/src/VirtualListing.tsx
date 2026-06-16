@@ -20,6 +20,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import InlineNameInput from "@/explorer/InlineNameInput";
+import {
+  collectTableEntryRects,
+  type ListingMarqueeLayoutResolver,
+} from "@/explorer/listingMarqueeSelect";
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
@@ -45,6 +49,7 @@ type VirtualListingProps = {
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
+  marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
 };
@@ -144,6 +149,7 @@ export default function VirtualListing({
   sorting: sortingProp,
   onSortingChange,
   listingViewportRef,
+  marqueeLayoutRef,
   onViewportPointerDown,
   marqueeActive = false,
 }: VirtualListingProps) {
@@ -234,6 +240,22 @@ export default function VirtualListing({
       virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
     }
   }, [selectedIndex, rows.length, virtualizer]);
+
+  useEffect(() => {
+    if (!marqueeLayoutRef) {
+      return;
+    }
+    marqueeLayoutRef.current = {
+      getEntryRects: (scrollElement) =>
+        collectTableEntryRects(
+          scrollElement,
+          rows.map((row) => row.original.path),
+        ),
+    };
+    return () => {
+      marqueeLayoutRef.current = null;
+    };
+  }, [marqueeLayoutRef, rows]);
 
   const headerGroup = table.getHeaderGroups()[0];
 

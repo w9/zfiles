@@ -17,6 +17,14 @@ export const MARQUEE_AUTO_SCROLL_MARGIN_PX = 40;
 
 export const MARQUEE_AUTO_SCROLL_STEP_PX = 12;
 
+export const LISTING_TABLE_ROW_HEIGHT_PX = 44;
+
+export type ListingMarqueeEntryRect = { path: string; rect: ClientRect };
+
+export type ListingMarqueeLayoutResolver = {
+  getEntryRects: (scrollElement: HTMLElement) => ListingMarqueeEntryRect[];
+};
+
 export function pointerDistance(
   x1: number,
   y1: number,
@@ -53,6 +61,77 @@ export function domRectToClientRect(rect: DOMRect): ClientRect {
     right: rect.right,
     bottom: rect.bottom,
   };
+}
+
+export function collectTableEntryRects(
+  scrollElement: HTMLElement,
+  paths: readonly string[],
+  rowHeight: number = LISTING_TABLE_ROW_HEIGHT_PX,
+): ListingMarqueeEntryRect[] {
+  const viewportRect = scrollElement.getBoundingClientRect();
+  const scrollTop = scrollElement.scrollTop;
+  return paths.map((path, index) => {
+    const start = index * rowHeight;
+    const top = viewportRect.top + start - scrollTop;
+    return {
+      path,
+      rect: {
+        left: viewportRect.left,
+        top,
+        right: viewportRect.right,
+        bottom: top + rowHeight,
+      },
+    };
+  });
+}
+
+export function collectGridEntryRects(
+  scrollElement: HTMLElement,
+  paths: readonly string[],
+  options: {
+    columnCount: number;
+    cardWidth: number;
+    cardHeight: number;
+    gap: number;
+    padding: number;
+  },
+): ListingMarqueeEntryRect[] {
+  const viewportRect = scrollElement.getBoundingClientRect();
+  const scrollTop = scrollElement.scrollTop;
+  const { columnCount, cardWidth, cardHeight, gap, padding } = options;
+  if (columnCount <= 0) {
+    return [];
+  }
+
+  const rowStride = cardHeight + gap;
+  const colStride = cardWidth + gap;
+  return paths.map((path, index) => {
+    const row = Math.floor(index / columnCount);
+    const col = index % columnCount;
+    const top = viewportRect.top + padding + row * rowStride - scrollTop;
+    const left = viewportRect.left + padding + col * colStride;
+    return {
+      path,
+      rect: {
+        left,
+        top,
+        right: left + cardWidth,
+        bottom: top + cardHeight,
+      },
+    };
+  });
+}
+
+export function collectDomEntryRectsFromViewport(
+  scrollElement: HTMLElement,
+): ListingMarqueeEntryRect[] {
+  const nodes = scrollElement.querySelectorAll<HTMLElement>(
+    "[data-listing-entry][data-listing-path]",
+  );
+  return Array.from(nodes).map((node) => ({
+    path: node.dataset.listingPath ?? "",
+    rect: domRectToClientRect(node.getBoundingClientRect()),
+  }));
 }
 
 export function hitTestEntryPaths(

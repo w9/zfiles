@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  collectGridEntryRects,
+  collectTableEntryRects,
   computeMarqueeSelection,
   hitTestEntryPaths,
   normalizeMarqueeRect,
@@ -78,4 +80,108 @@ test("computeMarqueeSelection does not add unselected paths on ctrl", () => {
 
 test("pointerDistance measures drag length", () => {
   assert.equal(pointerDistance(0, 0, 3, 4), 5);
+});
+
+test("collectTableEntryRects maps virtual row indices to viewport coordinates", () => {
+  const scrollElement = {
+    scrollTop: 44,
+    getBoundingClientRect: () => ({
+      left: 10,
+      top: 100,
+      right: 210,
+      bottom: 500,
+      width: 200,
+      height: 400,
+      x: 10,
+      y: 100,
+      toJSON: () => ({}),
+    }),
+  } as unknown as HTMLElement;
+
+  const rects = collectTableEntryRects(scrollElement, ["/a", "/b", "/c"]);
+  assert.deepEqual(rects[0].rect, {
+    left: 10,
+    top: 56,
+    right: 210,
+    bottom: 100,
+  });
+  assert.deepEqual(rects[1].rect, {
+    left: 10,
+    top: 100,
+    right: 210,
+    bottom: 144,
+  });
+  assert.deepEqual(rects[2].rect, {
+    left: 10,
+    top: 144,
+    right: 210,
+    bottom: 188,
+  });
+});
+
+test("collectTableEntryRects hit-tests scrolled-out rows against marquee", () => {
+  const scrollElement = {
+    scrollTop: 440,
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 300,
+      width: 100,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+  } as unknown as HTMLElement;
+
+  const paths = Array.from({ length: 20 }, (_, index) => `/item-${index}`);
+  const rects = collectTableEntryRects(scrollElement, paths);
+  const marquee = normalizeMarqueeRect(0, 0, 100, 40);
+  const hit = hitTestEntryPaths(marquee, rects);
+  assert.deepEqual(hit, ["/item-10"]);
+});
+
+test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
+  const scrollElement = {
+    scrollTop: 0,
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      right: 300,
+      bottom: 300,
+      width: 300,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+  } as unknown as HTMLElement;
+
+  const rects = collectGridEntryRects(scrollElement, ["/a", "/b", "/c", "/d"], {
+    columnCount: 2,
+    cardWidth: 100,
+    cardHeight: 80,
+    gap: 12,
+    padding: 12,
+  });
+
+  assert.deepEqual(rects[0].rect, {
+    left: 12,
+    top: 12,
+    right: 112,
+    bottom: 92,
+  });
+  assert.deepEqual(rects[1].rect, {
+    left: 124,
+    top: 12,
+    right: 224,
+    bottom: 92,
+  });
+  assert.deepEqual(rects[2].rect, {
+    left: 12,
+    top: 104,
+    right: 112,
+    bottom: 184,
+  });
 });

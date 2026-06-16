@@ -3,6 +3,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 
 import GridCardPreview from "@/GridCardPreview";
 import InlineNameInput from "@/explorer/InlineNameInput";
+import {
+  collectGridEntryRects,
+  type ListingMarqueeLayoutResolver,
+} from "@/explorer/listingMarqueeSelect";
 import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
@@ -32,6 +36,7 @@ type GridListingProps = {
   iconTheme?: FileIconTheme;
   className?: string;
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
+  marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
   onResizeActiveChange?: (active: boolean) => void;
@@ -59,6 +64,7 @@ export default function GridListing({
   iconTheme = "dark",
   className,
   listingViewportRef,
+  marqueeLayoutRef,
   onViewportPointerDown,
   marqueeActive = false,
   onResizeActiveChange,
@@ -129,6 +135,29 @@ export default function GridListing({
       virtualizer.scrollToIndex(row, { align: "auto" });
     }
   }, [columnCount, rowCount, selectedIndex, virtualizer]);
+
+  useEffect(() => {
+    if (!marqueeLayoutRef) {
+      return;
+    }
+    marqueeLayoutRef.current = {
+      getEntryRects: (scrollElement) =>
+        collectGridEntryRects(
+          scrollElement,
+          entries.map((entry) => entry.path),
+          {
+            columnCount,
+            cardWidth: cardSize.width,
+            cardHeight: cardSize.height,
+            gap: GRID_GAP_PX,
+            padding: VIEWPORT_PADDING_PX,
+          },
+        ),
+    };
+    return () => {
+      marqueeLayoutRef.current = null;
+    };
+  }, [cardSize.height, cardSize.width, columnCount, entries, marqueeLayoutRef]);
 
   const gridTemplateColumns = `repeat(${columnCount}, ${cardSize.width}px)`;
 
