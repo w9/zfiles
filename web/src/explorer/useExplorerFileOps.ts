@@ -12,6 +12,7 @@ import {
 } from "@/fileOperations/paths";
 import { notifyError } from "@/notifyError";
 import type { MessageKey } from "@/i18n";
+import { useCloudAuth } from "@/cloud/CloudAuthContext";
 import {
   readStoredPasteBatchOnError,
   type PasteBatchOnError,
@@ -42,6 +43,7 @@ export type ExplorerFileOpsDeps = {
 };
 
 export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
+  const cloudAuth = useCloudAuth();
   const [clipboard, setClipboard] = useState<FileClipboard | null>(null);
   const [inlineEditPath, setInlineEditPath] = useState<string | null>(null);
   const [pasteDestOpen, setPasteDestOpen] = useState(false);
@@ -144,15 +146,24 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
 
     const entriesByPath = new Map(deps.entries.map((entry) => [entry.path, entry]));
     const batchOnError: PasteBatchOnError = readStoredPasteBatchOnError();
-    const result = await performPaste({
-      backend: deps.backend,
-      clipboard,
-      destDir,
-      listingEntries: deps.entries,
-      allEntriesByPath: entriesByPath,
-      batchOnError,
-      askConflict: askPasteConflict,
-    });
+    let result;
+    try {
+      result = await performPaste({
+        backend: deps.backend,
+        clipboard,
+        destDir,
+        listingEntries: deps.entries,
+        allEntriesByPath: entriesByPath,
+        batchOnError,
+        askConflict: askPasteConflict,
+      });
+    } catch (err) {
+      if (cloudAuth.handleAuthError(err)) {
+        return;
+      }
+      notifyError(deps.t("error.actionFailed", { status: "failed" }));
+      return;
+    }
 
     if (result.cancelled) {
       return;
@@ -182,7 +193,7 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
         notifyError(parts.join(" · "));
       }
     }
-  }, [clipboard, deps, askPasteConflict, resolvePasteDestDir]);
+  }, [clipboard, cloudAuth, deps, askPasteConflict, resolvePasteDestDir]);
 
   const createNewFolder = useCallback(async () => {
     const existingNames = new Set(deps.entries.map((entry) => entry.name));
@@ -193,14 +204,17 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
         paths: [deps.currentPath],
         newName: name,
       });
-    } catch {
+    } catch (err) {
+      if (cloudAuth.handleAuthError(err)) {
+        return;
+      }
       notifyError(deps.t("error.actionFailed", { status: "failed" }));
       return;
     }
     await deps.loadListing(deps.currentPath);
     const createdPath = joinExplorerPath(deps.currentPath, name);
     setInlineEditPath(createdPath);
-  }, [deps]);
+  }, [cloudAuth, deps]);
 
   const commitRename = useCallback(
     async (path: string, newName: string, overwrite = false) => {
@@ -225,14 +239,17 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
           newName,
           overwrite,
         });
-      } catch {
+      } catch (err) {
+        if (cloudAuth.handleAuthError(err)) {
+          return false;
+        }
         notifyError(deps.t("error.actionFailed", { status: "failed" }));
         return false;
       }
       await deps.loadListing(deps.currentPath, { preserveSelection: true });
       return true;
     },
-    [deps],
+    [cloudAuth, deps],
   );
 
   const startRename = useCallback(() => {

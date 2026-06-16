@@ -361,6 +361,11 @@ export const vi: Record<MessageKey, string> = {
     "Thông tin xác thực được lưu trong sessionStorage chỉ cho tab này. Trang tĩnh không bao giờ nhận chúng.",
   "connect.submit": "Kết nối",
   "connect.connecting": "Đang kết nối…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Ngắt kết nối",
   "connect.shareUrl.label": "Sao chép URL chia sẻ",
   "connect.shareUrl.copied": "Đã sao chép URL chia sẻ vào bộ nhớ tạm",

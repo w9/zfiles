@@ -12,6 +12,7 @@ import {
   normalizeExplorerPath,
   objectKeyForPath,
 } from "../cloud/s3Paths";
+import { toCloudCredentialsAuthError } from "../cloud/s3AuthError";
 
 function folderMarkerKey(bucketPrefix: string, explorerPath: string, name: string): string {
   const key = objectKeyForPath(bucketPrefix, explorerPath, name);
@@ -35,7 +36,10 @@ async function headIsFile(
   try {
     await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
     return true;
-  } catch {
+  } catch (err) {
+    if (toCloudCredentialsAuthError(err)) {
+      throw err;
+    }
     return false;
   }
 }
@@ -157,6 +161,9 @@ async function copyExplorerPath(
         await client.send(new HeadObjectCommand({ Bucket: bucket, Key: targetKey }));
         throw new Error("path already exists");
       } catch (error) {
+        if (toCloudCredentialsAuthError(error)) {
+          throw error;
+        }
         if (error instanceof Error && error.message === "path already exists") {
           throw error;
         }

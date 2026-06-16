@@ -1,6 +1,7 @@
 import type { ExplorerBackend } from "@/backend/types";
 import type { FileEntry } from "@/backend/types";
 import type { PasteBatchOnError } from "@/settings/pasteBatchOnError";
+import { toCloudCredentialsAuthError } from "@/cloud/s3AuthError";
 import type { FileClipboard } from "./clipboard";
 import {
   basename,
@@ -122,7 +123,10 @@ export async function performPaste(options: {
         path: joinExplorerPath(destDir, destName),
         isDir: sourceDir,
       });
-    } catch {
+    } catch (err) {
+      if (toCloudCredentialsAuthError(err)) {
+        throw err;
+      }
       failed.push(source);
       if (batchOnError === "stop") {
         break;

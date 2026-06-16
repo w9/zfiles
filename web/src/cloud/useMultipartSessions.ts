@@ -11,6 +11,7 @@ import {
 } from "./multipartSessions";
 import { removeStoredFileHandle } from "./multipartFileHandles";
 import type { MergedMultipartSession } from "./s3Multipart";
+import { useCloudAuth } from "./CloudAuthContext";
 
 export type MultipartSessionView = MergedMultipartSession & {
   resuming: boolean;
@@ -36,6 +37,7 @@ export function useMultipartSessions({
   onResumeMismatch,
   onError,
 }: UseMultipartSessionsOptions) {
+  const cloudAuth = useCloudAuth();
   const s3Backend = backend.mode === "s3" ? (backend as S3Backend) : null;
   const scopeId = useMemo(
     () => (s3Backend ? multipartSessionScopeId(s3Backend.connectionConfig) : null),
@@ -74,6 +76,9 @@ export function useMultipartSessions({
         })),
       );
     } catch (err) {
+      if (cloudAuth.handleAuthError(err)) {
+        return;
+      }
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
       setSessions([]);
@@ -81,7 +86,7 @@ export function useMultipartSessions({
     } finally {
       setLoading(false);
     }
-  }, [s3Backend, scopeId]);
+  }, [cloudAuth, s3Backend, scopeId]);
 
   useEffect(() => {
     void refresh();
@@ -156,6 +161,9 @@ export function useMultipartSessions({
         await removeStoredFileHandle(scopeId, uploadId);
         await refresh();
       } catch (err) {
+        if (cloudAuth.handleAuthError(err)) {
+          return;
+        }
         const message = err instanceof Error ? err.message : String(err);
         onErrorRef.current(message);
       } finally {
@@ -168,7 +176,7 @@ export function useMultipartSessions({
         );
       }
     },
-    [refresh, s3Backend, scopeId, sessions],
+    [cloudAuth, refresh, s3Backend, scopeId, sessions],
   );
 
   const onUploadSessionFinished = useCallback(

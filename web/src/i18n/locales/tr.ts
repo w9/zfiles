@@ -361,6 +361,11 @@ export const tr: Record<MessageKey, string> = {
     "Kimlik bilgileri yalnızca bu sekme için sessionStorage'da saklanır. Statik site bunları asla almaz.",
   "connect.submit": "Bağlan",
   "connect.connecting": "Bağlanıyor…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Bağlantıyı kes",
   "connect.shareUrl.label": "Paylaşım URL’sini kopyala",
   "connect.shareUrl.copied": "Paylaşım URL’si panoya kopyalandı",

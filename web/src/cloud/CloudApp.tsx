@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import AppShell from "@/AppShell";
 import { ExplorerBackendProvider } from "@/backend";
 import { createS3Backend, type S3Backend } from "@/backend/s3Backend";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider } from "@/i18n";
+import { I18nProvider, useTranslation } from "@/i18n";
+import { CloudAuthProvider } from "./CloudAuthContext";
 import { CloudDisconnectProvider } from "./CloudDisconnectContext";
 import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvider";
 import { GridCardSizeProvider } from "@/settings/GridCardSizeProvider";
@@ -23,41 +25,134 @@ import {
   readScopedMultipartRecords,
 } from "./multipartSessions";
 import { removeStoredFileHandle } from "./multipartFileHandles";
-import { clearSessionConfig, loadSessionConfig } from "./credentials";
+import {
+  clearSessionConfig,
+  clearSessionCredentialsPreservingSettings,
+  loadPreservedConnectionSettings,
+  loadSessionConfig,
+} from "./credentials";
+import { toCloudCredentialsAuthError } from "./s3AuthError";
+import type { S3BootParams, S3ConnectionConfig, S3ConnectionSettings } from "./types";
 
-function backendFromSession(): S3Backend | null {
-  const config = loadSessionConfig();
-  return config ? createS3Backend(config) : null;
+function settingsToBootParams(settings: S3ConnectionSettings): S3BootParams {
+  return {
+    provider: settings.provider,
+    bucket: settings.bucket,
+    region: settings.region,
+    endpoint: settings.endpoint,
+    prefix: settings.prefix,
+    readOnly: settings.readOnly,
+  };
+}
+
+function mergeBootParams(base: S3BootParams, override: S3BootParams): S3BootParams {
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    if (value !== undefined) {
+      (merged as Record<string, unknown>)[key] = value;
+    }
+  }
+  return merged;
 }
 
 function ConnectedCloudShell({
   backend,
   onDisconnect,
+  authExpired,
+  onAuthError,
+  onReconnect,
 }: {
   backend: S3Backend;
   onDisconnect: () => void;
+  authExpired: boolean;
+  onAuthError: (error: unknown) => boolean;
+  onReconnect: () => void;
 }) {
   return (
-    <CloudDisconnectProvider onDisconnect={onDisconnect}>
-      <ExplorerBackendProvider backend={backend}>
-        <AppShell />
-      </ExplorerBackendProvider>
-    </CloudDisconnectProvider>
+    <CloudAuthProvider
+      expired={authExpired}
+      handleAuthError={onAuthError}
+      onReconnect={onReconnect}
+    >
+      <CloudDisconnectProvider onDisconnect={onDisconnect}>
+        <ExplorerBackendProvider backend={backend}>
+          <AppShell />
+        </ExplorerBackendProvider>
+      </CloudDisconnectProvider>
+    </CloudAuthProvider>
   );
 }
 
-export default function CloudApp() {
+function CloudAppContent() {
+  const { t } = useTranslation();
   const bootParams = useMemo(() => {
     const params = readBootParamsFromUrl();
     stripCredentialParamsFromUrl();
     return params;
   }, []);
-  const [backend, setBackend] = useState<S3Backend | null>(() => backendFromSession());
+  const [connectionConfig, setConnectionConfig] = useState<S3ConnectionConfig | null>(
+    () => loadSessionConfig(),
+  );
+  const [preservedSettings, setPreservedSettings] =
+    useState<S3ConnectionSettings | null>(() => loadPreservedConnectionSettings());
+  const [authExpired, setAuthExpired] = useState(false);
+  const [reconnectOpen, setReconnectOpen] = useState(false);
+  const authToastShownRef = useRef(false);
+
+  const openReconnect = useCallback(() => {
+    setReconnectOpen(true);
+  }, []);
+
+  const handleAuthError = useCallback(
+    (error: unknown): boolean => {
+      const authError = toCloudCredentialsAuthError(error);
+      if (!authError || !connectionConfig) {
+        return false;
+      }
+
+      const settings = clearSessionCredentialsPreservingSettings(connectionConfig);
+      setPreservedSettings(settings);
+      setAuthExpired(true);
+
+      if (!authToastShownRef.current) {
+        authToastShownRef.current = true;
+        toast.error(t("connect.authExpired.toast"), {
+          action: {
+            label: t("connect.authExpired.reconnect"),
+            onClick: openReconnect,
+          },
+        });
+      }
+      return true;
+    },
+    [connectionConfig, openReconnect, t],
+  );
+
+  const backend = useMemo(
+    () =>
+      connectionConfig
+        ? createS3Backend(connectionConfig, { onAuthError: handleAuthError })
+        : null,
+    [connectionConfig, handleAuthError],
+  );
+
+  const connectBootParams = useMemo(() => {
+    const preserved = preservedSettings ? settingsToBootParams(preservedSettings) : {};
+    return mergeBootParams(preserved, bootParams);
+  }, [bootParams, preservedSettings]);
+
+  const onConnected = useCallback((config: S3ConnectionConfig) => {
+    setConnectionConfig(config);
+    setPreservedSettings(null);
+    setAuthExpired(false);
+    setReconnectOpen(false);
+    authToastShownRef.current = false;
+  }, []);
 
   const onDisconnect = useCallback(() => {
-    setBackend((current) => {
+    setConnectionConfig((current) => {
       if (current) {
-        const scopeId = multipartSessionScopeId(current.connectionConfig);
+        const scopeId = multipartSessionScopeId(current);
         const records = readScopedMultipartRecords(scopeId);
         clearScopedMultipartRecords(scopeId);
         void Promise.all(
@@ -65,42 +160,63 @@ export default function CloudApp() {
         );
       }
       clearSessionConfig();
+      setPreservedSettings(null);
+      setAuthExpired(false);
+      setReconnectOpen(false);
+      authToastShownRef.current = false;
       return null;
     });
   }, []);
 
   if (!backend) {
     return (
-      <I18nProvider>
-        <TooltipProvider>
-          <ConnectDialog open bootParams={bootParams} onConnected={setBackend} />
-          <Toaster richColors closeButton position="bottom-right" />
-        </TooltipProvider>
-      </I18nProvider>
+      <TooltipProvider>
+        <ConnectDialog open bootParams={connectBootParams} onConnected={onConnected} />
+        <Toaster richColors closeButton position="bottom-right" />
+      </TooltipProvider>
     );
   }
 
   return (
+    <AppRouteProvider>
+      <ModifiedTimeFormatProvider>
+        <GridCardSizeProvider>
+          <ListingSortOrderProvider>
+            <ShowDotEntriesProvider>
+              <GridImagePreviewsProvider bootMode="cloud">
+                <GridThumbnailBadgeProvider bootMode="cloud">
+                  <SlideshowSettingsProvider>
+                    <TooltipProvider>
+                      <ConnectedCloudShell
+                        backend={backend}
+                        onDisconnect={onDisconnect}
+                        authExpired={authExpired}
+                        onAuthError={handleAuthError}
+                        onReconnect={openReconnect}
+                      />
+                      {reconnectOpen ? (
+                        <ConnectDialog
+                          open
+                          bootParams={connectBootParams}
+                          onConnected={onConnected}
+                        />
+                      ) : null}
+                    </TooltipProvider>
+                  </SlideshowSettingsProvider>
+                </GridThumbnailBadgeProvider>
+              </GridImagePreviewsProvider>
+            </ShowDotEntriesProvider>
+          </ListingSortOrderProvider>
+        </GridCardSizeProvider>
+      </ModifiedTimeFormatProvider>
+    </AppRouteProvider>
+  );
+}
+
+export default function CloudApp() {
+  return (
     <I18nProvider>
-      <AppRouteProvider>
-        <ModifiedTimeFormatProvider>
-          <GridCardSizeProvider>
-            <ListingSortOrderProvider>
-              <ShowDotEntriesProvider>
-                <GridImagePreviewsProvider bootMode="cloud">
-                  <GridThumbnailBadgeProvider bootMode="cloud">
-                    <SlideshowSettingsProvider>
-                      <TooltipProvider>
-                        <ConnectedCloudShell backend={backend} onDisconnect={onDisconnect} />
-                      </TooltipProvider>
-                    </SlideshowSettingsProvider>
-                  </GridThumbnailBadgeProvider>
-                </GridImagePreviewsProvider>
-              </ShowDotEntriesProvider>
-            </ListingSortOrderProvider>
-          </GridCardSizeProvider>
-        </ModifiedTimeFormatProvider>
-      </AppRouteProvider>
+      <CloudAppContent />
     </I18nProvider>
   );
 }

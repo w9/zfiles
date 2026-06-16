@@ -95,7 +95,7 @@ Use the **S3 API endpoint** shown in the R2 bucket settings (for example `https:
 | Upload fails after connect | Missing `PUT` / `POST` in `AllowedMethods` |
 | Preview/download image broken | `GET` blocked on presigned URL; check `ExposeHeaders` includes `Content-Type` |
 | Works in curl but not browser | CORS is browser-only; curl ignores CORS |
-| Intermittent failures after long idle | Session token expired — disconnect and reconnect |
+| Intermittent failures after long idle | Session token expired — use the reconnect banner and paste fresh credentials |
 
 Always check the browser **Network** tab: failed S3 requests show the exact origin the browser sent. That origin must appear in `AllowedOrigins`.
 

@@ -360,6 +360,11 @@ export const ko: Record<MessageKey, string> = {
     "자격 증명은 이 탭에 한해 sessionStorage에 저장됩니다. 정적 사이트는 절대 받지 않습니다.",
   "connect.submit": "연결",
   "connect.connecting": "연결 중…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "연결 해제",
   "connect.shareUrl.label": "공유 URL 복사",
   "connect.shareUrl.copied": "공유 URL이 클립보드에 복사되었습니다",

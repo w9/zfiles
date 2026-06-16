@@ -43,7 +43,7 @@ Credentials are **not** written to `localStorage`. After a successful connect th
 - Credentials persist for the **browser tab** until Disconnect or the tab is closed.
 - Reloading the page reuses `sessionStorage` in the same tab — no re-paste until the tab ends.
 - Closing the tab clears the session; the user must connect again.
-- Expired or revoked credentials show API errors; use Disconnect and reconnect with fresh credentials.
+- Expired or revoked credentials are detected on S3/R2 API errors. zfiles keeps the explorer visible, clears stored secrets from the tab, preserves non-secret bucket settings, and shows a reconnect banner so you can paste fresh credentials without re-entering the bucket details.
 
 ## URL parameters
 

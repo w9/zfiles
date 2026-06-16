@@ -362,6 +362,11 @@ export const ru: Record<MessageKey, string> = {
     "Учётные данные хранятся в sessionStorage только для этой вкладки. Статический сайт никогда их не получает.",
   "connect.submit": "Подключиться",
   "connect.connecting": "Подключение…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Отключиться",
   "connect.shareUrl.label": "Копировать ссылку для доступа",
   "connect.shareUrl.copied": "Ссылка для доступа скопирована в буфер обмена",

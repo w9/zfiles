@@ -16,6 +16,8 @@ export type S3ConnectionConfig = {
   credentials: S3Credentials;
 };
 
+export type S3ConnectionSettings = Omit<S3ConnectionConfig, "credentials">;
+
 export type S3BootParams = {
   provider?: S3Provider;
   bucket?: string;
@@ -39,3 +41,4 @@ export const S3_CREDENTIAL_URL_PARAM_NAMES = [
 ] as const;
 
 export const S3_SESSION_STORAGE_KEY = "zfiles-s3-session";
+export const S3_CONNECTION_SETTINGS_STORAGE_KEY = "zfiles-s3-connection-settings";

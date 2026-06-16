@@ -28,6 +28,7 @@ import {
   readUploadChecksumValidation,
   uploadChecksumValidationEnabled,
 } from "./settings/uploadChecksumSettings";
+import { useCloudAuth } from "./cloud/CloudAuthContext";
 
 export type UploadItemStatus =
   | "pending"
@@ -434,7 +435,7 @@ type UseUploadQueueOptions = {
   backend: ExplorerBackend;
   readOnly?: boolean;
   onItemComplete?: () => void;
-  onItemFailed?: (message: string) => void;
+  onItemFailed?: (message: string, error?: unknown) => void;
   onMultipartSessionFinished?: (uploadId: string) => void;
   onTusSessionFinished?: (uploadId: string) => void;
 };
@@ -447,6 +448,7 @@ export function useUploadQueue({
   onMultipartSessionFinished,
   onTusSessionFinished,
 }: UseUploadQueueOptions) {
+  const cloudAuth = useCloudAuth();
   const [items, setItems] = useState<UploadQueueItem[]>([]);
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -1224,7 +1226,9 @@ export function useUploadQueue({
             etaSeconds: null,
           };
           commitProgressItem(queueId, failedItem, true);
-          onItemFailed?.(message);
+          if (!cloudAuth.handleAuthError(err)) {
+            onItemFailed?.(message, err);
+          }
         }
         samplesRef.current.delete(queueId);
         lastProgressUiAtRef.current.delete(queueId);
@@ -1245,7 +1249,7 @@ export function useUploadQueue({
     if (hasPending && !hasActive && !hasAwaitingConflict) {
       void run();
     }
-  }, [items, backend, clearProgressFlush, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed, onMultipartSessionFinished, onTusSessionFinished]);
+  }, [items, backend, clearProgressFlush, cloudAuth, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed, onMultipartSessionFinished, onTusSessionFinished]);
 
   return {
     items,

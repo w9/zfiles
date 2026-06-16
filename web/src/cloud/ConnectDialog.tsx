@@ -26,8 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/i18n";
-import { createS3Backend, validateS3Connection } from "@/backend/s3Backend";
-import type { S3Backend } from "@/backend/s3Backend";
+import { validateS3Connection } from "@/backend/s3Backend";
 import { readBootParamsFromUrl } from "./bootParams";
 import { saveSessionConfig } from "./credentials";
 import ShareUrlButton from "./ShareUrlButton";
@@ -41,7 +40,7 @@ import type { S3BootParams, S3ConnectionConfig, S3Provider } from "./types";
 type ConnectDialogProps = {
   open: boolean;
   bootParams?: S3BootParams;
-  onConnected: (backend: S3Backend) => void;
+  onConnected: (config: S3ConnectionConfig) => void;
 };
 
 type FormState = {
@@ -117,7 +116,7 @@ export default function ConnectDialog({
     }
     await validateS3Connection(config);
     saveSessionConfig(config);
-    onConnected(createS3Backend(config));
+    onConnected(config);
   };
 
   const onSubmit = async (event: React.FormEvent) => {

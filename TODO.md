@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Improve cloud credential-expiration handling so explicit S3/R2 auth failures never look like empty buckets: classify expired/revoked credential errors across cloud operations, preserve non-secret connection settings while clearing secrets, surface an inline reconnect banner plus actionable toast, and document the reconnect flow. Do not infer auth failure from successful empty listings. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
+Cloud credential-expiration handling is complete for explicit S3/R2 auth failures: the app now classifies expired/revoked credentials, preserves non-secret reconnect settings, keeps empty successful listings valid, and documents the reconnect flow. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -230,10 +230,10 @@ Improve cloud credential-expiration handling so explicit S3/R2 auth failures nev
 - [x] `GridListing.tsx`: increase grid virtualizer overscan by virtual rows so whole card bands are ready before entering the viewport
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Add cloud S3/R2 auth-error classification with tests for expired/revoked credentials and non-auth empty-success responses
-- [ ] Split cloud session handling so expired credentials clear secrets while preserving provider, bucket, region, endpoint, prefix, and read-only settings
-- [ ] Wire auth-expired handling through all S3 operations, including list/stat/download URL/upload/multipart/file actions, without treating HTTP 200 empty listings as errors
-- [ ] Add inline explorer reconnect banner and actionable toast for expired/revoked cloud credentials
-- [ ] Update connect dialog/reconnect flow to prefill preserved non-secret settings after credential expiration
-- [ ] Update cloud credential troubleshooting docs for automatic detection, preserved settings, and reconnect behavior
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Add cloud S3/R2 auth-error classification with tests for expired/revoked credentials and non-auth empty-success responses
+- [x] Split cloud session handling so expired credentials clear secrets while preserving provider, bucket, region, endpoint, prefix, and read-only settings
+- [x] Wire auth-expired handling through all S3 operations, including list/stat/download URL/upload/multipart/file actions, without treating HTTP 200 empty listings as errors
+- [x] Add inline explorer reconnect banner and actionable toast for expired/revoked cloud credentials
+- [x] Update connect dialog/reconnect flow to prefill preserved non-secret settings after credential expiration
+- [x] Update cloud credential troubleshooting docs for automatic detection, preserved settings, and reconnect behavior
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

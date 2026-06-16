@@ -44,6 +44,10 @@ import {
   objectKeyForPath,
 } from "../cloud/s3Paths";
 import type { S3ConnectionConfig } from "../cloud/types";
+import {
+  CloudCredentialsAuthError,
+  toCloudCredentialsAuthError,
+} from "../cloud/s3AuthError";
 import { sha256Base64, sha256Base64Matches } from "../fileHash";
 import {
   readUploadChecksumValidation,
@@ -63,6 +67,10 @@ import type {
 } from "./types";
 
 const PRESIGN_TTL_SECONDS = 3600;
+
+type S3BackendOptions = {
+  onAuthError?: (error: CloudCredentialsAuthError) => void;
+};
 
 function isUploadAbortError(err: unknown): boolean {
   if (err instanceof DOMException && err.name === "AbortError") {
@@ -116,27 +124,48 @@ export class S3Backend implements ExplorerBackend {
   readonly mode = "s3" as const;
   private readonly client: S3Client;
   private readonly config: S3ConnectionConfig;
+  private readonly options: S3BackendOptions;
   private readonly cache = new BackendObjectCache();
 
-  constructor(config: S3ConnectionConfig) {
+  constructor(config: S3ConnectionConfig, options: S3BackendOptions = {}) {
     this.config = config;
     this.client = createS3Client(config);
+    this.options = options;
   }
 
   get connectionConfig(): S3ConnectionConfig {
     return this.config;
   }
 
+  private async withAuthHandling<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (err) {
+      this.rethrowS3Error(err);
+    }
+  }
+
+  private rethrowS3Error(err: unknown): never {
+    const authError = toCloudCredentialsAuthError(err);
+    if (authError) {
+      this.options.onAuthError?.(authError);
+      throw authError;
+    }
+    throw err;
+  }
+
   async list(path: string, cursor?: string): Promise<ListResult> {
     const prefix = listPrefixForPath(this.config.prefix, path);
-    const response = await this.client.send(
-      new ListObjectsV2Command({
-        Bucket: this.config.bucket,
-        Prefix: prefix || undefined,
-        Delimiter: "/",
-        ContinuationToken: cursor,
-        MaxKeys: 1000,
-      }),
+    const response = await this.withAuthHandling(() =>
+      this.client.send(
+        new ListObjectsV2Command({
+          Bucket: this.config.bucket,
+          Prefix: prefix || undefined,
+          Delimiter: "/",
+          ContinuationToken: cursor,
+          MaxKeys: 1000,
+        }),
+      ),
     );
 
     const entries: FileEntry[] = [];
@@ -210,11 +239,13 @@ export class S3Backend implements ExplorerBackend {
     const key = keyForExplorerPath(this.config.prefix, path);
 
     try {
-      const head = await this.client.send(
-        new HeadObjectCommand({
-          Bucket: this.config.bucket,
-          Key: key,
-        }),
+      const head = await this.withAuthHandling(() =>
+        this.client.send(
+          new HeadObjectCommand({
+            Bucket: this.config.bucket,
+            Key: key,
+          }),
+        ),
       );
       const extra: Record<string, unknown> = {};
       if (head.ContentType) {
@@ -233,15 +264,20 @@ export class S3Backend implements ExplorerBackend {
         modified: head.LastModified?.toISOString(),
         extra: Object.keys(extra).length > 0 ? extra : undefined,
       };
-    } catch {
+    } catch (err) {
+      if (toCloudCredentialsAuthError(err)) {
+        this.rethrowS3Error(err);
+      }
       const prefix = listPrefixForPath(this.config.prefix, path);
-      const listing = await this.client.send(
-        new ListObjectsV2Command({
-          Bucket: this.config.bucket,
-          Prefix: prefix,
-          Delimiter: "/",
-          MaxKeys: 1,
-        }),
+      const listing = await this.withAuthHandling(() =>
+        this.client.send(
+          new ListObjectsV2Command({
+            Bucket: this.config.bucket,
+            Prefix: prefix,
+            Delimiter: "/",
+            MaxKeys: 1,
+          }),
+        ),
       );
       const hasChildren =
         (listing.CommonPrefixes?.length ?? 0) > 0 || (listing.Contents?.length ?? 0) > 0;
@@ -274,22 +310,26 @@ export class S3Backend implements ExplorerBackend {
 
   private signDownloadUrl(path: string): Promise<string> {
     const key = keyForExplorerPath(this.config.prefix, path);
-    return getSignedUrl(
-      this.client,
-      new GetObjectCommand({
-        Bucket: this.config.bucket,
-        Key: key,
-      }),
-      { expiresIn: PRESIGN_TTL_SECONDS },
+    return this.withAuthHandling(() =>
+      getSignedUrl(
+        this.client,
+        new GetObjectCommand({
+          Bucket: this.config.bucket,
+          Key: key,
+        }),
+        { expiresIn: PRESIGN_TTL_SECONDS },
+      ),
     );
   }
 
   async listMultipartSessions(): Promise<MergedMultipartSession[]> {
     const scopeId = multipartSessionScopeId(this.config);
-    const listed = await listInProgressMultipartUploads(
-      this.client,
-      this.config.bucket,
-      this.config.prefix,
+    const listed = await this.withAuthHandling(() =>
+      listInProgressMultipartUploads(
+        this.client,
+        this.config.bucket,
+        this.config.prefix,
+      ),
     );
     const localRecords = readScopedMultipartRecords(scopeId);
     const bytesUploadedByUploadId = new Map<string, number>();
@@ -297,11 +337,13 @@ export class S3Backend implements ExplorerBackend {
     const removedLocalUploadIds = new Set<string>();
     await Promise.all([
       ...listed.map(async (upload) => {
-        const parts = await listUploadedParts(
-          this.client,
-          this.config.bucket,
-          upload.objectKey,
-          upload.uploadId,
+        const parts = await this.withAuthHandling(() =>
+          listUploadedParts(
+            this.client,
+            this.config.bucket,
+            upload.objectKey,
+            upload.uploadId,
+          ),
         );
         bytesUploadedByUploadId.set(upload.uploadId, multipartBytesUploaded(parts));
       }),
@@ -316,7 +358,10 @@ export class S3Backend implements ExplorerBackend {
               record.uploadId,
             );
             bytesUploadedByUploadId.set(record.uploadId, multipartBytesUploaded(parts));
-          } catch {
+          } catch (err) {
+            if (toCloudCredentialsAuthError(err)) {
+              this.rethrowS3Error(err);
+            }
             removedLocalUploadIds.add(record.uploadId);
             removeMultipartRecord(scopeId, record.uploadId);
             await removeStoredFileHandle(scopeId, record.uploadId);
@@ -332,15 +377,19 @@ export class S3Backend implements ExplorerBackend {
   }
 
   async abortMultipartSession(objectKey: string, uploadId: string): Promise<void> {
-    await abortMultipartUpload(this.client, this.config.bucket, objectKey, uploadId);
+    await this.withAuthHandling(() =>
+      abortMultipartUpload(this.client, this.config.bucket, objectKey, uploadId),
+    );
   }
 
   async getMultipartBytesUploaded(objectKey: string, uploadId: string): Promise<number> {
-    const parts = await listUploadedParts(
-      this.client,
-      this.config.bucket,
-      objectKey,
-      uploadId,
+    const parts = await this.withAuthHandling(() =>
+      listUploadedParts(
+        this.client,
+        this.config.bucket,
+        objectKey,
+        uploadId,
+      ),
     );
     return multipartBytesUploaded(parts);
   }
@@ -416,7 +465,7 @@ export class S3Backend implements ExplorerBackend {
           checksum ?? undefined,
         );
       }
-      throw err;
+      this.rethrowS3Error(err);
     }
 
     const scopeId = multipartSessionScopeId(this.config);
@@ -537,7 +586,7 @@ export class S3Backend implements ExplorerBackend {
           checksum ?? undefined,
         );
       }
-      throw err;
+      this.rethrowS3Error(err);
     } finally {
       signal?.removeEventListener("abort", onAbort);
     }
@@ -585,11 +634,13 @@ export class S3Backend implements ExplorerBackend {
 
   private async deleteUploadedObject(key: string): Promise<void> {
     try {
-      await this.client.send(
-        new DeleteObjectCommand({
-          Bucket: this.config.bucket,
-          Key: key,
-        }),
+      await this.withAuthHandling(() =>
+        this.client.send(
+          new DeleteObjectCommand({
+            Bucket: this.config.bucket,
+            Key: key,
+          }),
+        ),
       );
     } catch {
       // Best-effort cleanup after a failed or mismatched upload.
@@ -600,11 +651,13 @@ export class S3Backend implements ExplorerBackend {
     if (this.config.readOnly) {
       throw new Error("bucket is read-only");
     }
-    await runS3FileAction(
-      this.client,
-      this.config.bucket,
-      this.config.prefix,
-      params,
+    await this.withAuthHandling(() =>
+      runS3FileAction(
+        this.client,
+        this.config.bucket,
+        this.config.prefix,
+        params,
+      ),
     );
     this.cache.invalidatePaths(pathsAffectedByAction(params));
   }
@@ -628,6 +681,9 @@ export class S3Backend implements ExplorerBackend {
   }
 }
 
-export function createS3Backend(config: S3ConnectionConfig): S3Backend {
-  return new S3Backend(config);
+export function createS3Backend(
+  config: S3ConnectionConfig,
+  options?: S3BackendOptions,
+): S3Backend {
+  return new S3Backend(config, options);
 }

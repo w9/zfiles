@@ -361,6 +361,11 @@ export const en = {
     "Credentials are stored in sessionStorage for this tab only. The static site never receives them.",
   "connect.submit": "Connect",
   "connect.connecting": "Connecting…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Disconnect",
   "connect.shareUrl.label": "Copy share URL",
   "connect.shareUrl.copied": "Share URL copied to clipboard",

@@ -341,6 +341,11 @@ export const zhTW: Record<MessageKey, string> = {
   "connect.privacy": "憑證僅儲存在此分頁的 sessionStorage 中。靜態網站不會收到它們。",
   "connect.submit": "連線",
   "connect.connecting": "連線中…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "中斷連線",
   "connect.shareUrl.label": "複製分享連結",
   "connect.shareUrl.copied": "分享連結已複製到剪貼簿",

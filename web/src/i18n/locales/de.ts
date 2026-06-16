@@ -363,6 +363,11 @@ export const de: Record<MessageKey, string> = {
     "Die Anmeldedaten werden nur für diesen Tab im sessionStorage gespeichert. Die statische Website erhält sie nie.",
   "connect.submit": "Verbinden",
   "connect.connecting": "Verbinden…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Trennen",
   "connect.shareUrl.label": "Freigabe-URL kopieren",
   "connect.shareUrl.copied": "Freigabe-URL in die Zwischenablage kopiert",

@@ -361,6 +361,11 @@ export const id: Record<MessageKey, string> = {
     "Kredensial disimpan di sessionStorage hanya untuk tab ini. Situs statis tidak pernah menerimanya.",
   "connect.submit": "Hubungkan",
   "connect.connecting": "Menghubungkan…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Putuskan koneksi",
   "connect.shareUrl.label": "Salin URL berbagi",
   "connect.shareUrl.copied": "URL berbagi disalin ke papan klip",

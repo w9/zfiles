@@ -360,6 +360,11 @@ export const ja: Record<MessageKey, string> = {
     "認証情報はこのタブの sessionStorage にのみ保存されます。静的サイトが受け取ることはありません。",
   "connect.submit": "接続",
   "connect.connecting": "接続中…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "切断",
   "connect.shareUrl.label": "共有 URL をコピー",
   "connect.shareUrl.copied": "共有 URL をクリップボードにコピーしました",

@@ -16,6 +16,7 @@ import {
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { useCloudAuth } from "./cloud/CloudAuthContext";
 
 type PreviewPaneProps = {
   path: string | null;
@@ -46,6 +47,7 @@ export default function PreviewPane({
   onSymlinkTargetClick,
 }: PreviewPaneProps) {
   const backend = useExplorerBackend();
+  const cloudAuth = useCloudAuth();
   const { t, locale } = useTranslation();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const [stat, setStat] = useState<FileStat | null>(null);
@@ -72,13 +74,16 @@ export default function PreviewPane({
       })
       .catch(async (err) => {
         setStat(null);
+        if (cloudAuth.handleAuthError(err)) {
+          return;
+        }
         if (err instanceof Response) {
           setError(await messageFromApiResponse(err, t));
           return;
         }
         setError(err instanceof Error ? err.message : String(err));
       });
-  }, [path, backend, t]);
+  }, [path, backend, cloudAuth, t]);
 
   useEffect(() => {
     if (!stat?.is_dir) {
@@ -103,7 +108,10 @@ export default function PreviewPane({
           truncated: Boolean(result.nextCursor),
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        if (cloudAuth.handleAuthError(err)) {
+          return;
+        }
         if (!cancelled) {
           setDirSummary({ status: "error" });
         }
@@ -112,7 +120,7 @@ export default function PreviewPane({
     return () => {
       cancelled = true;
     };
-  }, [stat?.is_dir, stat?.path, backend]);
+  }, [stat?.is_dir, stat?.path, backend, cloudAuth]);
 
   const shellClass = cn(
     "relative min-h-[320px] overflow-auto rounded-xl border bg-card p-4",

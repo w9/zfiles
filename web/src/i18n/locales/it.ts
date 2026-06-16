@@ -363,6 +363,11 @@ export const it: Record<MessageKey, string> = {
     "Le credenziali vengono memorizzate in sessionStorage solo per questa scheda. Il sito statico non le riceve mai.",
   "connect.submit": "Connetti",
   "connect.connecting": "Connessione…",
+  "connect.authExpired.bannerTitle": "Cloud credentials expired",
+  "connect.authExpired.bannerDescription":
+    "Your bucket credentials expired or no longer have access. Enter fresh credentials to reconnect; your bucket settings are preserved.",
+  "connect.authExpired.toast": "Cloud credentials expired. Reconnect to continue.",
+  "connect.authExpired.reconnect": "Reconnect",
   "connect.disconnect": "Disconnetti",
   "connect.shareUrl.label": "Copia URL di condivisione",
   "connect.shareUrl.copied": "URL di condivisione copiato negli appunti",

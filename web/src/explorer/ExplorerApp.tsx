@@ -108,6 +108,7 @@ import type { ListingColumnLabels } from "../listing-types";
 import { useListingDisplayOrder } from "../useListingDisplayOrder";
 import DisconnectButton from "../cloud/DisconnectButton";
 import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
+import { CloudAuthExpiredBanner, useCloudAuth } from "../cloud/CloudAuthContext";
 import { loadSessionConfig } from "../cloud/credentials";
 import ShareUrlButton from "../cloud/ShareUrlButton";
 import { connectionConfigToShareInput } from "../cloud/shareUrl";
@@ -196,6 +197,7 @@ function isNativeTypingTarget(target: EventTarget | null): boolean {
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
   const onCloudDisconnect = useCloudDisconnect();
+  const cloudAuth = useCloudAuth();
   const cloudSessionConfig = onCloudDisconnect ? loadSessionConfig() : null;
   const { t, locale } = useTranslation();
   const { navigate } = useAppRoute();
@@ -257,6 +259,16 @@ export default function ExplorerApp() {
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
 
+  const notifyStorageError = useCallback(
+    (err: unknown) => {
+      if (cloudAuth.handleAuthError(err)) {
+        return;
+      }
+      notifyError(err instanceof Error ? err.message : String(err));
+    },
+    [cloudAuth],
+  );
+
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
     const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
     const previousPaths = options?.preserveSelection
@@ -296,12 +308,12 @@ export default function ExplorerApp() {
         await notifyApiError(err, t);
         return false;
       }
-      notifyError(err instanceof Error ? err.message : String(err));
+      notifyStorageError(err);
       return false;
     } finally {
       setListingLoaded(true);
     }
-  }, [backend, t]);
+  }, [backend, notifyStorageError, t]);
 
   const loadMoreEntries = useCallback(async () => {
     if (!listCursor || loadingMore) {
@@ -313,14 +325,14 @@ export default function ExplorerApp() {
       setEntries((current) => [...current, ...data]);
       setListCursor(nextCursor);
     } catch (err) {
-      notifyError(err instanceof Error ? err.message : String(err));
+      notifyStorageError(err);
     } finally {
       setLoadingMore(false);
     }
-  }, [backend, listCursor, loadingMore]);
+  }, [backend, listCursor, loadingMore, notifyStorageError]);
 
   useEffect(() => {
-    loadListing(initialPath).catch((err: Error) => notifyError(err.message));
+    loadListing(initialPath).catch((err: unknown) => notifyStorageError(err));
     void backend
       .fetchHealth()
       .then((data) => {
@@ -329,7 +341,7 @@ export default function ExplorerApp() {
         }
       })
       .catch(() => {});
-  }, [backend, loadListing, initialPath]);
+  }, [backend, loadListing, initialPath, notifyStorageError]);
 
   const {
     items: uploadItems,
@@ -348,10 +360,15 @@ export default function ExplorerApp() {
     readOnly,
     onItemComplete: () => {
       loadListing(currentPathRef.current, { preserveSelection: true }).catch(
-        (err: Error) => notifyError(err.message),
+        (err: unknown) => notifyStorageError(err),
       );
     },
-    onItemFailed: (message) => notifyError(message),
+    onItemFailed: (message, err) => {
+      if (err && cloudAuth.handleAuthError(err)) {
+        return;
+      }
+      notifyError(message);
+    },
     onMultipartSessionFinished: (uploadId) => {
       void multipartSessionsRef.current.onUploadSessionFinished(uploadId);
     },
@@ -444,7 +461,7 @@ export default function ExplorerApp() {
             break;
           }
           loadListing(currentPathRef.current, { preserveSelection: true }).catch(
-            (err: Error) => notifyError(err.message),
+            (err: unknown) => notifyStorageError(err),
           );
           break;
         }
@@ -457,7 +474,7 @@ export default function ExplorerApp() {
           break;
       }
     },
-    [applyRemoteProgress, loadListing],
+    [applyRemoteProgress, loadListing, notifyStorageError],
   );
 
   const backendStatus = useBackendStatus(handleKernelEvent);
@@ -469,9 +486,9 @@ export default function ExplorerApp() {
     }
     setRefreshing(true);
     void loadListing(currentPathRef.current, { preserveSelection: true })
-      .catch((err: Error) => notifyError(err.message))
+      .catch((err: unknown) => notifyStorageError(err))
       .finally(() => setRefreshing(false));
-  }, [loadListing, refreshing]);
+  }, [loadListing, notifyStorageError, refreshing]);
 
   const loadListingForNavigation = useCallback(
     (path: string, options?: { preserveSelection?: boolean; focusPath?: string }) =>
@@ -506,10 +523,10 @@ export default function ExplorerApp() {
           await notifyApiError(err, t);
           return;
         }
-        notifyError(err instanceof Error ? err.message : String(err));
+        notifyStorageError(err);
       }
     },
-    [backend, navigateTo, t],
+    [backend, navigateTo, notifyStorageError, t],
   );
 
   const getOperationTargets = useCallback(() => {
@@ -548,7 +565,10 @@ export default function ExplorerApp() {
       }
       try {
         await backend.runAction({ actionId, paths });
-      } catch {
+      } catch (err) {
+        if (cloudAuth.handleAuthError(err)) {
+          return;
+        }
         notifyError(t("error.actionFailed", { status: "failed" }));
         return;
       }
@@ -559,7 +579,7 @@ export default function ExplorerApp() {
         await loadListing(currentPathRef.current);
       }
     },
-    [backend, fileOps, t, loadListing],
+    [backend, cloudAuth, fileOps, t, loadListing],
   );
 
 
@@ -1140,9 +1160,13 @@ export default function ExplorerApp() {
 
   const downloadPathsHandler = useCallback(
     async (paths: string[]) => {
-      await downloadFiles(backend, paths);
+      try {
+        await downloadFiles(backend, paths);
+      } catch (err) {
+        notifyStorageError(err);
+      }
     },
-    [backend],
+    [backend, notifyStorageError],
   );
 
   const confirmMessageRef = useRef<
@@ -1493,6 +1517,8 @@ export default function ExplorerApp() {
           }
         }}
       />
+
+      <CloudAuthExpiredBanner />
 
       <section className="shrink-0 overflow-hidden rounded-xl bg-card">
         <ExplorerBreadcrumb
