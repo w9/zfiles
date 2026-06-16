@@ -72,6 +72,14 @@ type S3BackendOptions = {
   onAuthError?: (error: CloudCredentialsAuthError) => void;
 };
 
+function shouldForcePathStyle(config: S3ConnectionConfig): boolean {
+  if (config.provider === "r2") {
+    return true;
+  }
+  const endpoint = config.endpoint?.toLowerCase() ?? "";
+  return endpoint.includes(".r2.cloudflarestorage.com");
+}
+
 function baseS3ClientConfig(config: S3ConnectionConfig): S3ClientConfig {
   const clientConfig: S3ClientConfig = {
     region: config.region,
@@ -86,7 +94,7 @@ function baseS3ClientConfig(config: S3ConnectionConfig): S3ClientConfig {
   };
   if (config.endpoint) {
     clientConfig.endpoint = config.endpoint;
-    clientConfig.forcePathStyle = config.provider === "r2";
+    clientConfig.forcePathStyle = shouldForcePathStyle(config);
   }
   return clientConfig;
 }
