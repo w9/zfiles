@@ -249,6 +249,6 @@ Repair stale e2e smoke assertions in `e2e/tests/smoke.spec.ts` (keyboard-shortcu
 - [x] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions for new banner lines
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `e2e/tests/smoke.spec.ts`: scope keyboard-shortcuts assertion to the shortcuts dialog (avoid command-palette title collision)
-- [ ] `e2e/tests/smoke.spec.ts`: zh-CN locale smoke asserts visible upload tray button (`上传`), not panel-only “选择文件”
-- [ ] Run e2e smoke (`pnpm test` in `e2e/`) and confirm both tests pass
+- [x] `e2e/tests/smoke.spec.ts`: scope keyboard-shortcuts assertion to the shortcuts dialog (avoid command-palette title collision)
+- [x] `e2e/tests/smoke.spec.ts`: zh-CN locale smoke asserts visible upload tray button (`上传`), not panel-only “选择文件”
+- [x] Run e2e smoke (`pnpm test` in `e2e/`) and confirm both tests pass

@@ -79,8 +79,9 @@ test("status bar opens keyboard shortcuts from Help menu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("menuitem", { name: "Help" }).click();
   await page.getByRole("menuitem", { name: "Keyboard shortcuts…" }).click();
-  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
-  await expect(page.getByText("Command Palette")).toBeVisible();
+  const shortcutsDialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(shortcutsDialog).toBeVisible();
+  await expect(shortcutsDialog.getByText("Command Palette")).toBeVisible();
 });
 
 test("theme toggle switches color theme", async ({ page }) => {
@@ -169,7 +170,7 @@ test("command palette opens and lists built-in actions", async ({ page }) => {
 test("lang query param switches UI to Simplified Chinese", async ({ page }) => {
   await page.goto("/?lang=zh-CN");
   await expect(page.getByRole("contentinfo", { name: "状态栏" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "选择文件" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "上传" })).toBeVisible();
 });
 
 test("menu bar and toolbar expose built-in action surfaces", async ({ page }) => {
