@@ -27,7 +27,7 @@ type TruncatedTextTooltipProps<T extends React.ElementType = "span"> = {
 export function TruncatedTextTooltip<T extends React.ElementType = "span">({
   text,
   as,
-  side = "top",
+  side = "bottom",
   delayDuration = TRUNCATED_TEXT_TOOLTIP_DELAY_MS,
   className,
   contentClassName,

@@ -217,5 +217,5 @@ Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability).
 - [x] Fix slideshow availability: enable when selection/listing has image paths, not only when focused item is an image; update action `when`, Space keybinding, context-menu keys
 - [x] Unit tests for new context key / when expressions; verify with post-fix logs; remove instrumentation; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `truncated-text-tooltip.tsx`: default tooltip `side` to `"bottom"` so filename (and other truncated-text) tooltips appear below the label
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `truncated-text-tooltip.tsx`: default tooltip `side` to `"bottom"` so filename (and other truncated-text) tooltips appear below the label
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
