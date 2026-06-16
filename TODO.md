@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts. Next: show filename truncated-text tooltips below the label (not above).
+Per-folder view settings (localStorage): table/grid mode, table column sort, and grid card size per directory path; fall back to global defaults when no override. Toolbar view toggle saves per-folder; Shift+toggle invokes a dedicated `view.apply-global-listing-settings` action that promotes the current folder’s effective settings to global and clears all per-folder overrides. Column sort and grid resize always save per-folder only. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -219,3 +219,9 @@ Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability).
 
 - [x] `truncated-text-tooltip.tsx`: default tooltip `side` to `"bottom"` so filename (and other truncated-text) tooltips appear below the label
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `folderViewSettings.ts` + test: per-folder override map in localStorage; global column-sort key; read effective settings (override → global); write/clear helpers
+- [ ] `view.toggle-listing-mode` + `view.apply-global-listing-settings` actions; i18n (14 locales); toolbar Shift+toggle invokes global action
+- [ ] `ExplorerApp.tsx`: apply effective settings on `currentPath` change; persist view/column-sort/grid-size changes per folder
+- [ ] `ListingViewToggle.tsx`: stop writing global directly; pass `{ global: shiftKey }` to parent
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
