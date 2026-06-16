@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Quick filter help affordance refinement: the usage (and invalid-regex error) tooltip is now triggered by hovering anywhere on the entire filter input box; the dedicated small "?" HelpCircle icon + its separate trigger has been removed (help/error strings and red-tint behavior remain). No change to matching rules, ESC-to-clear, or keyboard routing. Web-only polish on the prior unification (no new version bump). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Toast close-button polish: hide the Sonner "X" by default; reveal it when the whole toast is hovered or focus-within on hover-capable pointer devices; on touch, keep it hidden (auto-dismiss / swipe only). Web-only CSS in `index.css` (no sonner API changes). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
 
 ## TODO List
 
@@ -209,3 +209,6 @@ Quick filter help affordance refinement: the usage (and invalid-regex error) too
 - [x] `ExplorerBreadcrumb.tsx`: remove the `HelpCircle` import and the entire "?" icon affordance (its Tooltip, span, aria-label from quickFilterHelpLabel, and the addon item); make the whole filter `<InputGroup>` the `TooltipTrigger asChild` (0-delay hover) for the help/error tooltip; choose content dynamically (regexErrorLabel when the query starts with / and is invalid per isValidQuickFilterRegex, else the helpText); keep the input's aria-invalid for the group's red/destructive styling on bad regex; the clear X (when present) is inside the hover surface; simplify the prior conditional input-wrapping IIFE for error; drop the quickFilterHelpLabel prop from the component type and usage.
 - [x] `ExplorerApp.tsx`: stop passing `quickFilterHelpLabel` to ExplorerBreadcrumb (the helpText and regexErrorLabel props stay, now used for the box-level tooltip content).
 - [x] Run `pnpm test` + `pnpm build` (suites covering the breadcrumb/explorer filter UI and quick filter logic); no patch version bump (refinement of the prior cycle's help presentation, not a new shipped behavior change).
+
+- [ ] `index.css`: hide Sonner `[data-close-button]` by default; show on toast `:hover` / `:focus-within` under `@media (hover: hover) and (pointer: fine)`; touch devices stay hidden
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
