@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Replace the boxed CLI startup banner with a Vite-inspired layout: versioned header, arrow-prefixed rows, raw clickable URL (no box width blowout), separate token line, minimal metadata, subtle ANSI color on interactive stdout, and QR hint for public shares. Update `src/banner.rs` unit tests plus `tests/browser_open.rs` and `tests/qr.rs`. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
+Repair stale e2e smoke assertions in `e2e/tests/smoke.spec.ts` (keyboard-shortcuts locator ambiguity, zh-CN upload button). Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -248,3 +248,7 @@ Replace the boxed CLI startup banner with a Vite-inspired layout: versioned head
 - [x] `banner.rs` unit tests: cover local/share wording, token row, read-only mode, dev-frontend dimmed rows, no-color render path
 - [x] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions for new banner lines
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `e2e/tests/smoke.spec.ts`: scope keyboard-shortcuts assertion to the shortcuts dialog (avoid command-palette title collision)
+- [ ] `e2e/tests/smoke.spec.ts`: zh-CN locale smoke asserts visible upload tray button (`上传`), not panel-only “选择文件”
+- [ ] Run e2e smoke (`pnpm test` in `e2e/`) and confirm both tests pass
