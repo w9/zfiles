@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Debug the cloud expired-token flow with runtime evidence: instrument connect validation, auth-error classification, session selection, and S3 listing responses to determine whether expired credentials are accepted, hidden, misclassified, or bypassed by an existing session. Keep instrumentation temporary until logs prove the root cause and any fix is verified. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
+Replace the boxed CLI startup banner with a Vite-inspired layout: versioned header, arrow-prefixed rows, raw clickable URL (no box width blowout), separate token line, minimal metadata, subtle ANSI color on interactive stdout, and QR hint for public shares. Update `src/banner.rs` unit tests plus `tests/browser_open.rs` and `tests/qr.rs`. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts.
 
 ## TODO List
 
@@ -243,3 +243,8 @@ Debug the cloud expired-token flow with runtime evidence: instrument connect val
 - [ ] Fix only the proven root cause while keeping instrumentation active
 - [ ] Verify with post-fix logs, then remove instrumentation
 - [ ] Run targeted web verification for the touched cloud auth path
+
+- [ ] `banner.rs`: Vite-style startup output — `zfiles vX.Y.Z is running`, arrow rows (`Local`/`Share`, `Token`, `Serving`, `Access`, `Mode`, optional dimmed `State`/`Frontend`, public `QR`), raw URL without box; subtle ANSI on TTY
+- [ ] `banner.rs` unit tests: cover local/share wording, token row, read-only mode, dev-frontend dimmed rows, no-color render path
+- [ ] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions for new banner lines
+- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
