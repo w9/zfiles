@@ -210,5 +210,5 @@ Toast close-button polish: hide the Sonner "X" by default; reveal it when the wh
 - [x] `ExplorerApp.tsx`: stop passing `quickFilterHelpLabel` to ExplorerBreadcrumb (the helpText and regexErrorLabel props stay, now used for the box-level tooltip content).
 - [x] Run `pnpm test` + `pnpm build` (suites covering the breadcrumb/explorer filter UI and quick filter logic); no patch version bump (refinement of the prior cycle's help presentation, not a new shipped behavior change).
 
-- [ ] `index.css`: hide Sonner `[data-close-button]` by default; show on toast `:hover` / `:focus-within` under `@media (hover: hover) and (pointer: fine)`; touch devices stay hidden
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `index.css`: hide Sonner `[data-close-button]` by default; show on toast `:hover` / `:focus-within` under `@media (hover: hover) and (pointer: fine)`; touch devices stay hidden
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

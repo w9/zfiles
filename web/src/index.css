@@ -100,3 +100,17 @@
     display: none;
   }
 }
+
+/* Sonner: close button visible only on toast hover/focus (hover-capable pointers). */
+[data-sonner-toast][data-styled="true"] [data-close-button] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-sonner-toast][data-styled="true"]:hover [data-close-button],
+  [data-sonner-toast][data-styled="true"]:focus-within [data-close-button] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
