@@ -117,7 +117,7 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     {
       key: "Space",
       command: "viewer.slideshow",
-      when: `${fileList} && preview.is-image == true`,
+      when: `${fileList} && viewer.image-count > 0`,
     },
     {
       key: "Mod+A",

@@ -45,7 +45,7 @@ import { useActionSystem } from "../actions/useActionSystem";
 import type { ActionDefinition } from "../actions/types";
 import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
-import { sortPathsByListingOrder } from "../slideshowPathOrder";
+import { resolveViewerImagePaths } from "../slideshowPathOrder";
 import {
   canShowInlinePreviewPanel,
   LG_BREAKPOINT_PX,
@@ -580,22 +580,14 @@ export default function ExplorerApp() {
     [t],
   );
 
-  const getImagePaths = useCallback(() => {
-    const listingPaths = listingEntriesRef.current.map((entry) => entry.path);
-    const selected = Array.from(selectedPathsRef.current);
-    if (selected.length > 0) {
-      return sortPathsByListingOrder(
-        selected.filter(isImagePath),
-        listingPaths,
-      );
-    }
-    return sortPathsByListingOrder(
-      listingEntriesRef.current
-        .filter((entry) => !entry.isDir && isImagePath(entry.path))
-        .map((entry) => entry.path),
-      listingPaths,
-    );
-  }, []);
+  const getImagePaths = useCallback(
+    () =>
+      resolveViewerImagePaths(
+        Array.from(selectedPathsRef.current),
+        listingEntriesRef.current,
+      ),
+    [],
+  );
 
   const openSlideshow = useCallback((paths: string[], startPath: string | null) => {
     setSlideshowPaths(paths);
@@ -657,6 +649,14 @@ export default function ExplorerApp() {
     [selectedPaths, entries],
   );
 
+  const viewerImageCount = useMemo(() => {
+    const listingSource = quickFilteredEntries.map((entry) => ({
+      path: entry.path,
+      isDir: entry.is_dir,
+    }));
+    return resolveViewerImagePaths(Array.from(selectedPaths), listingSource).length;
+  }, [selectedPaths, quickFilteredEntries]);
+
   const contextKeys = useMemo<ContextKeys>(
     () => ({
       "focus.pane": focusPane,
@@ -669,6 +669,7 @@ export default function ExplorerApp() {
       "clipboard.count": fileOps.clipboard?.paths.length ?? 0,
       "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
       "preview.path": selectedPath ?? "",
+      "viewer.image-count": viewerImageCount,
       "listing.show-dot-entries": showDotEntries,
       "listing.loaded": listingLoaded,
       "listing.visible-count": quickFilteredEntries.length,
@@ -686,6 +687,7 @@ export default function ExplorerApp() {
       readOnly,
       selectedPath,
       showDotEntries,
+      viewerImageCount,
       fileOps.clipboard,
       listingLoaded,
       quickFilteredEntries.length,
@@ -1147,6 +1149,9 @@ export default function ExplorerApp() {
       setFocusPane("file-list");
 
       let menuContextKeys = contextKeys;
+      const listingRows = listingEntriesRef.current;
+      const imageCountForSelection = (paths: string[]) =>
+        resolveViewerImagePaths(paths, listingRows).length;
       if (path == null) {
         setSelectedPaths(new Set());
         setSelectedPath(null);
@@ -1156,6 +1161,7 @@ export default function ExplorerApp() {
           "selection.paths": [],
           "preview.path": "",
           "preview.is-image": false,
+          "viewer.image-count": 0,
         };
       } else if (!selectedPathsRef.current.has(path)) {
         const rows = listingEntriesRef.current;
@@ -1172,12 +1178,16 @@ export default function ExplorerApp() {
           "selection.paths": [path],
           "preview.path": path,
           "preview.is-image": isImagePath(path),
+          "viewer.image-count": imageCountForSelection([path]),
         };
       } else {
         menuContextKeys = {
           ...contextKeys,
           "preview.path": path,
           "preview.is-image": isImagePath(path),
+          "viewer.image-count": imageCountForSelection(
+            Array.from(selectedPathsRef.current),
+          ),
         };
       }
 

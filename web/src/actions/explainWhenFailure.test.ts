@@ -15,6 +15,7 @@ const emptySelection: ContextKeys = {
   "clipboard.count": 0,
   "preview.is-image": false,
   "preview.path": "",
+  "viewer.image-count": 0,
   "listing.show-dot-entries": false,
   "listing.loaded": true,
   "listing.visible-count": 0,

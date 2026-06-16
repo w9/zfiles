@@ -1,3 +1,5 @@
+import { isImagePath } from "./imagePaths";
+
 export function sortPathsByListingOrder(
   paths: string[],
   listingPaths: string[],
@@ -11,6 +13,22 @@ export function sortPathsByListingOrder(
     }
     return left.localeCompare(right);
   });
+}
+
+export function resolveViewerImagePaths(
+  selectedPaths: string[],
+  listingEntries: Array<{ path: string; isDir: boolean }>,
+): string[] {
+  const listingPaths = listingEntries.map((entry) => entry.path);
+  if (selectedPaths.length > 0) {
+    return sortPathsByListingOrder(selectedPaths.filter(isImagePath), listingPaths);
+  }
+  return sortPathsByListingOrder(
+    listingEntries
+      .filter((entry) => !entry.isDir && isImagePath(entry.path))
+      .map((entry) => entry.path),
+    listingPaths,
+  );
 }
 
 export function resolveSlideshowStartIndex(

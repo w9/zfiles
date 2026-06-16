@@ -151,7 +151,7 @@ test("matchKeybinding matches grid-only horizontal navigation", () => {
   assert.equal(matchKeybinding(bindings, event, tableAvailable), null);
 });
 
-test("matchKeybinding matches Space slideshow when image focused in file list", () => {
+test("matchKeybinding matches Space slideshow when images are available in file list", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -164,6 +164,7 @@ test("matchKeybinding matches Space slideshow when image focused in file list", 
     evaluateWhen(binding.when, {
       ...defaultContextKeys(),
       "preview.is-image": true,
+      "viewer.image-count": 1,
     });
   assert.equal(
     matchKeybinding(bindings, event, bindingAvailable)?.command,
@@ -171,7 +172,28 @@ test("matchKeybinding matches Space slideshow when image focused in file list", 
   );
 });
 
-test("matchKeybinding ignores Space when non-image focused in file list", () => {
+test("matchKeybinding matches Space when selection has images despite non-image focus", () => {
+  const bindings = defaultKeybindings();
+  const event = {
+    key: " ",
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  } as KeyboardEvent;
+  const bindingAvailable = (binding: { when?: string }) =>
+    evaluateWhen(binding.when, {
+      ...defaultContextKeys(),
+      "preview.is-image": false,
+      "viewer.image-count": 2,
+    });
+  assert.equal(
+    matchKeybinding(bindings, event, bindingAvailable)?.command,
+    "viewer.slideshow",
+  );
+});
+
+test("matchKeybinding ignores Space when no images are available", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -190,12 +212,12 @@ test("keybindingChordForContext prefers binding whose when matches context", () 
   const gridContext = {
     "focus.pane": "file-list",
     "listing.view": "grid",
-    "preview.is-image": true,
+    "viewer.image-count": 1,
   };
   const tableContext = {
     "focus.pane": "file-list",
     "listing.view": "table",
-    "preview.is-image": true,
+    "viewer.image-count": 1,
   };
   assert.equal(
     keybindingChordForContext("viewer.slideshow", bindings, gridContext, {

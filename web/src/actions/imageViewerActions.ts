@@ -50,7 +50,7 @@ export function createImageViewerActions(
       id: "viewer.slideshow",
       nameKey: "viewer.slideshow.name",
       categoryKey: "viewer.category",
-      when: "preview.is-image == true",
+      when: "viewer.image-count > 0",
       defaultKeybinding: "Space",
       contexts: ["context-menu", "file-list", "preview"],
       handler: async () => {
