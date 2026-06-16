@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import AppShell from "@/AppShell";
 import { ExplorerBackendProvider } from "@/backend";
-import { createS3Backend, type S3Backend } from "@/backend/s3Backend";
+import { createS3Backend, type S3Backend, validateS3Connection } from "@/backend/s3Backend";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useTranslation } from "@/i18n";
@@ -97,6 +97,7 @@ function CloudAppContent() {
     useState<S3ConnectionSettings | null>(() => loadPreservedConnectionSettings());
   const [authExpired, setAuthExpired] = useState(false);
   const [reconnectOpen, setReconnectOpen] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(() => loadSessionConfig() == null);
   const authToastShownRef = useRef(false);
 
   const openReconnect = useCallback(() => {
@@ -128,12 +129,33 @@ function CloudAppContent() {
     [connectionConfig, openReconnect, t],
   );
 
+  useEffect(() => {
+    if (sessionChecked || !connectionConfig) {
+      return;
+    }
+    let cancelled = false;
+    void validateS3Connection(connectionConfig)
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          handleAuthError(err);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSessionChecked(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connectionConfig, handleAuthError, sessionChecked]);
+
   const backend = useMemo(
     () =>
-      connectionConfig
+      connectionConfig && sessionChecked
         ? createS3Backend(connectionConfig, { onAuthError: handleAuthError })
         : null,
-    [connectionConfig, handleAuthError],
+    [connectionConfig, handleAuthError, sessionChecked],
   );
 
   const connectBootParams = useMemo(() => {
@@ -146,6 +168,7 @@ function CloudAppContent() {
     setPreservedSettings(null);
     setAuthExpired(false);
     setReconnectOpen(false);
+    setSessionChecked(true);
     authToastShownRef.current = false;
   }, []);
 
@@ -163,12 +186,16 @@ function CloudAppContent() {
       setPreservedSettings(null);
       setAuthExpired(false);
       setReconnectOpen(false);
+      setSessionChecked(true);
       authToastShownRef.current = false;
       return null;
     });
   }, []);
 
   if (!backend) {
+    if (connectionConfig && !sessionChecked) {
+      return null;
+    }
     return (
       <TooltipProvider>
         <ConnectDialog open bootParams={connectBootParams} onConnected={onConnected} />

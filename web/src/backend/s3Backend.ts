@@ -72,6 +72,38 @@ type S3BackendOptions = {
   onAuthError?: (error: CloudCredentialsAuthError) => void;
 };
 
+function baseS3ClientConfig(config: S3ConnectionConfig): S3ClientConfig {
+  const clientConfig: S3ClientConfig = {
+    region: config.region,
+    credentials: {
+      accessKeyId: config.credentials.accessKeyId,
+      secretAccessKey: config.credentials.secretAccessKey,
+      sessionToken: config.credentials.sessionToken,
+    },
+    // AWS SDK v3.729+ defaults to CRC checksums on uploads; R2 does not implement them.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+  };
+  if (config.endpoint) {
+    clientConfig.endpoint = config.endpoint;
+    clientConfig.forcePathStyle = config.provider === "r2";
+  }
+  return clientConfig;
+}
+
+/** Fetch-based client for reads and validation — surfaces 403/CORS failures as thrown errors. */
+function createS3ReadClient(config: S3ConnectionConfig): S3Client {
+  return new S3Client(baseS3ClientConfig(config));
+}
+
+/** XHR client for uploads so in-flight progress events are available. */
+function createS3UploadClient(config: S3ConnectionConfig): S3Client {
+  return new S3Client({
+    ...baseS3ClientConfig(config),
+    requestHandler: new XhrHttpHandler({}),
+  });
+}
+
 function isUploadAbortError(err: unknown): boolean {
   if (err instanceof DOMException && err.name === "AbortError") {
     return true;
@@ -94,42 +126,31 @@ function keyForExplorerPath(bucketPrefix: string, explorerPath: string): string 
   return objectKeyForPath(bucketPrefix, parent, name);
 }
 
-function createS3Client(config: S3ConnectionConfig): S3Client {
-  const clientConfig: S3ClientConfig = {
-    region: config.region,
-    credentials: {
-      accessKeyId: config.credentials.accessKeyId,
-      secretAccessKey: config.credentials.secretAccessKey,
-      sessionToken: config.credentials.sessionToken,
-    },
-    // AWS SDK v3.729+ defaults to CRC checksums on uploads; R2 does not implement them.
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED",
-    // Fetch has no upload progress; XhrHttpHandler enables in-flight upload progress events.
-    requestHandler: new XhrHttpHandler({}),
-  };
-  if (config.endpoint) {
-    clientConfig.endpoint = config.endpoint;
-    clientConfig.forcePathStyle = config.provider === "r2";
-  }
-  return new S3Client(clientConfig);
-}
-
 export async function validateS3Connection(config: S3ConnectionConfig): Promise<void> {
-  const client = createS3Client(config);
-  await client.send(new HeadBucketCommand({ Bucket: config.bucket }));
+  const client = createS3ReadClient(config);
+  try {
+    await client.send(new HeadBucketCommand({ Bucket: config.bucket }));
+  } catch (err) {
+    const authError = toCloudCredentialsAuthError(err);
+    if (authError) {
+      throw authError;
+    }
+    throw err;
+  }
 }
 
 export class S3Backend implements ExplorerBackend {
   readonly mode = "s3" as const;
-  private readonly client: S3Client;
+  private readonly readClient: S3Client;
+  private readonly uploadClient: S3Client;
   private readonly config: S3ConnectionConfig;
   private readonly options: S3BackendOptions;
   private readonly cache = new BackendObjectCache();
 
   constructor(config: S3ConnectionConfig, options: S3BackendOptions = {}) {
     this.config = config;
-    this.client = createS3Client(config);
+    this.readClient = createS3ReadClient(config);
+    this.uploadClient = createS3UploadClient(config);
     this.options = options;
   }
 
@@ -157,7 +178,7 @@ export class S3Backend implements ExplorerBackend {
   async list(path: string, cursor?: string): Promise<ListResult> {
     const prefix = listPrefixForPath(this.config.prefix, path);
     const response = await this.withAuthHandling(() =>
-      this.client.send(
+      this.readClient.send(
         new ListObjectsV2Command({
           Bucket: this.config.bucket,
           Prefix: prefix || undefined,
@@ -240,7 +261,7 @@ export class S3Backend implements ExplorerBackend {
 
     try {
       const head = await this.withAuthHandling(() =>
-        this.client.send(
+        this.readClient.send(
           new HeadObjectCommand({
             Bucket: this.config.bucket,
             Key: key,
@@ -270,7 +291,7 @@ export class S3Backend implements ExplorerBackend {
       }
       const prefix = listPrefixForPath(this.config.prefix, path);
       const listing = await this.withAuthHandling(() =>
-        this.client.send(
+        this.readClient.send(
           new ListObjectsV2Command({
             Bucket: this.config.bucket,
             Prefix: prefix,
@@ -312,7 +333,7 @@ export class S3Backend implements ExplorerBackend {
     const key = keyForExplorerPath(this.config.prefix, path);
     return this.withAuthHandling(() =>
       getSignedUrl(
-        this.client,
+        this.readClient,
         new GetObjectCommand({
           Bucket: this.config.bucket,
           Key: key,
@@ -326,7 +347,7 @@ export class S3Backend implements ExplorerBackend {
     const scopeId = multipartSessionScopeId(this.config);
     const listed = await this.withAuthHandling(() =>
       listInProgressMultipartUploads(
-        this.client,
+        this.readClient,
         this.config.bucket,
         this.config.prefix,
       ),
@@ -339,7 +360,7 @@ export class S3Backend implements ExplorerBackend {
       ...listed.map(async (upload) => {
         const parts = await this.withAuthHandling(() =>
           listUploadedParts(
-            this.client,
+            this.readClient,
             this.config.bucket,
             upload.objectKey,
             upload.uploadId,
@@ -352,7 +373,7 @@ export class S3Backend implements ExplorerBackend {
         .map(async (record) => {
           try {
             const parts = await listUploadedParts(
-              this.client,
+              this.readClient,
               this.config.bucket,
               record.objectKey,
               record.uploadId,
@@ -378,14 +399,14 @@ export class S3Backend implements ExplorerBackend {
 
   async abortMultipartSession(objectKey: string, uploadId: string): Promise<void> {
     await this.withAuthHandling(() =>
-      abortMultipartUpload(this.client, this.config.bucket, objectKey, uploadId),
+      abortMultipartUpload(this.readClient, this.config.bucket, objectKey, uploadId),
     );
   }
 
   async getMultipartBytesUploaded(objectKey: string, uploadId: string): Promise<number> {
     const parts = await this.withAuthHandling(() =>
       listUploadedParts(
-        this.client,
+        this.readClient,
         this.config.bucket,
         objectKey,
         uploadId,
@@ -430,7 +451,7 @@ export class S3Backend implements ExplorerBackend {
     const key = record.objectKey;
     try {
       await uploadMultipartFile(
-        this.client,
+        this.uploadClient,
         {
           bucket: this.config.bucket,
           objectKey: key,
@@ -520,7 +541,7 @@ export class S3Backend implements ExplorerBackend {
       }
       if (activeUploadId) {
         void abortMultipartUpload(
-          this.client,
+          this.uploadClient,
           this.config.bucket,
           key,
           activeUploadId,
@@ -530,7 +551,7 @@ export class S3Backend implements ExplorerBackend {
     signal?.addEventListener("abort", onAbort, { once: true });
     try {
       const { uploadId } = await uploadMultipartFile(
-        this.client,
+        this.uploadClient,
         {
           bucket: this.config.bucket,
           objectKey: key,
@@ -635,7 +656,7 @@ export class S3Backend implements ExplorerBackend {
   private async deleteUploadedObject(key: string): Promise<void> {
     try {
       await this.withAuthHandling(() =>
-        this.client.send(
+        this.readClient.send(
           new DeleteObjectCommand({
             Bucket: this.config.bucket,
             Key: key,
@@ -653,7 +674,7 @@ export class S3Backend implements ExplorerBackend {
     }
     await this.withAuthHandling(() =>
       runS3FileAction(
-        this.client,
+        this.readClient,
         this.config.bucket,
         this.config.prefix,
         params,

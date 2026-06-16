@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from "@/i18n";
 import { validateS3Connection } from "@/backend/s3Backend";
+import { isCloudCredentialsAuthError } from "./s3AuthError";
 import { readBootParamsFromUrl } from "./bootParams";
 import { saveSessionConfig } from "./credentials";
 import ShareUrlButton from "./ShareUrlButton";
@@ -126,7 +127,13 @@ export default function ConnectDialog({
     try {
       await connectWithConfig(toConfig(form));
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(
+        isCloudCredentialsAuthError(err)
+          ? t("connect.authExpired.toast")
+          : err instanceof Error
+            ? err.message
+            : String(err),
+      );
     } finally {
       setConnecting(false);
     }
@@ -148,7 +155,13 @@ export default function ConnectDialog({
     setConnecting(true);
     void connectWithConfig(config)
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : String(err));
+        setError(
+          isCloudCredentialsAuthError(err)
+            ? t("connect.authExpired.toast")
+            : err instanceof Error
+              ? err.message
+              : String(err),
+        );
         autoConnectAttempted.current = false;
       })
       .finally(() => {

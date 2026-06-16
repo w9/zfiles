@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   CloudCredentialsAuthError,
   isCloudCredentialsAuthError,
+  isS3ObjectNotFoundError,
   toCloudCredentialsAuthError,
 } from "./s3AuthError";
 
@@ -44,4 +45,35 @@ test("isCloudCredentialsAuthError recognizes wrapped errors", () => {
   });
   assert.equal(isCloudCredentialsAuthError(auth), true);
   assert.equal(isCloudCredentialsAuthError(new Error("ExpiredToken")), false);
+});
+
+test("isS3ObjectNotFoundError recognizes missing-object responses", () => {
+  assert.equal(
+    isS3ObjectNotFoundError({
+      name: "NotFound",
+      $metadata: { httpStatusCode: 404 },
+    }),
+    true,
+  );
+  assert.equal(
+    isS3ObjectNotFoundError({
+      name: "AccessDenied",
+      $metadata: { httpStatusCode: 403 },
+    }),
+    false,
+  );
+});
+
+test("toCloudCredentialsAuthError classifies browser transport failures", () => {
+  const xhr = toCloudCredentialsAuthError(
+    new Error("XHR_HTTP_HANDLER_ERROR: [object ProgressEvent]"),
+  );
+  assert.ok(xhr instanceof CloudCredentialsAuthError);
+  assert.equal(xhr.code, "NetworkError");
+
+  const fetchFailure = toCloudCredentialsAuthError(
+    new TypeError("Failed to fetch"),
+  );
+  assert.ok(fetchFailure instanceof CloudCredentialsAuthError);
+  assert.equal(fetchFailure.code, "NetworkError");
 });

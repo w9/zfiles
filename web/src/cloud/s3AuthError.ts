@@ -54,6 +54,22 @@ function readStatusCode(value: unknown): number | undefined {
   return typeof raw === "number" ? raw : undefined;
 }
 
+const XHR_HTTP_HANDLER_ERROR = "XHR_HTTP_HANDLER_ERROR";
+
+/** Browser blocked the S3 response (common when R2/S3 returns 403 without CORS headers). */
+function isS3BrowserTransportError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  if (error.message.includes(XHR_HTTP_HANDLER_ERROR)) {
+    return true;
+  }
+  if (error.name === "TypeError" && /failed to fetch/i.test(error.message)) {
+    return true;
+  }
+  return error.name === "NetworkingError";
+}
+
 export function toCloudCredentialsAuthError(
   error: unknown,
 ): CloudCredentialsAuthError | null {
@@ -66,6 +82,16 @@ export function toCloudCredentialsAuthError(
     readStringProperty(error, "name") ??
     readStringProperty(error, "Code") ??
     readStringProperty(error, "code");
+  const transportError = isS3BrowserTransportError(error);
+  if (transportError) {
+    return new CloudCredentialsAuthError(
+      "Cloud storage credentials expired or no longer have access.",
+      {
+        cause: error,
+        code: "NetworkError",
+      },
+    );
+  }
   if (!code && statusCode !== 401 && statusCode !== 403) {
     return null;
   }
@@ -85,4 +111,18 @@ export function toCloudCredentialsAuthError(
 
 export function isCloudCredentialsAuthError(error: unknown): boolean {
   return error instanceof CloudCredentialsAuthError;
+}
+
+const S3_NOT_FOUND_CODES = new Set(["NotFound", "NoSuchKey", "404"]);
+
+/** HeadObject on a missing key — credentials authenticated but the object does not exist. */
+export function isS3ObjectNotFoundError(error: unknown): boolean {
+  if (readStatusCode(error) === 404) {
+    return true;
+  }
+  const code =
+    readStringProperty(error, "name") ??
+    readStringProperty(error, "Code") ??
+    readStringProperty(error, "code");
+  return code != null && S3_NOT_FOUND_CODES.has(code);
 }
