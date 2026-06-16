@@ -90,6 +90,8 @@ const LISTING_PANEL_GROUP_CLASS = "h-10 max-h-10 min-h-0 w-full overflow-hidden"
 
 const LISTING_PANEL_CLASS = "!h-10 !max-h-10 min-h-0 min-w-0 overflow-hidden";
 
+const LISTING_VIRTUAL_OVERSCAN_ROWS = 32;
+
 const COLUMN_RESIZE_HANDLE_CLASS = cn(
   "h-10 max-h-10 min-h-0 shrink-0 self-center",
   "z-10 bg-transparent opacity-0 transition-opacity",
@@ -190,7 +192,7 @@ export default function VirtualListing({
     count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 44,
-    overscan: 12,
+    overscan: LISTING_VIRTUAL_OVERSCAN_ROWS,
   });
 
   const measureColumnGrid = useCallback(() => {

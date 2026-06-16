@@ -226,6 +226,6 @@ Reduce virtual listing flicker during fast scrolling by increasing the virtualiz
 - [x] `ListingViewToggle.tsx`: stop writing global directly; pass `{ global: shiftKey }` to parent
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `VirtualListing.tsx`: increase table virtualizer overscan enough to keep rows mounted ahead of fast wheel/trackpad scroll
-- [ ] `GridListing.tsx`: increase grid virtualizer overscan by virtual rows so whole card bands are ready before entering the viewport
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `VirtualListing.tsx`: increase table virtualizer overscan enough to keep rows mounted ahead of fast wheel/trackpad scroll
+- [x] `GridListing.tsx`: increase grid virtualizer overscan by virtual rows so whole card bands are ready before entering the viewport
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

@@ -50,6 +50,7 @@ const GRID_ITEM_FOCUS_SELECTED_CLASS =
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 
 const VIEWPORT_PADDING_PX = 12;
+const GRID_VIRTUAL_OVERSCAN_ROWS = 8;
 
 export default function GridListing({
   entries,
@@ -122,7 +123,7 @@ export default function GridListing({
     getScrollElement: () => parentRef.current,
     estimateSize: () => cardSize.height,
     gap: GRID_GAP_PX,
-    overscan: 4,
+    overscan: GRID_VIRTUAL_OVERSCAN_ROWS,
   });
 
   useEffect(() => {
