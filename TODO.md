@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts.
+Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability). Deferred: dedicated preview content (text/media/EXIF), quick-actions bar, multi-select summary, palette recent-use / keybinding ranking boosts. Next: show filename truncated-text tooltips below the label (not above).
 
 ## TODO List
 
@@ -216,3 +216,6 @@ Slideshow mixed-selection fix shipped (`viewer.image-count` gates availability).
 - [x] Instrument slideshow trigger path (`getImagePaths`, action when, Space keybinding) with debug logs; reproduce mixed selection bug and analyze logs
 - [x] Fix slideshow availability: enable when selection/listing has image paths, not only when focused item is an image; update action `when`, Space keybinding, context-menu keys
 - [x] Unit tests for new context key / when expressions; verify with post-fix logs; remove instrumentation; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `truncated-text-tooltip.tsx`: default tooltip `side` to `"bottom"` so filename (and other truncated-text) tooltips appear below the label
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
