@@ -122,6 +122,8 @@ export const id: Record<MessageKey, string> = {
   "listing.column.modified": "Diubah",
   "listing.view.grid": "Tampilan kisi",
   "listing.view.table": "Tampilan tabel",
+  "listing.view.gridHint": "{{shiftClick}}klik untuk menetapkan tampilan default semua folder.",
+  "listing.view.tableHint": "{{shiftClick}}klik untuk menetapkan tampilan default semua folder.",
   "listing.loadMore": "Muat lebih banyak",
   "listing.loadingMore": "Memuat…",
   "listing.dotEntries.show": "Tampilkan berkas tersembunyi",
@@ -256,6 +258,12 @@ export const id: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Alihkan berkas tersembunyi",
   "actions.view.toggleDotEntries.description":
     "Tampilkan atau sembunyikan berkas dan folder yang namanya diawali titik",
+  "actions.view.toggleListingMode.name": "Alihkan Tampilan Daftar/Kisi",
+  "actions.view.toggleListingMode.description":
+    "Beralih antara tampilan tabel dan kisi untuk folder ini",
+  "actions.view.applyGlobalListingSettings.name": "Terapkan Pengaturan Tampilan Secara Global",
+  "actions.view.applyGlobalListingSettings.description":
+    "Simpan tampilan, urutan kolom, dan ukuran kartu kisi saat ini sebagai default dan hapus penggantian per folder",
   "actions.navigation.category": "Navigasi",
   "actions.navigation.open.name": "Buka",
   "actions.navigation.up.name": "Naik",

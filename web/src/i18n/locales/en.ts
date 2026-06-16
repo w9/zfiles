@@ -120,6 +120,8 @@ export const en = {
   "listing.column.modified": "Modified",
   "listing.view.grid": "Grid view",
   "listing.view.table": "Table view",
+  "listing.view.gridHint": "{{shiftClick}}click to set the default view for all folders.",
+  "listing.view.tableHint": "{{shiftClick}}click to set the default view for all folders.",
   "listing.loadMore": "Load more",
   "listing.loadingMore": "Loading…",
   "listing.dotEntries.show": "Show hidden files",
@@ -255,6 +257,12 @@ export const en = {
   "actions.view.toggleDotEntries.name": "Toggle Hidden Files",
   "actions.view.toggleDotEntries.description":
     "Show or hide files and folders whose names start with a dot",
+  "actions.view.toggleListingMode.name": "Toggle List/Grid View",
+  "actions.view.toggleListingMode.description":
+    "Switch between table and grid view for this folder",
+  "actions.view.applyGlobalListingSettings.name": "Apply View Settings Globally",
+  "actions.view.applyGlobalListingSettings.description":
+    "Save the current view, column sort, and grid card size as defaults and clear per-folder overrides",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Open",
   "actions.navigation.up.name": "Go Up",

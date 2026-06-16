@@ -121,6 +121,8 @@ export const es: Record<MessageKey, string> = {
   "listing.column.modified": "Modificado",
   "listing.view.grid": "Vista de cuadrícula",
   "listing.view.table": "Vista de tabla",
+  "listing.view.gridHint": "{{shiftClick}}clic para establecer la vista predeterminada de todas las carpetas.",
+  "listing.view.tableHint": "{{shiftClick}}clic para establecer la vista predeterminada de todas las carpetas.",
   "listing.loadMore": "Cargar más",
   "listing.loadingMore": "Cargando…",
   "listing.dotEntries.show": "Mostrar archivos ocultos",
@@ -255,6 +257,12 @@ export const es: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Alternar archivos ocultos",
   "actions.view.toggleDotEntries.description":
     "Mostrar u ocultar archivos y carpetas cuyo nombre empieza por punto",
+  "actions.view.toggleListingMode.name": "Alternar vista lista/cuadrícula",
+  "actions.view.toggleListingMode.description":
+    "Cambiar entre vista de tabla y cuadrícula en esta carpeta",
+  "actions.view.applyGlobalListingSettings.name": "Aplicar ajustes de vista globalmente",
+  "actions.view.applyGlobalListingSettings.description":
+    "Guardar la vista, orden de columnas y tamaño de tarjetas de cuadrícula actuales como predeterminados y borrar anulaciones por carpeta",
   "actions.navigation.category": "Navegación",
   "actions.navigation.open.name": "Abrir",
   "actions.navigation.up.name": "Subir",

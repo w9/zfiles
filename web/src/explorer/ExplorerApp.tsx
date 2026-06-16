@@ -6,7 +6,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import type { SortingState } from "@tanstack/react-table";
+import type { OnChangeFn, SortingState } from "@tanstack/react-table";
 
 import { Settings } from "lucide-react";
 
@@ -52,9 +52,14 @@ import {
   PREVIEW_PANEL_WIDTH_PX,
 } from "../previewLayout";
 import {
-  readListingViewMode,
+  nextListingViewMode,
   type ListingViewMode,
 } from "../listingView";
+import {
+  applyGlobalListingSettings,
+  readEffectiveFolderViewSettings,
+  writeFolderViewOverride,
+} from "../settings/folderViewSettings";
 import {
   restoreSelectionFromListing,
   shouldRefreshListing,
@@ -80,6 +85,7 @@ import { useGridCardSize } from "../settings/GridCardSizeProvider";
 import {
   computeGridColumnCount,
   GRID_GAP_PX,
+  type GridCardSize,
 } from "../settings/gridCardSize";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
 import { listingOverlayMessageKey } from "../listingEmpty";
@@ -195,7 +201,7 @@ export default function ExplorerApp() {
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder } = useListingSortOrder();
   const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
-  const { cardSize } = useGridCardSize();
+  const { cardSize, setCardSize } = useGridCardSize();
   const initialPath = useMemo(
     () => explorerPathFromPathname(window.location.pathname),
     [],
@@ -214,13 +220,13 @@ export default function ExplorerApp() {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [focusPane, setFocusPane] = useState<"file-list" | "preview">("file-list");
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
-    readListingViewMode(),
+    readEffectiveFolderViewSettings(initialPath).viewMode,
   );
   const [gridResizeActive, setGridResizeActive] = useState(false);
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
-  const [columnSorting, setColumnSorting] = useState<SortingState>([
-    { id: "name", desc: false },
-  ]);
+  const [columnSorting, setColumnSorting] = useState<SortingState>(() =>
+    readEffectiveFolderViewSettings(initialPath).columnSort,
+  );
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
@@ -706,6 +712,61 @@ export default function ExplorerApp() {
   gridColumnCountRef.current = gridColumnCount;
   const listingViewModeRef = useRef(listingViewMode);
   listingViewModeRef.current = listingViewMode;
+  const columnSortingRef = useRef(columnSorting);
+  columnSortingRef.current = columnSorting;
+  const cardSizeRef = useRef(cardSize);
+  cardSizeRef.current = cardSize;
+
+  useEffect(() => {
+    const effective = readEffectiveFolderViewSettings(currentPath);
+    setListingViewMode(effective.viewMode);
+    setColumnSorting(effective.columnSort);
+    setCardSize(effective.gridCardSize);
+  }, [currentPath, setCardSize]);
+
+  const handleListingViewModeChange = useCallback(
+    (mode: ListingViewMode, options?: { global?: boolean }) => {
+      setListingViewMode(mode);
+      if (options?.global) {
+        applyGlobalListingSettings({
+          viewMode: mode,
+          columnSort: columnSortingRef.current,
+          gridCardSize: cardSizeRef.current,
+        });
+        return;
+      }
+      writeFolderViewOverride(currentPathRef.current, { viewMode: mode });
+    },
+    [],
+  );
+
+  const toggleListingViewModeHandler = useCallback((options?: { global?: boolean }) => {
+    handleListingViewModeChange(nextListingViewMode(listingViewModeRef.current), options);
+  }, [handleListingViewModeChange]);
+
+  const applyGlobalListingSettingsHandler = useCallback(() => {
+    applyGlobalListingSettings({
+      viewMode: listingViewModeRef.current,
+      columnSort: columnSortingRef.current,
+      gridCardSize: cardSizeRef.current,
+    });
+  }, []);
+
+  const handleColumnSortingChange = useCallback<OnChangeFn<SortingState>>((updater) => {
+    setColumnSorting((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      writeFolderViewOverride(currentPathRef.current, { columnSort: next });
+      return next;
+    });
+  }, []);
+
+  const handleCardSizeChange = useCallback(
+    (size: GridCardSize) => {
+      setCardSize(size);
+      writeFolderViewOverride(currentPathRef.current, { gridCardSize: size });
+    },
+    [setCardSize],
+  );
 
   useEffect(() => {
     if (listingViewMode !== "grid") {
@@ -1118,6 +1179,8 @@ export default function ExplorerApp() {
       selectAllVisible,
       openSettings: () => navigate("settings"),
       toggleShowDotEntries,
+      toggleListingViewMode: toggleListingViewModeHandler,
+      applyGlobalListingSettings: applyGlobalListingSettingsHandler,
     },
     () => ({
       getImagePaths,
@@ -1365,7 +1428,7 @@ export default function ExplorerApp() {
             <ShowDotEntriesToggle />
             <ListingViewToggle
               mode={listingViewMode}
-              onChange={setListingViewMode}
+              onChange={handleListingViewModeChange}
             />
             <ThemeToggle mode={themeMode} onChange={setThemeMode} />
             <LanguageToggle iconOnly />
@@ -1496,6 +1559,7 @@ export default function ExplorerApp() {
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 onResizeActiveChange={setGridResizeActive}
+                onCardSizeChange={handleCardSizeChange}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {
@@ -1536,7 +1600,7 @@ export default function ExplorerApp() {
                 className="h-full rounded-none border-0 shadow-none"
                 columnLabels={listingColumnLabels}
                 sorting={columnSorting}
-                onSortingChange={setColumnSorting}
+                onSortingChange={handleColumnSortingChange}
               />
             )}
             {listCursor ? (

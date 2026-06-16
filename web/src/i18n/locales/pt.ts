@@ -122,6 +122,8 @@ export const pt: Record<MessageKey, string> = {
   "listing.column.modified": "Modificado",
   "listing.view.grid": "Visualização em grade",
   "listing.view.table": "Visualização em tabela",
+  "listing.view.gridHint": "{{shiftClick}}clique para definir a visualização padrão de todas as pastas.",
+  "listing.view.tableHint": "{{shiftClick}}clique para definir a visualização padrão de todas as pastas.",
   "listing.loadMore": "Carregar mais",
   "listing.loadingMore": "Carregando…",
   "listing.dotEntries.show": "Mostrar arquivos ocultos",
@@ -257,6 +259,12 @@ export const pt: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Alternar arquivos ocultos",
   "actions.view.toggleDotEntries.description":
     "Mostrar ou ocultar arquivos e pastas cujo nome começa com ponto",
+  "actions.view.toggleListingMode.name": "Alternar visualização lista/grade",
+  "actions.view.toggleListingMode.description":
+    "Alternar entre visualização em tabela e em grade nesta pasta",
+  "actions.view.applyGlobalListingSettings.name": "Aplicar configurações de visualização globalmente",
+  "actions.view.applyGlobalListingSettings.description":
+    "Salvar a visualização, ordenação de colunas e tamanho dos cartões da grade atuais como padrão e limpar substituições por pasta",
   "actions.navigation.category": "Navegação",
   "actions.navigation.open.name": "Abrir",
   "actions.navigation.up.name": "Subir",

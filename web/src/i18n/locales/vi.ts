@@ -122,6 +122,8 @@ export const vi: Record<MessageKey, string> = {
   "listing.column.modified": "Đã sửa đổi",
   "listing.view.grid": "Xem dạng lưới",
   "listing.view.table": "Xem dạng bảng",
+  "listing.view.gridHint": "{{shiftClick}}nhấp để đặt chế độ xem mặc định cho mọi thư mục.",
+  "listing.view.tableHint": "{{shiftClick}}nhấp để đặt chế độ xem mặc định cho mọi thư mục.",
   "listing.loadMore": "Tải thêm",
   "listing.loadingMore": "Đang tải…",
   "listing.dotEntries.show": "Hiện tệp ẩn",
@@ -256,6 +258,12 @@ export const vi: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Bật/tắt tệp ẩn",
   "actions.view.toggleDotEntries.description":
     "Hiện hoặc ẩn các tệp và thư mục có tên bắt đầu bằng dấu chấm",
+  "actions.view.toggleListingMode.name": "Chuyển chế độ danh sách/lưới",
+  "actions.view.toggleListingMode.description":
+    "Chuyển giữa dạng bảng và dạng lưới cho thư mục này",
+  "actions.view.applyGlobalListingSettings.name": "Áp dụng cài đặt xem toàn cục",
+  "actions.view.applyGlobalListingSettings.description":
+    "Lưu chế độ xem, thứ tự cột và kích thước thẻ lưới hiện tại làm mặc định và xóa ghi đè theo thư mục",
   "actions.navigation.category": "Điều hướng",
   "actions.navigation.open.name": "Mở",
   "actions.navigation.up.name": "Lên trên",

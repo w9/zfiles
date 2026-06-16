@@ -78,4 +78,6 @@ export type BuiltinActionDeps = {
   createNewFolder: () => Promise<void>;
   startRename: () => void;
   selectAllVisible: () => void;
+  toggleListingViewMode: (options?: { global?: boolean }) => void;
+  applyGlobalListingSettings: () => void;
 };

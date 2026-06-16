@@ -220,8 +220,8 @@ Per-folder view settings (localStorage): table/grid mode, table column sort, and
 - [x] `truncated-text-tooltip.tsx`: default tooltip `side` to `"bottom"` so filename (and other truncated-text) tooltips appear below the label
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `folderViewSettings.ts` + test: per-folder override map in localStorage; global column-sort key; read effective settings (override → global); write/clear helpers
-- [ ] `view.toggle-listing-mode` + `view.apply-global-listing-settings` actions; i18n (14 locales); toolbar Shift+toggle invokes global action
-- [ ] `ExplorerApp.tsx`: apply effective settings on `currentPath` change; persist view/column-sort/grid-size changes per folder
-- [ ] `ListingViewToggle.tsx`: stop writing global directly; pass `{ global: shiftKey }` to parent
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `folderViewSettings.ts` + test: per-folder override map in localStorage; global column-sort key; read effective settings (override → global); write/clear helpers
+- [x] `view.toggle-listing-mode` + `view.apply-global-listing-settings` actions; i18n (14 locales); toolbar Shift+toggle invokes global action
+- [x] `ExplorerApp.tsx`: apply effective settings on `currentPath` change; persist view/column-sort/grid-size changes per folder
+- [x] `ListingViewToggle.tsx`: stop writing global directly; pass `{ global: shiftKey }` to parent
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

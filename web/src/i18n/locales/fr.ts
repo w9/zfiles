@@ -122,6 +122,8 @@ export const fr: Record<MessageKey, string> = {
   "listing.column.modified": "Modifié",
   "listing.view.grid": "Vue en grille",
   "listing.view.table": "Vue en tableau",
+  "listing.view.gridHint": "{{shiftClick}}clic pour définir la vue par défaut de tous les dossiers.",
+  "listing.view.tableHint": "{{shiftClick}}clic pour définir la vue par défaut de tous les dossiers.",
   "listing.loadMore": "Charger plus",
   "listing.loadingMore": "Chargement…",
   "listing.dotEntries.show": "Afficher les fichiers cachés",
@@ -257,6 +259,12 @@ export const fr: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Basculer les fichiers cachés",
   "actions.view.toggleDotEntries.description":
     "Afficher ou masquer les fichiers et dossiers dont le nom commence par un point",
+  "actions.view.toggleListingMode.name": "Basculer vue liste/grille",
+  "actions.view.toggleListingMode.description":
+    "Basculer entre vue tableau et vue grille pour ce dossier",
+  "actions.view.applyGlobalListingSettings.name": "Appliquer les paramètres d'affichage globalement",
+  "actions.view.applyGlobalListingSettings.description":
+    "Enregistrer la vue, le tri des colonnes et la taille des cartes grille actuels comme valeurs par défaut et effacer les remplacements par dossier",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Ouvrir",
   "actions.navigation.up.name": "Remonter",

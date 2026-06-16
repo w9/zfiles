@@ -122,6 +122,8 @@ export const tr: Record<MessageKey, string> = {
   "listing.column.modified": "Değiştirilme",
   "listing.view.grid": "Izgara görünümü",
   "listing.view.table": "Tablo görünümü",
+  "listing.view.gridHint": "Tüm klasörler için varsayılan görünümü ayarlamak üzere {{shiftClick}}tıklayın.",
+  "listing.view.tableHint": "Tüm klasörler için varsayılan görünümü ayarlamak üzere {{shiftClick}}tıklayın.",
   "listing.loadMore": "Daha fazla yükle",
   "listing.loadingMore": "Yükleniyor…",
   "listing.dotEntries.show": "Gizli dosyaları göster",
@@ -256,6 +258,12 @@ export const tr: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Gizli dosyaları değiştir",
   "actions.view.toggleDotEntries.description":
     "Adı noktayla başlayan dosya ve klasörleri göster veya gizle",
+  "actions.view.toggleListingMode.name": "Liste/Izgara Görünümünü Değiştir",
+  "actions.view.toggleListingMode.description":
+    "Bu klasör için tablo ve ızgara görünümü arasında geçiş yap",
+  "actions.view.applyGlobalListingSettings.name": "Görünüm Ayarlarını Genel Olarak Uygula",
+  "actions.view.applyGlobalListingSettings.description":
+    "Geçerli görünümü, sütun sıralamasını ve ızgara kart boyutunu varsayılan olarak kaydet ve klasör bazlı geçersiz kılmaları temizle",
   "actions.navigation.category": "Gezinme",
   "actions.navigation.open.name": "Aç",
   "actions.navigation.up.name": "Yukarı çık",

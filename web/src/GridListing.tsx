@@ -14,6 +14,7 @@ import {
   GRID_GAP_PX,
   computeGridColumnCount,
   gridIconPixelSize,
+  type GridCardSize,
 } from "@/settings/gridCardSize";
 import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
@@ -34,6 +35,7 @@ type GridListingProps = {
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
   onResizeActiveChange?: (active: boolean) => void;
+  onCardSizeChange?: (size: GridCardSize) => void;
 };
 
 const GRID_ITEM_SELECTED_CLASS =
@@ -60,9 +62,11 @@ export default function GridListing({
   onViewportPointerDown,
   marqueeActive = false,
   onResizeActiveChange,
+  onCardSizeChange,
 }: GridListingProps) {
   const { t } = useTranslation();
-  const { cardSize, setCardSize, resetToDefault } = useGridCardSize();
+  const { cardSize, setCardSize: setCardSizeFromProvider, resetToDefault } = useGridCardSize();
+  const setCardSize = onCardSizeChange ?? setCardSizeFromProvider;
   const { enabled: gridImagePreviewsEnabled } = useGridImagePreviews();
   const cutPathSet = new Set(cutPaths);
   const parentRef = useRef<HTMLDivElement | null>(null);

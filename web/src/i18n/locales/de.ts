@@ -122,6 +122,8 @@ export const de: Record<MessageKey, string> = {
   "listing.column.modified": "Geändert",
   "listing.view.grid": "Rasteransicht",
   "listing.view.table": "Tabellenansicht",
+  "listing.view.gridHint": "{{shiftClick}}Klick, um die Standardansicht für alle Ordner festzulegen.",
+  "listing.view.tableHint": "{{shiftClick}}Klick, um die Standardansicht für alle Ordner festzulegen.",
   "listing.loadMore": "Mehr laden",
   "listing.loadingMore": "Wird geladen…",
   "listing.dotEntries.show": "Versteckte Dateien anzeigen",
@@ -257,6 +259,12 @@ export const de: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Versteckte Dateien umschalten",
   "actions.view.toggleDotEntries.description":
     "Dateien und Ordner anzeigen oder ausblenden, deren Namen mit einem Punkt beginnen",
+  "actions.view.toggleListingMode.name": "Listen-/Rasteransicht umschalten",
+  "actions.view.toggleListingMode.description":
+    "Zwischen Tabellen- und Rasteransicht für diesen Ordner wechseln",
+  "actions.view.applyGlobalListingSettings.name": "Ansichtseinstellungen global anwenden",
+  "actions.view.applyGlobalListingSettings.description":
+    "Aktuelle Ansicht, Spaltensortierung und Rasterkartengröße als Standard speichern und ordnerspezifische Überschreibungen löschen",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Öffnen",
   "actions.navigation.up.name": "Nach oben",

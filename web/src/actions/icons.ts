@@ -14,6 +14,8 @@ import {
   Eye,
   FolderOpen,
   FolderPlus,
+  Globe,
+  LayoutGrid,
   ListFilter,
   PanelRightOpen,
   Pencil,
@@ -30,6 +32,8 @@ import type { LucideIcon } from "lucide-react";
 const ICONS: Record<string, LucideIcon> = {
   "view.open-command-palette": Command,
   "view.toggle-dot-entries": Eye,
+  "view.toggle-listing-mode": LayoutGrid,
+  "view.apply-global-listing-settings": Globe,
   "navigation.open": ArrowRight,
   "navigation.up": ArrowUpToLine,
   "navigation.open-settings": Settings,

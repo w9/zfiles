@@ -55,6 +55,26 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
     {
+      id: "view.toggle-listing-mode",
+      nameKey: "actions.view.toggleListingMode.name",
+      descriptionKey: "actions.view.toggleListingMode.description",
+      categoryKey: "actions.view.category",
+      icon: "view.toggle-listing-mode",
+      handler: async () => {
+        getDeps().toggleListingViewMode();
+      },
+    },
+    {
+      id: "view.apply-global-listing-settings",
+      nameKey: "actions.view.applyGlobalListingSettings.name",
+      descriptionKey: "actions.view.applyGlobalListingSettings.description",
+      categoryKey: "actions.view.category",
+      icon: "view.apply-global-listing-settings",
+      handler: async () => {
+        getDeps().applyGlobalListingSettings();
+      },
+    },
+    {
       id: "selection.move-down",
       nameKey: "actions.selection.moveDown.name",
       categoryKey: "actions.selection.category",

@@ -122,6 +122,8 @@ export const ko: Record<MessageKey, string> = {
   "listing.column.modified": "수정한 날짜",
   "listing.view.grid": "그리드 보기",
   "listing.view.table": "테이블 보기",
+  "listing.view.gridHint": "모든 폴더의 기본 보기로 설정하려면 {{shiftClick}}클릭하세요.",
+  "listing.view.tableHint": "모든 폴더의 기본 보기로 설정하려면 {{shiftClick}}클릭하세요.",
   "listing.loadMore": "더 불러오기",
   "listing.loadingMore": "불러오는 중…",
   "listing.dotEntries.show": "숨김 파일 표시",
@@ -256,6 +258,11 @@ export const ko: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "숨김 파일 전환",
   "actions.view.toggleDotEntries.description":
     "점으로 시작하는 파일과 폴더를 표시하거나 숨깁니다",
+  "actions.view.toggleListingMode.name": "목록/그리드 보기 전환",
+  "actions.view.toggleListingMode.description": "이 폴더의 테이블 보기와 그리드 보기를 전환합니다",
+  "actions.view.applyGlobalListingSettings.name": "보기 설정을 전역으로 적용",
+  "actions.view.applyGlobalListingSettings.description":
+    "현재 보기, 열 정렬, 그리드 카드 크기를 기본값으로 저장하고 폴더별 재정의를 지웁니다",
   "actions.navigation.category": "탐색",
   "actions.navigation.open.name": "열기",
   "actions.navigation.up.name": "위로",

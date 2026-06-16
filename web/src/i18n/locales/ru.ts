@@ -122,6 +122,8 @@ export const ru: Record<MessageKey, string> = {
   "listing.column.modified": "Изменён",
   "listing.view.grid": "Вид сеткой",
   "listing.view.table": "Вид таблицей",
+  "listing.view.gridHint": "{{shiftClick}}щелчок — задать вид по умолчанию для всех папок.",
+  "listing.view.tableHint": "{{shiftClick}}щелчок — задать вид по умолчанию для всех папок.",
   "listing.loadMore": "Загрузить ещё",
   "listing.loadingMore": "Загрузка…",
   "listing.dotEntries.show": "Показать скрытые файлы",
@@ -256,6 +258,12 @@ export const ru: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Переключить скрытые файлы",
   "actions.view.toggleDotEntries.description":
     "Показать или скрыть файлы и папки, имена которых начинаются с точки",
+  "actions.view.toggleListingMode.name": "Переключить вид списка/сетки",
+  "actions.view.toggleListingMode.description":
+    "Переключить табличный и сеточный вид для этой папки",
+  "actions.view.applyGlobalListingSettings.name": "Применить настройки вида глобально",
+  "actions.view.applyGlobalListingSettings.description":
+    "Сохранить текущий вид, сортировку столбцов и размер карточек сетки как значения по умолчанию и сбросить переопределения для папок",
   "actions.navigation.category": "Навигация",
   "actions.navigation.open.name": "Открыть",
   "actions.navigation.up.name": "Вверх",

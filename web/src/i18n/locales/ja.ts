@@ -122,6 +122,8 @@ export const ja: Record<MessageKey, string> = {
   "listing.column.modified": "更新日時",
   "listing.view.grid": "グリッド表示",
   "listing.view.table": "テーブル表示",
+  "listing.view.gridHint": "すべてのフォルダーの既定表示にするには {{shiftClick}}クリック。",
+  "listing.view.tableHint": "すべてのフォルダーの既定表示にするには {{shiftClick}}クリック。",
   "listing.loadMore": "さらに読み込む",
   "listing.loadingMore": "読み込み中…",
   "listing.dotEntries.show": "隠しファイルを表示",
@@ -256,6 +258,11 @@ export const ja: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "隠しファイルの切り替え",
   "actions.view.toggleDotEntries.description":
     "ドットで始まるファイルやフォルダーの表示・非表示を切り替えます",
+  "actions.view.toggleListingMode.name": "リスト/グリッド表示を切り替え",
+  "actions.view.toggleListingMode.description": "このフォルダーのテーブル表示とグリッド表示を切り替えます",
+  "actions.view.applyGlobalListingSettings.name": "表示設定を全体に適用",
+  "actions.view.applyGlobalListingSettings.description":
+    "現在の表示、列の並べ替え、グリッドカードサイズを既定として保存し、フォルダーごとの上書きを解除します",
   "actions.navigation.category": "ナビゲーション",
   "actions.navigation.open.name": "開く",
   "actions.navigation.up.name": "上へ",

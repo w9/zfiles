@@ -25,6 +25,12 @@ export const GRID_CARD_MAX_SIZE_STORAGE_KEY = "zfiles-grid-card-max-size";
 
 const MAX_PRACTICAL_DIMENSION = 4096;
 
+function storage(): Storage | null {
+  return typeof globalThis.localStorage === "object" && globalThis.localStorage
+    ? globalThis.localStorage
+    : null;
+}
+
 function parsePositiveInt(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
@@ -127,64 +133,49 @@ export function gridIconPixelSize(cardWidth: number, cardHeight: number): number
 }
 
 export function readStoredGridCardDefaultSize(): GridCardSize {
-  if (typeof window === "undefined") {
-    return { ...BUILTIN_DEFAULT_GRID_CARD_SIZE };
-  }
   return parseGridCardSizeJson(
-    window.localStorage.getItem(GRID_CARD_DEFAULT_SIZE_STORAGE_KEY),
+    storage()?.getItem(GRID_CARD_DEFAULT_SIZE_STORAGE_KEY) ?? null,
     BUILTIN_DEFAULT_GRID_CARD_SIZE,
   );
 }
 
 export function storeGridCardDefaultSize(size: GridCardSize): void {
-  window.localStorage.setItem(GRID_CARD_DEFAULT_SIZE_STORAGE_KEY, JSON.stringify(size));
+  storage()?.setItem(GRID_CARD_DEFAULT_SIZE_STORAGE_KEY, JSON.stringify(size));
 }
 
 export function readStoredGridCardMinSize(): GridCardSize {
-  if (typeof window === "undefined") {
-    return { ...BUILTIN_MIN_GRID_CARD_SIZE };
-  }
   return parseGridCardSizeJson(
-    window.localStorage.getItem(GRID_CARD_MIN_SIZE_STORAGE_KEY),
+    storage()?.getItem(GRID_CARD_MIN_SIZE_STORAGE_KEY) ?? null,
     BUILTIN_MIN_GRID_CARD_SIZE,
   );
 }
 
 export function storeGridCardMinSize(size: GridCardSize): void {
-  window.localStorage.setItem(GRID_CARD_MIN_SIZE_STORAGE_KEY, JSON.stringify(size));
+  storage()?.setItem(GRID_CARD_MIN_SIZE_STORAGE_KEY, JSON.stringify(size));
 }
 
 export function readStoredGridCardMaxSize(): GridCardSize {
-  if (typeof window === "undefined") {
-    return {
-      width: UNLIMITED_GRID_CARD_DIMENSION,
-      height: UNLIMITED_GRID_CARD_DIMENSION,
-    };
-  }
-  return parseGridCardMaxSizeJson(window.localStorage.getItem(GRID_CARD_MAX_SIZE_STORAGE_KEY), {
+  return parseGridCardMaxSizeJson(storage()?.getItem(GRID_CARD_MAX_SIZE_STORAGE_KEY) ?? null, {
     width: UNLIMITED_GRID_CARD_DIMENSION,
     height: UNLIMITED_GRID_CARD_DIMENSION,
   });
 }
 
 export function storeGridCardMaxSize(size: GridCardSize): void {
-  window.localStorage.setItem(GRID_CARD_MAX_SIZE_STORAGE_KEY, JSON.stringify(size));
+  storage()?.setItem(GRID_CARD_MAX_SIZE_STORAGE_KEY, JSON.stringify(size));
 }
 
 export function readStoredGridCardSize(): GridCardSize {
-  if (typeof window === "undefined") {
-    return { ...BUILTIN_DEFAULT_GRID_CARD_SIZE };
-  }
   const defaultSize = readStoredGridCardDefaultSize();
   const min = readStoredGridCardMinSize();
   const max = readStoredGridCardMaxSize();
   const parsed = parseGridCardSizeJson(
-    window.localStorage.getItem(GRID_CARD_SIZE_STORAGE_KEY),
+    storage()?.getItem(GRID_CARD_SIZE_STORAGE_KEY) ?? null,
     defaultSize,
   );
   return clampGridCardSize(parsed, min, max);
 }
 
 export function storeGridCardSize(size: GridCardSize): void {
-  window.localStorage.setItem(GRID_CARD_SIZE_STORAGE_KEY, JSON.stringify(size));
+  storage()?.setItem(GRID_CARD_SIZE_STORAGE_KEY, JSON.stringify(size));
 }

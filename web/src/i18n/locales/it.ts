@@ -122,6 +122,8 @@ export const it: Record<MessageKey, string> = {
   "listing.column.modified": "Modificato",
   "listing.view.grid": "Vista griglia",
   "listing.view.table": "Vista tabella",
+  "listing.view.gridHint": "{{shiftClick}}clic per impostare la vista predefinita per tutte le cartelle.",
+  "listing.view.tableHint": "{{shiftClick}}clic per impostare la vista predefinita per tutte le cartelle.",
   "listing.loadMore": "Carica altro",
   "listing.loadingMore": "Caricamento…",
   "listing.dotEntries.show": "Mostra file nascosti",
@@ -257,6 +259,12 @@ export const it: Record<MessageKey, string> = {
   "actions.view.toggleDotEntries.name": "Attiva/disattiva file nascosti",
   "actions.view.toggleDotEntries.description":
     "Mostra o nascondi file e cartelle il cui nome inizia con un punto",
+  "actions.view.toggleListingMode.name": "Alterna vista elenco/griglia",
+  "actions.view.toggleListingMode.description":
+    "Passa dalla vista tabella alla griglia per questa cartella",
+  "actions.view.applyGlobalListingSettings.name": "Applica impostazioni vista globalmente",
+  "actions.view.applyGlobalListingSettings.description":
+    "Salva vista, ordinamento colonne e dimensione schede griglia correnti come predefiniti e cancella le override per cartella",
   "actions.navigation.category": "Navigazione",
   "actions.navigation.open.name": "Apri",
   "actions.navigation.up.name": "Su",
