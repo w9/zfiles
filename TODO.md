@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Show a listing loading overlay (spinner + i18n text) for initial load, navigation, and refresh — especially noticeable on local/LAN folders with tens of thousands of entries. Optimistic breadcrumb path update on navigation; ignore stale in-flight loads. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
+Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info becomes non-modal floating on wide viewports and bottom Sheet on narrow (<640px); fixed size, centered initial placement, ⌘I toggles, Escape/× close. Deferred: CLI banner redesign, listing loading overlay polish.
 
 ## TODO List
 
@@ -288,3 +288,10 @@ Show a listing loading overlay (spinner + i18n text) for initial load, navigatio
 - [x] Listing pane: semi-transparent overlay with spinner + `listing.loading` while loading; spin breadcrumb refresh during load; loading takes precedence over empty overlay
 - [x] i18n (14 locales): add `listing.loading`
 - [x] Unit tests for listing overlay priority helper; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `floatingPanelGeometry.ts` + tests: shared panel geometry (clamp, resize delta, parse/store, center default); slim `uploadTrayGeometry.ts` to upload-specific defaults
+- [ ] `FloatingPanel.tsx`: shared portal shell — no backdrop, drop shadow, drag title bar, optional 8-edge resize, Escape close, localStorage geometry
+- [ ] Refactor `UploadFloatingPanel.tsx` to wrap `FloatingPanel`; wire `UploadIndicator` unchanged behavior
+- [ ] `InfoDialog.tsx`: use `FloatingPanel` (wide) + bottom `Sheet` (narrow); fixed size, centered initial placement; header × + drag; non-modal (no explorer keyboard blocks)
+- [ ] `previewActions.ts` + `ExplorerApp`: ⌘I toggles open/closed; `when` allows close while open; drop `preview.info-open` shortcut blocking
+- [ ] i18n (14 locales): info panel drag/close/sheet labels; update e2e Get Info test for floating panel; run `pnpm test`; bump patch version
