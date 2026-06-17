@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Clear multi-selection on plain click in the listing scroll viewport (empty padding / below last row), without clearing keyboard focus; modifier clicks and marquee drag unchanged. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Explorer header top-right icon buttons use ghost variant (utility toggles, settings, action toolbar, cloud share/disconnect); settings page and connect dialog keep outline. Upload tray keeps bg-accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -389,3 +389,7 @@ Clear multi-selection on plain click in the listing scroll viewport (empty paddi
 - [x] `useListingMarqueeSelect.ts`: invoke `onEmptyClick` on pointer-up when helper passes; run empty-click path even when marquee disabled
 - [x] `ExplorerApp.tsx`: `clearMultiSelection` (selectedPaths only); wire `onEmptyClick`; respect `blockSelectionClearRef`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] Explorer-only icon buttons → ghost: `UploadIndicator`, `ShowDotEntriesToggle`, `ListingViewToggle`, `ActionToolbar`, `DisconnectButton`
+- [ ] Shared toggles: optional `variant` prop on `ThemeToggle`, `LanguageToggle`, `ShareUrlButton` (default outline); pass `variant="ghost"` from `ExplorerApp` (+ inline settings button)
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
