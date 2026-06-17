@@ -299,3 +299,8 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] `listingEmpty.ts`: export `LISTING_LOADING_OVERLAY_DELAY_MS` (300); `listingPaneOverlayKey` takes `showListingLoadingOverlay`
 - [x] `ExplorerApp.tsx`: delay listing overlay/spinner until 300ms into load; reset timer per load generation; breadcrumb refresh spin unchanged
 - [x] Update overlay helper tests; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `infoPanelGeometry.ts`: resizable limits (min 320×240, default 480×560); persist full geometry like upload tray
+- [ ] `MetadataValueRow.tsx`: shared label/value row with optional copy button (icon flash to checkmark); skip when no copy text
+- [ ] Wire copy rows into `PreviewPane.tsx` and `InfoDialog` aggregate summary; enable `FloatingPanel` resize
+- [ ] i18n (14 locales): `preview.copyValue` aria label; run `pnpm test`; bump patch version in `Cargo.toml`
