@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Center grid-view filenames under each card (grid only); inline rename stays full-width left-aligned; long names truncate with end ellipsis. Deferred: CLI banner redesign.
+Show a subtle primary ring on the grid card whose resize handle is being dragged; resize outline takes precedence over selection styling. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -337,3 +337,7 @@ Center grid-view filenames under each card (grid only); inline rename stays full
 
 - [x] `GridListing.tsx`: center filename label; keep inline rename full-width left-aligned; end ellipsis when truncated
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `useGridCardResize.ts`: track the grabbed card path while resizing; clear on pointer up/cancel
+- [ ] `GridListing.tsx`: apply lighter primary ring to the resizing card only; suppress selection chrome on that card during drag
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
