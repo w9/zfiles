@@ -357,5 +357,5 @@ Fix status-bar selection label to use generic item wording (not "files") when fo
 - [x] `BackendStatus.tsx`: use Globe / GlobeOff instead of Wifi / WifiOff for connected/offline
 - [x] Run `pnpm test`
 
-- [ ] `StatusBar.tsx`: use generic `selection.count` i18n key instead of file-only `selection.fileSelected` / `selection.filesSelected`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `StatusBar.tsx`: use generic `selection.count` i18n key instead of file-only `selection.fileSelected` / `selection.filesSelected`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

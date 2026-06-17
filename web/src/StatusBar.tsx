@@ -32,11 +32,9 @@ export default function StatusBar({
 }: StatusBarProps) {
   const { t } = useTranslation();
   const selectionLabel =
-    selectedCount === 1
-      ? t("selection.fileSelected")
-      : selectedCount > 1
-        ? t("selection.filesSelected", { count: String(selectedCount) })
-        : null;
+    selectedCount > 0
+      ? t("selection.count", { count: String(selectedCount) })
+      : null;
 
   return (
     <div
