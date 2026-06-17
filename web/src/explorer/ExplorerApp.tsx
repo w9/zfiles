@@ -82,7 +82,7 @@ import {
   type GridCardSize,
 } from "../settings/gridCardSize";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
-import { listingPaneOverlayKey } from "../listingEmpty";
+import { listingPaneOverlayKey, LISTING_LOADING_OVERLAY_DELAY_MS } from "../listingEmpty";
 import { filterDotEntries, isDotEntryName } from "../listingFilter";
 import {
   collectSelectAllWarnings,
@@ -209,6 +209,7 @@ export default function ExplorerApp() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
+  const [listingLoadingOverlay, setListingLoadingOverlay] = useState(false);
   const [listingLoaded, setListingLoaded] = useState(false);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
@@ -242,6 +243,7 @@ export default function ExplorerApp() {
   const selectedPathsRef = useRef(selectedPaths);
   const selectedPathRef = useRef(selectedPath);
   const listingLoadGenerationRef = useRef(0);
+  const listingLoadingOverlayTimerRef = useRef<number | null>(null);
   const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
     () => {},
   );
@@ -260,6 +262,27 @@ export default function ExplorerApp() {
     [cloudAuth.expired, cloudAuth.handleAuthError],
   );
 
+  const clearListingLoadingOverlayTimer = useCallback(() => {
+    if (listingLoadingOverlayTimerRef.current != null) {
+      window.clearTimeout(listingLoadingOverlayTimerRef.current);
+      listingLoadingOverlayTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleListingLoadingOverlay = useCallback(
+    (generation: number) => {
+      clearListingLoadingOverlayTimer();
+      setListingLoadingOverlay(false);
+      listingLoadingOverlayTimerRef.current = window.setTimeout(() => {
+        listingLoadingOverlayTimerRef.current = null;
+        if (generation === listingLoadGenerationRef.current) {
+          setListingLoadingOverlay(true);
+        }
+      }, LISTING_LOADING_OVERLAY_DELAY_MS);
+    },
+    [clearListingLoadingOverlayTimer],
+  );
+
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
     if (cloudAuth.expired) {
       return false;
@@ -275,6 +298,7 @@ export default function ExplorerApp() {
           : new Set<string>()
       : null;
     setListingLoading(true);
+    scheduleListingLoadingOverlay(generation);
     if (!options?.preserveSelection) {
       setListingLoaded(false);
       setCurrentPath(path);
@@ -322,11 +346,22 @@ export default function ExplorerApp() {
       return false;
     } finally {
       if (generation === listingLoadGenerationRef.current) {
+        clearListingLoadingOverlayTimer();
+        setListingLoadingOverlay(false);
         setListingLoading(false);
         setListingLoaded(true);
       }
     }
-  }, [backend, cloudAuth.expired, notifyStorageError, t]);
+  }, [
+    backend,
+    clearListingLoadingOverlayTimer,
+    cloudAuth.expired,
+    notifyStorageError,
+    scheduleListingLoadingOverlay,
+    t,
+  ]);
+
+  useEffect(() => () => clearListingLoadingOverlayTimer(), [clearListingLoadingOverlayTimer]);
 
   const loadMoreEntries = useCallback(async () => {
     if (cloudAuth.expired || !listCursor || loadingMore) {
@@ -806,7 +841,7 @@ export default function ExplorerApp() {
   }, [listingViewMode, listingLoaded, quickFilteredEntries.length]);
 
   const listingPaneOverlay = listingPaneOverlayKey({
-    listingLoading,
+    showListingLoadingOverlay: listingLoadingOverlay,
     listingLoaded,
     quickFilterActive,
     visibleEntryCount: visibleEntries.length,

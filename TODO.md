@@ -296,6 +296,6 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] `previewActions.ts` + `ExplorerApp`: ⌘I toggles open/closed; `when` allows close while open; drop `preview.info-open` shortcut blocking
 - [x] i18n (14 locales): info panel drag/close/sheet labels; update e2e Get Info test for floating panel; run `pnpm test`; bump patch version
 
-- [ ] `listingEmpty.ts`: export `LISTING_LOADING_OVERLAY_DELAY_MS` (300); `listingPaneOverlayKey` takes `showListingLoadingOverlay`
-- [ ] `ExplorerApp.tsx`: delay listing overlay/spinner until 300ms into load; reset timer per load generation; breadcrumb refresh spin unchanged
-- [ ] Update overlay helper tests; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `listingEmpty.ts`: export `LISTING_LOADING_OVERLAY_DELAY_MS` (300); `listingPaneOverlayKey` takes `showListingLoadingOverlay`
+- [x] `ExplorerApp.tsx`: delay listing overlay/spinner until 300ms into load; reset timer per load generation; breadcrumb refresh spin unchanged
+- [x] Update overlay helper tests; run `pnpm test`; bump patch version in `Cargo.toml`
