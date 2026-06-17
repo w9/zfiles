@@ -372,7 +372,7 @@ Status-bar selection and cut labels: type-specific single item, file/folder brea
 - [x] i18n (14 locales): replace `backend.kernelVersion` with `statusBar.serverVersion`; drop kernel from `statusBar.openAbout`
 - [x] Update e2e status-bar version assertion; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `selectionStatusText.ts`: file/folder count helpers + `formatSelectionStatusLabel` / `formatCutStatusLabel`; unit tests; register in `pnpm test`
-- [ ] `ExplorerApp.tsx` + `StatusBar.tsx`: precomputed selection/cut status strings via helper (drop `selectedCount` prop)
-- [ ] i18n (14 locales): `selection.folderSelected`, `selection.foldersSelected`, `selection.breakdownSelected`; `clipboard.cutManyFiles`, `clipboard.cutManyFolders`, `clipboard.cutBreakdown`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `selectionStatusText.ts`: file/folder count helpers + `formatSelectionStatusLabel` / `formatCutStatusLabel`; unit tests; register in `pnpm test`
+- [x] `ExplorerApp.tsx` + `StatusBar.tsx`: precomputed selection/cut status strings via helper (drop `selectedCount` prop)
+- [x] i18n (14 locales): `selection.folderSelected`, `selection.foldersSelected`, `selection.breakdownSelected`; `clipboard.cutManyFiles`, `clipboard.cutManyFolders`, `clipboard.cutBreakdown`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

@@ -18,7 +18,7 @@ type StatusBarProps = {
   cloudProvider?: S3Provider | null;
   kernelVersion?: string | null;
   readOnly?: boolean;
-  selectedCount?: number;
+  selectionStatusText?: string | null;
   cutStatusText?: string | null;
   onVersionClick?: () => void;
   className?: string;
@@ -30,16 +30,12 @@ export default function StatusBar({
   cloudProvider = null,
   kernelVersion,
   readOnly = false,
-  selectedCount = 0,
+  selectionStatusText = null,
   cutStatusText = null,
   onVersionClick,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
-  const selectionLabel =
-    selectedCount > 0
-      ? t("selection.count", { count: String(selectedCount) })
-      : null;
 
   return (
     <div
@@ -77,8 +73,8 @@ export default function StatusBar({
         {cutStatusText ? (
           <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
         ) : null}
-        {selectionLabel ? (
-          <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
+        {selectionStatusText ? (
+          <p className="shrink-0 text-xs text-muted-foreground">{selectionStatusText}</p>
         ) : null}
       </div>
       {backendMode === "local" && kernelVersion ? (

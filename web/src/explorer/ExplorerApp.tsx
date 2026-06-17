@@ -59,6 +59,11 @@ import {
   shouldRefreshListing,
 } from "../listingRefresh";
 import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
+import {
+  countSelectedFileFolders,
+  formatCutStatusLabel,
+  formatSelectionStatusLabel,
+} from "../selectionStatusText";
 import UploadIndicator from "../UploadIndicator";
 import UploadConflictDialog from "../UploadConflictDialog";
 import { useMultipartSessions } from "../cloud/useMultipartSessions";
@@ -703,6 +708,38 @@ export default function ExplorerApp() {
     () => filterDownloadablePaths(Array.from(selectedPaths), entries).length,
     [selectedPaths, entries],
   );
+
+  const entryByPath = useMemo(
+    () => new Map(entries.map((entry) => [entry.path, entry])),
+    [entries],
+  );
+
+  const statusTextTranslate = useCallback(
+    (key: string, params?: Record<string, string>) => t(key as MessageKey, params),
+    [t],
+  );
+
+  const selectionStatusText = useMemo(
+    () =>
+      formatSelectionStatusLabel(
+        countSelectedFileFolders(Array.from(selectedPaths), entryByPath),
+        statusTextTranslate,
+      ),
+    [selectedPaths, entryByPath, statusTextTranslate],
+  );
+
+  const cutStatusText = useMemo(() => {
+    if (fileOps.cutPaths.length === 0) {
+      return null;
+    }
+    const singleItemName =
+      fileOps.cutPaths.length === 1 ? basename(fileOps.cutPaths[0] ?? "") : null;
+    return formatCutStatusLabel(
+      countSelectedFileFolders(fileOps.cutPaths, entryByPath),
+      singleItemName,
+      statusTextTranslate,
+    );
+  }, [fileOps.cutPaths, entryByPath, statusTextTranslate]);
 
   const viewerImageCount = useMemo(() => {
     const listingSource = quickFilteredEntries.map((entry) => ({
@@ -1686,14 +1723,8 @@ export default function ExplorerApp() {
           cloudProvider={cloudSessionConfig?.provider ?? null}
           kernelVersion={kernelVersion}
           readOnly={readOnly}
-          selectedCount={selectedPaths.size}
-          cutStatusText={
-            fileOps.cutPaths.length > 0
-              ? fileOps.cutPaths.length === 1
-                ? t("clipboard.cutOne", { name: basename(fileOps.cutPaths[0] ?? "") })
-                : t("clipboard.cutMany", { count: String(fileOps.cutPaths.length) })
-              : null
-          }
+          selectionStatusText={selectionStatusText}
+          cutStatusText={cutStatusText}
           onVersionClick={() => setAboutOpen(true)}
         />
       </section>
