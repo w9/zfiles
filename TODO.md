@@ -335,5 +335,5 @@ Center grid-view filenames under each card (grid only); inline rename stays full
 - [x] `e2e/tests/smoke.spec.ts`: open Command Palette from Help menu instead of View
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `GridListing.tsx`: center filename label; keep inline rename full-width left-aligned; end ellipsis when truncated
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `GridListing.tsx`: center filename label; keep inline rename full-width left-aligned; end ellipsis when truncated
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
