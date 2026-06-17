@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Status-bar selection and cut labels: type-specific single item, file/folder breakdown when mixed (e.g. "2 files, 1 folder selected"). Deferred: CLI banner redesign.
+Fix file/folder plural labels: compose singular/plural unit fragments (1 vs 2+) for status-bar selection/cut and Get Info breakdown. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -376,3 +376,8 @@ Status-bar selection and cut labels: type-specific single item, file/folder brea
 - [x] `ExplorerApp.tsx` + `StatusBar.tsx`: precomputed selection/cut status strings via helper (drop `selectedCount` prop)
 - [x] i18n (14 locales): `selection.folderSelected`, `selection.foldersSelected`, `selection.breakdownSelected`; `clipboard.cutManyFiles`, `clipboard.cutManyFolders`, `clipboard.cutBreakdown`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `selectionStatusText.ts`: `formatFileUnit` / `formatFolderUnit` and compose breakdown labels (1 vs 2+); update tests
+- [ ] `InfoDialog.tsx`: use unit helpers for aggregate breakdown
+- [ ] i18n (14 locales): `selection.fileUnit.one/many`, `selection.folderUnit.one/many`; retemplate breakdown keys to `{{files}}, {{folders}}`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
