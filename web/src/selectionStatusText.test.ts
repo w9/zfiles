@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   countSelectedFileFolders,
   formatCutStatusLabel,
+  formatInfoAggregateBreakdown,
   formatSelectionStatusLabel,
 } from "./selectionStatusText";
 
@@ -18,14 +19,21 @@ const t = (key: string, params?: Record<string, string>) => {
   if (key === "selection.folderSelected") return "1 folder selected";
   if (key === "selection.filesSelected") return `${params?.count} files selected`;
   if (key === "selection.foldersSelected") return `${params?.count} folders selected`;
+  if (key === "selection.fileUnit.one") return "1 file";
+  if (key === "selection.fileUnit.many") return `${params?.count} files`;
+  if (key === "selection.folderUnit.one") return "1 folder";
+  if (key === "selection.folderUnit.many") return `${params?.count} folders`;
   if (key === "selection.breakdownSelected") {
-    return `${params?.files} files, ${params?.folders} folders selected`;
+    return `${params?.files}, ${params?.folders} selected`;
+  }
+  if (key === "preview.aggregate.breakdown") {
+    return `${params?.files}, ${params?.folders}`;
   }
   if (key === "clipboard.cutOne") return `Ready to move: ${params?.name}`;
   if (key === "clipboard.cutManyFiles") return `Ready to move ${params?.count} files`;
   if (key === "clipboard.cutManyFolders") return `Ready to move ${params?.count} folders`;
   if (key === "clipboard.cutBreakdown") {
-    return `Ready to move ${params?.files} files, ${params?.folders} folders`;
+    return `Ready to move ${params?.files}, ${params?.folders}`;
   }
   throw new Error(`unexpected key: ${key}`);
 };
@@ -59,10 +67,14 @@ test("formatSelectionStatusLabel uses homogeneous multi labels", () => {
   );
 });
 
-test("formatSelectionStatusLabel uses breakdown for mixed selections", () => {
+test("formatSelectionStatusLabel pluralizes each side of mixed breakdown", () => {
+  assert.equal(
+    formatSelectionStatusLabel({ fileCount: 1, folderCount: 11 }, t),
+    "1 file, 11 folders selected",
+  );
   assert.equal(
     formatSelectionStatusLabel({ fileCount: 2, folderCount: 1 }, t),
-    "2 files, 1 folders selected",
+    "2 files, 1 folder selected",
   );
 });
 
@@ -73,7 +85,7 @@ test("formatCutStatusLabel keeps name for a single cut item", () => {
   );
 });
 
-test("formatCutStatusLabel uses file/folder breakdown for multiple cuts", () => {
+test("formatCutStatusLabel pluralizes each side of mixed breakdown", () => {
   assert.equal(
     formatCutStatusLabel({ fileCount: 2, folderCount: 0 }, null, t),
     "Ready to move 2 files",
@@ -83,7 +95,12 @@ test("formatCutStatusLabel uses file/folder breakdown for multiple cuts", () => 
     "Ready to move 2 folders",
   );
   assert.equal(
-    formatCutStatusLabel({ fileCount: 2, folderCount: 1 }, null, t),
-    "Ready to move 2 files, 1 folders",
+    formatCutStatusLabel({ fileCount: 1, folderCount: 11 }, null, t),
+    "Ready to move 1 file, 11 folders",
   );
+});
+
+test("formatInfoAggregateBreakdown pluralizes each side", () => {
+  assert.equal(formatInfoAggregateBreakdown(1, 11, t), "1 file, 11 folders");
+  assert.equal(formatInfoAggregateBreakdown(3, 0, t), "3 files, 0 folders");
 });

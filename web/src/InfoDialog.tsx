@@ -6,6 +6,7 @@ import MetadataValueRow from "./MetadataValueRow";
 import type { FileEntry } from "./backend";
 import { formatSize } from "./listing-format";
 import { aggregateSelection } from "./infoSelectionSummary";
+import { formatInfoAggregateBreakdown } from "./selectionStatusText";
 import FloatingPanel, { resolveStoredOrDefaultGeometry } from "./FloatingPanel";
 import {
   INFO_PANEL_GEOMETRY_STORAGE_KEY,
@@ -18,7 +19,7 @@ import {
   isFloatingPanelSheetLayout,
   type ViewportSize,
 } from "./floatingPanelGeometry";
-import { useTranslation } from "@/i18n";
+import { useTranslation, type MessageKey } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -49,10 +50,11 @@ function InfoAggregateSummary({
     [paths, entryByPath],
   );
   const selectionLabel = t("preview.aggregate.summary", { count: String(summary.totalCount) });
-  const breakdownLabel = t("preview.aggregate.breakdown", {
-    files: String(summary.fileCount),
-    folders: String(summary.folderCount),
-  });
+  const breakdownLabel = formatInfoAggregateBreakdown(
+    summary.fileCount,
+    summary.folderCount,
+    (key, params) => t(key as MessageKey, params),
+  );
   const symlinksLabel =
     summary.symlinkCount > 0
       ? t("preview.aggregate.symlinks", { count: String(summary.symlinkCount) })

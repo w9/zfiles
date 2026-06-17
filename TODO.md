@@ -377,7 +377,7 @@ Fix file/folder plural labels: compose singular/plural unit fragments (1 vs 2+) 
 - [x] i18n (14 locales): `selection.folderSelected`, `selection.foldersSelected`, `selection.breakdownSelected`; `clipboard.cutManyFiles`, `clipboard.cutManyFolders`, `clipboard.cutBreakdown`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `selectionStatusText.ts`: `formatFileUnit` / `formatFolderUnit` and compose breakdown labels (1 vs 2+); update tests
-- [ ] `InfoDialog.tsx`: use unit helpers for aggregate breakdown
-- [ ] i18n (14 locales): `selection.fileUnit.one/many`, `selection.folderUnit.one/many`; retemplate breakdown keys to `{{files}}, {{folders}}`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `selectionStatusText.ts`: `formatFileUnit` / `formatFolderUnit` and compose breakdown labels (1 vs 2+); update tests
+- [x] `InfoDialog.tsx`: use unit helpers for aggregate breakdown
+- [x] i18n (14 locales): `selection.fileUnit.one/many`, `selection.folderUnit.one/many`; retemplate breakdown keys to `{{files}}, {{folders}}`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

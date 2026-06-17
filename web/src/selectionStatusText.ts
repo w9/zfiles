@@ -21,6 +21,30 @@ export function countSelectedFileFolders(
   };
 }
 
+export function formatFileUnit(count: number, t: StatusTextTranslate): string {
+  return count === 1
+    ? t("selection.fileUnit.one")
+    : t("selection.fileUnit.many", { count: String(count) });
+}
+
+export function formatFolderUnit(count: number, t: StatusTextTranslate): string {
+  return count === 1
+    ? t("selection.folderUnit.one")
+    : t("selection.folderUnit.many", { count: String(count) });
+}
+
+export function formatBreakdownLabel(
+  fileCount: number,
+  folderCount: number,
+  templateKey: string,
+  t: StatusTextTranslate,
+): string {
+  return t(templateKey, {
+    files: formatFileUnit(fileCount, t),
+    folders: formatFolderUnit(folderCount, t),
+  });
+}
+
 export function formatSelectionStatusLabel(
   counts: FileFolderCounts,
   t: StatusTextTranslate,
@@ -38,10 +62,12 @@ export function formatSelectionStatusLabel(
   }
 
   if (fileCount > 0 && folderCount > 0) {
-    return t("selection.breakdownSelected", {
-      files: String(fileCount),
-      folders: String(folderCount),
-    });
+    return formatBreakdownLabel(
+      fileCount,
+      folderCount,
+      "selection.breakdownSelected",
+      t,
+    );
   }
 
   if (fileCount > 0) {
@@ -67,10 +93,7 @@ export function formatCutStatusLabel(
   }
 
   if (fileCount > 0 && folderCount > 0) {
-    return t("clipboard.cutBreakdown", {
-      files: String(fileCount),
-      folders: String(folderCount),
-    });
+    return formatBreakdownLabel(fileCount, folderCount, "clipboard.cutBreakdown", t);
   }
 
   if (fileCount > 0) {
@@ -78,4 +101,12 @@ export function formatCutStatusLabel(
   }
 
   return t("clipboard.cutManyFolders", { count: String(folderCount) });
+}
+
+export function formatInfoAggregateBreakdown(
+  fileCount: number,
+  folderCount: number,
+  t: StatusTextTranslate,
+): string {
+  return formatBreakdownLabel(fileCount, folderCount, "preview.aggregate.breakdown", t);
 }
