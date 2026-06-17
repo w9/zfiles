@@ -257,7 +257,7 @@ When the server binds `0.0.0.0`, resolve the default-route IPv4 address for publ
 - [x] `cli.rs` tests: rename `public_bind_requires_token` coverage to assert a specific non-loopback IP (`192.168.1.50`) without token fails, with `--token` passes, the `0.0.0.0` wildcard without token still fails, and a loopback alias (`127.0.0.2`) without token passes
 - [x] `design/design.md` §6: update the "Auth default policy" row to "Refuse non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`) token-free"
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
-- [ ] Add Rust tests for replacing `0.0.0.0` share/QR host with the default-route IPv4 address and for localhost fallback messaging when detection fails
-- [ ] Implement default-route IPv4 detection for wildcard bind share output without changing the actual listener bind address
-- [ ] Wire the resolved display host into startup Share URL and QR code generation; include a clear fallback explanation when detection fails
-- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+- [x] Add Rust tests for replacing `0.0.0.0` share/QR host with the default-route IPv4 address and for localhost fallback messaging when detection fails
+- [x] Implement default-route IPv4 detection for wildcard bind share output without changing the actual listener bind address
+- [x] Wire the resolved display host into startup Share URL and QR code generation; include a clear fallback explanation when detection fails
+- [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`

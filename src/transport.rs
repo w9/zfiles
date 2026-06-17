@@ -162,15 +162,24 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let ui_lang = serve.locale()?;
     let explorer_url = browser::open_url(&bound, share_token.as_deref(), ui_lang);
     let public_share = serve.token && serve.is_public_bind()?;
+    let public_share_url =
+        public_share.then(|| browser::public_share_url(&bound, share_token.as_deref(), ui_lang));
+    let banner_url = public_share_url
+        .as_ref()
+        .map_or_else(|| explorer_url.clone(), |share| share.url.clone());
+    let share_note = public_share_url
+        .as_ref()
+        .and_then(|share| share.note.clone());
 
     banner::ServeBanner {
         root: root.display().to_string(),
-        url: explorer_url.clone(),
+        url: banner_url.clone(),
         token: share_token.clone(),
         read_only,
         auto_read_only: layout.auto_read_only,
         state_dir: Some(state_dir.display().to_string()),
         public_share,
+        share_note,
         #[cfg(feature = "dev-frontend")]
         vite_dev: serve
             .vite_dev_enabled()
@@ -184,7 +193,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         browser::open_async(explorer_url.clone());
     }
 
-    if public_share && let Err(error) = qr::print_url(&explorer_url) {
+    if public_share && let Err(error) = qr::print_url(&banner_url) {
         tracing::warn!(%error, "failed to render QR code");
     }
 

@@ -11,6 +11,7 @@ pub struct ServeBanner {
     pub auto_read_only: bool,
     pub state_dir: Option<String>,
     pub public_share: bool,
+    pub share_note: Option<String>,
     pub vite_dev: Option<String>,
 }
 
@@ -89,6 +90,10 @@ impl ServeBanner {
             lines.push(arrow_row("QR:", "scan below"));
         }
 
+        if let Some(note) = &self.share_note {
+            lines.push(arrow_row("Note:", note));
+        }
+
         if self.vite_dev.is_some() {
             if let Some(state_dir) = &self.state_dir {
                 lines.push(colors.dim(&arrow_row("State:", state_dir)));
@@ -136,6 +141,7 @@ mod tests {
             auto_read_only: false,
             state_dir: None,
             public_share: false,
+            share_note: None,
             vite_dev: None,
         }
     }
@@ -180,6 +186,23 @@ mod tests {
         assert!(rendered.contains("▸  QR:"));
         assert!(rendered.contains("scan below"));
         assert!(!rendered.contains("▸  Local:"));
+    }
+
+    #[test]
+    fn public_share_banner_can_explain_share_host_fallback() {
+        let banner = ServeBanner {
+            public_share: true,
+            share_note: Some(
+                "could not detect a LAN IP for 0.0.0.0; using localhost for the share URL"
+                    .to_string(),
+            ),
+            ..sample_banner()
+        };
+
+        let rendered = banner.render();
+        assert!(rendered.contains("▸  Note:"));
+        assert!(rendered.contains("could not detect a LAN IP"));
+        assert!(rendered.contains("using localhost for the share URL"));
     }
 
     #[test]

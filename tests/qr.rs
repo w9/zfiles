@@ -47,6 +47,10 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         "expected share URL with hex token in startup banner:\n{output}"
     );
     assert!(
+        !output.lines().any(|line| line.contains("http://0.0.0.0:")),
+        "share URL must not expose the wildcard bind address:\n{output}"
+    );
+    assert!(
         output.contains("▸  QR:") && output.contains("scan below"),
         "expected QR hint in startup banner:\n{output}"
     );
