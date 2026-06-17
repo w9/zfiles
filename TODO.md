@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix status-bar selection label to use generic item wording (not "files") when folders are selected. Then: lucide icons in status-bar badges (connection + read-only) instead of colored dots. Deferred: CLI banner redesign.
+Reword the connected status tooltip to "Connected to {{backend}} v{{version}}" (kernel locally, provider name in cloud). Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -359,3 +359,7 @@ Fix status-bar selection label to use generic item wording (not "files") when fo
 
 - [x] `StatusBar.tsx`: use generic `selection.count` i18n key instead of file-only `selection.fileSelected` / `selection.filesSelected`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `BackendStatus.tsx` + `StatusBar.tsx` + `ExplorerApp.tsx`: connected tooltip uses `backend` + `version` params (kernel locally, provider in cloud)
+- [ ] i18n (14 locales): update `backend.connectedTooltip`; add `backend.connectedBackend.kernel` and `backend.connectedTooltipBackendOnly`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
