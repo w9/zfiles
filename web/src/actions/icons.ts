@@ -5,6 +5,7 @@ import {
   ArrowUp,
   ArrowUpToLine,
   CheckCheck,
+  CircleHelp,
   ClipboardPaste,
   Command,
   Copy,
@@ -13,6 +14,7 @@ import {
   FolderOpen,
   FolderPlus,
   Globe,
+  Keyboard,
   LayoutGrid,
   ListFilter,
   Info,
@@ -53,6 +55,8 @@ const ICONS: Record<string, LucideIcon> = {
   "file.delete": Trash2,
   "preview.get-info": Info,
   "viewer.slideshow": Play,
+  "help.open-keyboard-shortcuts": Keyboard,
+  "help.open-about": CircleHelp,
 };
 
 export function actionIcon(id: string): LucideIcon | null {

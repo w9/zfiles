@@ -314,6 +314,6 @@ Add Lucide icons for help menu actions missing from `icons.ts` (`help.open-keybo
 - [x] Shortcut slots (`dropdown-menu`, `context-menu`, `menubar`, `command`): widen min gap between label and shortcut (`ms-3 flex-1 justify-end`)
 - [x] Run `pnpm test`
 
-- [ ] `icons.ts`: add `Keyboard` for `help.open-keyboard-shortcuts`, `CircleHelp` for `help.open-about`
-- [ ] `icons.test.ts`: assert every registered action id has a mapped icon
-- [ ] Run `pnpm test`
+- [x] `icons.ts`: add `Keyboard` for `help.open-keyboard-shortcuts`, `CircleHelp` for `help.open-about`
+- [x] `icons.test.ts`: assert every registered action id has a mapped icon
+- [x] Run `pnpm test`
