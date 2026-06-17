@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Add Lucide icons for help menu actions missing from `icons.ts` (`help.open-keyboard-shortcuts`, `help.open-about`); unit test that every registered builtin/help/preview/viewer action has an icon. Deferred: CLI banner redesign.
+Simplify grid view cards: strip per-item border, background, rounded corners, preview-area tint, and name divider; keep primary ring + tint for hover/selection. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -317,3 +317,7 @@ Add Lucide icons for help menu actions missing from `icons.ts` (`help.open-keybo
 - [x] `icons.ts`: add `Keyboard` for `help.open-keyboard-shortcuts`, `CircleHelp` for `help.open-about`
 - [x] `icons.test.ts`: assert every registered action id has a mapped icon
 - [x] Run `pnpm test`
+
+- [ ] `GridListing.tsx`: remove card border/background/rounded corners and name divider; keep hover + selection ring/tint
+- [ ] `GridCardPreview.tsx`: remove preview-area muted background
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
