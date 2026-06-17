@@ -1,6 +1,6 @@
 ## High-level plan next
 
-When the server binds `0.0.0.0`, resolve the default-route IPv4 address for public-facing startup output (Share URL, QR code, and xdg-open) so URLs are reachable; if detection fails, fall back to localhost and explain the fallback in the banner. Keep IPv6 wildcard handling deferred. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
+Redesign the CLI startup banner (`banner.rs`) for stronger visual hierarchy: spotlight the local/share URL as a bold, clickable (OSC 8) line with an `→` marker, inline the QR for shares, and condense all secondary info into dim `·`-separated lines (tilde-shortened paths, share-only token line, single dev footer). Deferred: `--verbose` gating of state/frontend diagnostics, dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
 
 ## TODO List
 
@@ -265,3 +265,9 @@ When the server binds `0.0.0.0`, resolve the default-route IPv4 address for publ
 - [x] `transport.rs`: pass resolved `banner_url` to `open_async` instead of raw `explorer_url` when binding `0.0.0.0`
 - [x] `browser.rs`: regression test documenting that `open_url` stays raw but share URL is browser-safe for wildcard bind
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `banner.rs` tests-first: rewrite/extend unit tests for the new layout — `→`-marker spotlight URL line (no `▸  Local:`/`Share:` rows), bold-cyan + OSC 8 hyperlink on TTY (assert `\x1b]8;;` wrap), condensed dim `·`-joined meta (`root · mode · access`), share-only `token` line, single dim dev footer, inline QR block + caption when `qr` present, no-ANSI/no-OSC plain path, and a `shorten_home` helper; drop obsolete `arrow_row`/label-row tests and the "is running" header assertion
+- [ ] `banner.rs` impl: add `qr: Option<String>` field; header `zfiles vX.Y.Z`; spotlight URL as `  →  {url}` in bold cyan wrapped in an OSC 8 hyperlink on TTY; condense secondary info into dim `·`-joined meta (`shorten_home(root) · read/write|read-only · token required|sharing on LAN`), a share-only dim `token  {token}` line, optional dim note line, and a single dim dev footer (`shorten_home(state) · Vite dev proxy ({url})`); add `shorten_home(path, home)` helper (used for root + state); remove `arrow_row`/label scaffolding
+- [ ] `transport.rs`: render the QR into the banner — compute `qr::render_url(&banner_url)` for public shares, pass `Some/None` into `ServeBanner.qr` (warn on error), and remove the separate post-banner `qr::print_url` call
+- [ ] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions to the new banner — match the `→` URL line instead of `▸  Local:`/`Share:`, the new QR caption instead of `▸  QR:`/`scan below`, and parse the token from the URL line for the loopback `--token` case (no standalone token row locally)
+- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
