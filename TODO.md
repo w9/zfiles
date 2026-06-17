@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix file/folder plural labels: compose singular/plural unit fragments (1 vs 2+) for status-bar selection/cut and Get Info breakdown. Deferred: CLI banner redesign.
+Remove horizontal dividers between data rows in table/list view (`VirtualListing`); keep the column-header separator and grid view unchanged. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -381,3 +381,6 @@ Fix file/folder plural labels: compose singular/plural unit fragments (1 vs 2+) 
 - [x] `InfoDialog.tsx`: use unit helpers for aggregate breakdown
 - [x] i18n (14 locales): `selection.fileUnit.one/many`, `selection.folderUnit.one/many`; retemplate breakdown keys to `{{files}}, {{folders}}`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `VirtualListing.tsx`: drop `border-b` from data row class; keep header `border-b`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
