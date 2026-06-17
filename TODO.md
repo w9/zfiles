@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Get Info opens with no selection (empty state); live-updates when items are selected. Deferred: CLI banner redesign.
+Move Command Palette from View to Help (menu, shortcuts dialog, palette category labels); keep `view.open-command-palette` id/keybinding and toolbar entry. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -329,3 +329,8 @@ Get Info opens with no selection (empty state); live-updates when items are sele
 - [x] Drop selection requirement from `preview.get-info` action and ⌘I keybinding
 - [x] `InfoDialog.tsx`: empty-state body when `paths.length === 0`; remove auto-close on empty selection
 - [x] Update `previewActions.test.ts`; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `builtins.ts`: set Command Palette `categoryKey` to `actions.help.category` (first Help item via registry order)
+- [ ] `shortcutDialogRows.ts`: add Help to `SHORTCUT_DIALOG_CATEGORY_ORDER`; update unit tests
+- [ ] `e2e/tests/smoke.spec.ts`: open Command Palette from Help menu instead of View
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
