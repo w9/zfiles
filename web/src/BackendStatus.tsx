@@ -1,4 +1,7 @@
+import { Globe, GlobeOff, Loader2 } from "lucide-react";
+
 import { backendStatusMessage, useTranslation } from "@/i18n";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -10,13 +13,35 @@ import { type BackendStatus } from "./useBackendStatus";
 type BackendStatusProps = {
   status: BackendStatus;
   kernelVersion?: string | null;
-  showLabel?: boolean;
 };
+
+const statusIconClass: Record<BackendStatus, string> = {
+  connected: "text-success",
+  connecting: "text-warning",
+  offline: "text-destructive",
+};
+
+const statusBadgeClass: Record<BackendStatus, string> = {
+  connected: "border-muted-foreground/30 text-muted-foreground",
+  connecting: "border-muted-foreground/30 text-muted-foreground",
+  offline: "border-destructive/40 text-destructive",
+};
+
+function StatusIcon({ status }: { status: BackendStatus }) {
+  const className = cn("size-3 shrink-0", statusIconClass[status]);
+  switch (status) {
+    case "connected":
+      return <Globe className={className} aria-hidden />;
+    case "connecting":
+      return <Loader2 className={cn(className, "animate-spin")} aria-hidden />;
+    case "offline":
+      return <GlobeOff className={className} aria-hidden />;
+  }
+}
 
 export default function BackendStatus({
   status,
   kernelVersion,
-  showLabel = false,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
   const label = backendStatusMessage(locale, status);
@@ -31,37 +56,22 @@ export default function BackendStatus({
             ? t("backend.offlineHint")
             : label;
 
-  const dot = (
-    <span
-      className={cn(
-        "size-2 shrink-0 rounded-full",
-        status === "connected" && "bg-success",
-        status === "connecting" && "bg-warning",
-        status === "offline" && "bg-destructive",
-      )}
-      tabIndex={showLabel ? undefined : 0}
-    />
-  );
-
   return (
-    <div
-      className="inline-flex shrink-0 items-center gap-2"
-      role="status"
-      aria-label={t("backend.status", { status: label })}
-    >
-      {showLabel ? (
-        dot
-      ) : (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>{dot}</TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs text-wrap">
-            {tooltipText}
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {showLabel ? (
-        <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
-      ) : null}
-    </div>
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Badge
+          variant="outline"
+          className={cn("gap-1", statusBadgeClass[status])}
+          role="status"
+          aria-label={t("backend.status", { status: label })}
+        >
+          <StatusIcon status={status} />
+          {label}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-wrap">
+        {tooltipText}
+      </TooltipContent>
+    </Tooltip>
   );
 }

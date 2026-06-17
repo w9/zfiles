@@ -354,5 +354,5 @@ Use lucide icons in status-bar badges (connection + read-only) instead of colore
 - [x] `BackendStatus.tsx`: swap status dots for lucide icons (Wifi / Loader2 / WifiOff)
 - [x] Run `pnpm test`
 
-- [ ] `BackendStatus.tsx`: use Globe / GlobeOff instead of Wifi / WifiOff for connected/offline
-- [ ] Run `pnpm test`
+- [x] `BackendStatus.tsx`: use Globe / GlobeOff instead of Wifi / WifiOff for connected/offline
+- [x] Run `pnpm test`
