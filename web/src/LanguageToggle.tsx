@@ -1,6 +1,6 @@
 import { Languages } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,16 +38,20 @@ function localeLabel(locale: Locale, t: (key: MessageKey) => string) {
 
 type LanguageToggleProps = {
   iconOnly?: boolean;
+  variant?: ButtonProps["variant"];
 };
 
-export default function LanguageToggle({ iconOnly = false }: LanguageToggleProps) {
+export default function LanguageToggle({
+  iconOnly = false,
+  variant = "outline",
+}: LanguageToggleProps) {
   const { locale, setLocale, t } = useTranslation();
   const currentLabel = localeLabel(locale, t);
 
   const menuButton = (
     <Button
       type="button"
-      variant="outline"
+      variant={variant}
       size={iconOnly ? "icon" : "sm"}
       className={iconOnly ? "h-8 w-8" : undefined}
       aria-label={t("language.group")}

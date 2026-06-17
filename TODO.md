@@ -390,6 +390,6 @@ Explorer header top-right icon buttons use ghost variant (utility toggles, setti
 - [x] `ExplorerApp.tsx`: `clearMultiSelection` (selectedPaths only); wire `onEmptyClick`; respect `blockSelectionClearRef`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Explorer-only icon buttons → ghost: `UploadIndicator`, `ShowDotEntriesToggle`, `ListingViewToggle`, `ActionToolbar`, `DisconnectButton`
-- [ ] Shared toggles: optional `variant` prop on `ThemeToggle`, `LanguageToggle`, `ShareUrlButton` (default outline); pass `variant="ghost"` from `ExplorerApp` (+ inline settings button)
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Explorer-only icon buttons → ghost: `UploadIndicator`, `ShowDotEntriesToggle`, `ListingViewToggle`, `ActionToolbar`, `DisconnectButton`
+- [x] Shared toggles: optional `variant` prop on `ThemeToggle`, `LanguageToggle`, `ShareUrlButton` (default outline); pass `variant="ghost"` from `ExplorerApp` (+ inline settings button)
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

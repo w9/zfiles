@@ -101,7 +101,7 @@ export default function UploadIndicator({
           <Button
             ref={triggerRef}
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
             className={cn(
               "relative h-8 w-8",

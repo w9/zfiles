@@ -22,7 +22,7 @@ export default function DisconnectButton({ onClick }: DisconnectButtonProps) {
         <span className="inline-flex">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
             className="h-8 w-8"
             aria-label={label}

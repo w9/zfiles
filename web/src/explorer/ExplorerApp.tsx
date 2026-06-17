@@ -1529,13 +1529,13 @@ export default function ExplorerApp() {
               mode={listingViewMode}
               onChange={handleListingViewModeChange}
             />
-            <ThemeToggle mode={themeMode} onChange={setThemeMode} />
-            <LanguageToggle iconOnly />
+            <ThemeToggle mode={themeMode} onChange={setThemeMode} variant="ghost" />
+            <LanguageToggle iconOnly variant="ghost" />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                   className="h-8 w-8"
                   aria-label={t("settings.title")}
@@ -1560,6 +1560,7 @@ export default function ExplorerApp() {
                   <ShareUrlButton
                     input={connectionConfigToShareInput(cloudSessionConfig)}
                     explorerPath={currentPath}
+                    variant="ghost"
                   />
                 ) : null}
                 <DisconnectButton onClick={onCloudDisconnect} />

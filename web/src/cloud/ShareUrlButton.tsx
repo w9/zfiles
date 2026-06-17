@@ -1,6 +1,6 @@
 import { Link2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -19,12 +19,14 @@ type ShareUrlButtonProps = {
   input: ShareUrlInput;
   explorerPath?: string;
   includeCredentials?: boolean;
+  variant?: ButtonProps["variant"];
 };
 
 export default function ShareUrlButton({
   input,
   explorerPath = "",
   includeCredentials,
+  variant = "outline",
 }: ShareUrlButtonProps) {
   const { t } = useTranslation();
   const label = t("connect.shareUrl.label");
@@ -50,7 +52,7 @@ export default function ShareUrlButton({
         <span className="inline-flex">
           <Button
             type="button"
-            variant="outline"
+            variant={variant}
             size="icon"
             className="h-8 w-8"
             aria-label={label}

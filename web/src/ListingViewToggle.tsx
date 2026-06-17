@@ -33,7 +33,7 @@ export default function ListingViewToggle({ mode, onChange }: ListingViewToggleP
       <TooltipTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon"
           className="h-8 w-8"
           aria-label={label}

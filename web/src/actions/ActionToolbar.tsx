@@ -54,7 +54,7 @@ export default function ActionToolbar({
               <span className="inline-flex">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                   className={cn("h-8 w-8", !available && "opacity-50")}
                   disabled={!available}
