@@ -253,6 +253,8 @@ export const ko: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "모든 그리드 카드 크기 조정",
   "statusBar.label": "상태 표시줄",
   "statusBar.openAbout": "zfiles 정보(커널 v{{version}})",
+  "statusBar.readOnly": "읽기 전용",
+  "statusBar.readOnlyTooltip": "업로드 및 파일 변경이 비활성화되어 있습니다.",
   "about.title": "zfiles 정보",
   "about.appName": "zfiles",
   "about.tagline": "브라우저 기반 탐색기가 있는 로컬 파일 서버.",

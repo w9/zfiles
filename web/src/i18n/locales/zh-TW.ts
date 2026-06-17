@@ -243,6 +243,8 @@ export const zhTW: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "調整所有格狀卡片大小",
   "statusBar.label": "狀態列",
   "statusBar.openAbout": "關於 zfiles（核心 v{{version}}）",
+  "statusBar.readOnly": "唯讀",
+  "statusBar.readOnlyTooltip": "無法上傳或修改檔案。",
   "about.title": "關於 zfiles",
   "about.appName": "zfiles",
   "about.tagline": "附瀏覽器介面的本機檔案伺服器。",

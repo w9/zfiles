@@ -254,6 +254,9 @@ export const pt: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Redimensionar todos os cartões",
   "statusBar.label": "Barra de status",
   "statusBar.openAbout": "Sobre o zfiles (kernel v{{version}})",
+  "statusBar.readOnly": "Somente leitura",
+  "statusBar.readOnlyTooltip":
+    "Envios e alterações de arquivos estão desativados.",
   "about.title": "Sobre o zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Servidor de ficheiros local com explorador no navegador.",

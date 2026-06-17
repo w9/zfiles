@@ -1683,6 +1683,7 @@ export default function ExplorerApp() {
         <StatusBar
           backendStatus={backendStatus}
           kernelVersion={kernelVersion}
+          readOnly={readOnly}
           selectedCount={selectedPaths.size}
           cutStatusText={
             fileOps.cutPaths.length > 0

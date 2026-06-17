@@ -253,6 +253,8 @@ export const id: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Ubah ukuran semua kartu grid",
   "statusBar.label": "Bilah status",
   "statusBar.openAbout": "Tentang zfiles (kernel v{{version}})",
+  "statusBar.readOnly": "Hanya-baca",
+  "statusBar.readOnlyTooltip": "Unggahan dan perubahan file dinonaktifkan.",
   "about.title": "Tentang zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Server berkas lokal dengan penjelajah berbasis browser.",

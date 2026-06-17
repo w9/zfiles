@@ -253,6 +253,8 @@ export const ru: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Изменить размер всех карточек",
   "statusBar.label": "Строка состояния",
   "statusBar.openAbout": "О zfiles (ядро v{{version}})",
+  "statusBar.readOnly": "Только чтение",
+  "statusBar.readOnlyTooltip": "Загрузка и изменение файлов отключены.",
   "about.title": "О zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Локальный файловый сервер с проводником в браузере.",

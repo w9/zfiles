@@ -342,7 +342,7 @@ Add subtle read-only reminders in the explorer: a status-bar badge with tooltip,
 - [x] `GridListing.tsx`: apply lighter primary ring to the resizing card only; suppress selection chrome on that card during drag
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `StatusBar.tsx` + `ExplorerApp.tsx`: persistent read-only badge (Lock + label) with tooltip when `readOnly`
-- [ ] `UploadPanel.tsx` + `UploadIndicator.tsx`: pass `readOnly`; empty tray shows existing `upload.readOnly` string
-- [ ] i18n (14 locales): `statusBar.readOnly` + `statusBar.readOnlyTooltip`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `StatusBar.tsx` + `ExplorerApp.tsx`: persistent read-only badge (Lock + label) with tooltip when `readOnly`
+- [x] `UploadPanel.tsx` + `UploadIndicator.tsx`: pass `readOnly`; empty tray shows existing `upload.readOnly` string
+- [x] i18n (14 locales): `statusBar.readOnly` + `statusBar.readOnlyTooltip`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

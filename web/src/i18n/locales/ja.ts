@@ -253,6 +253,8 @@ export const ja: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "すべてのグリッドカードをリサイズ",
   "statusBar.label": "ステータスバー",
   "statusBar.openAbout": "zfiles について（カーネル v{{version}}）",
+  "statusBar.readOnly": "読み取り専用",
+  "statusBar.readOnlyTooltip": "アップロードとファイルの変更は無効です。",
   "about.title": "zfiles について",
   "about.appName": "zfiles",
   "about.tagline": "ブラウザベースのエクスプローラー付きローカルファイルサーバー。",

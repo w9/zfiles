@@ -1,11 +1,20 @@
+import { Lock } from "lucide-react";
+
 import BackendStatus from "./BackendStatus";
 import { useTranslation } from "@/i18n";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
 
 type StatusBarProps = {
   backendStatus: BackendStatusValue;
   kernelVersion?: string | null;
+  readOnly?: boolean;
   selectedCount?: number;
   cutStatusText?: string | null;
   onVersionClick?: () => void;
@@ -15,6 +24,7 @@ type StatusBarProps = {
 export default function StatusBar({
   backendStatus,
   kernelVersion,
+  readOnly = false,
   selectedCount = 0,
   cutStatusText = null,
   onVersionClick,
@@ -45,6 +55,22 @@ export default function StatusBar({
           kernelVersion={kernelVersion}
           showLabel={showConnectionStatus}
         />
+        {readOnly ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="outline"
+                className="gap-1 border-muted-foreground/30 text-muted-foreground"
+              >
+                <Lock className="size-3" aria-hidden />
+                {t("statusBar.readOnly")}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs text-wrap">
+              {t("statusBar.readOnlyTooltip")}
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
         {cutStatusText ? (
           <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
         ) : null}

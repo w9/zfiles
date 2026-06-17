@@ -254,6 +254,8 @@ export const de: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Alle Karten skalieren",
   "statusBar.label": "Statusleiste",
   "statusBar.openAbout": "Über zfiles (Kernel v{{version}})",
+  "statusBar.readOnly": "Schreibgeschützt",
+  "statusBar.readOnlyTooltip": "Uploads und Dateiänderungen sind deaktiviert.",
   "about.title": "Über zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Lokaler Dateiserver mit browserbasiertem Explorer.",

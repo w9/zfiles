@@ -88,6 +88,7 @@ export default function UploadIndicator({
     onPause,
     onResume,
     onClose: closePanel,
+    readOnly,
     unfinishedSessions: sessionPanel,
     cloudMultipart: sessionPanel,
     onChooseFiles: readOnly ? undefined : openFilePicker,

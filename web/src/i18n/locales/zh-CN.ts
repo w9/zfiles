@@ -243,6 +243,8 @@ export const zhCN: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "调整所有网格卡片大小",
   "statusBar.label": "状态栏",
   "statusBar.openAbout": "关于 zfiles（内核 v{{version}}）",
+  "statusBar.readOnly": "只读",
+  "statusBar.readOnlyTooltip": "无法上传或修改文件。",
   "about.title": "关于 zfiles",
   "about.appName": "zfiles",
   "about.tagline": "带浏览器界面的本地文件服务器。",

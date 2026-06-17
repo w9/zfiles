@@ -46,6 +46,7 @@ type UploadPanelProps = {
   onResume: (queueId: string) => void;
   onClose?: () => void;
   onChooseFiles?: () => void;
+  readOnly?: boolean;
   unfinishedSessions?: UnfinishedSessionsPanelProps;
   /** @deprecated Use unfinishedSessions */
   cloudMultipart?: UnfinishedSessionsPanelProps;
@@ -443,6 +444,7 @@ export default function UploadPanel({
   onResume,
   onClose,
   onChooseFiles,
+  readOnly = false,
   unfinishedSessions,
   cloudMultipart,
   onDragHandlePointerDown,
@@ -545,7 +547,7 @@ export default function UploadPanel({
         </ScrollArea>
       ) : (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-          {t("upload.tray.empty")}
+          {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
         </p>
       )}
     </div>

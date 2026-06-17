@@ -253,6 +253,8 @@ export const vi: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Thay đổi kích thước tất cả thẻ lưới",
   "statusBar.label": "Thanh trạng thái",
   "statusBar.openAbout": "Giới thiệu zfiles (nhân v{{version}})",
+  "statusBar.readOnly": "Chỉ đọc",
+  "statusBar.readOnlyTooltip": "Tải lên và thay đổi tệp đã bị tắt.",
   "about.title": "Giới thiệu zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Máy chủ tệp cục bộ với trình khám phá trên trình duyệt.",

@@ -252,6 +252,8 @@ export const en = {
   "listing.grid.resizeHandle": "Resize all grid cards",
   "statusBar.label": "Status bar",
   "statusBar.openAbout": "About zfiles (kernel v{{version}})",
+  "statusBar.readOnly": "Read-only",
+  "statusBar.readOnlyTooltip": "Uploads and file changes are disabled.",
   "about.title": "About zfiles",
   "about.appName": "zfiles",
   "about.tagline": "Local file server with a browser-based explorer.",

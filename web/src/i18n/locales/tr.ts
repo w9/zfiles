@@ -253,6 +253,8 @@ export const tr: Record<MessageKey, string> = {
   "listing.grid.resizeHandle": "Tüm ızgara kartlarını yeniden boyutlandır",
   "statusBar.label": "Durum çubuğu",
   "statusBar.openAbout": "zfiles hakkında (çekirdek v{{version}})",
+  "statusBar.readOnly": "Salt okunur",
+  "statusBar.readOnlyTooltip": "Yüklemeler ve dosya değişiklikleri devre dışı.",
   "about.title": "zfiles hakkında",
   "about.appName": "zfiles",
   "about.tagline": "Tarayıcı tabanlı gezginli yerel dosya sunucusu.",
