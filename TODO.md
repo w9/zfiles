@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Add subtle read-only reminders in the explorer: a status-bar badge with tooltip, and the existing `upload.readOnly` copy in the upload tray empty state. Deferred: CLI banner redesign.
+Restyle the backend connection indicator as a status-bar badge (matching read-only), replacing the dot + separate label. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -346,3 +346,7 @@ Add subtle read-only reminders in the explorer: a status-bar badge with tooltip,
 - [x] `UploadPanel.tsx` + `UploadIndicator.tsx`: pass `readOnly`; empty tray shows existing `upload.readOnly` string
 - [x] i18n (14 locales): `statusBar.readOnly` + `statusBar.readOnlyTooltip`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `BackendStatus.tsx`: replace dot + label with outline badge (status dot + text) and tooltip; drop `showLabel`
+- [ ] `StatusBar.tsx`: remove `showConnectionStatus` / `showLabel` wiring
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
