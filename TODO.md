@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Redesign the CLI startup banner (`banner.rs`) for stronger visual hierarchy: spotlight the local/share URL as a bold, clickable (OSC 8) line with an `→` marker, inline the QR for shares, and condense all secondary info into dim `·`-separated lines (tilde-shortened paths, share-only token line, single dev footer). Deferred: `--verbose` gating of state/frontend diagnostics, dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
+Fix marquee retract deselection: replace cumulative client-space hits with content-space hit testing so shrinking the box deselects rows while auto-scroll still selects across virtualized pages. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
 
 ## TODO List
 
@@ -271,3 +271,8 @@ Redesign the CLI startup banner (`banner.rs`) for stronger visual hierarchy: spo
 - [ ] `transport.rs`: render the QR into the banner — compute `qr::render_url(&banner_url)` for public shares, pass `Some/None` into `ServeBanner.qr` (warn on error), and remove the separate post-banner `qr::print_url` call
 - [ ] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions to the new banner — match the `→` URL line instead of `▸  Local:`/`Share:`, the new QR caption instead of `▸  QR:`/`scan below`, and parse the token from the URL line for the loopback `--token` case (no standalone token row locally)
 - [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `listingMarqueeSelect.ts` tests: content-space marquee hit-testing — retract shrinks selection; auto-scroll across pages keeps swept rows selected
+- [ ] `listingMarqueeSelect.ts` + layout resolvers: hit-test entries in scroll content coordinates instead of viewport-only client rects
+- [ ] `useListingMarqueeSelect.ts`: remove cumulative `marqueeHits`; drive selection from content-space hits each frame
+- [ ] Run `pnpm test` for marquee/listing tests
