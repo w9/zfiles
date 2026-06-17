@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Simplify grid view cards: strip per-item border, background, rounded corners, preview-area tint, and name divider; keep primary ring + tint for hover/selection. Deferred: CLI banner redesign.
+Simplify grid view cards: strip per-item border, background, rounded corners, preview-area tint, and name divider; keep primary ring + tint for hover/selection. Get Info stays open on outside clicks (no selection clear while open; sheet ignores overlay dismiss). Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -321,3 +321,7 @@ Simplify grid view cards: strip per-item border, background, rounded corners, pr
 - [x] `GridListing.tsx`: remove card border/background/rounded corners and name divider; keep hover + selection ring/tint
 - [x] `GridCardPreview.tsx`: remove preview-area muted background
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerApp.tsx`: block background-click selection clear while Get Info is open
+- [ ] `InfoDialog.tsx`: ignore Sheet `onOpenChange(false)` from outside overlay clicks
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
