@@ -12,7 +12,7 @@ const sampleActions: ActionDefinition[] = [
   {
     id: "view.open-command-palette",
     nameKey: "actions.view.openCommandPalette.name",
-    categoryKey: "actions.view.category",
+    categoryKey: "actions.help.category",
     handler: async () => {},
   },
   {
@@ -46,6 +46,6 @@ test("groupShortcutDialogRows preserves category order", () => {
 
   assert.deepEqual(
     groups.map((group) => group.categoryKey),
-    ["actions.view.category", "actions.selection.category"],
+    ["actions.selection.category", "actions.help.category"],
   );
 });

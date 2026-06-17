@@ -38,7 +38,7 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       id: "view.open-command-palette",
       nameKey: "actions.view.openCommandPalette.name",
       descriptionKey: "actions.view.openCommandPalette.description",
-      categoryKey: "actions.view.category",
+      categoryKey: "actions.help.category",
       defaultKeybinding: "Mod+P",
       handler: async () => {
         getDeps().openCommandPalette();

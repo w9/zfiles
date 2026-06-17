@@ -43,6 +43,7 @@ export const SHORTCUT_DIALOG_CATEGORY_ORDER = [
   "actions.file.category",
   "viewer.category",
   "preview.category",
+  "actions.help.category",
 ] as const;
 
 export function groupShortcutDialogRows(

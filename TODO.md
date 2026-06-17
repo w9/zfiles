@@ -330,7 +330,7 @@ Move Command Palette from View to Help (menu, shortcuts dialog, palette category
 - [x] `InfoDialog.tsx`: empty-state body when `paths.length === 0`; remove auto-close on empty selection
 - [x] Update `previewActions.test.ts`; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `builtins.ts`: set Command Palette `categoryKey` to `actions.help.category` (first Help item via registry order)
-- [ ] `shortcutDialogRows.ts`: add Help to `SHORTCUT_DIALOG_CATEGORY_ORDER`; update unit tests
-- [ ] `e2e/tests/smoke.spec.ts`: open Command Palette from Help menu instead of View
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `builtins.ts`: set Command Palette `categoryKey` to `actions.help.category` (first Help item via registry order)
+- [x] `shortcutDialogRows.ts`: add Help to `SHORTCUT_DIALOG_CATEGORY_ORDER`; update unit tests
+- [x] `e2e/tests/smoke.spec.ts`: open Command Palette from Help menu instead of View
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

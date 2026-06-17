@@ -177,7 +177,7 @@ test("lang query param switches UI to Simplified Chinese", async ({ page }) => {
 test("menu bar and toolbar expose built-in action surfaces", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("toolbar", { name: "Action toolbar" })).toBeVisible();
-  await page.getByRole("menubar").getByRole("menuitem", { name: "View" }).click();
+  await page.getByRole("menubar").getByRole("menuitem", { name: "Help" }).click();
   const commandPaletteItem = page.getByRole("menuitem", { name: "Command Palette" });
   await expect(commandPaletteItem).toBeVisible();
   await expect(commandPaletteItem).toContainText("Ctrl+P");
