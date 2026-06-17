@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { GridCardSize } from "@/settings/gridCardSize";
 
@@ -11,6 +11,7 @@ type UseGridCardResizeOptions = {
 
 type ResizeSession = {
   pointerId: number;
+  path: string;
   startX: number;
   startY: number;
   startSize: GridCardSize;
@@ -22,6 +23,7 @@ export function useGridCardResize({
   onReset,
   onActiveChange,
 }: UseGridCardResizeOptions) {
+  const [resizingPath, setResizingPath] = useState<string | null>(null);
   const sessionRef = useRef<ResizeSession | null>(null);
   const cardSizeRef = useRef(cardSize);
   const onSizeChangeRef = useRef(onSizeChange);
@@ -38,6 +40,7 @@ export function useGridCardResize({
       target.releasePointerCapture(pointerId);
     }
     sessionRef.current = null;
+    setResizingPath(null);
     onActiveChangeRef.current?.(false);
   }, []);
 
@@ -82,20 +85,24 @@ export function useGridCardResize({
     };
   }, [finishSession]);
 
-  const onHandlePointerDown = useCallback((event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    sessionRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      startSize: { ...cardSizeRef.current },
+  const onHandlePointerDown = useCallback((path: string) => {
+    return (event: React.PointerEvent<HTMLElement>) => {
+      if (event.button !== 0) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      sessionRef.current = {
+        pointerId: event.pointerId,
+        path,
+        startX: event.clientX,
+        startY: event.clientY,
+        startSize: { ...cardSizeRef.current },
+      };
+      setResizingPath(path);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      onActiveChangeRef.current?.(true);
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    onActiveChangeRef.current?.(true);
   }, []);
 
   const onHandleDoubleClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
@@ -107,5 +114,6 @@ export function useGridCardResize({
   return {
     onHandlePointerDown,
     onHandleDoubleClick,
+    resizingPath,
   };
 }

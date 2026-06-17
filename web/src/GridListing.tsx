@@ -49,6 +49,8 @@ const GRID_ITEM_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
+const GRID_ITEM_RESIZING_CLASS =
+  "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 
 const VIEWPORT_PADDING_PX = 12;
@@ -93,7 +95,7 @@ export default function GridListing({
   );
   const iconPixelSize = gridIconPixelSize(cardSize.width, cardSize.height);
 
-  const { onHandlePointerDown, onHandleDoubleClick } = useGridCardResize({
+  const { onHandlePointerDown, onHandleDoubleClick, resizingPath } = useGridCardResize({
     cardSize,
     onSizeChange: setCardSize,
     onReset: resetToDefault,
@@ -240,6 +242,7 @@ export default function GridListing({
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   const isCut = cutPathSet.has(entry.path);
                   const isEditing = inlineEditPath === entry.path;
+                  const isResizing = resizingPath === entry.path;
                   return (
                     <div
                       key={entry.key}
@@ -258,7 +261,9 @@ export default function GridListing({
                           dimmed && "opacity-70",
                           isCut && GRID_ITEM_CUT_CLASS,
                           entry.quickFilterMatched === false && "opacity-40",
+                          isResizing && GRID_ITEM_RESIZING_CLASS,
                           isSelected &&
+                            !isResizing &&
                             (isFocused
                               ? GRID_ITEM_FOCUS_SELECTED_CLASS
                               : GRID_ITEM_SELECTED_CLASS),
@@ -311,7 +316,7 @@ export default function GridListing({
                         className={cn(
                           "absolute bottom-0 right-0 z-10 flex h-4 w-4 translate-x-0.5 translate-y-0.5 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
                         )}
-                        onPointerDown={onHandlePointerDown}
+                        onPointerDown={onHandlePointerDown(entry.path)}
                         onDoubleClick={onHandleDoubleClick}
                       >
                         <span
