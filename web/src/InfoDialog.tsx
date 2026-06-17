@@ -157,12 +157,16 @@ export default function InfoDialog({
   const sheetLayout = useInfoSheetLayout();
   const singlePath = paths.length === 1 ? paths[0]! : null;
   const title =
-    singlePath != null
-      ? t("preview.getInfo.titleSingle", { name: basename(singlePath) })
-      : t("preview.getInfo.titleMultiple", { count: String(paths.length) });
+    paths.length === 0
+      ? t("preview.getInfo.sheetLabel")
+      : singlePath != null
+        ? t("preview.getInfo.titleSingle", { name: basename(singlePath) })
+        : t("preview.getInfo.titleMultiple", { count: String(paths.length) });
 
   const body =
-    singlePath != null ? (
+    paths.length === 0 ? (
+      <p className="text-sm text-muted-foreground">{t("preview.selectFile")}</p>
+    ) : singlePath != null ? (
       <PreviewPane
         path={singlePath}
         showTitle={false}

@@ -326,6 +326,6 @@ Get Info opens with no selection (empty state); live-updates when items are sele
 - [x] `InfoDialog.tsx`: ignore Sheet `onOpenChange(false)` from outside overlay clicks
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Drop selection requirement from `preview.get-info` action and ⌘I keybinding
-- [ ] `InfoDialog.tsx`: empty-state body when `paths.length === 0`; remove auto-close on empty selection
-- [ ] Update `previewActions.test.ts`; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Drop selection requirement from `preview.get-info` action and ⌘I keybinding
+- [x] `InfoDialog.tsx`: empty-state body when `paths.length === 0`; remove auto-close on empty selection
+- [x] Update `previewActions.test.ts`; run `pnpm test`; bump patch version in `Cargo.toml`

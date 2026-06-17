@@ -1029,12 +1029,6 @@ export default function ExplorerApp() {
   });
 
   useEffect(() => {
-    if (infoDialogOpen && selectedPaths.size === 0 && !marqueeSelect.isActive) {
-      setInfoDialogOpen(false);
-    }
-  }, [infoDialogOpen, selectedPaths.size, marqueeSelect.isActive]);
-
-  useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
     const path = selectedPathRef.current;
     if (!path) {

@@ -5,19 +5,12 @@ import { defaultContextKeys } from "./contextKeys";
 import { createPreviewActions } from "./previewActions";
 import { evaluateWhen } from "./when";
 
-test("preview.get-info requires at least one selected item", () => {
+test("preview.get-info is available without a selection", () => {
   const action = createPreviewActions(() => ({ toggleInfoDialog: () => {} }))[0]!;
-  assert.equal(evaluateWhen(action.when!, defaultContextKeys()), false);
+  assert.equal(action.when, undefined);
+  assert.equal(evaluateWhen(action.when, defaultContextKeys()), true);
   assert.equal(
-    evaluateWhen(action.when!, { ...defaultContextKeys(), "selection.count": 1 }),
-    true,
-  );
-  assert.equal(
-    evaluateWhen(action.when!, {
-      ...defaultContextKeys(),
-      "selection.count": 0,
-      "preview.info-open": true,
-    }),
+    evaluateWhen(action.when, { ...defaultContextKeys(), "selection.count": 0 }),
     true,
   );
 });
