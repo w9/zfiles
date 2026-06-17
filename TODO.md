@@ -289,9 +289,9 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] i18n (14 locales): add `listing.loading`
 - [x] Unit tests for listing overlay priority helper; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `floatingPanelGeometry.ts` + tests: shared panel geometry (clamp, resize delta, parse/store, center default); slim `uploadTrayGeometry.ts` to upload-specific defaults
-- [ ] `FloatingPanel.tsx`: shared portal shell — no backdrop, drop shadow, drag title bar, optional 8-edge resize, Escape close, localStorage geometry
-- [ ] Refactor `UploadFloatingPanel.tsx` to wrap `FloatingPanel`; wire `UploadIndicator` unchanged behavior
-- [ ] `InfoDialog.tsx`: use `FloatingPanel` (wide) + bottom `Sheet` (narrow); fixed size, centered initial placement; header × + drag; non-modal (no explorer keyboard blocks)
-- [ ] `previewActions.ts` + `ExplorerApp`: ⌘I toggles open/closed; `when` allows close while open; drop `preview.info-open` shortcut blocking
-- [ ] i18n (14 locales): info panel drag/close/sheet labels; update e2e Get Info test for floating panel; run `pnpm test`; bump patch version
+- [x] `floatingPanelGeometry.ts` + tests: shared panel geometry (clamp, resize delta, parse/store, center default); slim `uploadTrayGeometry.ts` to upload-specific defaults
+- [x] `FloatingPanel.tsx`: shared portal shell — no backdrop, drop shadow, drag title bar, optional 8-edge resize, Escape close, localStorage geometry
+- [x] Refactor `UploadFloatingPanel.tsx` to wrap `FloatingPanel`; wire `UploadIndicator` unchanged behavior
+- [x] `InfoDialog.tsx`: use `FloatingPanel` (wide) + bottom `Sheet` (narrow); fixed size, centered initial placement; header × + drag; non-modal (no explorer keyboard blocks)
+- [x] `previewActions.ts` + `ExplorerApp`: ⌘I toggles open/closed; `when` allows close while open; drop `preview.info-open` shortcut blocking
+- [x] i18n (14 locales): info panel drag/close/sheet labels; update e2e Get Info test for floating panel; run `pnpm test`; bump patch version

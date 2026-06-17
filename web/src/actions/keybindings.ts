@@ -138,7 +138,7 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     {
       key: "Mod+I",
       command: "preview.get-info",
-      when: `${fileList} && selection.count >= 1`,
+      when: "(focus.pane == 'file-list' && selection.count >= 1) || preview.info-open == true",
     },
   ];
 }

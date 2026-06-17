@@ -1,7 +1,7 @@
 import type { ActionDefinition } from "./types";
 
 export type PreviewActionDeps = {
-  openInfoDialog: () => void;
+  toggleInfoDialog: () => void;
 };
 
 export function createPreviewActions(
@@ -12,11 +12,11 @@ export function createPreviewActions(
       id: "preview.get-info",
       nameKey: "preview.getInfo.name",
       categoryKey: "preview.category",
-      when: "selection.count >= 1",
+      when: "selection.count >= 1 || preview.info-open == true",
       defaultKeybinding: "Mod+I",
       contexts: ["context-menu", "file-list"],
       handler: async () => {
-        getDeps().openInfoDialog();
+        getDeps().toggleInfoDialog();
       },
     },
   ];

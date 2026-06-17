@@ -846,7 +846,6 @@ export default function ExplorerApp() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         slideshowOpen ||
-        infoDialogOpen ||
         !isPlainQuickFilterLetterKey(event) ||
         isNativeTypingTarget(event.target)
       ) {
@@ -868,7 +867,7 @@ export default function ExplorerApp() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [infoDialogOpen, slideshowOpen]);
+  }, [slideshowOpen]);
 
   const listingEntries = useMemo((): Array<ListingEntry> => {
     return quickFilteredEntries.map((entry) => {
@@ -1212,7 +1211,7 @@ export default function ExplorerApp() {
       openSlideshow,
     }),
     () => ({
-      openInfoDialog: () => setInfoDialogOpen(true),
+      toggleInfoDialog: () => setInfoDialogOpen((open) => !open),
     }),
     () => ({
       openAbout: () => setAboutOpen(true),
@@ -1335,7 +1334,6 @@ export default function ExplorerApp() {
     actionSystem.confirmState != null ||
     contextMenu != null ||
     slideshowOpen ||
-    infoDialogOpen ||
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
