@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Replace per-key **Kbd** chips with muted small plain text everywhere shortcuts render (`ChordKbd` → platform-native `formatKeybindingLabel` string). Remove unused `kbd.tsx` and `keybindingDisplay` helpers. Deferred: CLI banner redesign.
+Replace per-key **Kbd** chips with muted plain shortcut text; widen the minimum gap between menu labels and shortcut text in shortcut slots. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -305,8 +305,8 @@ Replace per-key **Kbd** chips with muted small plain text everywhere shortcuts r
 - [x] Wire copy rows into `PreviewPane.tsx` and `InfoDialog` aggregate summary; enable `FloatingPanel` resize
 - [x] i18n (14 locales): `preview.copyValue` aria label; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ChordKbd.tsx`: render platform-native label (`formatKeybindingLabel`) as `text-xs text-muted-foreground` span; tooltip contrast override
-- [ ] Delete `web/src/components/ui/kbd.tsx`; remove `keybindingDisplay.ts` + tests (superseded by `formatKeybindingLabel`)
-- [ ] `CommandPalette.tsx`: drop kbd-chip-specific className tweaks; rely on `CommandShortcut` + span override for selected row
-- [ ] `e2e/tests/smoke.spec.ts`: assert plain `Ctrl+P` shortcut text instead of per-key kbd slots
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ChordKbd.tsx`: render platform-native label (`formatKeybindingLabel`) as `text-xs text-muted-foreground` span; tooltip contrast override
+- [x] Delete `web/src/components/ui/kbd.tsx`; remove `keybindingDisplay.ts` + tests (superseded by `formatKeybindingLabel`)
+- [x] `CommandPalette.tsx`: drop kbd-chip-specific className tweaks; rely on `CommandShortcut` + span override for selected row
+- [x] `e2e/tests/smoke.spec.ts`: assert plain `Ctrl+P` shortcut text instead of per-key kbd slots
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
