@@ -317,6 +317,7 @@ export default function VirtualListing({
 
       <ScrollArea
         viewportRef={setViewportRef}
+        listingViewport
         onViewportPointerDown={onViewportPointerDown}
         className={cn("min-h-0 flex-1", BODY_SCROLL_PEER_HOVER_CLASS)}
         viewportClassName={cn(

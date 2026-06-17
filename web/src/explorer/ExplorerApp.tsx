@@ -750,12 +750,6 @@ export default function ExplorerApp() {
     ],
   );
 
-  useEffect(() => {
-    if (infoDialogOpen && selectedPaths.size === 0) {
-      setInfoDialogOpen(false);
-    }
-  }, [infoDialogOpen, selectedPaths.size]);
-
   const infoDialogPaths = useMemo(() => Array.from(selectedPaths), [selectedPaths]);
 
   const gridColumnCount = useMemo(
@@ -1033,6 +1027,12 @@ export default function ExplorerApp() {
     layoutRef: listingMarqueeLayoutRef,
     onSelectionChange: applyMarqueeSelection,
   });
+
+  useEffect(() => {
+    if (infoDialogOpen && selectedPaths.size === 0 && !marqueeSelect.isActive) {
+      setInfoDialogOpen(false);
+    }
+  }, [infoDialogOpen, selectedPaths.size, marqueeSelect.isActive]);
 
   useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
@@ -1369,6 +1369,7 @@ export default function ExplorerApp() {
     actionSystem.confirmState != null ||
     contextMenu != null ||
     slideshowOpen ||
+    infoDialogOpen ||
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
@@ -1381,6 +1382,9 @@ export default function ExplorerApp() {
         return true;
       }
       if (target.closest("[data-listing-entry]")) {
+        return true;
+      }
+      if (target.closest("[data-listing-viewport]")) {
         return true;
       }
       if (target.closest('[role="dialog"]')) {

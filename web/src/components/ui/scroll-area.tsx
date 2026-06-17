@@ -9,11 +9,13 @@ function ScrollArea({
   viewportRef,
   viewportClassName,
   onViewportPointerDown,
+  listingViewport = false,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   viewportRef?: React.Ref<HTMLDivElement>
   viewportClassName?: string
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>
+  listingViewport?: boolean
 }) {
   return (
     <ScrollAreaPrimitive.Root
@@ -25,6 +27,7 @@ function ScrollArea({
         ref={viewportRef}
         onPointerDown={onViewportPointerDown}
         data-slot="scroll-area-viewport"
+        {...(listingViewport ? { "data-listing-viewport": "" } : {})}
         className={cn(
           "size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1",
           viewportClassName,

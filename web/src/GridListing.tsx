@@ -212,6 +212,7 @@ export default function GridListing({
     >
       <div
         ref={setViewportRef}
+        data-listing-viewport=""
         className={cn("min-h-0 flex-1 overflow-auto p-3", marqueeActive && "select-none")}
         onPointerDown={onViewportPointerDown}
       >

@@ -103,7 +103,12 @@ export function useListingMarqueeSelect({
   }, []);
 
   const applyMarqueeAt = useCallback(
-    (clientX: number, clientY: number, session: DragSession) => {
+    (
+      clientX: number,
+      clientY: number,
+      session: DragSession,
+      options?: { finalize?: boolean },
+    ) => {
       const scrollElement = scrollElementRef.current;
       if (!scrollElement) {
         return;
@@ -145,6 +150,18 @@ export function useListingMarqueeSelect({
         session.modifiers,
       );
 
+      const isReplaceMode =
+        !session.modifiers.shiftKey &&
+        !session.modifiers.ctrlKey &&
+        !session.modifiers.metaKey;
+      const resolvedSelection =
+        isReplaceMode &&
+        hitPaths.length === 0 &&
+        session.started &&
+        !options?.finalize
+          ? (session.lastSelection ?? session.baseSelection)
+          : nextSelection;
+
       const hoveredPath =
         usesContentMarquee && layout != null
           ? layout.findPathAtClientPoint(scrollElement, clientX, clientY)
@@ -155,10 +172,10 @@ export function useListingMarqueeSelect({
 
       if (
         session.lastSelection == null ||
-        !selectionSetsEqual(session.lastSelection, nextSelection)
+        !selectionSetsEqual(session.lastSelection, resolvedSelection)
       ) {
-        onSelectionChangeRef.current(nextSelection, session.lastHoveredPath);
-        session.lastSelection = new Set(nextSelection);
+        onSelectionChangeRef.current(resolvedSelection, session.lastHoveredPath);
+        session.lastSelection = new Set(resolvedSelection);
       }
     },
     [layoutRef, scrollElementRef],
@@ -286,7 +303,7 @@ export function useListingMarqueeSelect({
         if (active.started) {
           active.clientX = endEvent.clientX;
           active.clientY = endEvent.clientY;
-          applyMarqueeAt(endEvent.clientX, endEvent.clientY, active);
+          applyMarqueeAt(endEvent.clientX, endEvent.clientY, active, { finalize: true });
           if (scrollElement.hasPointerCapture(active.pointerId)) {
             scrollElement.releasePointerCapture(active.pointerId);
           }

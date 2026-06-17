@@ -322,6 +322,6 @@ Simplify grid view cards: strip per-item border, background, rounded corners, pr
 - [x] `GridCardPreview.tsx`: remove preview-area muted background
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerApp.tsx`: block background-click selection clear while Get Info is open
-- [ ] `InfoDialog.tsx`: ignore Sheet `onOpenChange(false)` from outside overlay clicks
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerApp.tsx`: block background-click selection clear while Get Info is open
+- [x] `InfoDialog.tsx`: ignore Sheet `onOpenChange(false)` from outside overlay clicks
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

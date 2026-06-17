@@ -185,7 +185,14 @@ export default function InfoDialog({
 
   if (sheetLayout) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            onOpenChange(true);
+          }
+        }}
+      >
         <SheetContent
           side="bottom"
           showCloseButton={false}
