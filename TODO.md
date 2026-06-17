@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix marquee retract deselection: replace cumulative client-space hits with content-space hit testing so shrinking the box deselects rows while auto-scroll still selects across virtualized pages. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
+Replace the inline preview split and narrow `PreviewSheet` with a centered **Get Info** dialog (macOS Finder–style): open from context menu and ⌘I / Ctrl+I; live-update while open; single-item shows current `PreviewPane` metadata, multi-select shows an aggregate summary (counts + total size). Remove `previewLayout` inline panel logic, `focus.pane == 'preview'`, and preview-pane image navigation actions. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
 
 ## TODO List
 
@@ -276,3 +276,10 @@ Fix marquee retract deselection: replace cumulative client-space hits with conte
 - [x] `listingMarqueeSelect.ts` + layout resolvers: hit-test entries in scroll content coordinates instead of viewport-only client rects
 - [x] `useListingMarqueeSelect.ts`: remove cumulative `marqueeHits`; drive selection from content-space hits each frame
 - [x] Run `pnpm test` for marquee/listing tests
+
+- [ ] `InfoDialog.tsx` (new): centered shadcn `Dialog` — single-path mode reuses `PreviewPane` metadata; multi-select aggregate (item count, file/folder breakdown, total size); live-follow selection while open
+- [ ] `previewActions.ts`: rename `preview.open-sheet` → `preview.get-info`; always when `selection.count >= 1`; context menu + default ⌘I / Ctrl+I; drop `preview.inline-available` gate
+- [ ] `ExplorerApp.tsx`: remove inline `PreviewPane` split + `PreviewSheet`; wire `infoDialogOpen` + paths; drop `inlinePreviewAvailable` / resize observer / `focusPane` preview focus
+- [ ] Clean up preview pane infrastructure: remove or slim `PreviewSheet.tsx`, `previewLayout.ts` (+ tests); drop `preview.inline-available` / `preview.sheet-open` context keys; remove `viewer.next-image` / `viewer.prev-image` preview-pane actions
+- [ ] i18n (14 locales): rename preview strings to Get Info (`preview.getInfo.name`, dialog title, aggregate summary keys); update shortcut hints if needed
+- [ ] Unit tests: aggregate summary helper + action `when`/keybinding; run `pnpm test`; bump patch version in `Cargo.toml`
