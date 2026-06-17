@@ -8,11 +8,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import type { S3Provider } from "./cloud/types";
 import { type BackendStatus } from "./useBackendStatus";
 
 type BackendStatusProps = {
   status: BackendStatus;
   kernelVersion?: string | null;
+  backendMode: "local" | "s3";
+  cloudProvider?: S3Provider | null;
 };
 
 const statusIconClass: Record<BackendStatus, string> = {
@@ -42,19 +45,28 @@ function StatusIcon({ status }: { status: BackendStatus }) {
 export default function BackendStatus({
   status,
   kernelVersion,
+  backendMode,
+  cloudProvider = null,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
   const label = backendStatusMessage(locale, status);
   const tooltipText =
-    status === "connected" && kernelVersion
-      ? t("backend.connectedTooltip", { version: kernelVersion })
-      : status === "connected"
-        ? t("backend.connectedBrief")
-        : status === "connecting"
-          ? t("backend.connectingTooltip")
-          : status === "offline"
-            ? t("backend.offlineHint")
-            : label;
+    status === "connected" && backendMode === "local" && kernelVersion
+      ? t("backend.connectedTooltip", {
+          backend: t("backend.connectedBackend.zfilesServer"),
+          version: kernelVersion,
+        })
+      : status === "connected" && backendMode === "s3" && cloudProvider
+        ? t("backend.connectedTooltipBackendOnly", {
+            backend: t(`connect.provider.${cloudProvider}`),
+          })
+        : status === "connected"
+          ? t("backend.connectedBrief")
+          : status === "connecting"
+            ? t("backend.connectingTooltip")
+            : status === "offline"
+              ? t("backend.offlineHint")
+              : label;
 
   return (
     <Tooltip delayDuration={0}>

@@ -364,6 +364,6 @@ Use "zfiles server" instead of "kernel" in the local connected tooltip. Deferred
 - [x] i18n (14 locales): update `backend.connectedTooltip`; add `backend.connectedBackend.kernel` and `backend.connectedTooltipBackendOnly`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Rename `backend.connectedBackend.kernel` → `backend.connectedBackend.zfilesServer` ("zfiles server" locally); wire `BackendStatus.tsx`
-- [ ] i18n (14 locales): natural translations aligned with `backend.connectedBrief`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Rename `backend.connectedBackend.kernel` → `backend.connectedBackend.zfilesServer` ("zfiles server" locally); wire `BackendStatus.tsx`
+- [x] i18n (14 locales): natural translations aligned with `backend.connectedBrief`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

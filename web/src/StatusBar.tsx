@@ -10,9 +10,12 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
+import type { S3Provider } from "./cloud/types";
 
 type StatusBarProps = {
   backendStatus: BackendStatusValue;
+  backendMode: "local" | "s3";
+  cloudProvider?: S3Provider | null;
   kernelVersion?: string | null;
   readOnly?: boolean;
   selectedCount?: number;
@@ -23,6 +26,8 @@ type StatusBarProps = {
 
 export default function StatusBar({
   backendStatus,
+  backendMode,
+  cloudProvider = null,
   kernelVersion,
   readOnly = false,
   selectedCount = 0,
@@ -47,7 +52,12 @@ export default function StatusBar({
       aria-label={t("statusBar.label")}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <BackendStatus status={backendStatus} kernelVersion={kernelVersion} />
+        <BackendStatus
+          status={backendStatus}
+          backendMode={backendMode}
+          cloudProvider={cloudProvider}
+          kernelVersion={kernelVersion}
+        />
         {readOnly ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>

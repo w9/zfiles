@@ -1682,6 +1682,8 @@ export default function ExplorerApp() {
       <section className="shrink-0">
         <StatusBar
           backendStatus={backendStatus}
+          backendMode={backend.mode}
+          cloudProvider={cloudSessionConfig?.provider ?? null}
           kernelVersion={kernelVersion}
           readOnly={readOnly}
           selectedCount={selectedPaths.size}
