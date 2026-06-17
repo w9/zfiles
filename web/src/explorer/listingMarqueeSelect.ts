@@ -421,3 +421,32 @@ export function shouldIgnoreMarqueePointerTarget(target: EventTarget | null): bo
   }
   return false;
 }
+
+export function shouldClearMultiSelectionOnEmptyClick(options: {
+  started: boolean;
+  modifiers: MarqueeModifiers;
+  target: EventTarget | null;
+}): boolean {
+  if (options.started) {
+    return false;
+  }
+  if (
+    options.modifiers.shiftKey ||
+    options.modifiers.ctrlKey ||
+    options.modifiers.metaKey
+  ) {
+    return false;
+  }
+  const target = options.target;
+  if (
+    target == null ||
+    typeof target !== "object" ||
+    typeof (target as Element).closest !== "function"
+  ) {
+    return false;
+  }
+  if ((target as Element).closest("[data-listing-entry]")) {
+    return false;
+  }
+  return true;
+}

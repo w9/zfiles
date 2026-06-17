@@ -385,7 +385,7 @@ Clear multi-selection on plain click in the listing scroll viewport (empty paddi
 - [x] `VirtualListing.tsx`: drop `border-b` from data row class; keep header `border-b`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `listingMarqueeSelect.ts`: `shouldClearMultiSelectionOnEmptyClick` helper (plain click, not on entry, no drag); unit tests
-- [ ] `useListingMarqueeSelect.ts`: invoke `onEmptyClick` on pointer-up when helper passes; run empty-click path even when marquee disabled
-- [ ] `ExplorerApp.tsx`: `clearMultiSelection` (selectedPaths only); wire `onEmptyClick`; respect `blockSelectionClearRef`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `listingMarqueeSelect.ts`: `shouldClearMultiSelectionOnEmptyClick` helper (plain click, not on entry, no drag); unit tests
+- [x] `useListingMarqueeSelect.ts`: invoke `onEmptyClick` on pointer-up when helper passes; run empty-click path even when marquee disabled
+- [x] `ExplorerApp.tsx`: `clearMultiSelection` (selectedPaths only); wire `onEmptyClick`; respect `blockSelectionClearRef`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

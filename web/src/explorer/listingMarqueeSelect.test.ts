@@ -12,6 +12,7 @@ import {
   pointerDistance,
   rectsIntersect,
   selectionSetsEqual,
+  shouldClearMultiSelectionOnEmptyClick,
 } from "./listingMarqueeSelect";
 
 function mockScrollElement(scrollTop: number) {
@@ -329,4 +330,57 @@ test("selectionSetsEqual compares set membership", () => {
   assert.equal(selectionSetsEqual(new Set(["/a"]), new Set(["/a"])), true);
   assert.equal(selectionSetsEqual(new Set(["/a"]), new Set(["/b"])), false);
   assert.equal(selectionSetsEqual(new Set(["/a", "/b"]), new Set(["/b"])), false);
+});
+
+test("shouldClearMultiSelectionOnEmptyClick allows plain click on viewport background", () => {
+  const viewport = { closest: () => null } as unknown as Element;
+  assert.equal(
+    shouldClearMultiSelectionOnEmptyClick({
+      started: false,
+      modifiers: { shiftKey: false, ctrlKey: false, metaKey: false },
+      target: viewport,
+    }),
+    true,
+  );
+});
+
+test("shouldClearMultiSelectionOnEmptyClick rejects drag, modifiers, and entry targets", () => {
+  const entry = {
+    closest: (selector: string) => (selector === "[data-listing-entry]" ? entry : null),
+  } as unknown as Element;
+  const viewport = { closest: () => null } as unknown as Element;
+  const noModifiers = { shiftKey: false, ctrlKey: false, metaKey: false };
+
+  assert.equal(
+    shouldClearMultiSelectionOnEmptyClick({
+      started: true,
+      modifiers: noModifiers,
+      target: viewport,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldClearMultiSelectionOnEmptyClick({
+      started: false,
+      modifiers: { shiftKey: true, ctrlKey: false, metaKey: false },
+      target: viewport,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldClearMultiSelectionOnEmptyClick({
+      started: false,
+      modifiers: { shiftKey: false, ctrlKey: true, metaKey: false },
+      target: viewport,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldClearMultiSelectionOnEmptyClick({
+      started: false,
+      modifiers: noModifiers,
+      target: entry,
+    }),
+    false,
+  );
 });

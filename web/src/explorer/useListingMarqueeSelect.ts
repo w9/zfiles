@@ -15,6 +15,7 @@ import {
   normalizeMarqueeRect,
   pointerDistance,
   selectionSetsEqual,
+  shouldClearMultiSelectionOnEmptyClick,
   shouldIgnoreMarqueePointerTarget,
 } from "@/explorer/listingMarqueeSelect";
 
@@ -24,6 +25,7 @@ export type UseListingMarqueeSelectOptions = {
   scrollElementRef: React.RefObject<HTMLElement | null>;
   layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>;
   onSelectionChange: (paths: Set<string>, primaryPath: string | null) => void;
+  onEmptyClick?: () => void;
 };
 
 export type UseListingMarqueeSelectResult = {
@@ -44,6 +46,7 @@ type DragSession = {
   lastHoveredPath: string | null;
   startContentY: number | null;
   lastSelection: Set<string> | null;
+  pointerTarget: EventTarget | null;
 };
 
 function collectEntryRectsFromViewport(
@@ -81,6 +84,7 @@ export function useListingMarqueeSelect({
   scrollElementRef,
   layoutRef,
   onSelectionChange,
+  onEmptyClick,
 }: UseListingMarqueeSelectOptions): UseListingMarqueeSelectResult {
   const [isActive, setIsActive] = useState(false);
   const [marqueeRect, setMarqueeRect] = useState<ClientRect | null>(null);
@@ -91,9 +95,11 @@ export function useListingMarqueeSelect({
   const autoScrollFrameRef = useRef<number | null>(null);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const selectedPathsRef = useRef(selectedPaths);
+  const onEmptyClickRef = useRef(onEmptyClick);
 
   onSelectionChangeRef.current = onSelectionChange;
   selectedPathsRef.current = selectedPaths;
+  onEmptyClickRef.current = onEmptyClick;
 
   const stopAutoScroll = useCallback(() => {
     if (autoScrollFrameRef.current != null) {
@@ -235,10 +241,13 @@ export function useListingMarqueeSelect({
 
   const onViewportPointerDown = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
-      if (!enabled || event.button !== 0) {
+      if (event.button !== 0) {
         return;
       }
       if (shouldIgnoreMarqueePointerTarget(event.target)) {
+        return;
+      }
+      if (!enabled && !onEmptyClickRef.current) {
         return;
       }
 
@@ -263,12 +272,17 @@ export function useListingMarqueeSelect({
         lastHoveredPath: null,
         startContentY: null,
         lastSelection: null,
+        pointerTarget: event.target,
       };
       sessionRef.current = session;
 
       const onPointerMove = (moveEvent: PointerEvent) => {
         const active = sessionRef.current;
         if (!active || moveEvent.pointerId !== active.pointerId) {
+          return;
+        }
+
+        if (!enabled) {
           return;
         }
 
@@ -307,6 +321,14 @@ export function useListingMarqueeSelect({
           if (scrollElement.hasPointerCapture(active.pointerId)) {
             scrollElement.releasePointerCapture(active.pointerId);
           }
+        } else if (
+          shouldClearMultiSelectionOnEmptyClick({
+            started: active.started,
+            modifiers: active.modifiers,
+            target: active.pointerTarget,
+          })
+        ) {
+          onEmptyClickRef.current?.();
         }
 
         endSession(active, active.started);

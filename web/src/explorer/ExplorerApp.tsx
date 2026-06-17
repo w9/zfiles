@@ -659,6 +659,10 @@ export default function ExplorerApp() {
     setSelectedPath(null);
   }, []);
 
+  const clearMultiSelection = useCallback(() => {
+    setSelectedPaths((current) => (current.size === 0 ? current : new Set()));
+  }, []);
+
   const actionLabel = useCallback(
     (key: string) => t(key as MessageKey),
     [t],
@@ -1052,6 +1056,8 @@ export default function ExplorerApp() {
     }
   }, []);
 
+  const onListingEmptyClickRef = useRef<() => void>(() => {});
+
   const marqueeSelect = useListingMarqueeSelect({
     selectedPaths,
     enabled:
@@ -1063,6 +1069,7 @@ export default function ExplorerApp() {
     scrollElementRef: listingViewportRef,
     layoutRef: listingMarqueeLayoutRef,
     onSelectionChange: applyMarqueeSelection,
+    onEmptyClick: () => onListingEmptyClickRef.current(),
   });
 
   useEffect(() => {
@@ -1406,6 +1413,16 @@ export default function ExplorerApp() {
     fileOps.pasteConflict != null ||
     fileOps.inlineEditPath != null ||
     marqueeSelect.isActive;
+
+  onListingEmptyClickRef.current = () => {
+    if (blockSelectionClearRef.current) {
+      return;
+    }
+    if (selectedPathsRef.current.size === 0) {
+      return;
+    }
+    clearMultiSelection();
+  };
 
   useEffect(() => {
     const shouldIgnoreTarget = (target: EventTarget | null) => {
