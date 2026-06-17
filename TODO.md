@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Tighten the bind auth gate so `validate()` requires `--token` for any non-loopback address (specific LAN/Tailscale/routable IPs), not just the `0.0.0.0`/`::` wildcard — matching the already-documented "token auth for non-loopback binds" policy. Loopback aliases (`127.0.0.0/8`, `::1`) stay token-free. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
+When the server binds `0.0.0.0`, resolve the default-route IPv4 address for public-facing startup output so the Share URL and QR code are usable from other devices; if detection fails, fall back to localhost and explain the fallback in the banner. Keep IPv6 wildcard handling deferred. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
 
 ## TODO List
 
@@ -257,3 +257,7 @@ Tighten the bind auth gate so `validate()` requires `--token` for any non-loopba
 - [x] `cli.rs` tests: rename `public_bind_requires_token` coverage to assert a specific non-loopback IP (`192.168.1.50`) without token fails, with `--token` passes, the `0.0.0.0` wildcard without token still fails, and a loopback alias (`127.0.0.2`) without token passes
 - [x] `design/design.md` §6: update the "Auth default policy" row to "Refuse non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`) token-free"
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+- [ ] Add Rust tests for replacing `0.0.0.0` share/QR host with the default-route IPv4 address and for localhost fallback messaging when detection fails
+- [ ] Implement default-route IPv4 detection for wildcard bind share output without changing the actual listener bind address
+- [ ] Wire the resolved display host into startup Share URL and QR code generation; include a clear fallback explanation when detection fails
+- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
