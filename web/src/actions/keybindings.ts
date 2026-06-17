@@ -135,6 +135,11 @@ export function defaultKeybindings(): KeybindingDefinition[] {
       when: "clipboard.count > 0 && server.read-only == false",
     },
     { key: "Delete", command: "file.delete", when: fileSelectionOps },
+    {
+      key: "Mod+I",
+      command: "preview.get-info",
+      when: `${fileList} && selection.count >= 1`,
+    },
   ];
 }
 

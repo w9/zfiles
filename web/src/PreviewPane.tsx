@@ -21,7 +21,7 @@ import { useCloudAuth } from "./cloud/CloudAuthContext";
 type PreviewPaneProps = {
   path: string | null;
   className?: string;
-  onFocusPreview?: () => void;
+  showTitle?: boolean;
   onSymlinkTargetClick?: (resolvedPath: string) => void;
 };
 
@@ -43,7 +43,7 @@ function MetadataRow({ label, children }: { label: string; children: ReactNode }
 export default function PreviewPane({
   path,
   className,
-  onFocusPreview,
+  showTitle = true,
   onSymlinkTargetClick,
 }: PreviewPaneProps) {
   const backend = useExplorerBackend();
@@ -199,12 +199,10 @@ export default function PreviewPane({
   }
 
   return (
-    <aside
-      className={shellClass}
-      aria-label={t("preview.label")}
-      onMouseDown={() => onFocusPreview?.()}
-    >
-      <h2 className="mb-3 text-lg font-semibold">{stat.path.split("/").pop()}</h2>
+    <aside className={shellClass} aria-label={t("preview.label")}>
+      {showTitle ? (
+        <h2 className="mb-3 text-lg font-semibold">{stat.path.split("/").pop()}</h2>
+      ) : null}
       <dl className="mb-4 grid gap-2 text-sm">
         <MetadataRow label={t("preview.path")}>
           <span className="break-all">{stat.path}</span>

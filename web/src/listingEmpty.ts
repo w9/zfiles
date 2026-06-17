@@ -1,5 +1,7 @@
 export type ListingOverlayMessageKey = "listing.empty" | "quickFilter.empty";
 
+export type ListingPaneOverlayKey = ListingOverlayMessageKey | "listing.loading";
+
 /** Centered listing overlay when there are no rows to show after filtering. */
 export function listingOverlayMessageKey(options: {
   listingLoaded: boolean;
@@ -16,4 +18,18 @@ export function listingOverlayMessageKey(options: {
     return "quickFilter.empty";
   }
   return "listing.empty";
+}
+
+/** Listing pane overlay — loading spinner takes precedence over empty states. */
+export function listingPaneOverlayKey(options: {
+  listingLoading: boolean;
+  listingLoaded: boolean;
+  quickFilterActive: boolean;
+  visibleEntryCount: number;
+  filteredEntryCount: number;
+}): ListingPaneOverlayKey | null {
+  if (options.listingLoading) {
+    return "listing.loading";
+  }
+  return listingOverlayMessageKey(options);
 }

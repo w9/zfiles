@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { listingOverlayMessageKey } from "./listingEmpty";
+import { listingOverlayMessageKey, listingPaneOverlayKey } from "./listingEmpty";
 
 test("listingOverlayMessageKey is null before first listing load", () => {
   assert.equal(
@@ -60,5 +60,44 @@ test("listingOverlayMessageKey shows filter empty when filter hides all entries"
       filteredEntryCount: 0,
     }),
     "quickFilter.empty",
+  );
+});
+
+test("listingPaneOverlayKey shows loading while a folder listing is in flight", () => {
+  assert.equal(
+    listingPaneOverlayKey({
+      listingLoading: true,
+      listingLoaded: false,
+      quickFilterActive: false,
+      visibleEntryCount: 0,
+      filteredEntryCount: 0,
+    }),
+    "listing.loading",
+  );
+});
+
+test("listingPaneOverlayKey prefers loading over empty folder overlay", () => {
+  assert.equal(
+    listingPaneOverlayKey({
+      listingLoading: true,
+      listingLoaded: true,
+      quickFilterActive: false,
+      visibleEntryCount: 0,
+      filteredEntryCount: 0,
+    }),
+    "listing.loading",
+  );
+});
+
+test("listingPaneOverlayKey falls back to empty overlay when not loading", () => {
+  assert.equal(
+    listingPaneOverlayKey({
+      listingLoading: false,
+      listingLoaded: true,
+      quickFilterActive: false,
+      visibleEntryCount: 0,
+      filteredEntryCount: 0,
+    }),
+    "listing.empty",
   );
 });

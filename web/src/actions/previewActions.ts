@@ -1,7 +1,7 @@
 import type { ActionDefinition } from "./types";
 
 export type PreviewActionDeps = {
-  openPreviewSheet: () => void;
+  openInfoDialog: () => void;
 };
 
 export function createPreviewActions(
@@ -9,13 +9,14 @@ export function createPreviewActions(
 ): ActionDefinition[] {
   return [
     {
-      id: "preview.open-sheet",
-      nameKey: "preview.openSheet.name",
+      id: "preview.get-info",
+      nameKey: "preview.getInfo.name",
       categoryKey: "preview.category",
-      when: "preview.inline-available == false && selection.count >= 1",
-      contexts: ["context-menu"],
+      when: "selection.count >= 1",
+      defaultKeybinding: "Mod+I",
+      contexts: ["context-menu", "file-list"],
       handler: async () => {
-        getDeps().openPreviewSheet();
+        getDeps().openInfoDialog();
       },
     },
   ];

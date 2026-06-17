@@ -15,8 +15,7 @@ export type ContextKeys = {
   "listing.visible-count": number;
   "listing.view": string;
   "slideshow.open": boolean;
-  "preview.inline-available": boolean;
-  "preview.sheet-open": boolean;
+  "preview.info-open": boolean;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -37,8 +36,7 @@ export function defaultContextKeys(): ContextKeys {
     "listing.view": "table",
     "clipboard.count": 0,
     "slideshow.open": false,
-    "preview.inline-available": false,
-    "preview.sheet-open": false,
+    "preview.info-open": false,
   };
 }
 

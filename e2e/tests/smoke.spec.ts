@@ -140,13 +140,14 @@ test("header shows offline backend status after server stops", async ({ page }) 
   }
 });
 
-test("preview pane shows selected file metadata", async ({ page }) => {
+test("Get Info dialog shows selected file metadata", async ({ page }) => {
   await page.goto("/");
   await listingEntry(page, /hello\.txt/).click();
-  const preview = page.getByRole("complementary", { name: "Preview pane" });
-  await expect(preview.getByRole("heading", { name: "hello.txt" })).toBeVisible();
-  await expect(preview.getByText("Size", { exact: true })).toBeVisible();
-  await expect(preview.getByText("15 B")).toBeVisible();
+  await page.keyboard.press("ControlOrMeta+I");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "hello.txt" })).toBeVisible();
+  await expect(dialog.getByText("Size", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("15 B")).toBeVisible();
 });
 
 test("context menu shows built-in file actions", async ({ page }) => {
@@ -281,11 +282,6 @@ test("slideshow opens for image preview", async ({ page }) => {
     await page.goto("http://127.0.0.1:9881/");
     await page.getByRole("button", { name: "Grid view" }).click();
     await page.getByRole("button", { name: "slide-a.png", exact: true }).click();
-    await expect(
-      page.getByRole("complementary", { name: "Preview pane" }).getByRole("heading", {
-        name: "slide-a.png",
-      }),
-    ).toBeVisible();
     await page
       .getByRole("button", { name: "slide-b.png", exact: true })
       .click({ modifiers: ["ControlOrMeta"] });
@@ -303,7 +299,7 @@ test("slideshow opens for image preview", async ({ page }) => {
   }
 });
 
-test("preview pane renders browser-decodable images", async ({ page }) => {
+test("Get Info dialog shows image file metadata without inline preview", async ({ page }) => {
   const imageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-preview-image-"));
   fs.writeFileSync(
     path.join(imageDir, "photo.png"),
@@ -332,10 +328,11 @@ test("preview pane renders browser-decodable images", async ({ page }) => {
   try {
     await page.goto("http://127.0.0.1:9882/");
     await listingEntry(page, "photo.png").click();
-    const preview = page.getByRole("complementary", { name: "Preview pane" });
-    await expect(preview.getByRole("heading", { name: "photo.png" })).toBeVisible();
-    await expect(preview.getByText("Size", { exact: true })).toBeVisible();
-    await expect(preview.getByRole("img")).not.toBeVisible();
+    await page.keyboard.press("ControlOrMeta+I");
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "photo.png" })).toBeVisible();
+    await expect(dialog.getByText("Size", { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("img")).not.toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");
   }

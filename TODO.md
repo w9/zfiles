@@ -284,7 +284,7 @@ Show a listing loading overlay (spinner + i18n text) for initial load, navigatio
 - [x] i18n (14 locales): rename preview strings to Get Info (`preview.getInfo.name`, dialog title, aggregate summary keys); update shortcut hints if needed
 - [x] Unit tests: aggregate summary helper + action `when`/keybinding; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerApp.tsx`: `listingLoading` state + generation counter — optimistic path on navigation loads, revert on failure, ignore stale responses
-- [ ] Listing pane: semi-transparent overlay with spinner + `listing.loading` while loading; spin breadcrumb refresh during load; loading takes precedence over empty overlay
-- [ ] i18n (14 locales): add `listing.loading`
-- [ ] Unit tests for listing overlay priority helper; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerApp.tsx`: `listingLoading` state + generation counter — optimistic path on navigation loads, revert on failure, ignore stale responses
+- [x] Listing pane: semi-transparent overlay with spinner + `listing.loading` while loading; spin breadcrumb refresh during load; loading takes precedence over empty overlay
+- [x] i18n (14 locales): add `listing.loading`
+- [x] Unit tests for listing overlay priority helper; run `pnpm test`; bump patch version in `Cargo.toml`

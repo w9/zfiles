@@ -164,7 +164,7 @@ export function useActionSystem(
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (contextKeys["slideshow.open"] || contextKeys["preview.sheet-open"]) {
+      if (contextKeys["slideshow.open"] || contextKeys["preview.info-open"]) {
         return;
       }
       const typing = isTypingTarget(event.target);

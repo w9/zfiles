@@ -5,8 +5,6 @@ import {
   ArrowUp,
   ArrowUpToLine,
   CheckCheck,
-  ChevronLeft,
-  ChevronRight,
   ClipboardPaste,
   Command,
   Copy,
@@ -17,7 +15,7 @@ import {
   Globe,
   LayoutGrid,
   ListFilter,
-  PanelRightOpen,
+  Info,
   Pencil,
   Play,
   Scissors,
@@ -53,10 +51,8 @@ const ICONS: Record<string, LucideIcon> = {
   "file.cut": Scissors,
   "file.paste": ClipboardPaste,
   "file.delete": Trash2,
-  "preview.open-sheet": PanelRightOpen,
+  "preview.get-info": Info,
   "viewer.slideshow": Play,
-  "viewer.next-image": ChevronRight,
-  "viewer.prev-image": ChevronLeft,
 };
 
 export function actionIcon(id: string): LucideIcon | null {

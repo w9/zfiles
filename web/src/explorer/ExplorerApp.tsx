@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { OnChangeFn, SortingState } from "@tanstack/react-table";
 
-import { Settings } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
 import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
@@ -16,8 +16,7 @@ import StatusBar from "../StatusBar";
 import LanguageToggle from "../LanguageToggle";
 import ThemeToggle from "../ThemeToggle";
 import ListingViewToggle from "../ListingViewToggle";
-import PreviewPane from "../PreviewPane";
-import PreviewSheet from "../PreviewSheet";
+import InfoDialog from "../InfoDialog";
 import VirtualListing, { type ListingEntry } from "../VirtualListing";
 import GridListing from "../GridListing";
 import SlideshowOverlay from "../SlideshowOverlay";
@@ -46,11 +45,6 @@ import type { ActionDefinition } from "../actions/types";
 import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
 import { resolveViewerImagePaths } from "../slideshowPathOrder";
-import {
-  canShowInlinePreviewPanel,
-  LG_BREAKPOINT_PX,
-  PREVIEW_PANEL_WIDTH_PX,
-} from "../previewLayout";
 import {
   nextListingViewMode,
   type ListingViewMode,
@@ -88,7 +82,7 @@ import {
   type GridCardSize,
 } from "../settings/gridCardSize";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
-import { listingOverlayMessageKey } from "../listingEmpty";
+import { listingPaneOverlayKey } from "../listingEmpty";
 import { filterDotEntries, isDotEntryName } from "../listingFilter";
 import {
   collectSelectAllWarnings,
@@ -214,6 +208,7 @@ export default function ExplorerApp() {
   const [listCursor, setListCursor] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [listingLoading, setListingLoading] = useState(false);
   const [listingLoaded, setListingLoaded] = useState(false);
   const [kernelVersion, setKernelVersion] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
@@ -221,7 +216,6 @@ export default function ExplorerApp() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const [focusPane, setFocusPane] = useState<"file-list" | "preview">("file-list");
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readEffectiveFolderViewSettings(initialPath).viewMode,
   );
@@ -233,13 +227,9 @@ export default function ExplorerApp() {
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
-  const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
-  const [mainContentWidth, setMainContentWidth] = useState(0);
-  const [viewportWidth, setViewportWidth] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth : LG_BREAKPOINT_PX,
-  );
   const [quickFilter, setQuickFilter] = useState("");
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
@@ -251,6 +241,7 @@ export default function ExplorerApp() {
   const selectedIndexRef = useRef(selectedIndex);
   const selectedPathsRef = useRef(selectedPaths);
   const selectedPathRef = useRef(selectedPath);
+  const listingLoadGenerationRef = useRef(0);
   const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
     () => {},
   );
@@ -273,23 +264,33 @@ export default function ExplorerApp() {
     if (cloudAuth.expired) {
       return false;
     }
-    const previousPath = options?.preserveSelection ? selectedPathRef.current : null;
+    const generation = ++listingLoadGenerationRef.current;
+    const previousPath = options?.preserveSelection ? null : currentPathRef.current;
+    const previousPathForSelection = options?.preserveSelection ? selectedPathRef.current : null;
     const previousPaths = options?.preserveSelection
       ? selectedPathsRef.current.size > 0
         ? new Set(selectedPathsRef.current)
-        : previousPath
-          ? new Set([previousPath])
+        : previousPathForSelection
+          ? new Set([previousPathForSelection])
           : new Set<string>()
       : null;
+    setListingLoading(true);
+    if (!options?.preserveSelection) {
+      setListingLoaded(false);
+      setCurrentPath(path);
+    }
     try {
       const { entries: data, nextCursor } = await backend.list(path);
+      if (generation !== listingLoadGenerationRef.current) {
+        return false;
+      }
       setEntries(data);
       setListCursor(nextCursor);
       setCurrentPath(path);
       const restored = options?.focusPath
         ? restoreSelectionFromListing(data, new Set([options.focusPath]), options.focusPath)
         : previousPaths != null
-          ? restoreSelectionFromListing(data, previousPaths, previousPath)
+          ? restoreSelectionFromListing(data, previousPaths, previousPathForSelection)
           : null;
       if (restored) {
         setSelectedIndex(restored.index);
@@ -307,6 +308,12 @@ export default function ExplorerApp() {
       }
       return true;
     } catch (err) {
+      if (generation !== listingLoadGenerationRef.current) {
+        return false;
+      }
+      if (previousPath != null) {
+        setCurrentPath(previousPath);
+      }
       if (err instanceof Response) {
         await notifyApiError(err, t);
         return false;
@@ -314,7 +321,10 @@ export default function ExplorerApp() {
       notifyStorageError(err);
       return false;
     } finally {
-      setListingLoaded(true);
+      if (generation === listingLoadGenerationRef.current) {
+        setListingLoading(false);
+        setListingLoaded(true);
+      }
     }
   }, [backend, cloudAuth.expired, notifyStorageError, t]);
 
@@ -654,30 +664,6 @@ export default function ExplorerApp() {
 
   const quickFilteredEntries = quickMatchedEntries;
 
-  useEffect(() => {
-    const onViewportResize = () => setViewportWidth(window.innerWidth);
-    onViewportResize();
-    window.addEventListener("resize", onViewportResize);
-    return () => window.removeEventListener("resize", onViewportResize);
-  }, []);
-
-  useEffect(() => {
-    const node = mainContentRef.current;
-    if (!node) {
-      return;
-    }
-    const measure = () => setMainContentWidth(node.clientWidth);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [listingLoaded, quickFilteredEntries.length, listingViewMode]);
-
-  const inlinePreviewAvailable = useMemo(
-    () => canShowInlinePreviewPanel(mainContentWidth, viewportWidth),
-    [mainContentWidth, viewportWidth],
-  );
-
   const selectedFileCount = useMemo(
     () => filterDownloadablePaths(Array.from(selectedPaths), entries).length,
     [selectedPaths, entries],
@@ -693,7 +679,7 @@ export default function ExplorerApp() {
 
   const contextKeys = useMemo<ContextKeys>(
     () => ({
-      "focus.pane": focusPane,
+      "focus.pane": "file-list",
       "selection.count": selectedPaths.size,
       "selection.file-count": selectedFileCount,
       "selection.paths": Array.from(selectedPaths),
@@ -709,11 +695,9 @@ export default function ExplorerApp() {
       "listing.visible-count": quickFilteredEntries.length,
       "listing.view": listingViewMode,
       "slideshow.open": slideshowOpen,
-      "preview.inline-available": inlinePreviewAvailable,
-      "preview.sheet-open": previewSheetOpen,
+      "preview.info-open": infoDialogOpen,
     }),
     [
-      focusPane,
       selectedPaths,
       selectedFileCount,
       currentPath,
@@ -727,10 +711,17 @@ export default function ExplorerApp() {
       quickFilteredEntries.length,
       listingViewMode,
       slideshowOpen,
-      inlinePreviewAvailable,
-      previewSheetOpen,
+      infoDialogOpen,
     ],
   );
+
+  useEffect(() => {
+    if (infoDialogOpen && selectedPaths.size === 0) {
+      setInfoDialogOpen(false);
+    }
+  }, [infoDialogOpen, selectedPaths.size]);
+
+  const infoDialogPaths = useMemo(() => Array.from(selectedPaths), [selectedPaths]);
 
   const gridColumnCount = useMemo(
     () => computeGridColumnCount(gridViewportWidth, cardSize.width, GRID_GAP_PX),
@@ -814,7 +805,8 @@ export default function ExplorerApp() {
     return () => observer.disconnect();
   }, [listingViewMode, listingLoaded, quickFilteredEntries.length]);
 
-  const listingOverlayKey = listingOverlayMessageKey({
+  const listingPaneOverlay = listingPaneOverlayKey({
+    listingLoading,
     listingLoaded,
     quickFilterActive,
     visibleEntryCount: visibleEntries.length,
@@ -854,8 +846,7 @@ export default function ExplorerApp() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         slideshowOpen ||
-        previewSheetOpen ||
-        focusPane !== "file-list" ||
+        infoDialogOpen ||
         !isPlainQuickFilterLetterKey(event) ||
         isNativeTypingTarget(event.target)
       ) {
@@ -877,7 +868,7 @@ export default function ExplorerApp() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusPane, previewSheetOpen, slideshowOpen]);
+  }, [infoDialogOpen, slideshowOpen]);
 
   const listingEntries = useMemo((): Array<ListingEntry> => {
     return quickFilteredEntries.map((entry) => {
@@ -893,7 +884,6 @@ export default function ExplorerApp() {
         size: entry.is_dir ? undefined : entry.size,
         modified: entry.modified,
         onSelect: (event, displayIndex) => {
-          setFocusPane("file-list");
           const rows = listingEntriesRef.current;
           let nextSelectedPath: string | null = entry.path;
 
@@ -1001,7 +991,8 @@ export default function ExplorerApp() {
     selectedPaths,
     enabled:
       listingLoaded &&
-      !listingOverlayKey &&
+      !listingLoading &&
+      !listingPaneOverlay &&
       activeListingEntries.length > 0 &&
       !gridResizeActive,
     scrollElementRef: listingViewportRef,
@@ -1218,19 +1209,10 @@ export default function ExplorerApp() {
     () => ({
       getImagePaths,
       getCurrentPreviewPath: () => selectedPathRef.current,
-      setPreviewPath: (path: string) => {
-        const index = listingEntriesRef.current.findIndex((entry) => entry.path === path);
-        if (index >= 0) {
-          setSelectedIndex(index);
-        }
-        setSelectedPath(path);
-        setSelectedPaths(new Set([path]));
-        setFocusPane("preview");
-      },
       openSlideshow,
     }),
     () => ({
-      openPreviewSheet: () => setPreviewSheetOpen(true),
+      openInfoDialog: () => setInfoDialogOpen(true),
     }),
     () => ({
       openAbout: () => setAboutOpen(true),
@@ -1242,7 +1224,6 @@ export default function ExplorerApp() {
   const openContextMenu = useCallback(
     async (event: React.MouseEvent, path: string | null) => {
       event.preventDefault();
-      setFocusPane("file-list");
 
       let menuContextKeys = contextKeys;
       const listingRows = listingEntriesRef.current;
@@ -1354,7 +1335,7 @@ export default function ExplorerApp() {
     actionSystem.confirmState != null ||
     contextMenu != null ||
     slideshowOpen ||
-    previewSheetOpen ||
+    infoDialogOpen ||
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
@@ -1536,7 +1517,7 @@ export default function ExplorerApp() {
           backLabel={t("breadcrumb.back")}
           forwardLabel={t("breadcrumb.forward")}
           refreshLabel={t("breadcrumb.refresh")}
-          refreshing={refreshing}
+          refreshing={refreshing || listingLoading}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           onBack={() => void goBack()}
@@ -1562,7 +1543,6 @@ export default function ExplorerApp() {
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
             className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-            onMouseDown={() => setFocusPane("file-list")}
             onContextMenu={(event) => {
               if (
                 event.target instanceof Element &&
@@ -1573,13 +1553,24 @@ export default function ExplorerApp() {
               void openContextMenuRef.current(event, null);
             }}
           >
-            {listingOverlayKey ? (
-              <p
-                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground"
+            {listingPaneOverlay ? (
+              <div
+                className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/60 px-4 text-center backdrop-blur-[1px]"
                 role="status"
+                aria-live="polite"
               >
-                {t(listingOverlayKey)}
-              </p>
+                {listingPaneOverlay === "listing.loading" ? (
+                  <>
+                    <Loader2
+                      className="size-6 animate-spin text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <p className="text-sm text-muted-foreground">{t("listing.loading")}</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t(listingPaneOverlay)}</p>
+                )}
+              </div>
             ) : null}
             <MarqueeOverlay rect={marqueeSelect.marqueeRect} />
             {listingViewMode === "grid" ? (
@@ -1654,19 +1645,6 @@ export default function ExplorerApp() {
               </div>
             ) : null}
           </div>
-          {inlinePreviewAvailable ? (
-            <div
-              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-t border-border lg:border-t-0 lg:border-l"
-              style={{ width: PREVIEW_PANEL_WIDTH_PX }}
-            >
-              <PreviewPane
-                path={selectedPath}
-                onFocusPreview={() => setFocusPane("preview")}
-                onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
-                className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-transparent shadow-none"
-              />
-            </div>
-          ) : null}
         </div>
       </section>
 
@@ -1816,10 +1794,11 @@ export default function ExplorerApp() {
         onCurrentPathChange={handleSlideshowCurrentPathChange}
       />
 
-      <PreviewSheet
-        open={previewSheetOpen}
-        onOpenChange={setPreviewSheetOpen}
-        path={selectedPath}
+      <InfoDialog
+        open={infoDialogOpen}
+        onOpenChange={setInfoDialogOpen}
+        paths={infoDialogPaths}
+        entries={entries}
         onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
       />
 
