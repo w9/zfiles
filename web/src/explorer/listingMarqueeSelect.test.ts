@@ -6,10 +6,30 @@ import {
   collectTableEntryRects,
   computeMarqueeSelection,
   hitTestEntryPaths,
+  hitTestGridPathsWithContentMarquee,
+  hitTestTablePathsWithContentMarquee,
   normalizeMarqueeRect,
   pointerDistance,
   rectsIntersect,
+  selectionSetsEqual,
 } from "./listingMarqueeSelect";
+
+function mockScrollElement(scrollTop: number) {
+  return {
+    scrollTop,
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 400,
+      width: 200,
+      height: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+  } as unknown as HTMLElement;
+}
 
 test("normalizeMarqueeRect orders corners regardless of drag direction", () => {
   assert.deepEqual(normalizeMarqueeRect(10, 20, 30, 5), {
@@ -184,4 +204,98 @@ test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
     right: 112,
     bottom: 184,
   });
+});
+
+test("hitTestTablePathsWithContentMarquee retract shrinks selection", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = Array.from({ length: 30 }, (_, index) => `/item-${index}`);
+  const wide = {
+    contentTop: 0,
+    contentBottom: 22 * 44,
+    clientLeft: 0,
+    clientRight: 200,
+  };
+  const narrow = {
+    contentTop: 0,
+    contentBottom: 15 * 44,
+    clientLeft: 0,
+    clientRight: 200,
+  };
+
+  assert.equal(
+    hitTestTablePathsWithContentMarquee(scrollElement, paths, wide).length,
+    22,
+  );
+  assert.equal(
+    hitTestTablePathsWithContentMarquee(scrollElement, paths, narrow).length,
+    15,
+  );
+});
+
+test("hitTestTablePathsWithContentMarquee auto-scroll extends swept range", () => {
+  const paths = Array.from({ length: 40 }, (_, index) => `/item-${index}`);
+  const bounds = {
+    contentTop: 0,
+    contentBottom: 900,
+    clientLeft: 0,
+    clientRight: 200,
+  };
+
+  const atScrollZero = hitTestTablePathsWithContentMarquee(
+    mockScrollElement(0),
+    paths,
+    bounds,
+  ).length;
+  const afterScroll = hitTestTablePathsWithContentMarquee(
+    mockScrollElement(500),
+    paths,
+    { ...bounds, contentBottom: 1400 },
+  ).length;
+
+  assert.equal(atScrollZero, 21);
+  assert.equal(afterScroll, 32);
+  assert.ok(afterScroll > atScrollZero);
+});
+
+test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = ["/a", "/b", "/c", "/d"];
+  const hit = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 0,
+      contentBottom: 100,
+      clientLeft: 0,
+      clientRight: 200,
+    },
+    {
+      columnCount: 2,
+      cardWidth: 100,
+      cardHeight: 80,
+      gap: 12,
+      padding: 12,
+    },
+  );
+
+  assert.deepEqual(hit, ["/a", "/b"]);
+});
+
+test("hitTestTablePathsWithContentMarquee range scan matches full-list bounds", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = Array.from({ length: 10_000 }, (_, index) => `/item-${index}`);
+  const bounds = {
+    contentTop: 440,
+    contentBottom: 880,
+    clientLeft: 0,
+    clientRight: 200,
+  };
+  const ranged = hitTestTablePathsWithContentMarquee(scrollElement, paths, bounds);
+  assert.deepEqual(ranged, ["/item-10", "/item-11", "/item-12", "/item-13", "/item-14", "/item-15", "/item-16", "/item-17", "/item-18", "/item-19"]);
+});
+
+test("selectionSetsEqual compares set membership", () => {
+  assert.equal(selectionSetsEqual(new Set(["/a"]), new Set(["/a"])), true);
+  assert.equal(selectionSetsEqual(new Set(["/a"]), new Set(["/b"])), false);
+  assert.equal(selectionSetsEqual(new Set(["/a", "/b"]), new Set(["/b"])), false);
 });

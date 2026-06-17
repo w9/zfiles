@@ -7,12 +7,14 @@ import {
   type ClientRect,
   type ListingMarqueeLayoutResolver,
   type MarqueeModifiers,
+  clientYToContentY,
   collectDomEntryRectsFromViewport,
   computeMarqueeSelection,
   findEntryPathAtPoint,
   hitTestEntryPaths,
   normalizeMarqueeRect,
   pointerDistance,
+  selectionSetsEqual,
   shouldIgnoreMarqueePointerTarget,
 } from "@/explorer/listingMarqueeSelect";
 
@@ -40,7 +42,8 @@ type DragSession = {
   baseSelection: Set<string>;
   modifiers: MarqueeModifiers;
   lastHoveredPath: string | null;
-  marqueeHits: Set<string>;
+  startContentY: number | null;
+  lastSelection: Set<string> | null;
 };
 
 function collectEntryRectsFromViewport(
@@ -114,29 +117,49 @@ export function useListingMarqueeSelect({
       );
       setMarqueeRect(marquee);
 
-      const entryRects = collectEntryRectsFromViewport(scrollElement, layoutRef);
-      const hitPaths = hitTestEntryPaths(marquee, entryRects);
-      for (const path of hitPaths) {
-        session.marqueeHits.add(path);
+      if (session.started && session.startContentY == null) {
+        session.startContentY = clientYToContentY(scrollElement, session.startY);
       }
 
-      const marqueePaths =
-        session.modifiers.ctrlKey || session.modifiers.metaKey
-          ? hitPaths
-          : session.marqueeHits;
+      const layout = layoutRef?.current;
+      const usesContentMarquee =
+        layout?.hitTestContentMarquee != null && session.startContentY != null;
+
+      const entryRects = usesContentMarquee
+        ? []
+        : collectEntryRectsFromViewport(scrollElement, layoutRef);
+
+      const hitPaths =
+        usesContentMarquee && layout != null
+          ? layout.hitTestContentMarquee(scrollElement, {
+              contentTop: session.startContentY!,
+              contentBottom: clientYToContentY(scrollElement, clientY),
+              clientLeft: Math.min(session.startX, clientX),
+              clientRight: Math.max(session.startX, clientX),
+            })
+          : hitTestEntryPaths(marquee, entryRects);
 
       const nextSelection = computeMarqueeSelection(
         session.baseSelection,
-        marqueePaths,
+        hitPaths,
         session.modifiers,
       );
 
-      const hoveredPath = findEntryPathAtPoint(entryRects, clientX, clientY);
+      const hoveredPath =
+        usesContentMarquee && layout != null
+          ? layout.findPathAtClientPoint(scrollElement, clientX, clientY)
+          : findEntryPathAtPoint(entryRects, clientX, clientY);
       if (hoveredPath) {
         session.lastHoveredPath = hoveredPath;
       }
 
-      onSelectionChangeRef.current(nextSelection, session.lastHoveredPath);
+      if (
+        session.lastSelection == null ||
+        !selectionSetsEqual(session.lastSelection, nextSelection)
+      ) {
+        onSelectionChangeRef.current(nextSelection, session.lastHoveredPath);
+        session.lastSelection = new Set(nextSelection);
+      }
     },
     [layoutRef, scrollElementRef],
   );
@@ -221,7 +244,8 @@ export function useListingMarqueeSelect({
           metaKey: event.metaKey,
         },
         lastHoveredPath: null,
-        marqueeHits: new Set(),
+        startContentY: null,
+        lastSelection: null,
       };
       sessionRef.current = session;
 

@@ -272,7 +272,7 @@ Fix marquee retract deselection: replace cumulative client-space hits with conte
 - [ ] `tests/browser_open.rs` + `tests/qr.rs`: update integration assertions to the new banner — match the `→` URL line instead of `▸  Local:`/`Share:`, the new QR caption instead of `▸  QR:`/`scan below`, and parse the token from the URL line for the loopback `--token` case (no standalone token row locally)
 - [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `listingMarqueeSelect.ts` tests: content-space marquee hit-testing — retract shrinks selection; auto-scroll across pages keeps swept rows selected
-- [ ] `listingMarqueeSelect.ts` + layout resolvers: hit-test entries in scroll content coordinates instead of viewport-only client rects
-- [ ] `useListingMarqueeSelect.ts`: remove cumulative `marqueeHits`; drive selection from content-space hits each frame
-- [ ] Run `pnpm test` for marquee/listing tests
+- [x] `listingMarqueeSelect.ts` tests: content-space marquee hit-testing — retract shrinks selection; auto-scroll across pages keeps swept rows selected
+- [x] `listingMarqueeSelect.ts` + layout resolvers: hit-test entries in scroll content coordinates instead of viewport-only client rects
+- [x] `useListingMarqueeSelect.ts`: remove cumulative `marqueeHits`; drive selection from content-space hits each frame
+- [x] Run `pnpm test` for marquee/listing tests

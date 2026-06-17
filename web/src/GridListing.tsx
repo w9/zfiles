@@ -5,6 +5,8 @@ import GridCardPreview from "@/GridCardPreview";
 import InlineNameInput from "@/explorer/InlineNameInput";
 import {
   collectGridEntryRects,
+  findGridPathAtClientPoint,
+  hitTestGridPathsWithContentMarquee,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
 import { useGridCardResize } from "@/explorer/useGridCardResize";
@@ -85,6 +87,10 @@ export default function GridListing({
   );
 
   const rowCount = Math.ceil(entries.length / columnCount);
+  const listingPaths = useMemo(
+    () => entries.map((entry) => entry.path),
+    [entries],
+  );
   const iconPixelSize = gridIconPixelSize(cardSize.width, cardSize.height);
 
   const { onHandlePointerDown, onHandleDoubleClick } = useGridCardResize({
@@ -142,10 +148,38 @@ export default function GridListing({
       return;
     }
     marqueeLayoutRef.current = {
+      entryCount: listingPaths.length,
       getEntryRects: (scrollElement) =>
         collectGridEntryRects(
           scrollElement,
-          entries.map((entry) => entry.path),
+          listingPaths,
+          {
+            columnCount,
+            cardWidth: cardSize.width,
+            cardHeight: cardSize.height,
+            gap: GRID_GAP_PX,
+            padding: VIEWPORT_PADDING_PX,
+          },
+        ),
+      hitTestContentMarquee: (scrollElement, bounds) =>
+        hitTestGridPathsWithContentMarquee(
+          scrollElement,
+          listingPaths,
+          bounds,
+          {
+            columnCount,
+            cardWidth: cardSize.width,
+            cardHeight: cardSize.height,
+            gap: GRID_GAP_PX,
+            padding: VIEWPORT_PADDING_PX,
+          },
+        ),
+      findPathAtClientPoint: (scrollElement, clientX, clientY) =>
+        findGridPathAtClientPoint(
+          scrollElement,
+          listingPaths,
+          clientX,
+          clientY,
           {
             columnCount,
             cardWidth: cardSize.width,
@@ -158,7 +192,13 @@ export default function GridListing({
     return () => {
       marqueeLayoutRef.current = null;
     };
-  }, [cardSize.height, cardSize.width, columnCount, entries, marqueeLayoutRef]);
+  }, [
+    cardSize.height,
+    cardSize.width,
+    columnCount,
+    listingPaths,
+    marqueeLayoutRef,
+  ]);
 
   const gridTemplateColumns = `repeat(${columnCount}, ${cardSize.width}px)`;
 

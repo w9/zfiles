@@ -22,6 +22,8 @@ import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import InlineNameInput from "@/explorer/InlineNameInput";
 import {
   collectTableEntryRects,
+  findTablePathAtClientPoint,
+  hitTestTablePathsWithContentMarquee,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
 import { createListingColumns } from "@/listing-columns";
@@ -178,6 +180,10 @@ export default function VirtualListing({
   });
 
   const rows = table.getRowModel().rows;
+  const listingPaths = useMemo(
+    () => rows.map((row) => row.original.path),
+    [rows],
+  );
   const parentRef = useRef<HTMLDivElement | null>(null);
   const setViewportRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -248,16 +254,27 @@ export default function VirtualListing({
       return;
     }
     marqueeLayoutRef.current = {
+      entryCount: listingPaths.length,
       getEntryRects: (scrollElement) =>
-        collectTableEntryRects(
+        collectTableEntryRects(scrollElement, listingPaths),
+      hitTestContentMarquee: (scrollElement, bounds) =>
+        hitTestTablePathsWithContentMarquee(
           scrollElement,
-          rows.map((row) => row.original.path),
+          listingPaths,
+          bounds,
+        ),
+      findPathAtClientPoint: (scrollElement, clientX, clientY) =>
+        findTablePathAtClientPoint(
+          scrollElement,
+          listingPaths,
+          clientX,
+          clientY,
         ),
     };
     return () => {
       marqueeLayoutRef.current = null;
     };
-  }, [marqueeLayoutRef, rows]);
+  }, [listingPaths, marqueeLayoutRef]);
 
   const headerGroup = table.getHeaderGroups()[0];
 
