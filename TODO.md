@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info is non-modal floating on wide viewports (resizable, copy-to-clipboard per value) and bottom Sheet on narrow (<640px). Listing loading overlay: show spinner only after 300ms. Deferred: CLI banner redesign.
+Replace per-key **Kbd** chips with muted small plain text everywhere shortcuts render (`ChordKbd` → platform-native `formatKeybindingLabel` string). Remove unused `kbd.tsx` and `keybindingDisplay` helpers. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -304,3 +304,9 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] `MetadataValueRow.tsx`: shared label/value row with optional copy button (icon flash to checkmark); skip when no copy text
 - [x] Wire copy rows into `PreviewPane.tsx` and `InfoDialog` aggregate summary; enable `FloatingPanel` resize
 - [x] i18n (14 locales): `preview.copyValue` aria label; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ChordKbd.tsx`: render platform-native label (`formatKeybindingLabel`) as `text-xs text-muted-foreground` span; tooltip contrast override
+- [ ] Delete `web/src/components/ui/kbd.tsx`; remove `keybindingDisplay.ts` + tests (superseded by `formatKeybindingLabel`)
+- [ ] `CommandPalette.tsx`: drop kbd-chip-specific className tweaks; rely on `CommandShortcut` + span override for selected row
+- [ ] `e2e/tests/smoke.spec.ts`: assert plain `Ctrl+P` shortcut text instead of per-key kbd slots
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
