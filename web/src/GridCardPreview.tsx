@@ -62,7 +62,7 @@ export default function GridCardPreview({
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-0 flex-1 items-center justify-center bg-muted/30 p-2"
+      className="relative flex min-h-0 flex-1 items-center justify-center p-2"
     >
       {showIcon ? (
         <FileIcon

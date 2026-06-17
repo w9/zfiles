@@ -253,7 +253,7 @@ export default function GridListing({
                         data-listing-entry
                         data-listing-path={entry.path}
                         className={cn(
-                          "absolute inset-0 flex select-none flex-col overflow-hidden rounded-lg border bg-background text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
+                          "absolute inset-0 flex select-none flex-col overflow-hidden text-left hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
                           dimmed && "opacity-70",
                           isCut && GRID_ITEM_CUT_CLASS,
                           entry.quickFilterMatched === false && "opacity-40",
@@ -286,7 +286,7 @@ export default function GridListing({
                           iconTheme={iconTheme}
                           pixelSize={iconPixelSize}
                         />
-                        <div className="shrink-0 border-t px-2 py-1.5 text-sm">
+                        <div className="shrink-0 px-2 py-1.5 text-sm">
                           {isEditing && onInlineCommit && onInlineCancel ? (
                             <InlineNameInput
                               initialName={entry.name}

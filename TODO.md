@@ -318,6 +318,6 @@ Simplify grid view cards: strip per-item border, background, rounded corners, pr
 - [x] `icons.test.ts`: assert every registered action id has a mapped icon
 - [x] Run `pnpm test`
 
-- [ ] `GridListing.tsx`: remove card border/background/rounded corners and name divider; keep hover + selection ring/tint
-- [ ] `GridCardPreview.tsx`: remove preview-area muted background
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `GridListing.tsx`: remove card border/background/rounded corners and name divider; keep hover + selection ring/tint
+- [x] `GridCardPreview.tsx`: remove preview-area muted background
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
