@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Move Command Palette from View to Help (menu, shortcuts dialog, palette category labels); keep `view.open-command-palette` id/keybinding and toolbar entry. Deferred: CLI banner redesign.
+Center grid-view filenames under each card (grid only); inline rename stays full-width left-aligned; long names truncate with end ellipsis. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -334,3 +334,6 @@ Move Command Palette from View to Help (menu, shortcuts dialog, palette category
 - [x] `shortcutDialogRows.ts`: add Help to `SHORTCUT_DIALOG_CATEGORY_ORDER`; update unit tests
 - [x] `e2e/tests/smoke.spec.ts`: open Command Palette from Help menu instead of View
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `GridListing.tsx`: center filename label; keep inline rename full-width left-aligned; end ellipsis when truncated
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
