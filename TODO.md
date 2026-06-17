@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Replace per-key **Kbd** chips with muted plain shortcut text; widen the minimum gap between menu labels and shortcut text in shortcut slots. Deferred: CLI banner redesign.
+Add Lucide icons for help menu actions missing from `icons.ts` (`help.open-keyboard-shortcuts`, `help.open-about`); unit test that every registered builtin/help/preview/viewer action has an icon. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -313,3 +313,7 @@ Replace per-key **Kbd** chips with muted plain shortcut text; widen the minimum 
 
 - [x] Shortcut slots (`dropdown-menu`, `context-menu`, `menubar`, `command`): widen min gap between label and shortcut (`ms-3 flex-1 justify-end`)
 - [x] Run `pnpm test`
+
+- [ ] `icons.ts`: add `Keyboard` for `help.open-keyboard-shortcuts`, `CircleHelp` for `help.open-about`
+- [ ] `icons.test.ts`: assert every registered action id has a mapped icon
+- [ ] Run `pnpm test`
