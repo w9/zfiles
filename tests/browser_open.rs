@@ -10,9 +10,12 @@ fn is_hex_token(token: &str) -> bool {
 
 fn token_from_banner(output: &str) -> Option<String> {
     for line in output.lines() {
-        let line = line.trim();
-        if let Some(rest) = line.strip_prefix("▸  Token:") {
-            let token = rest.trim();
+        if let Some(rest) = line.split("token=").nth(1) {
+            let token = rest
+                .split(['/', '&', '"', ' '])
+                .next()
+                .unwrap_or_default()
+                .trim();
             if is_hex_token(token) {
                 return Some(token.to_string());
             }
@@ -56,18 +59,14 @@ fn serve_prints_startup_banner_with_explorer_url() {
     let output = collect_startup_stdout(&[], dir.path());
 
     assert!(
-        output.contains("zfiles v") && output.contains("is running"),
+        output.contains("zfiles v"),
         "expected versioned startup banner:\n{output}"
-    );
-    assert!(
-        output.contains("▸  Local:"),
-        "expected local URL row in banner:\n{output}"
     );
     assert!(
         output
             .lines()
-            .any(|line| line.contains("http://127.0.0.1:")),
-        "expected explorer URL in banner:\n{output}"
+            .any(|line| line.contains('→') && line.contains("http://127.0.0.1:")),
+        "expected spotlighted explorer URL in banner:\n{output}"
     );
 }
 
@@ -95,11 +94,6 @@ fn serve_with_token_includes_token_in_banner_url() {
 fn token_startup_prints_hex_auth_token_in_banner() {
     let dir = tempdir().unwrap();
     let output = collect_startup_stdout(&["--token", "--no-open"], dir.path());
-
-    assert!(
-        output.contains("▸  Token:"),
-        "expected token row in banner:\n{output}"
-    );
 
     let token = token_from_banner(&output).expect("token in auth banner section:\n{output}");
     assert!(

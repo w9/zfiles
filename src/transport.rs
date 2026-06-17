@@ -171,6 +171,16 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         .as_ref()
         .and_then(|share| share.note.clone());
 
+    let qr = public_share
+        .then(|| match qr::render_url(&banner_url) {
+            Ok(image) => Some(image),
+            Err(error) => {
+                tracing::warn!(%error, "failed to render QR code");
+                None
+            }
+        })
+        .flatten();
+
     banner::ServeBanner {
         root: root.display().to_string(),
         url: banner_url.clone(),
@@ -186,15 +196,12 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
             .then(|| serve.vite_dev_url().to_string()),
         #[cfg(not(feature = "dev-frontend"))]
         vite_dev: None,
+        qr,
     }
     .print();
 
     if open_browser {
         browser::open_async(banner_url.clone());
-    }
-
-    if public_share && let Err(error) = qr::print_url(&banner_url) {
-        tracing::warn!(%error, "failed to render QR code");
     }
 
     mount::warn_if_cross_mount("upload spool", &root, &state_dir);

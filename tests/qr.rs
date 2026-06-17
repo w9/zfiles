@@ -40,18 +40,17 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         "expected scannable QR in startup output, found {dark_modules} dark modules:\n{output}"
     );
     assert!(
-        output.contains("▸  Share:")
-            && output
-                .lines()
-                .any(|line| line.contains("http://") && line.contains("token=")),
-        "expected share URL with hex token in startup banner:\n{output}"
+        output
+            .lines()
+            .any(|line| line.contains('→') && line.contains("http://") && line.contains("token=")),
+        "expected spotlighted share URL with hex token in startup banner:\n{output}"
     );
     assert!(
         !output.lines().any(|line| line.contains("http://0.0.0.0:")),
         "share URL must not expose the wildcard bind address:\n{output}"
     );
     assert!(
-        output.contains("▸  QR:") && output.contains("scan below"),
-        "expected QR hint in startup banner:\n{output}"
+        output.contains("Scan to open on another device"),
+        "expected QR caption in startup banner:\n{output}"
     );
 }

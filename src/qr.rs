@@ -13,11 +13,6 @@ pub fn render_url(url: &str) -> Result<String> {
         .build())
 }
 
-pub fn print_url(url: &str) -> Result<()> {
-    println!("{}", render_url(url)?);
-    Ok(())
-}
-
 pub fn dark_module_count(image: &str) -> usize {
     image.chars().filter(|&ch| ch == '█').count()
 }
