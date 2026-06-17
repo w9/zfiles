@@ -172,6 +172,7 @@ export const zhTW: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "拖曳以移動",
   "preview.getInfo.close": "關閉",
   "preview.getInfo.sheetLabel": "顯示簡介",
+  "preview.copyValue": "複製{{label}}",
   "preview.aggregate.items": "選取",
   "preview.aggregate.summary": "已選取 {{count}} 個項目",
   "preview.aggregate.breakdown": "{{files}} 個檔案，{{folders}} 個資料夾",

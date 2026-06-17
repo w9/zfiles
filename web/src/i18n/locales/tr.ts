@@ -177,6 +177,7 @@ export const tr: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "Taşımak için sürükleyin",
   "preview.getInfo.close": "Kapat",
   "preview.getInfo.sheetLabel": "Bilgi",
+  "preview.copyValue": "{{label}} kopyala",
   "preview.aggregate.items": "Seçim",
   "preview.aggregate.summary": "{{count}} öğe seçildi",
   "preview.aggregate.breakdown": "{{files}} dosya, {{folders}} klasör",

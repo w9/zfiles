@@ -172,6 +172,7 @@ export const zhCN: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "拖动以移动",
   "preview.getInfo.close": "关闭",
   "preview.getInfo.sheetLabel": "显示简介",
+  "preview.copyValue": "复制{{label}}",
   "preview.aggregate.items": "选择",
   "preview.aggregate.summary": "已选择 {{count}} 个项目",
   "preview.aggregate.breakdown": "{{files}} 个文件，{{folders}} 个文件夹",

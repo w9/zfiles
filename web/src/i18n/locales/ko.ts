@@ -177,6 +177,7 @@ export const ko: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "드래그하여 이동",
   "preview.getInfo.close": "닫기",
   "preview.getInfo.sheetLabel": "정보",
+  "preview.copyValue": "{{label}} 복사",
   "preview.aggregate.items": "선택",
   "preview.aggregate.summary": "{{count}}개 항목 선택됨",
   "preview.aggregate.breakdown": "파일 {{files}}개, 폴더 {{folders}}개",

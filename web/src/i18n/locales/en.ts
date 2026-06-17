@@ -175,6 +175,7 @@ export const en = {
   "preview.getInfo.dragHandle": "Drag to move",
   "preview.getInfo.close": "Close",
   "preview.getInfo.sheetLabel": "Get Info",
+  "preview.copyValue": "Copy {{label}}",
   "preview.aggregate.items": "Selection",
   "preview.aggregate.summary": "{{count}} items selected",
   "preview.aggregate.breakdown": "{{files}} files, {{folders}} folders",

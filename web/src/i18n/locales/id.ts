@@ -177,6 +177,7 @@ export const id: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "Seret untuk memindahkan",
   "preview.getInfo.close": "Tutup",
   "preview.getInfo.sheetLabel": "Info",
+  "preview.copyValue": "Salin {{label}}",
   "preview.aggregate.items": "Pilihan",
   "preview.aggregate.summary": "{{count}} item dipilih",
   "preview.aggregate.breakdown": "{{files}} berkas, {{folders}} folder",

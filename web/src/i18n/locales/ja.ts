@@ -177,6 +177,7 @@ export const ja: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "ドラッグして移動",
   "preview.getInfo.close": "閉じる",
   "preview.getInfo.sheetLabel": "情報",
+  "preview.copyValue": "{{label}}をコピー",
   "preview.aggregate.items": "選択",
   "preview.aggregate.summary": "{{count}} 項目を選択",
   "preview.aggregate.breakdown": "ファイル {{files}} 件、フォルダー {{folders}} 件",

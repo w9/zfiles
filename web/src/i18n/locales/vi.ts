@@ -177,6 +177,7 @@ export const vi: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "Kéo để di chuyển",
   "preview.getInfo.close": "Đóng",
   "preview.getInfo.sheetLabel": "Thông tin",
+  "preview.copyValue": "Sao chép {{label}}",
   "preview.aggregate.items": "Lựa chọn",
   "preview.aggregate.summary": "Đã chọn {{count}} mục",
   "preview.aggregate.breakdown": "{{files}} tệp, {{folders}} thư mục",

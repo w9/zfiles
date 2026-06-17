@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type PointerEvent as ReactPo
 import { X } from "lucide-react";
 
 import PreviewPane from "./PreviewPane";
+import MetadataValueRow from "./MetadataValueRow";
 import type { FileEntry } from "./backend";
 import { formatSize } from "./listing-format";
 import { aggregateSelection } from "./infoSelectionSummary";
@@ -15,7 +16,6 @@ import {
 import {
   centerPanelGeometry,
   isFloatingPanelSheetLayout,
-  readStoredPanelGeometry,
   type ViewportSize,
 } from "./floatingPanelGeometry";
 import { useTranslation } from "@/i18n";
@@ -31,15 +31,6 @@ type InfoDialogProps = {
   entries: FileEntry[];
   onSymlinkTargetClick?: (resolvedPath: string) => void;
 };
-
-function MetadataRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-[5rem_1fr] gap-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
 
 function InfoAggregateSummary({
   paths,
@@ -57,47 +48,44 @@ function InfoAggregateSummary({
     () => aggregateSelection(paths, entryByPath),
     [paths, entryByPath],
   );
+  const selectionLabel = t("preview.aggregate.summary", { count: String(summary.totalCount) });
+  const breakdownLabel = t("preview.aggregate.breakdown", {
+    files: String(summary.fileCount),
+    folders: String(summary.folderCount),
+  });
+  const symlinksLabel =
+    summary.symlinkCount > 0
+      ? t("preview.aggregate.symlinks", { count: String(summary.symlinkCount) })
+      : null;
+  const sizeLabel = formatSize(summary.totalSize, false);
 
   return (
     <dl className="grid gap-2 text-sm">
-      <MetadataRow label={t("preview.aggregate.items")}>
-        {t("preview.aggregate.summary", { count: String(summary.totalCount) })}
-      </MetadataRow>
-      <MetadataRow label={t("preview.type")}>
-        {t("preview.aggregate.breakdown", {
-          files: String(summary.fileCount),
-          folders: String(summary.folderCount),
-        })}
-      </MetadataRow>
-      {summary.symlinkCount > 0 ? (
-        <MetadataRow label={t("preview.type.symlink")}>
-          {t("preview.aggregate.symlinks", { count: String(summary.symlinkCount) })}
-        </MetadataRow>
+      <MetadataValueRow rowKey="selection" label={t("preview.aggregate.items")} copyText={selectionLabel}>
+        {selectionLabel}
+      </MetadataValueRow>
+      <MetadataValueRow rowKey="type" label={t("preview.type")} copyText={breakdownLabel}>
+        {breakdownLabel}
+      </MetadataValueRow>
+      {symlinksLabel != null ? (
+        <MetadataValueRow rowKey="symlinks" label={t("preview.type.symlink")} copyText={symlinksLabel}>
+          {symlinksLabel}
+        </MetadataValueRow>
       ) : null}
-      <MetadataRow label={t("preview.size")}>
-        {formatSize(summary.totalSize, false)}
-      </MetadataRow>
+      <MetadataValueRow rowKey="size" label={t("preview.size")} copyText={sizeLabel}>
+        {sizeLabel}
+      </MetadataValueRow>
     </dl>
   );
 }
 
 function resolveInfoPanelGeometry(viewport: ViewportSize) {
-  const defaults = centerPanelGeometry(
-    INFO_PANEL_WIDTH_PX,
-    INFO_PANEL_HEIGHT_PX,
+  return resolveStoredOrDefaultGeometry(
+    INFO_PANEL_GEOMETRY_STORAGE_KEY,
     viewport,
     INFO_PANEL_SIZE_LIMITS,
+    centerPanelGeometry(INFO_PANEL_WIDTH_PX, INFO_PANEL_HEIGHT_PX, viewport, INFO_PANEL_SIZE_LIMITS),
   );
-  const stored = readStoredPanelGeometry(INFO_PANEL_GEOMETRY_STORAGE_KEY);
-  if (stored) {
-    return resolveStoredOrDefaultGeometry(
-      INFO_PANEL_GEOMETRY_STORAGE_KEY,
-      viewport,
-      INFO_PANEL_SIZE_LIMITS,
-      { ...defaults, x: stored.x, y: stored.y },
-    );
-  }
-  return defaults;
 }
 
 type InfoPanelChromeProps = {
@@ -220,7 +208,7 @@ export default function InfoDialog({
       onClose={close}
       ariaLabel={t("preview.label")}
       storageKey={INFO_PANEL_GEOMETRY_STORAGE_KEY}
-      resizable={false}
+      resizable
       sizeLimits={INFO_PANEL_SIZE_LIMITS}
       resolveInitialGeometry={resolveInitialGeometry}
     >

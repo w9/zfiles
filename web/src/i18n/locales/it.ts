@@ -177,6 +177,7 @@ export const it: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "Trascina per spostare",
   "preview.getInfo.close": "Chiudi",
   "preview.getInfo.sheetLabel": "Informazioni",
+  "preview.copyValue": "Copia {{label}}",
   "preview.aggregate.items": "Selezione",
   "preview.aggregate.summary": "{{count}} elementi selezionati",
   "preview.aggregate.breakdown": "{{files}} file, {{folders}} cartelle",

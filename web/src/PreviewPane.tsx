@@ -1,11 +1,13 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 import { TriangleAlertIcon } from "lucide-react";
 
 import { messageFromApiResponse } from "./apiError";
 import { useExplorerBackend, type FileStat } from "./backend";
+import { useCloudAuth } from "./cloud/CloudAuthContext";
 import { formatSize } from "./listing-format";
 import { useTranslation } from "@/i18n";
+import { cn } from "@/lib/utils";
 import {
   cloudExtraString,
   countDirectoryChildren,
@@ -15,8 +17,7 @@ import {
 } from "./preview-metadata";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
-import { useCloudAuth } from "./cloud/CloudAuthContext";
+import MetadataValueRow from "./MetadataValueRow";
 
 type PreviewPaneProps = {
   path: string | null;
@@ -30,15 +31,6 @@ type DirectorySummaryState =
   | { status: "loading" }
   | { status: "ready"; files: number; folders: number; truncated: boolean }
   | { status: "error" };
-
-function MetadataRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-[5rem_1fr] gap-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
 
 export default function PreviewPane({
   path,
@@ -204,14 +196,24 @@ export default function PreviewPane({
         <h2 className="mb-3 text-lg font-semibold">{stat.path.split("/").pop()}</h2>
       ) : null}
       <dl className="mb-4 grid gap-2 text-sm">
-        <MetadataRow label={t("preview.path")}>
+        <MetadataValueRow rowKey="path" label={t("preview.path")} copyText={stat.path}>
           <span className="break-all">{stat.path}</span>
-        </MetadataRow>
-        <MetadataRow label={t("preview.type")}>{typeLabel}</MetadataRow>
-        <MetadataRow label={t("preview.kind")}>{kindLabel}</MetadataRow>
-        <MetadataRow label={t("preview.modified")}>{modifiedLabel}</MetadataRow>
+        </MetadataValueRow>
+        <MetadataValueRow rowKey="type" label={t("preview.type")} copyText={typeLabel}>
+          {typeLabel}
+        </MetadataValueRow>
+        <MetadataValueRow rowKey="kind" label={t("preview.kind")} copyText={kindLabel}>
+          {kindLabel}
+        </MetadataValueRow>
+        <MetadataValueRow rowKey="modified" label={t("preview.modified")} copyText={modifiedLabel}>
+          {modifiedLabel}
+        </MetadataValueRow>
         {stat.is_symlink && stat.symlink_target ? (
-          <MetadataRow label={t("preview.symlinkTarget")}>
+          <MetadataValueRow
+            rowKey="symlinkTarget"
+            label={t("preview.symlinkTarget")}
+            copyText={stat.symlink_target}
+          >
             {symlinkResolution?.inRoot && symlinkResolution.resolvedPath != null ? (
               <button
                 type="button"
@@ -230,17 +232,35 @@ export default function PreviewPane({
                 ) : null}
               </span>
             )}
-          </MetadataRow>
+          </MetadataValueRow>
         ) : null}
         {stat.is_dir && contentsLabel != null ? (
-          <MetadataRow label={t("preview.contents")}>{contentsLabel}</MetadataRow>
+          <MetadataValueRow
+            rowKey="contents"
+            label={t("preview.contents")}
+            copyText={dirSummary.status === "ready" ? contentsLabel : null}
+          >
+            {contentsLabel}
+          </MetadataValueRow>
         ) : null}
         {!stat.is_dir ? (
-          <MetadataRow label={t("preview.size")}>{formatSize(stat.size, false)}</MetadataRow>
+          <MetadataValueRow
+            rowKey="size"
+            label={t("preview.size")}
+            copyText={formatSize(stat.size, false)}
+          >
+            {formatSize(stat.size, false)}
+          </MetadataValueRow>
         ) : null}
-        {etag ? <MetadataRow label={t("preview.etag")}>{etag}</MetadataRow> : null}
+        {etag ? (
+          <MetadataValueRow rowKey="etag" label={t("preview.etag")} copyText={etag}>
+            {etag}
+          </MetadataValueRow>
+        ) : null}
         {storageClass ? (
-          <MetadataRow label={t("preview.storageClass")}>{storageClass}</MetadataRow>
+          <MetadataValueRow rowKey="storageClass" label={t("preview.storageClass")} copyText={storageClass}>
+            {storageClass}
+          </MetadataValueRow>
         ) : null}
       </dl>
     </aside>

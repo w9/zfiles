@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info becomes non-modal floating on wide viewports and bottom Sheet on narrow (<640px); fixed size, centered initial placement, ⌘I toggles, Escape/× close. Listing loading overlay: show spinner only after 300ms. Deferred: CLI banner redesign.
+Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info is non-modal floating on wide viewports (resizable, copy-to-clipboard per value) and bottom Sheet on narrow (<640px). Listing loading overlay: show spinner only after 300ms. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -300,7 +300,7 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] `ExplorerApp.tsx`: delay listing overlay/spinner until 300ms into load; reset timer per load generation; breadcrumb refresh spin unchanged
 - [x] Update overlay helper tests; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `infoPanelGeometry.ts`: resizable limits (min 320×240, default 480×560); persist full geometry like upload tray
-- [ ] `MetadataValueRow.tsx`: shared label/value row with optional copy button (icon flash to checkmark); skip when no copy text
-- [ ] Wire copy rows into `PreviewPane.tsx` and `InfoDialog` aggregate summary; enable `FloatingPanel` resize
-- [ ] i18n (14 locales): `preview.copyValue` aria label; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `infoPanelGeometry.ts`: resizable limits (min 320×240, default 480×560); persist full geometry like upload tray
+- [x] `MetadataValueRow.tsx`: shared label/value row with optional copy button (icon flash to checkmark); skip when no copy text
+- [x] Wire copy rows into `PreviewPane.tsx` and `InfoDialog` aggregate summary; enable `FloatingPanel` resize
+- [x] i18n (14 locales): `preview.copyValue` aria label; run `pnpm test`; bump patch version in `Cargo.toml`

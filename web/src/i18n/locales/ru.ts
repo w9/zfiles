@@ -177,6 +177,7 @@ export const ru: Record<MessageKey, string> = {
   "preview.getInfo.dragHandle": "Перетащите, чтобы переместить",
   "preview.getInfo.close": "Закрыть",
   "preview.getInfo.sheetLabel": "Сведения",
+  "preview.copyValue": "Копировать {{label}}",
   "preview.aggregate.items": "Выбор",
   "preview.aggregate.summary": "Выбрано элементов: {{count}}",
   "preview.aggregate.breakdown": "{{files}} файлов, {{folders}} папок",
