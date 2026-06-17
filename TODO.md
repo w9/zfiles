@@ -262,6 +262,6 @@ When the server binds `0.0.0.0`, resolve the default-route IPv4 address for publ
 - [x] Wire the resolved display host into startup Share URL and QR code generation; include a clear fallback explanation when detection fails
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `transport.rs`: pass resolved `banner_url` to `open_async` instead of raw `explorer_url` when binding `0.0.0.0`
-- [ ] `browser.rs`: regression test documenting that `open_url` stays raw but share URL is browser-safe for wildcard bind
-- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+- [x] `transport.rs`: pass resolved `banner_url` to `open_async` instead of raw `explorer_url` when binding `0.0.0.0`
+- [x] `browser.rs`: regression test documenting that `open_url` stays raw but share URL is browser-safe for wildcard bind
+- [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`

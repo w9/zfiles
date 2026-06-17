@@ -151,4 +151,17 @@ mod tests {
         assert_eq!(share.url, "http://192.168.1.50:8080/");
         assert_eq!(share.note, None);
     }
+
+    #[test]
+    fn wildcard_bind_explorer_url_stays_raw_while_share_url_is_browser_safe() {
+        let bound = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));
+        let explorer = open_url(&bound, None, None);
+        let share = public_share_url_with_default_route(&bound, None, None, || {
+            Some(Ipv4Addr::new(192, 168, 1, 23))
+        });
+
+        assert_eq!(explorer, "http://0.0.0.0:8080/");
+        assert_eq!(share.url, "http://192.168.1.23:8080/");
+        assert!(!share.url.contains("0.0.0.0"));
+    }
 }

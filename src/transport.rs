@@ -190,7 +190,7 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     .print();
 
     if open_browser {
-        browser::open_async(explorer_url.clone());
+        browser::open_async(banner_url.clone());
     }
 
     if public_share && let Err(error) = qr::print_url(&banner_url) {
