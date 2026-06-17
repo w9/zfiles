@@ -81,14 +81,14 @@ export default function StatusBar({
           <p className="shrink-0 text-xs text-muted-foreground">{selectionLabel}</p>
         ) : null}
       </div>
-      {kernelVersion ? (
+      {backendMode === "local" && kernelVersion ? (
         <button
           type="button"
           className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
           onClick={onVersionClick}
           aria-label={t("statusBar.openAbout", { version: kernelVersion })}
         >
-          {t("backend.kernelVersion", { version: kernelVersion })}
+          {t("statusBar.serverVersion", { version: kernelVersion })}
         </button>
       ) : null}
     </div>

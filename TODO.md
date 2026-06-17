@@ -368,6 +368,6 @@ Drop "kernel" from the status-bar version link (show v{{version}} only; local mo
 - [x] i18n (14 locales): natural translations aligned with `backend.connectedBrief`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `StatusBar.tsx`: show `v{{version}}` in bottom-right link; local mode only; update `statusBar.openAbout` aria label
-- [ ] i18n (14 locales): replace `backend.kernelVersion` with `statusBar.serverVersion`; drop kernel from `statusBar.openAbout`
-- [ ] Update e2e status-bar version assertion; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `StatusBar.tsx`: show `v{{version}}` in bottom-right link; local mode only; update `statusBar.openAbout` aria label
+- [x] i18n (14 locales): replace `backend.kernelVersion` with `statusBar.serverVersion`; drop kernel from `statusBar.openAbout`
+- [x] Update e2e status-bar version assertion; run `pnpm test`; bump patch version in `Cargo.toml`

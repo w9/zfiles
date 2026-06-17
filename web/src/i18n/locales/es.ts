@@ -30,7 +30,6 @@ export const es: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Conectado a {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Conectado a {{backend}}",
   "backend.connectingTooltip": "Conectando al servidor zfiles…",
-  "backend.kernelVersion": "núcleo v{{version}}",
   "upload.drop": "Suelta archivos en cualquier lugar para subirlos",
   "upload.uploading": "Subiendo…",
   "upload.uploadingProgress": "Subiendo… {{percent}}%",
@@ -253,7 +252,8 @@ export const es: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.disabled": "Desactivado",
   "listing.grid.resizeHandle": "Redimensionar todas las tarjetas",
   "statusBar.label": "Barra de estado",
-  "statusBar.openAbout": "Acerca de zfiles (núcleo v{{version}})",
+  "statusBar.serverVersion": "v{{version}}",
+  "statusBar.openAbout": "Acerca de zfiles (v{{version}})",
   "statusBar.readOnly": "Solo lectura",
   "statusBar.readOnlyTooltip":
     "Las subidas y los cambios de archivos están deshabilitados.",

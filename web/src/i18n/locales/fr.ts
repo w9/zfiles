@@ -30,7 +30,6 @@ export const fr: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Connecté à {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connecté à {{backend}}",
   "backend.connectingTooltip": "Connexion au serveur zfiles…",
-  "backend.kernelVersion": "noyau v{{version}}",
   "upload.drop": "Déposez des fichiers n'importe où pour les téléverser",
   "upload.uploading": "Téléversement…",
   "upload.uploadingProgress": "Téléversement… {{percent}} %",
@@ -255,7 +254,8 @@ export const fr: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.disabled": "Désactivé",
   "listing.grid.resizeHandle": "Redimensionner toutes les cartes",
   "statusBar.label": "Barre d'état",
-  "statusBar.openAbout": "À propos de zfiles (noyau v{{version}})",
+  "statusBar.serverVersion": "v{{version}}",
+  "statusBar.openAbout": "À propos de zfiles (v{{version}})",
   "statusBar.readOnly": "Lecture seule",
   "statusBar.readOnlyTooltip":
     "Les téléversements et les modifications de fichiers sont désactivés.",
