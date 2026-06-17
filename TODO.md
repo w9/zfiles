@@ -382,5 +382,5 @@ Remove horizontal dividers between data rows in table/list view (`VirtualListing
 - [x] i18n (14 locales): `selection.fileUnit.one/many`, `selection.folderUnit.one/many`; retemplate breakdown keys to `{{files}}, {{folders}}`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `VirtualListing.tsx`: drop `border-b` from data row class; keep header `border-b`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `VirtualListing.tsx`: drop `border-b` from data row class; keep header `border-b`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
