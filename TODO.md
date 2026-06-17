@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Restyle the backend connection indicator as a status-bar badge (matching read-only), replacing the dot + separate label. Deferred: CLI banner redesign.
+Use lucide icons in status-bar badges (connection + read-only) instead of colored dots. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -347,6 +347,9 @@ Restyle the backend connection indicator as a status-bar badge (matching read-on
 - [x] i18n (14 locales): `statusBar.readOnly` + `statusBar.readOnlyTooltip`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `BackendStatus.tsx`: replace dot + label with outline badge (status dot + text) and tooltip; drop `showLabel`
-- [ ] `StatusBar.tsx`: remove `showConnectionStatus` / `showLabel` wiring
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `BackendStatus.tsx`: replace dot + label with outline badge (status dot + text) and tooltip; drop `showLabel`
+- [x] `StatusBar.tsx`: remove `showConnectionStatus` / `showLabel` wiring
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `BackendStatus.tsx`: swap status dots for lucide icons (Wifi / Loader2 / WifiOff)
+- [ ] Run `pnpm test`
