@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Drop "kernel" from the status-bar version link (show v{{version}} only; local mode). Deferred: CLI banner redesign.
+Status-bar selection and cut labels: type-specific single item, file/folder breakdown when mixed (e.g. "2 files, 1 folder selected"). Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -371,3 +371,8 @@ Drop "kernel" from the status-bar version link (show v{{version}} only; local mo
 - [x] `StatusBar.tsx`: show `v{{version}}` in bottom-right link; local mode only; update `statusBar.openAbout` aria label
 - [x] i18n (14 locales): replace `backend.kernelVersion` with `statusBar.serverVersion`; drop kernel from `statusBar.openAbout`
 - [x] Update e2e status-bar version assertion; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `selectionStatusText.ts`: file/folder count helpers + `formatSelectionStatusLabel` / `formatCutStatusLabel`; unit tests; register in `pnpm test`
+- [ ] `ExplorerApp.tsx` + `StatusBar.tsx`: precomputed selection/cut status strings via helper (drop `selectedCount` prop)
+- [ ] i18n (14 locales): `selection.folderSelected`, `selection.foldersSelected`, `selection.breakdownSelected`; `clipboard.cutManyFiles`, `clipboard.cutManyFolders`, `clipboard.cutBreakdown`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
