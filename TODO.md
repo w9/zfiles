@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Replace the inline preview split and narrow `PreviewSheet` with a centered **Get Info** dialog (macOS Finder–style): open from context menu and ⌘I / Ctrl+I; live-update while open; single-item shows current `PreviewPane` metadata, multi-select shows an aggregate summary (counts + total size). Remove `previewLayout` inline panel logic, `focus.pane == 'preview'`, and preview-pane image navigation actions. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
+Show a listing loading overlay (spinner + i18n text) for initial load, navigation, and refresh — especially noticeable on local/LAN folders with tens of thousands of entries. Optimistic breadcrumb path update on navigation; ignore stale in-flight loads. Deferred: CLI banner redesign (`banner.rs`), `--verbose` gating, palette recent-use boosts.
 
 ## TODO List
 
@@ -277,9 +277,14 @@ Replace the inline preview split and narrow `PreviewSheet` with a centered **Get
 - [x] `useListingMarqueeSelect.ts`: remove cumulative `marqueeHits`; drive selection from content-space hits each frame
 - [x] Run `pnpm test` for marquee/listing tests
 
-- [ ] `InfoDialog.tsx` (new): centered shadcn `Dialog` — single-path mode reuses `PreviewPane` metadata; multi-select aggregate (item count, file/folder breakdown, total size); live-follow selection while open
-- [ ] `previewActions.ts`: rename `preview.open-sheet` → `preview.get-info`; always when `selection.count >= 1`; context menu + default ⌘I / Ctrl+I; drop `preview.inline-available` gate
-- [ ] `ExplorerApp.tsx`: remove inline `PreviewPane` split + `PreviewSheet`; wire `infoDialogOpen` + paths; drop `inlinePreviewAvailable` / resize observer / `focusPane` preview focus
-- [ ] Clean up preview pane infrastructure: remove or slim `PreviewSheet.tsx`, `previewLayout.ts` (+ tests); drop `preview.inline-available` / `preview.sheet-open` context keys; remove `viewer.next-image` / `viewer.prev-image` preview-pane actions
-- [ ] i18n (14 locales): rename preview strings to Get Info (`preview.getInfo.name`, dialog title, aggregate summary keys); update shortcut hints if needed
-- [ ] Unit tests: aggregate summary helper + action `when`/keybinding; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `InfoDialog.tsx` (new): centered shadcn `Dialog` — single-path mode reuses `PreviewPane` metadata; multi-select aggregate (item count, file/folder breakdown, total size); live-follow selection while open
+- [x] `previewActions.ts`: rename `preview.open-sheet` → `preview.get-info`; always when `selection.count >= 1`; context menu + default ⌘I / Ctrl+I; drop `preview.inline-available` gate
+- [x] `ExplorerApp.tsx`: remove inline `PreviewPane` split + `PreviewSheet`; wire `infoDialogOpen` + paths; drop `inlinePreviewAvailable` / resize observer / `focusPane` preview focus
+- [x] Clean up preview pane infrastructure: remove or slim `PreviewSheet.tsx`, `previewLayout.ts` (+ tests); drop `preview.inline-available` / `preview.sheet-open` context keys; remove `viewer.next-image` / `viewer.prev-image` preview-pane actions
+- [x] i18n (14 locales): rename preview strings to Get Info (`preview.getInfo.name`, dialog title, aggregate summary keys); update shortcut hints if needed
+- [x] Unit tests: aggregate summary helper + action `when`/keybinding; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerApp.tsx`: `listingLoading` state + generation counter — optimistic path on navigation loads, revert on failure, ignore stale responses
+- [ ] Listing pane: semi-transparent overlay with spinner + `listing.loading` while loading; spin breadcrumb refresh during load; loading takes precedence over empty overlay
+- [ ] i18n (14 locales): add `listing.loading`
+- [ ] Unit tests for listing overlay priority helper; run `pnpm test`; bump patch version in `Cargo.toml`
