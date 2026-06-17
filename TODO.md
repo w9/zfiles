@@ -1,6 +1,6 @@
 ## High-level plan next
 
-When the server binds `0.0.0.0`, resolve the default-route IPv4 address for public-facing startup output so the Share URL and QR code are usable from other devices; if detection fails, fall back to localhost and explain the fallback in the banner. Keep IPv6 wildcard handling deferred. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
+When the server binds `0.0.0.0`, resolve the default-route IPv4 address for public-facing startup output (Share URL, QR code, and xdg-open) so URLs are reachable; if detection fails, fall back to localhost and explain the fallback in the banner. Keep IPv6 wildcard handling deferred. Deferred: dedicated preview content, quick-actions bar, multi-select summary, palette recent-use boosts, kernel TLS.
 
 ## TODO List
 
@@ -261,3 +261,7 @@ When the server binds `0.0.0.0`, resolve the default-route IPv4 address for publ
 - [x] Implement default-route IPv4 detection for wildcard bind share output without changing the actual listener bind address
 - [x] Wire the resolved display host into startup Share URL and QR code generation; include a clear fallback explanation when detection fails
 - [x] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `transport.rs`: pass resolved `banner_url` to `open_async` instead of raw `explorer_url` when binding `0.0.0.0`
+- [ ] `browser.rs`: regression test documenting that `open_url` stays raw but share URL is browser-safe for wildcard bind
+- [ ] Run `cargo fmt`, `cargo clippy -- -D warnings`, and `cargo test`; bump patch version in `Cargo.toml`
