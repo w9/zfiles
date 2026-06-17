@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info becomes non-modal floating on wide viewports and bottom Sheet on narrow (<640px); fixed size, centered initial placement, ⌘I toggles, Escape/× close. Deferred: CLI banner redesign, listing loading overlay polish.
+Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, optional resize, persisted geometry) used by upload tray and Get Info. Info becomes non-modal floating on wide viewports and bottom Sheet on narrow (<640px); fixed size, centered initial placement, ⌘I toggles, Escape/× close. Listing loading overlay: show spinner only after 300ms. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -295,3 +295,7 @@ Extract a shared **FloatingPanel** shell (portal, shadow, no backdrop, drag, opt
 - [x] `InfoDialog.tsx`: use `FloatingPanel` (wide) + bottom `Sheet` (narrow); fixed size, centered initial placement; header × + drag; non-modal (no explorer keyboard blocks)
 - [x] `previewActions.ts` + `ExplorerApp`: ⌘I toggles open/closed; `when` allows close while open; drop `preview.info-open` shortcut blocking
 - [x] i18n (14 locales): info panel drag/close/sheet labels; update e2e Get Info test for floating panel; run `pnpm test`; bump patch version
+
+- [ ] `listingEmpty.ts`: export `LISTING_LOADING_OVERLAY_DELAY_MS` (300); `listingPaneOverlayKey` takes `showListingLoadingOverlay`
+- [ ] `ExplorerApp.tsx`: delay listing overlay/spinner until 300ms into load; reset timer per load generation; breadcrumb refresh spin unchanged
+- [ ] Update overlay helper tests; run `pnpm test`; bump patch version in `Cargo.toml`
