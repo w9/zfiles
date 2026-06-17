@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Reword the connected status tooltip to "Connected to {{backend}} v{{version}}" (kernel locally, provider name in cloud). Deferred: CLI banner redesign.
+Use "zfiles server" instead of "kernel" in the local connected tooltip. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -360,6 +360,10 @@ Reword the connected status tooltip to "Connected to {{backend}} v{{version}}" (
 - [x] `StatusBar.tsx`: use generic `selection.count` i18n key instead of file-only `selection.fileSelected` / `selection.filesSelected`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `BackendStatus.tsx` + `StatusBar.tsx` + `ExplorerApp.tsx`: connected tooltip uses `backend` + `version` params (kernel locally, provider in cloud)
-- [ ] i18n (14 locales): update `backend.connectedTooltip`; add `backend.connectedBackend.kernel` and `backend.connectedTooltipBackendOnly`
+- [x] `BackendStatus.tsx` + `StatusBar.tsx` + `ExplorerApp.tsx`: connected tooltip uses `backend` + `version` params (kernel locally, provider in cloud)
+- [x] i18n (14 locales): update `backend.connectedTooltip`; add `backend.connectedBackend.kernel` and `backend.connectedTooltipBackendOnly`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] Rename `backend.connectedBackend.kernel` → `backend.connectedBackend.zfilesServer` ("zfiles server" locally); wire `BackendStatus.tsx`
+- [ ] i18n (14 locales): natural translations aligned with `backend.connectedBrief`
 - [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
