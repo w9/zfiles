@@ -117,18 +117,16 @@ function InfoPanelChrome({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col" aria-label={t("preview.label")}>
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3">
-        <h2
-          className={cn(
-            "min-w-0 flex-1 truncate text-sm font-medium",
-            onDragHandlePointerDown &&
-              "cursor-grab touch-none select-none active:cursor-grabbing",
-          )}
-          aria-label={onDragHandlePointerDown ? t("preview.getInfo.dragHandle") : undefined}
-          onPointerDown={onDragHandlePointerDown}
-        >
-          {title}
-        </h2>
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3",
+          onDragHandlePointerDown &&
+            "cursor-grab touch-none select-none active:cursor-grabbing",
+        )}
+        aria-label={onDragHandlePointerDown ? t("preview.getInfo.dragHandle") : undefined}
+        onPointerDown={onDragHandlePointerDown}
+      >
+        <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{title}</h2>
         <Button
           type="button"
           variant="ghost"
@@ -136,6 +134,7 @@ function InfoPanelChrome({
           className="h-8 w-8 shrink-0"
           aria-label={t("preview.getInfo.close")}
           onClick={onClose}
+          onPointerDown={(event) => event.stopPropagation()}
         >
           <X className="size-4" />
         </Button>
@@ -171,7 +170,7 @@ export default function InfoDialog({
   const singlePath = paths.length === 1 ? paths[0]! : null;
   const title =
     singlePath != null
-      ? basename(singlePath)
+      ? t("preview.getInfo.titleSingle", { name: basename(singlePath) })
       : t("preview.getInfo.titleMultiple", { count: String(paths.length) });
 
   const body =

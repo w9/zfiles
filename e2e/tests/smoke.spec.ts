@@ -145,7 +145,7 @@ test("Get Info dialog shows selected file metadata", async ({ page }) => {
   await listingEntry(page, /hello\.txt/).click();
   await page.keyboard.press("ControlOrMeta+I");
   const infoPanel = page.getByRole("dialog", { name: "Get Info" });
-  await expect(infoPanel.getByRole("heading", { name: "hello.txt" })).toBeVisible();
+  await expect(infoPanel.getByRole("heading", { name: "Info of hello.txt" })).toBeVisible();
   await expect(infoPanel.getByText("Size", { exact: true })).toBeVisible();
   await expect(infoPanel.getByText("15 B")).toBeVisible();
 });
@@ -330,7 +330,7 @@ test("Get Info dialog shows image file metadata without inline preview", async (
     await listingEntry(page, "photo.png").click();
     await page.keyboard.press("ControlOrMeta+I");
     const infoPanel = page.getByRole("dialog", { name: "Get Info" });
-    await expect(infoPanel.getByRole("heading", { name: "photo.png" })).toBeVisible();
+    await expect(infoPanel.getByRole("heading", { name: "Info of photo.png" })).toBeVisible();
     await expect(infoPanel.getByText("Size", { exact: true })).toBeVisible();
     await expect(infoPanel.getByRole("img")).not.toBeVisible();
   } finally {

@@ -466,25 +466,39 @@ export default function UploadPanel({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col" aria-label={headerTitle}>
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3">
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3",
+          onDragHandlePointerDown && "cursor-grab touch-none select-none active:cursor-grabbing",
+        )}
+        aria-label={onDragHandlePointerDown ? t("upload.tray.dragHandle") : undefined}
+        onPointerDown={onDragHandlePointerDown}
+      >
         <TruncatedTextTooltip
           as="h2"
           text={headerTitle}
-          className={cn(
-            "min-w-0 flex-1 truncate text-sm font-medium",
-            onDragHandlePointerDown && "cursor-grab touch-none select-none active:cursor-grabbing",
-          )}
-          aria-label={onDragHandlePointerDown ? t("upload.tray.dragHandle") : undefined}
-          onPointerDown={onDragHandlePointerDown}
+          className="min-w-0 flex-1 truncate text-sm font-medium"
         />
         <div className="flex shrink-0 items-center gap-1">
           {onChooseFiles ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onChooseFiles}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onChooseFiles}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               {t("upload.chooseFiles")}
             </Button>
           ) : null}
           {finishedCount > 0 ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onClearFinished}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClearFinished}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               {t("upload.clearFinished")}
             </Button>
           ) : null}
@@ -496,6 +510,7 @@ export default function UploadPanel({
               className="h-8 w-8"
               aria-label={t("upload.tray.close")}
               onClick={onClose}
+              onPointerDown={(event) => event.stopPropagation()}
             >
               <X className="size-4" />
             </Button>
