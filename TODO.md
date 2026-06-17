@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Remove horizontal dividers between data rows in table/list view (`VirtualListing`); keep the column-header separator and grid view unchanged. Deferred: CLI banner redesign.
+Clear multi-selection on plain click in the listing scroll viewport (empty padding / below last row), without clearing keyboard focus; modifier clicks and marquee drag unchanged. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -384,3 +384,8 @@ Remove horizontal dividers between data rows in table/list view (`VirtualListing
 
 - [x] `VirtualListing.tsx`: drop `border-b` from data row class; keep header `border-b`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `listingMarqueeSelect.ts`: `shouldClearMultiSelectionOnEmptyClick` helper (plain click, not on entry, no drag); unit tests
+- [ ] `useListingMarqueeSelect.ts`: invoke `onEmptyClick` on pointer-up when helper passes; run empty-click path even when marquee disabled
+- [ ] `ExplorerApp.tsx`: `clearMultiSelection` (selectedPaths only); wire `onEmptyClick`; respect `blockSelectionClearRef`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
