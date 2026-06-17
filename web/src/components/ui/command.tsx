@@ -166,7 +166,7 @@ function CommandShortcut({
     <span
       data-slot="command-shortcut"
       className={cn(
-        "ml-auto text-xs text-muted-foreground group-data-[selected=true]/command-item:text-foreground",
+        "ms-3 flex flex-1 justify-end text-xs text-muted-foreground group-data-[selected=true]/command-item:text-foreground",
         className
       )}
       {...props}

@@ -180,7 +180,7 @@ function DropdownMenuShortcut({
     <span
       data-slot="dropdown-menu-shortcut"
       className={cn(
-        "ml-auto text-xs text-muted-foreground",
+        "ms-3 flex flex-1 justify-end text-xs text-muted-foreground",
         className
       )}
       {...props}

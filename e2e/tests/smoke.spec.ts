@@ -180,13 +180,11 @@ test("menu bar and toolbar expose built-in action surfaces", async ({ page }) =>
   await page.getByRole("menubar").getByRole("menuitem", { name: "View" }).click();
   const commandPaletteItem = page.getByRole("menuitem", { name: "Command Palette" });
   await expect(commandPaletteItem).toBeVisible();
-  await expect(commandPaletteItem.locator('[data-slot="kbd"]')).toHaveText(["Ctrl", "P"]);
+  await expect(commandPaletteItem).toContainText("Ctrl+P");
   await page.keyboard.press("Control+P");
   const palette = page.getByRole("dialog");
   await expect(palette).toBeVisible();
-  await expect(
-    palette.locator('[data-slot="kbd-group"]').filter({ hasText: "Ctrl" }).first(),
-  ).toBeVisible();
+  await expect(palette.getByText("Ctrl+P").first()).toBeVisible();
 });
 
 test("listing shows data table column headers", async ({ page }) => {

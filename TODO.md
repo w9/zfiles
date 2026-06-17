@@ -310,3 +310,6 @@ Replace per-key **Kbd** chips with muted plain shortcut text; widen the minimum 
 - [x] `CommandPalette.tsx`: drop kbd-chip-specific className tweaks; rely on `CommandShortcut` + span override for selected row
 - [x] `e2e/tests/smoke.spec.ts`: assert plain `Ctrl+P` shortcut text instead of per-key kbd slots
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [x] Shortcut slots (`dropdown-menu`, `context-menu`, `menubar`, `command`): widen min gap between label and shortcut (`ms-3 flex-1 justify-end`)
+- [x] Run `pnpm test`

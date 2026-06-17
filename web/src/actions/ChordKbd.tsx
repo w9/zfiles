@@ -1,20 +1,21 @@
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { chordToKbdLabels } from "./keybindingDisplay";
+import { cn } from "@/lib/utils";
+import { formatKeybindingLabel } from "./keybindings";
 
 type ChordKbdProps = {
   chord: string;
-  /** Applied to each key chip. */
   className?: string;
 };
 
 export default function ChordKbd({ chord, className }: ChordKbdProps) {
   return (
-    <KbdGroup>
-      {chordToKbdLabels(chord).map((label, index) => (
-        <Kbd key={`${index}-${label}`} className={className}>
-          {label}
-        </Kbd>
-      ))}
-    </KbdGroup>
+    <span
+      className={cn(
+        "text-xs text-muted-foreground",
+        "[[data-slot=tooltip-content]_&]:text-background/70",
+        className,
+      )}
+    >
+      {formatKeybindingLabel(chord)}
+    </span>
   );
 }
