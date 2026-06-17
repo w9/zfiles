@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Simplify grid view cards: strip per-item border, background, rounded corners, preview-area tint, and name divider; keep primary ring + tint for hover/selection. Get Info stays open on outside clicks (no selection clear while open; sheet ignores overlay dismiss). Deferred: CLI banner redesign.
+Get Info opens with no selection (empty state); live-updates when items are selected. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -325,3 +325,7 @@ Simplify grid view cards: strip per-item border, background, rounded corners, pr
 - [x] `ExplorerApp.tsx`: block background-click selection clear while Get Info is open
 - [x] `InfoDialog.tsx`: ignore Sheet `onOpenChange(false)` from outside overlay clicks
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] Drop selection requirement from `preview.get-info` action and ⌘I keybinding
+- [ ] `InfoDialog.tsx`: empty-state body when `paths.length === 0`; remove auto-close on empty selection
+- [ ] Update `previewActions.test.ts`; run `pnpm test`; bump patch version in `Cargo.toml`
