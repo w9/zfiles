@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Use lucide icons in status-bar badges (connection + read-only) instead of colored dots. Deferred: CLI banner redesign.
+Fix status-bar selection label to use generic item wording (not "files") when folders are selected. Then: lucide icons in status-bar badges (connection + read-only) instead of colored dots. Deferred: CLI banner redesign.
 
 ## TODO List
 
@@ -356,3 +356,6 @@ Use lucide icons in status-bar badges (connection + read-only) instead of colore
 
 - [x] `BackendStatus.tsx`: use Globe / GlobeOff instead of Wifi / WifiOff for connected/offline
 - [x] Run `pnpm test`
+
+- [ ] `StatusBar.tsx`: use generic `selection.count` i18n key instead of file-only `selection.fileSelected` / `selection.filesSelected`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
