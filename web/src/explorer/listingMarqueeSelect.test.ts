@@ -281,6 +281,37 @@ test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
   assert.deepEqual(hit, ["/a", "/b"]);
 });
 
+test("hitTestGridPathsWithContentMarquee ignores blank area right of last column", () => {
+  const scrollElement = mockScrollElement(0);
+  const columnCount = 13;
+  const paths = Array.from({ length: 100 }, (_, index) => `/item-${index}`);
+  const options = {
+    columnCount,
+    cardWidth: 120,
+    cardHeight: 120,
+    gap: 12,
+    padding: 12,
+  };
+  const gridRight =
+    options.padding +
+    columnCount * options.cardWidth +
+    (columnCount - 1) * options.gap;
+
+  const hit = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 800,
+      contentBottom: 1000,
+      clientLeft: gridRight + 28,
+      clientRight: gridRight + 66,
+    },
+    options,
+  );
+
+  assert.deepEqual(hit, []);
+});
+
 test("hitTestTablePathsWithContentMarquee range scan matches full-list bounds", () => {
   const scrollElement = mockScrollElement(0);
   const paths = Array.from({ length: 10_000 }, (_, index) => `/item-${index}`);

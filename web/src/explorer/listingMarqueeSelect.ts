@@ -193,7 +193,10 @@ export function hitTestGridPathsWithContentMarquee(
   const minRow = Math.max(0, Math.floor((contentTop - padding) / rowStride));
   const maxRow = Math.ceil((contentBottom - padding) / rowStride);
   const minCol = Math.max(0, Math.floor((contentLeft - padding) / colStride));
-  const maxCol = Math.ceil((contentRight - padding) / colStride);
+  const maxCol = Math.min(
+    columnCount,
+    Math.ceil((contentRight - padding) / colStride),
+  );
 
   for (let row = minRow; row < maxRow; row++) {
     for (let col = minCol; col < maxCol; col++) {
