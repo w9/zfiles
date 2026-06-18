@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Add high-priority loading states for slow file operations: global pending guard (disable async actions), confirm dialogs stay open with delayed spinner (300ms), inline rename input disabled + row spinner. Reuse `ASYNC_VISUAL_DELAY_MS` (300) as the shared threshold; no listing overlay for mutations. Follow-up cycle: medium-priority (nav buttons, cloud session validation, overlay delay alignment).
+Upload panel: per-row dismiss (X) on queue rows with status Done only; header “Clear finished” unchanged (still clears done + failed + cancelled). Available in read-only. Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation, overlay delay alignment).
 
 ## TODO List
 
@@ -141,3 +141,7 @@ Add high-priority loading states for slow file operations: global pending guard 
 - [x] `useExplorerFileOps.ts`: wrap inline rename commit; expose `renameCommittingPath`
 - [x] `InlineNameInput` + listings: disabled input + row spinner while committing
 - [x] i18n (14 locales): `actions.confirm.working`; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `upload-queue.ts`: `removeDoneUploadItem` helper + `clearDone` callback (done rows only)
+- [ ] `UploadPanel.tsx` + `UploadIndicator.tsx` + `ExplorerApp.tsx`: per-row dismiss X on Done queue rows; wire `onClearDone`
+- [ ] i18n (14 locales): `upload.clearDone` aria label; unit test for `removeDoneUploadItem`; run `pnpm test`; bump patch version in `Cargo.toml`
