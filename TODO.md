@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Copy Path action icon: swap placeholder `ListFilter` for Lucide `CopySlash` (copy sheets + slash path). Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation, overlay delay alignment).
+Delay confirm-dialog "Working…" label until the shared 300ms visual threshold (same as spinner) to avoid layout shift. Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation).
 
 ## TODO List
 
@@ -148,3 +148,6 @@ Copy Path action icon: swap placeholder `ListFilter` for Lucide `CopySlash` (cop
 
 - [x] `icons.ts`: map `selection.copy-paths` to `CopySlash` (replace `ListFilter`)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ActionConfirmDialog.tsx`: delay "Working…" label until `showExecutingVisual` (300ms); keep Confirm disabled immediately
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
