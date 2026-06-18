@@ -698,12 +698,7 @@ export default function SlideshowOverlay({
         onTouchCancel={isImageKind ? handleTouchEnd : undefined}
       >
         <div
-          className={cn(
-            "flex h-full w-full",
-            nativeKind === "pdf"
-              ? "items-stretch justify-stretch p-2"
-              : "items-center justify-center p-6",
-          )}
+          className="flex h-full w-full items-center justify-center p-6"
           onClick={handleLetterboxClick}
         >
           {!previewUrl ? (
@@ -761,13 +756,17 @@ export default function SlideshowOverlay({
               />
             </div>
           ) : nativeKind === "pdf" ? (
-            <iframe
-              key={currentPath}
-              src={previewUrl}
-              title={fileName}
-              className="h-full w-full max-w-6xl rounded-sm bg-white"
+            <div
+              className="flex h-full w-full max-w-6xl flex-col"
               onClick={(event) => event.stopPropagation()}
-            />
+            >
+              <iframe
+                key={currentPath}
+                src={previewUrl}
+                title={fileName}
+                className="min-h-0 flex-1 w-full rounded-sm bg-white"
+              />
+            </div>
           ) : showUnsupported ? (
             statLoading ? (
               <CenteredPreviewMessage onClickStop>
