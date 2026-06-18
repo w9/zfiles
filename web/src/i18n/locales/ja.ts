@@ -47,6 +47,7 @@ export const ja: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} 件失敗",
   "upload.queue.header.cancelled": "{{count}} 件キャンセル",
   "upload.clearFinished": "完了分をクリア",
+  "upload.clearDone": "完了したアップロードを削除",
   "upload.status.pending": "待機中",
   "upload.status.hashing": "ハッシュ中",
   "upload.status.active": "アップロード中",

@@ -47,6 +47,7 @@ export const es: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} fallidas",
   "upload.queue.header.cancelled": "{{count}} canceladas",
   "upload.clearFinished": "Borrar finalizadas",
+  "upload.clearDone": "Quitar carga completada",
   "upload.status.pending": "En cola",
   "upload.status.hashing": "Calculando hash",
   "upload.status.active": "Subiendo",

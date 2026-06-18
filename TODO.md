@@ -142,6 +142,6 @@ Upload panel: per-row dismiss (X) on queue rows with status Done only; header â€
 - [x] `InlineNameInput` + listings: disabled input + row spinner while committing
 - [x] i18n (14 locales): `actions.confirm.working`; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `upload-queue.ts`: `removeDoneUploadItem` helper + `clearDone` callback (done rows only)
-- [ ] `UploadPanel.tsx` + `UploadIndicator.tsx` + `ExplorerApp.tsx`: per-row dismiss X on Done queue rows; wire `onClearDone`
-- [ ] i18n (14 locales): `upload.clearDone` aria label; unit test for `removeDoneUploadItem`; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `upload-queue.ts`: `removeDoneUploadItem` helper + `clearDone` callback (done rows only)
+- [x] `UploadPanel.tsx` + `UploadIndicator.tsx` + `ExplorerApp.tsx`: per-row dismiss X on Done queue rows; wire `onClearDone`
+- [x] i18n (14 locales): `upload.clearDone` aria label; unit test for `removeDoneUploadItem`; run `pnpm test`; bump patch version in `Cargo.toml`

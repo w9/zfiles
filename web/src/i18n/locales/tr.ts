@@ -47,6 +47,7 @@ export const tr: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} başarısız",
   "upload.queue.header.cancelled": "{{count}} iptal edildi",
   "upload.clearFinished": "Tamamlananları temizle",
+  "upload.clearDone": "Tamamlanan yüklemeyi kaldır",
   "upload.status.pending": "Sırada",
   "upload.status.hashing": "Hashleniyor",
   "upload.status.active": "Yükleniyor",

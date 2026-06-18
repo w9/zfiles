@@ -47,6 +47,7 @@ export const ko: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}}개 실패",
   "upload.queue.header.cancelled": "{{count}}개 취소됨",
   "upload.clearFinished": "완료 항목 지우기",
+  "upload.clearDone": "완료된 업로드 제거",
   "upload.status.pending": "대기 중",
   "upload.status.hashing": "해시 중",
   "upload.status.active": "업로드 중",

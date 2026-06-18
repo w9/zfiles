@@ -46,6 +46,7 @@ export const zhCN: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} 个失败",
   "upload.queue.header.cancelled": "{{count}} 个已取消",
   "upload.clearFinished": "清除已完成",
+  "upload.clearDone": "移除已完成的上传",
   "upload.status.pending": "排队中",
   "upload.status.hashing": "哈希中",
   "upload.status.active": "上传中",

@@ -46,6 +46,7 @@ export const zhTW: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} 個失敗",
   "upload.queue.header.cancelled": "{{count}} 個已取消",
   "upload.clearFinished": "清除已完成",
+  "upload.clearDone": "移除已完成的上傳",
   "upload.status.pending": "排隊中",
   "upload.status.hashing": "雜湊中",
   "upload.status.active": "上傳中",

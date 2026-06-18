@@ -412,6 +412,7 @@ export default function ExplorerApp() {
     resumeUpload,
     resolveUploadConflict,
     clearFinished: clearFinishedUploads,
+    clearDone: clearDoneUpload,
     conflictItem: uploadConflictItem,
   } = useUploadQueue({
     backend,
@@ -1533,6 +1534,7 @@ export default function ExplorerApp() {
               onSelect={onUpload}
               readOnly={readOnly}
               onClearFinished={clearFinishedUploads}
+              onClearDone={clearDoneUpload}
               onCancel={cancelUpload}
               onPause={pauseUpload}
               onResume={resumeUpload}

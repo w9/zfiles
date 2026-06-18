@@ -47,6 +47,7 @@ export const id: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} gagal",
   "upload.queue.header.cancelled": "{{count}} dibatalkan",
   "upload.clearFinished": "Hapus yang selesai",
+  "upload.clearDone": "Hapus unggahan selesai",
   "upload.status.pending": "Dalam antrean",
   "upload.status.hashing": "Menghitung hash",
   "upload.status.active": "Mengunggah",

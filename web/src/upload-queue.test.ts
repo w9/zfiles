@@ -12,6 +12,7 @@ import {
   isUploadAbortError,
   isUploadPauseError,
   multipartResumeFromRecord,
+  removeDoneUploadItem,
   PROGRESS_UI_MIN_INTERVAL_MS,
   resolvePausedUploadOffset,
   shouldCommitProgressUi,
@@ -275,4 +276,24 @@ test("shouldPersistMultipartCommittedBytes skips duplicate committed writes", ()
   assert.equal(shouldPersistMultipartCommittedBytes(0, 0), false);
   assert.equal(shouldPersistMultipartCommittedBytes(0, 5_242_880), true);
   assert.equal(shouldPersistMultipartCommittedBytes(5_242_880, 5_242_880), false);
+});
+
+test("removeDoneUploadItem drops only the matching done row", () => {
+  const file = new File(["x"], "a.txt");
+  const done = { ...createQueueItem(file, "a.txt"), id: "done", status: "done" as const };
+  const failed = {
+    ...createQueueItem(file, "b.txt"),
+    id: "failed",
+    status: "failed" as const,
+  };
+  const active = {
+    ...createQueueItem(file, "c.txt"),
+    id: "active",
+    status: "active" as const,
+  };
+  const items = [done, failed, active];
+
+  assert.deepEqual(removeDoneUploadItem(items, "done"), [failed, active]);
+  assert.deepEqual(removeDoneUploadItem(items, "failed"), items);
+  assert.deepEqual(removeDoneUploadItem(items, "missing"), items);
 });

@@ -47,6 +47,7 @@ export const pt: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} com falha",
   "upload.queue.header.cancelled": "{{count}} cancelados",
   "upload.clearFinished": "Limpar concluídos",
+  "upload.clearDone": "Remover envio concluído",
   "upload.status.pending": "Na fila",
   "upload.status.hashing": "Gerando hash",
   "upload.status.active": "Enviando",

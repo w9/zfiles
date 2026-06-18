@@ -41,6 +41,7 @@ export type CloudMultipartPanelProps = UnfinishedSessionsPanelProps;
 type UploadPanelProps = {
   items: UploadQueueItem[];
   onClearFinished: () => void;
+  onClearDone: (queueId: string) => void;
   onCancel: (queueId: string) => void;
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
@@ -197,12 +198,13 @@ function sessionProgressUnknown(session: UnfinishedSessionView): boolean {
 type QueueRowProps = {
   item: UploadQueueItem;
   iconTheme: ReturnType<typeof useTheme>["resolved"];
+  onClearDone: (queueId: string) => void;
   onCancel: (queueId: string) => void;
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
 };
 
-function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProps) {
+function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }: QueueRowProps) {
   const { t } = useTranslation();
   const showProgress = queueRowShowsProgress(item);
   const progressPercent = uploadPercent(item);
@@ -253,9 +255,20 @@ function QueueRow({ item, iconTheme, onCancel, onPause, onResume }: QueueRowProp
         <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
         </div>
-        {item.status === "active" ||
-        item.status === "paused" ||
-        cancellable ? (
+        {item.status === "done" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={t("upload.clearDone")}
+            onClick={() => onClearDone(item.id)}
+          >
+            <X className="size-4" />
+          </Button>
+        ) : item.status === "active" ||
+          item.status === "paused" ||
+          cancellable ? (
           <div className="flex shrink-0 items-center gap-0.5">
             {item.status === "active" ? (
               <Button
@@ -439,6 +452,7 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
 export default function UploadPanel({
   items,
   onClearFinished,
+  onClearDone,
   onCancel,
   onPause,
   onResume,
@@ -528,6 +542,7 @@ export default function UploadPanel({
                   key={row.item.id}
                   item={row.item}
                   iconTheme={iconTheme}
+                  onClearDone={onClearDone}
                   onCancel={onCancel}
                   onPause={onPause}
                   onResume={onResume}

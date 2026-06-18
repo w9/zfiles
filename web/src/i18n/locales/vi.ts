@@ -47,6 +47,7 @@ export const vi: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} thất bại",
   "upload.queue.header.cancelled": "{{count}} đã hủy",
   "upload.clearFinished": "Xóa mục đã hoàn tất",
+  "upload.clearDone": "Xóa upload đã hoàn tất",
   "upload.status.pending": "Đang chờ",
   "upload.status.hashing": "Đang băm",
   "upload.status.active": "Đang tải lên",

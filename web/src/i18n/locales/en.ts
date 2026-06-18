@@ -46,6 +46,7 @@ export const en = {
   "upload.queue.header.failed": "{{count}} failed",
   "upload.queue.header.cancelled": "{{count}} cancelled",
   "upload.clearFinished": "Clear finished",
+  "upload.clearDone": "Remove done upload",
   "upload.status.pending": "Queued",
   "upload.status.hashing": "Hashing",
   "upload.status.active": "Uploading",

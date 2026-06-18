@@ -26,6 +26,7 @@ type UploadIndicatorProps = {
   items: UploadQueueItem[];
   onSelect: (dropped: DroppedUploadFile[]) => void;
   onClearFinished: () => void;
+  onClearDone: (queueId: string) => void;
   onCancel: (queueId: string) => void;
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
@@ -53,6 +54,7 @@ export default function UploadIndicator({
   items,
   onSelect,
   onClearFinished,
+  onClearDone,
   onCancel,
   onPause,
   onResume,
@@ -84,6 +86,7 @@ export default function UploadIndicator({
   const panelProps = {
     items,
     onClearFinished,
+    onClearDone,
     onCancel,
     onPause,
     onResume,

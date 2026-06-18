@@ -47,6 +47,7 @@ export const fr: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} échoués",
   "upload.queue.header.cancelled": "{{count}} annulés",
   "upload.clearFinished": "Effacer les terminés",
+  "upload.clearDone": "Retirer le téléversement terminé",
   "upload.status.pending": "En attente",
   "upload.status.hashing": "Hachage",
   "upload.status.active": "Téléversement",

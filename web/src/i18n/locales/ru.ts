@@ -47,6 +47,7 @@ export const ru: Record<MessageKey, string> = {
   "upload.queue.header.failed": "{{count}} с ошибкой",
   "upload.queue.header.cancelled": "{{count}} отменено",
   "upload.clearFinished": "Очистить завершённые",
+  "upload.clearDone": "Убрать завершённую загрузку",
   "upload.status.pending": "В очереди",
   "upload.status.hashing": "Хеширование",
   "upload.status.active": "Загрузка",

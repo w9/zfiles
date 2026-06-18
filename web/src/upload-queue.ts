@@ -365,6 +365,13 @@ export async function resolvePausedUploadOffset(
   return item.committedUploadOffset ?? 0;
 }
 
+export function removeDoneUploadItem(
+  items: UploadQueueItem[],
+  queueId: string,
+): UploadQueueItem[] {
+  return items.filter((item) => item.id !== queueId || item.status !== "done");
+}
+
 export function countUploadsByStatus(items: UploadQueueItem[]): Partial<Record<UploadItemStatus, number>> {
   const counts: Partial<Record<UploadItemStatus, number>> = {};
   for (const item of items) {
@@ -662,6 +669,10 @@ export function useUploadQueue({
           item.status !== "cancelled",
       ),
     );
+  }, []);
+
+  const clearDone = useCallback((queueId: string) => {
+    setItems((prev) => removeDoneUploadItem(prev, queueId));
   }, []);
 
   const cancelUpload = useCallback((queueId: string) => {
@@ -1262,6 +1273,7 @@ export function useUploadQueue({
     resolveUploadConflict,
     applyRemoteProgress,
     clearFinished,
+    clearDone,
     hasQueue: items.length > 0,
     conflictItem: items.find((item) => item.status === "awaiting_conflict") ?? null,
   };
