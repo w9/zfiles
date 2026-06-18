@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Context menu download labels: plain "Download" for one file, "Download N files" for multi-select (no filename); remove unused filename i18n keys. Then: floating panel focus stacking, explorer header ghost buttons, upload tray accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Generalize the image slideshow into a multi-type **Preview**. This cycle: rename `viewer.slideshow` → `viewer.preview` (category "Preview", `Eye` icon, Space unchanged), broaden type detection + path collection to image/video/audio, render `<video>`/`<audio>` in the overlay alongside images, and make Preview the default double-click / Enter activation for previewable files (non-previewable files keep the existing download fallback). Deferred preview follow-ups (browser-native, no kernel transcoding): PDF via `<iframe>`/`<embed>`; text & source code (+ HTML rendered as source) fetched into a size-capped `<pre>`; SVG added to the image renderer; sanitized Markdown rendering. Still deferred from before: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -402,3 +402,11 @@ Context menu download labels: plain "Download" for one file, "Download N files" 
 - [x] i18n (14 locales): add `actions.selection.download.nameWithCount`; remove `actions.selection.download.nameWithFile` and legacy `selection.download`
 - [x] `e2e/tests/smoke.spec.ts`: update context menu download assertion
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `imagePaths.ts` + `imagePaths.test.ts`: add `previewKind(path)` → `"image" | "video" | "audio" | null` (video: mp4/webm/mov/m4v/ogv; audio: mp3/wav/flac/m4a/aac/ogg/oga) and `isPreviewable(path)`; keep `isImagePath`/`isBrowserPreview*` as-is; cover new extension lists + predicates
+- [ ] `slideshowPathOrder.ts` + test: rename `resolveViewerImagePaths` → `resolveViewerPreviewPaths` (filter `isPreviewable` instead of `isImagePath`); keep listing-order sort + `resolveSlideshowStartIndex`; port unit tests to mixed image/video/audio sets
+- [ ] Rename action to `viewer.preview` across `imageViewerActions.ts` (`when viewer.preview-count > 0`, nameKey `viewer.preview.name`), `keybindings.ts` (Space), `icons.ts` (`Eye`), `useActionSystem.ts` + `ExplorerApp.tsx` (context key `viewer.image-count` → `viewer.preview-count`, dep `getImagePaths` → `getPreviewPaths`, `openSlideshow` → `openPreview`), `contextKeys.ts`; update `keybindings.test.ts`, `icons.test.ts`, `explainWhenFailure.test.ts`
+- [ ] `SlideshowOverlay.tsx`: render `<video controls>` / `<audio controls>` by `previewKind`; gate zoom/pan + zoom controls + autoplay auto-advance to images only; reuse top/bottom chrome (filename, counter, metadata, download/open/close); aria/alt labels for media
+- [ ] Default file activation = Preview: new `fileActivation.ts` + test (`resolveFileActivation`: previewable → preview, else download); wire into `ExplorerApp.tsx` `onActivate`; route `VirtualListing.tsx`/`GridListing.tsx` double-click through `onActivate` for previewable files (Enter already flows via `navigation.open` → `activateSelected`)
+- [ ] i18n (14 locales): rename `viewer.slideshow.name` → `viewer.preview.name`, set `viewer.category` → "Preview", add video/audio alt+label strings; `design/design.md` §1/§3/§6 — replace "images-only" preview wording with the generalized image/video/audio direction + deferred roadmap; `e2e/tests/smoke.spec.ts` palette "Slideshow" → "Preview"
+- [ ] Run `pnpm test`; fix failures; bump patch version in `Cargo.toml`
