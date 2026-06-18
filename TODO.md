@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Polish grid section headers (bold labels). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Polish grid section headers (bold, dimmer labels). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -126,3 +126,7 @@ Polish grid section headers (bold labels). Still deferred: CLI banner redesign, 
 - [x] `listingGridNavigation.ts`: optional section folder count for arrow keys at section boundaries
 - [x] i18n (14 locales): `listing.grid.sectionFolders` and `listing.grid.sectionFiles`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [x] `GridListing.tsx`: use bold styling for folder/file section headers; bump patch version in `Cargo.toml`
+
+- [ ] `GridListing.tsx`: dim grid section header labels; bump patch version in `Cargo.toml`
