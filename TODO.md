@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Extend **type-to-filter** in the file listing: any printable filename character (server rules — exclude `\` and Space) plus `/` for regex mode, with Shift allowed for symbols; listing-area scope and append behavior unchanged; Space stays bound to preview. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Parse quick-filter **regex mode** like JS `/pattern/flags`: first unescaped closing `/` ends the pattern; optional `i` flag for case-insensitivity; escaped trailing slashes stay in the pattern (`/i/` → pattern `i`). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
