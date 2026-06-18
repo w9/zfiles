@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Preview for **all non-directory files** is shipped: unsupported types show `preview.noPreview` with optional **View as text**; playlists and Space/activate include every file. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Extend **type-to-filter** in the file listing: any printable filename character (server rules — exclude `\` and Space) plus `/` for regex mode, with Shift allowed for symbols; listing-area scope and append behavior unchanged; Space stays bound to preview. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -107,3 +107,8 @@ Preview for **all non-directory files** is shipped: unsupported types show `prev
 - [x] `ExplorerApp.tsx` + context keys: `viewer.preview-count` counts all non-dir files via updated path helper (Space/context menu available for any file selection)
 - [x] Update `fileActivation.test.ts`, `slideshowPathOrder.test.ts`, `keybindings.test.ts` if needed
 - [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
+
+- [ ] `quickFilter.ts`: replace `isPlainQuickFilterLetterKey` with `isQuickFilterTypeaheadKey` — printable chars except `\` and Space, plus `/`; Shift allowed; no Ctrl/Meta/Alt
+- [ ] `ExplorerApp.tsx`: wire type-to-filter handler to new helper
+- [ ] `quickFilter.test.ts`: cover digits, symbols, `/`, Shift symbols, rejects Space/`\`/modifiers/control keys
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
