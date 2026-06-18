@@ -69,8 +69,8 @@ import {
   type ZoomMode,
 } from "./slideshowZoom";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
-import { previewKind, type PreviewKind } from "./imagePaths";
-import { fetchPreviewText } from "./previewTextContent";
+import { previewKind } from "./imagePaths";
+import { fetchPreviewText, exceedsTextPreviewHardLimit, canOfferTextPreview } from "./previewTextContent";
 import { renderMarkdownToSafeHtml } from "./renderMarkdown";
 
 const CHROME_IDLE_MS = 2000;
@@ -105,6 +105,23 @@ type PinchSession = {
   initialDistance: number;
   initialScale: number;
 };
+
+function CenteredPreviewMessage({
+  children,
+  onClickStop,
+}: {
+  children: ReactNode;
+  onClickStop?: boolean;
+}) {
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center text-center"
+      onClick={onClickStop ? (event) => event.stopPropagation() : undefined}
+    >
+      <p className="max-w-md text-sm text-white/80">{children}</p>
+    </div>
+  );
+}
 
 type SlideshowOverlayProps = {
   open: boolean;
@@ -186,6 +203,7 @@ export default function SlideshowOverlay({
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [stat, setStat] = useState<FileStat | null>(null);
+  const [statLoading, setStatLoading] = useState(false);
   const [panOffset, setPanOffset] = useState<PanOffset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [textContent, setTextContent] = useState<string | null>(null);
@@ -194,6 +212,7 @@ export default function SlideshowOverlay({
   const [textError, setTextError] = useState<"fetch_failed" | "too_large" | null>(
     null,
   );
+  const [viewAsText, setViewAsText] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
@@ -209,16 +228,25 @@ export default function SlideshowOverlay({
   const currentPath = paths[index] ?? null;
   const previewUrl = useDownloadUrl(backend, currentPath);
   const fileName = currentPath?.split("/").pop() ?? currentPath ?? "";
-  const kind: PreviewKind = (currentPath && previewKind(currentPath)) || "image";
-  const isImageKind = kind === "image";
-  const isTextKind = kind === "text" || kind === "markdown";
+  const nativeKind = currentPath ? previewKind(currentPath) : null;
+  const isImageKind = nativeKind === "image";
+  const isTextKind =
+    nativeKind === "text" ||
+    nativeKind === "markdown" ||
+    (nativeKind === null && viewAsText);
+  const showUnsupported = nativeKind === null && !viewAsText;
+  const fileSize = stat?.size;
+  const textPreviewTooLarge =
+    !statLoading && exceedsTextPreviewHardLimit(fileSize);
+  const canViewAsText =
+    !statLoading && canOfferTextPreview(fileSize);
 
   const markdownHtml = useMemo(() => {
-    if (kind !== "markdown" || !textContent) {
+    if (nativeKind !== "markdown" || !textContent) {
       return null;
     }
     return renderMarkdownToSafeHtml(textContent);
-  }, [kind, textContent]);
+  }, [nativeKind, textContent]);
 
   const syncNaturalSizeFromVideo = useCallback((video: HTMLVideoElement) => {
     if (video.videoWidth <= 0 || video.videoHeight <= 0) {
@@ -250,6 +278,11 @@ export default function SlideshowOverlay({
     dragSessionRef.current = null;
     pinchSessionRef.current = null;
     setIsDragging(false);
+    setViewAsText(false);
+    setTextContent(null);
+    setTextTruncated(false);
+    setTextError(null);
+    setTextLoading(false);
   }, []);
 
   const effectiveScale = useCallback(
@@ -285,10 +318,12 @@ export default function SlideshowOverlay({
   useEffect(() => {
     if (!open || !currentPath) {
       setStat(null);
+      setStatLoading(false);
       return;
     }
     let cancelled = false;
     setStat(null);
+    setStatLoading(true);
     void backend
       .stat(currentPath)
       .then((data) => {
@@ -299,6 +334,11 @@ export default function SlideshowOverlay({
       .catch(() => {
         if (!cancelled) {
           setStat(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setStatLoading(false);
         }
       });
     return () => {
@@ -312,6 +352,20 @@ export default function SlideshowOverlay({
       setTextTruncated(false);
       setTextError(null);
       setTextLoading(false);
+      return;
+    }
+    if (statLoading) {
+      setTextLoading(true);
+      setTextContent(null);
+      setTextTruncated(false);
+      setTextError(null);
+      return;
+    }
+    if (exceedsTextPreviewHardLimit(stat?.size)) {
+      setTextLoading(false);
+      setTextContent(null);
+      setTextTruncated(false);
+      setTextError("too_large");
       return;
     }
     let cancelled = false;
@@ -334,7 +388,7 @@ export default function SlideshowOverlay({
     return () => {
       cancelled = true;
     };
-  }, [open, previewUrl, isTextKind, currentPath]);
+  }, [open, previewUrl, isTextKind, currentPath, statLoading, stat?.size]);
 
   useEffect(() => {
     if (!open || !viewportRef.current) {
@@ -646,7 +700,7 @@ export default function SlideshowOverlay({
         <div
           className={cn(
             "flex h-full w-full",
-            kind === "pdf"
+            nativeKind === "pdf"
               ? "items-stretch justify-stretch p-2"
               : "items-center justify-center p-6",
           )}
@@ -683,7 +737,7 @@ export default function SlideshowOverlay({
                 }}
               />
             </div>
-          ) : kind === "video" ? (
+          ) : nativeKind === "video" ? (
             <video
               key={currentPath}
               src={previewUrl}
@@ -695,7 +749,7 @@ export default function SlideshowOverlay({
                 syncNaturalSizeFromVideo(event.currentTarget);
               }}
             />
-          ) : kind === "audio" ? (
+          ) : nativeKind === "audio" ? (
             <div className="flex flex-col items-center gap-4">
               <Music className="h-16 w-16 text-white/70" aria-hidden />
               <audio
@@ -706,7 +760,7 @@ export default function SlideshowOverlay({
                 className="w-[min(80vw,28rem)]"
               />
             </div>
-          ) : kind === "pdf" ? (
+          ) : nativeKind === "pdf" ? (
             <iframe
               key={currentPath}
               src={previewUrl}
@@ -714,18 +768,47 @@ export default function SlideshowOverlay({
               className="h-full w-full max-w-6xl rounded-sm bg-white"
               onClick={(event) => event.stopPropagation()}
             />
+          ) : showUnsupported ? (
+            statLoading ? (
+              <CenteredPreviewMessage onClickStop>
+                {t("preview.loading")}
+              </CenteredPreviewMessage>
+            ) : textPreviewTooLarge ? (
+              <CenteredPreviewMessage onClickStop>
+                {t("preview.textTooLarge")}
+              </CenteredPreviewMessage>
+            ) : canViewAsText ? (
+              <div
+                className="flex max-w-md flex-col items-center gap-4 text-center"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <p className="text-sm text-white/80">{t("preview.noPreview")}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="bg-black/50 text-white hover:bg-black/70"
+                  onClick={() => {
+                    bumpActivity();
+                    setViewAsText(true);
+                  }}
+                >
+                  {t("preview.viewAsText")}
+                </Button>
+              </div>
+            ) : null
           ) : isTextKind ? (
             <div
               className="flex h-full w-full max-w-5xl flex-col"
               onClick={(event) => event.stopPropagation()}
             >
-              {textLoading ? (
-                <p className="text-sm text-white/80">{t("preview.loading")}</p>
-              ) : textError === "too_large" ? (
-                <p className="text-sm text-white/80">{t("preview.textTooLarge")}</p>
+              {textPreviewTooLarge || textError === "too_large" ? (
+                <CenteredPreviewMessage>{t("preview.textTooLarge")}</CenteredPreviewMessage>
+              ) : textLoading ? (
+                <CenteredPreviewMessage>{t("preview.loading")}</CenteredPreviewMessage>
               ) : textError === "fetch_failed" ? (
-                <p className="text-sm text-white/80">{t("preview.textLoadError")}</p>
-              ) : kind === "markdown" && markdownHtml ? (
+                <CenteredPreviewMessage>{t("preview.textLoadError")}</CenteredPreviewMessage>
+              ) : nativeKind === "markdown" && markdownHtml ? (
                 <>
                   {textTruncated ? (
                     <p className="mb-2 shrink-0 text-xs text-amber-200/90">
@@ -749,7 +832,7 @@ export default function SlideshowOverlay({
                   </pre>
                 </>
               ) : (
-                <p className="text-sm text-white/80">{t("preview.loading")}</p>
+                <CenteredPreviewMessage>{t("preview.loading")}</CenteredPreviewMessage>
               )}
             </div>
           ) : null}

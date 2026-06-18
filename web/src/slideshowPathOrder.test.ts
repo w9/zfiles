@@ -7,7 +7,7 @@ import {
   sortPathsByListingOrder,
 } from "./slideshowPathOrder";
 
-test("resolveViewerPreviewPaths filters selected paths to previewable types", () => {
+test("resolveViewerPreviewPaths filters selected paths to non-directory files", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.txt", isDir: false },
@@ -20,7 +20,7 @@ test("resolveViewerPreviewPaths filters selected paths to previewable types", ()
   );
 });
 
-test("resolveViewerPreviewPaths uses listing previewables when nothing is selected", () => {
+test("resolveViewerPreviewPaths uses listing files when nothing is selected", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.zip", isDir: false },
@@ -30,12 +30,24 @@ test("resolveViewerPreviewPaths uses listing previewables when nothing is select
   ];
   assert.deepEqual(resolveViewerPreviewPaths([], listing), [
     "/a.png",
+    "/b.zip",
     "/c.webm",
     "/d.flac",
   ]);
 });
 
-test("resolveViewerPreviewPaths includes pdf, text, markdown, and svg", () => {
+test("resolveViewerPreviewPaths excludes directories from selection", () => {
+  const listing = [
+    { path: "/a.png", isDir: false },
+    { path: "/subdir", isDir: true },
+  ];
+  assert.deepEqual(
+    resolveViewerPreviewPaths(["/subdir", "/a.png"], listing),
+    ["/a.png"],
+  );
+});
+
+test("resolveViewerPreviewPaths includes all file types in listing", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.pdf", isDir: false },
@@ -50,6 +62,7 @@ test("resolveViewerPreviewPaths includes pdf, text, markdown, and svg", () => {
     "/c.txt",
     "/d.md",
     "/e.svg",
+    "/f.zip",
   ]);
 });
 

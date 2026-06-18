@@ -17,6 +17,17 @@ export type PreviewTextFailure = {
 
 export type PreviewTextResult = PreviewTextSuccess | PreviewTextFailure;
 
+export function exceedsTextPreviewHardLimit(
+  size: number | undefined | null,
+): boolean {
+  return size != null && size > PREVIEW_TEXT_HARD_MAX_BYTES;
+}
+
+/** After stat has loaded, whether "View as text" is allowed for this file size. */
+export function canOfferTextPreview(size: number | undefined | null): boolean {
+  return !exceedsTextPreviewHardLimit(size);
+}
+
 export function decodePreviewTextBytes(
   bytes: Uint8Array,
   maxBytes: number,

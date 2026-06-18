@@ -179,6 +179,7 @@ export const tr: Record<MessageKey, string> = {
   "preview.storageClass": "Depolama sınıfı",
   "preview.symlinkOutsideRoot": "Hedef bu klasörün dışında.",
   "preview.noPreview": "Bu dosya türü için önizleme kullanılamıyor.",
+  "preview.viewAsText": "Metin olarak görüntüle",
   "preview.download": "İndir",
   "preview.category": "Bilgi",
   "preview.getInfo.name": "Bilgi al",

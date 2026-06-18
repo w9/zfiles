@@ -179,6 +179,7 @@ export const pt: Record<MessageKey, string> = {
   "preview.storageClass": "Classe de armazenamento",
   "preview.symlinkOutsideRoot": "O destino está fora desta pasta.",
   "preview.noPreview": "A visualização não está disponível para este tipo de arquivo.",
+  "preview.viewAsText": "Ver como texto",
   "preview.download": "Baixar",
   "preview.category": "Info",
   "preview.getInfo.name": "Obter informações",

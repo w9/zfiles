@@ -104,6 +104,32 @@ const PREVIEW_TEXT_EXTENSIONS = [
   ".editorconfig",
 ];
 
+// Well-known extensionless text files (matched on lowercased basename).
+const PREVIEW_EXTENSIONLESS_TEXT_NAMES = new Set([
+  "authors",
+  "brewfile",
+  "changelog",
+  "codeowners",
+  "containerfile",
+  "contributing",
+  "copying",
+  "dockerfile",
+  "gemfile",
+  "gnumakefile",
+  "install",
+  "jenkinsfile",
+  "justfile",
+  "licence",
+  "license",
+  "makefile",
+  "notice",
+  "procfile",
+  "rakefile",
+  "readme",
+  "todo",
+  "vagrantfile",
+]);
+
 export type PreviewKind = "image" | "video" | "audio" | "pdf" | "text" | "markdown";
 
 export function isImagePath(path: string): boolean {
@@ -141,8 +167,7 @@ export function previewKind(path: string): PreviewKind | null {
   }
   if (
     PREVIEW_TEXT_EXTENSIONS.some((ext) => lower.endsWith(ext)) ||
-    baseName === "dockerfile" ||
-    baseName === "makefile"
+    PREVIEW_EXTENSIONLESS_TEXT_NAMES.has(baseName)
   ) {
     return "text";
   }

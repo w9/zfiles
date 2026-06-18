@@ -179,6 +179,7 @@ export const ru: Record<MessageKey, string> = {
   "preview.storageClass": "Класс хранения",
   "preview.symlinkOutsideRoot": "Цель находится вне этой папки.",
   "preview.noPreview": "Предпросмотр недоступен для этого типа файла.",
+  "preview.viewAsText": "Просмотреть как текст",
   "preview.download": "Скачать",
   "preview.category": "Сведения",
   "preview.getInfo.name": "Показать сведения",

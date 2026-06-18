@@ -1,5 +1,3 @@
-import { isPreviewable } from "./imagePaths";
-
 export function sortPathsByListingOrder(
   paths: string[],
   listingPaths: string[],
@@ -15,6 +13,17 @@ export function sortPathsByListingOrder(
   });
 }
 
+function isListingFile(
+  path: string,
+  listingEntries: Array<{ path: string; isDir: boolean }>,
+): boolean {
+  const entry = listingEntries.find((item) => item.path === path);
+  if (entry) {
+    return !entry.isDir;
+  }
+  return true;
+}
+
 export function resolveViewerPreviewPaths(
   selectedPaths: string[],
   listingEntries: Array<{ path: string; isDir: boolean }>,
@@ -22,14 +31,12 @@ export function resolveViewerPreviewPaths(
   const listingPaths = listingEntries.map((entry) => entry.path);
   if (selectedPaths.length > 0) {
     return sortPathsByListingOrder(
-      selectedPaths.filter(isPreviewable),
+      selectedPaths.filter((path) => isListingFile(path, listingEntries)),
       listingPaths,
     );
   }
   return sortPathsByListingOrder(
-    listingEntries
-      .filter((entry) => !entry.isDir && isPreviewable(entry.path))
-      .map((entry) => entry.path),
+    listingEntries.filter((entry) => !entry.isDir).map((entry) => entry.path),
     listingPaths,
   );
 }

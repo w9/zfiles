@@ -177,6 +177,7 @@ export const en = {
   "preview.storageClass": "Storage class",
   "preview.symlinkOutsideRoot": "Target is outside this folder.",
   "preview.noPreview": "Preview is not available for this file type.",
+  "preview.viewAsText": "View as text",
   "preview.download": "Download",
   "preview.category": "Info",
   "preview.getInfo.name": "Get Info",

@@ -179,6 +179,7 @@ export const vi: Record<MessageKey, string> = {
   "preview.storageClass": "Lớp lưu trữ",
   "preview.symlinkOutsideRoot": "Đích nằm ngoài thư mục này.",
   "preview.noPreview": "Không có bản xem trước cho loại tệp này.",
+  "preview.viewAsText": "Xem dưới dạng văn bản",
   "preview.download": "Tải xuống",
   "preview.category": "Thông tin",
   "preview.getInfo.name": "Xem thông tin",

@@ -174,6 +174,7 @@ export const zhCN: Record<MessageKey, string> = {
   "preview.storageClass": "存储类别",
   "preview.symlinkOutsideRoot": "目标在此文件夹之外。",
   "preview.noPreview": "此文件类型无法预览。",
+  "preview.viewAsText": "以文本查看",
   "preview.download": "下载",
   "preview.category": "信息",
   "preview.getInfo.name": "显示简介",

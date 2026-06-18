@@ -179,6 +179,7 @@ export const ko: Record<MessageKey, string> = {
   "preview.storageClass": "스토리지 클래스",
   "preview.symlinkOutsideRoot": "대상이 이 폴더 밖에 있습니다.",
   "preview.noPreview": "이 파일 형식은 미리 볼 수 없습니다.",
+  "preview.viewAsText": "텍스트로 보기",
   "preview.download": "다운로드",
   "preview.category": "정보",
   "preview.getInfo.name": "정보 가져오기",

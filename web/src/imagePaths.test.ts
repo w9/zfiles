@@ -43,6 +43,12 @@ test("previewKind classifies images, video, audio, pdf, text, and markdown", () 
   assert.equal(previewKind("page.html"), "text");
   assert.equal(previewKind("src/main.rs"), "text");
   assert.equal(previewKind("Dockerfile"), "text");
+  assert.equal(previewKind("Makefile"), "text");
+  assert.equal(previewKind("GNUmakefile"), "text");
+  assert.equal(previewKind("LICENSE"), "text");
+  assert.equal(previewKind("COPYING"), "text");
+  assert.equal(previewKind("README"), "text");
+  assert.equal(previewKind("project/LICENSE"), "text");
   assert.equal(previewKind("README.md"), "markdown");
   assert.equal(previewKind("guide.markdown"), "markdown");
 });

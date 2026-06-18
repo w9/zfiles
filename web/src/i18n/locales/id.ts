@@ -179,6 +179,7 @@ export const id: Record<MessageKey, string> = {
   "preview.storageClass": "Kelas penyimpanan",
   "preview.symlinkOutsideRoot": "Target berada di luar folder ini.",
   "preview.noPreview": "Pratinjau tidak tersedia untuk jenis berkas ini.",
+  "preview.viewAsText": "Lihat sebagai teks",
   "preview.download": "Unduh",
   "preview.category": "Info",
   "preview.getInfo.name": "Dapatkan info",

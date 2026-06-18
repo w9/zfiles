@@ -174,6 +174,7 @@ export const zhTW: Record<MessageKey, string> = {
   "preview.storageClass": "儲存類別",
   "preview.symlinkOutsideRoot": "目標在此資料夾之外。",
   "preview.noPreview": "此檔案類型無法預覽。",
+  "preview.viewAsText": "以文字檢視",
   "preview.download": "下載",
   "preview.category": "資訊",
   "preview.getInfo.name": "顯示簡介",

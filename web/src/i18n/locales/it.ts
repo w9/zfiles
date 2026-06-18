@@ -179,6 +179,7 @@ export const it: Record<MessageKey, string> = {
   "preview.storageClass": "Classe di archiviazione",
   "preview.symlinkOutsideRoot": "La destinazione è fuori da questa cartella.",
   "preview.noPreview": "L'anteprima non è disponibile per questo tipo di file.",
+  "preview.viewAsText": "Visualizza come testo",
   "preview.download": "Scarica",
   "preview.category": "Info",
   "preview.getInfo.name": "Ottieni informazioni",

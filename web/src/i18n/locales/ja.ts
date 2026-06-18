@@ -179,6 +179,7 @@ export const ja: Record<MessageKey, string> = {
   "preview.storageClass": "ストレージクラス",
   "preview.symlinkOutsideRoot": "リンク先はこのフォルダーの外にあります。",
   "preview.noPreview": "この種類のファイルはプレビューできません。",
+  "preview.viewAsText": "テキストとして表示",
   "preview.download": "ダウンロード",
   "preview.category": "情報",
   "preview.getInfo.name": "情報を見る",

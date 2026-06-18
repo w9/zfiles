@@ -45,7 +45,6 @@ import type { ActionDefinition } from "../actions/types";
 import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
 import { resolveViewerPreviewPaths } from "../slideshowPathOrder";
-import { resolveFileActivation } from "../fileActivation";
 import {
   nextListingViewMode,
   type ListingViewMode,
@@ -990,13 +989,12 @@ export default function ExplorerApp() {
             navigateTo(entry.path);
             return;
           }
-          if (resolveFileActivation(entry.path) === "preview") {
-            openPreview([entry.path], entry.path);
-            return;
-          }
-          if (backend.mode !== "s3") {
-            window.location.href = backend.downloadUrl(entry.path) as string;
-          }
+          const selected = Array.from(selectedPathsRef.current);
+          const paths = resolveViewerPreviewPaths(
+            selected.length > 0 ? selected : [],
+            listingEntriesRef.current,
+          );
+          openPreview(paths.length > 0 ? paths : [entry.path], entry.path);
         },
         onContextMenu: (event) => {
           event.stopPropagation();

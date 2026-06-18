@@ -1,10 +1,7 @@
-import { isPreviewable } from "./imagePaths";
+export type FileActivation = "preview";
 
-export type FileActivation = "preview" | "download";
-
-// How a non-directory listing entry responds to the default activation
-// gesture (double-click / Enter): previewable types open the Preview overlay,
-// everything else falls back to download.
-export function resolveFileActivation(path: string): FileActivation {
-  return isPreviewable(path) ? "preview" : "download";
+// Every non-directory listing entry opens the Preview overlay. Unsupported
+// native types show an unavailable message with an optional text view.
+export function resolveFileActivation(_path: string): FileActivation {
+  return "preview";
 }
