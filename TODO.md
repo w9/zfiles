@@ -117,5 +117,5 @@ Center the PDF preview panel in the overlay (match text/other media layout). Sti
 - [x] `quickFilter.test.ts`: closing `/`, `/i/`, `//`, escaped trailing slash, `/foo/i/` flag edge cases
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `SlideshowOverlay.tsx`: center PDF iframe (shared stage flex centering + max-width wrapper like text preview)
-- [ ] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
+- [x] `SlideshowOverlay.tsx`: center PDF iframe (shared stage flex centering + max-width wrapper like text preview)
+- [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
