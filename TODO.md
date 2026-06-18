@@ -398,7 +398,7 @@ Context menu download labels: plain "Download" for one file, "Download N files" 
 - [x] `FloatingPanel.tsx`: subscribe to stack — dynamic z-index; pointer-down + open bring to front; Escape closes only when topmost
 - [x] Register stack tests in `pnpm test`; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerApp.tsx`: context menu download label — "Download" for one file, "Download {{count}} files" for multiple; drop filename branch
-- [ ] i18n (14 locales): add `actions.selection.download.nameWithCount`; remove `actions.selection.download.nameWithFile` and legacy `selection.download`
-- [ ] `e2e/tests/smoke.spec.ts`: update context menu download assertion
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerApp.tsx`: context menu download label — "Download" for one file, "Download {{count}} files" for multiple; drop filename branch
+- [x] i18n (14 locales): add `actions.selection.download.nameWithCount`; remove `actions.selection.download.nameWithFile` and legacy `selection.download`
+- [x] `e2e/tests/smoke.spec.ts`: update context menu download assertion
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

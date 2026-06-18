@@ -174,11 +174,11 @@ function contextMenuActionLabel(
   }
   if (action.id === "selection.download") {
     if (downloadablePaths.length === 1) {
-      return t("actions.selection.download.nameWithFile", {
-        name: basename(downloadablePaths[0]!),
-      });
+      return t("actions.selection.download.name");
     }
-    return t("actions.selection.download.name");
+    return t("actions.selection.download.nameWithCount", {
+      count: String(downloadablePaths.length),
+    });
   }
   return defaultLabel;
 }

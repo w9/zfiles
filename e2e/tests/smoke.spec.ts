@@ -154,7 +154,7 @@ test("context menu shows built-in file actions", async ({ page }) => {
   await page.goto("/");
   await listingEntry(page, /hello\.txt/).click({ button: "right" });
   await expect(page.getByRole("menuitem", { name: "Copy Path" })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Download hello.txt" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Download" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
 });
 
