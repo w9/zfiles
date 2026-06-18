@@ -394,6 +394,6 @@ Floating panel focus stacking: shared `FloatingPanel` stack manager — pointer-
 - [x] Shared toggles: optional `variant` prop on `ThemeToggle`, `LanguageToggle`, `ShareUrlButton` (default outline); pass `variant="ghost"` from `ExplorerApp` (+ inline settings button)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `floatingPanelStack.ts` + tests: in-memory stack (register/unregister, bring-to-front, z-index, is-topmost)
-- [ ] `FloatingPanel.tsx`: subscribe to stack — dynamic z-index; pointer-down + open bring to front; Escape closes only when topmost
-- [ ] Register stack tests in `pnpm test`; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `floatingPanelStack.ts` + tests: in-memory stack (register/unregister, bring-to-front, z-index, is-topmost)
+- [x] `FloatingPanel.tsx`: subscribe to stack — dynamic z-index; pointer-down + open bring to front; Escape closes only when topmost
+- [x] Register stack tests in `pnpm test`; run `pnpm test`; bump patch version in `Cargo.toml`

@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
@@ -22,6 +23,14 @@ import {
   type ResizeEdge,
   type ViewportSize,
 } from "./floatingPanelGeometry";
+import {
+  bringFloatingPanelToFront,
+  getFloatingPanelZIndex,
+  isTopmostFloatingPanel,
+  registerFloatingPanel,
+  subscribeFloatingPanelStack,
+  unregisterFloatingPanel,
+} from "./floatingPanelStack";
 
 export type FloatingPanelProps = {
   open: boolean;
@@ -84,6 +93,11 @@ export default function FloatingPanel({
   const interactionRef = useRef<InteractionState | null>(null);
   const geometryRef = useRef(geometry);
   geometryRef.current = geometry;
+  const zIndex = useSyncExternalStore(
+    subscribeFloatingPanelStack,
+    () => getFloatingPanelZIndex(storageKey),
+    () => getFloatingPanelZIndex(storageKey),
+  );
 
   useLayoutEffect(() => {
     if (!open) {
@@ -106,6 +120,16 @@ export default function FloatingPanel({
     if (!open) {
       return;
     }
+    registerFloatingPanel(storageKey);
+    return () => {
+      unregisterFloatingPanel(storageKey);
+    };
+  }, [open, storageKey]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
     const onResize = () => {
       commitGeometry(geometryRef.current);
     };
@@ -121,13 +145,20 @@ export default function FloatingPanel({
       if (event.key !== "Escape") {
         return;
       }
+      if (!isTopmostFloatingPanel(storageKey)) {
+        return;
+      }
       event.preventDefault();
       event.stopImmediatePropagation();
       onClose();
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [open, onClose]);
+  }, [open, onClose, storageKey]);
+
+  const onPanelPointerDown = useCallback(() => {
+    bringFloatingPanelToFront(storageKey);
+  }, [storageKey]);
 
   const onDragHandlePointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     if (event.button !== 0) {
@@ -219,14 +250,16 @@ export default function FloatingPanel({
       aria-modal="false"
       aria-label={ariaLabel}
       className={cn(
-        "fixed z-50 flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-[0_24px_64px_-16px_rgba(0,0,0,0.14),0_8px_20px_-8px_rgba(0,0,0,0.08)] dark:shadow-[0_24px_64px_-16px_rgba(0,0,0,0.45),0_8px_20px_-8px_rgba(0,0,0,0.28)]",
+        "fixed flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-[0_24px_64px_-16px_rgba(0,0,0,0.14),0_8px_20px_-8px_rgba(0,0,0,0.08)] dark:shadow-[0_24px_64px_-16px_rgba(0,0,0,0.45),0_8px_20px_-8px_rgba(0,0,0,0.28)]",
       )}
       style={{
         left: geometry.x,
         top: geometry.y,
         width: geometry.width,
         height: geometry.height,
+        zIndex,
       }}
+      onPointerDown={onPanelPointerDown}
       onPointerMove={onPanelPointerMove}
       onPointerUp={onPanelPointerUp}
       onPointerCancel={onPanelPointerUp}
