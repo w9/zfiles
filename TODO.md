@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Floating panel focus stacking: shared `FloatingPanel` stack manager — pointer-down or open brings panel to front; Escape closes topmost only; in-memory order. Then: explorer header ghost buttons, upload tray accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Context menu download labels: plain "Download" for one file, "Download N files" for multi-select (no filename); remove unused filename i18n keys. Then: floating panel focus stacking, explorer header ghost buttons, upload tray accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -397,3 +397,8 @@ Floating panel focus stacking: shared `FloatingPanel` stack manager — pointer-
 - [x] `floatingPanelStack.ts` + tests: in-memory stack (register/unregister, bring-to-front, z-index, is-topmost)
 - [x] `FloatingPanel.tsx`: subscribe to stack — dynamic z-index; pointer-down + open bring to front; Escape closes only when topmost
 - [x] Register stack tests in `pnpm test`; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerApp.tsx`: context menu download label — "Download" for one file, "Download {{count}} files" for multiple; drop filename branch
+- [ ] i18n (14 locales): add `actions.selection.download.nameWithCount`; remove `actions.selection.download.nameWithFile` and legacy `selection.download`
+- [ ] `e2e/tests/smoke.spec.ts`: update context menu download assertion
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
