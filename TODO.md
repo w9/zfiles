@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Generalize the image slideshow into a multi-type **Preview**. This cycle: rename `viewer.slideshow` → `viewer.preview` (category "Preview", `Eye` icon, Space unchanged), broaden type detection + path collection to image/video/audio, render `<video>`/`<audio>` in the overlay alongside images, and make Preview the default double-click / Enter activation for previewable files (non-previewable files keep the existing download fallback). Deferred preview follow-ups (browser-native, no kernel transcoding): PDF via `<iframe>`/`<embed>`; text & source code (+ HTML rendered as source) fetched into a size-capped `<pre>`; SVG added to the image renderer; sanitized Markdown rendering. Still deferred from before: CLI banner redesign, cloud auth expired-token debug cycle.
+Extend Preview with the remaining browser-native types: **PDF** (`<iframe>`), **text & source** (incl. HTML as escaped source in `<pre>`, size-capped fetch), **SVG** (via existing `<img>` path), and **Markdown** (sanitized HTML via `marked` + `dompurify`). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -410,3 +410,11 @@ Generalize the image slideshow into a multi-type **Preview**. This cycle: rename
 - [x] Default file activation = Preview: new `fileActivation.ts` + test (`resolveFileActivation`: previewable → preview, else download); wire into `ExplorerApp.tsx` `onActivate`; route `VirtualListing.tsx`/`GridListing.tsx` double-click through `onActivate` (Enter already flows via `navigation.open` → `activateSelected`); drop unused listing `href`
 - [x] i18n (14 locales): rename `viewer.slideshow.name` → `viewer.preview.name`, set `viewer.category` → "Preview"; `design/design.md` §1/§3/§6 — replace "images-only" preview wording with the generalized image/video/audio direction + deferred roadmap; `e2e/tests/smoke.spec.ts` palette "Slideshow" → "Preview"
 - [x] Run `pnpm test` + `pnpm build`; fix failures; bump patch version in `Cargo.toml`
+
+- [ ] `imagePaths.ts` + test: extend `PreviewKind` with `pdf`, `text`, `markdown`; add `.svg` to image extensions; define extension sets (pdf: `.pdf`; markdown: `.md`/`.markdown`; text: common source/log/data incl. `.html`/`.htm` as source-only); update `previewKind`/`isPreviewable` tests
+- [ ] `previewTextContent.ts` + test: `fetchPreviewText(url, maxBytes)` — fetch via download URL, UTF-8 decode, truncate with flag when over cap (default 512 KiB); register in `pnpm test`
+- [ ] Add `marked` + `dompurify`; `renderMarkdown.ts` + test: parse markdown to HTML, sanitize (strip scripts/event handlers/unsafe URLs); register in `pnpm test`
+- [ ] `SlideshowOverlay.tsx`: render `pdf` via full-viewport `<iframe>`; `text` via scrollable monospace `<pre>`; `markdown` via sanitized HTML scroll pane; loading/error/truncated UI wired to fetch helper
+- [ ] i18n (14 locales): add `preview.textTruncated`, `preview.textLoadError`, `preview.textTooLarge` (or equivalent) for text/markdown fetch states
+- [ ] Update `fileActivation.test.ts` + `slideshowPathOrder.test.ts` for pdf/text/markdown/svg paths
+- [ ] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
