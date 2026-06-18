@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Center the PDF preview panel in the overlay (match text/other media layout). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Grid view: when sort is folders-first and both types are visible, split folders and files into separate virtualized sections with small scrollable headers; keep flat grid otherwise. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -119,3 +119,10 @@ Center the PDF preview panel in the overlay (match text/other media layout). Sti
 
 - [x] `SlideshowOverlay.tsx`: center PDF iframe (shared stage flex centering + max-width wrapper like text preview)
 - [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
+
+- [ ] `gridListingLayout.ts` + tests: virtual rows (headers + card rows), section folder count, section-aware grid index moves, entry content positions for marquee
+- [ ] `listingMarqueeSelect.ts` + tests: grid marquee/hit-test via shared layout metrics (sectioned + flat)
+- [ ] `GridListing.tsx` + `ExplorerApp.tsx`: folders-first two-section grid; pass sort order; wire section folder count into keyboard nav deps
+- [ ] `listingGridNavigation.ts`: optional section folder count for arrow keys at section boundaries
+- [ ] i18n (14 locales): `listing.grid.sectionFolders` and `listing.grid.sectionFiles`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
