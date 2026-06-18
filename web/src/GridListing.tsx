@@ -240,7 +240,7 @@ export default function GridListing({
                       row.section === "files" ? GRID_SECTION_HEADER_TOP_GAP_PX : 0,
                   }}
                 >
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <p className="text-xs font-bold text-muted-foreground/60">
                     {row.section === "folders"
                       ? t("listing.grid.sectionFolders")
                       : t("listing.grid.sectionFiles")}

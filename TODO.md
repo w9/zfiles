@@ -129,4 +129,4 @@ Polish grid section headers (bold, dimmer labels). Still deferred: CLI banner re
 
 - [x] `GridListing.tsx`: use bold styling for folder/file section headers; bump patch version in `Cargo.toml`
 
-- [ ] `GridListing.tsx`: dim grid section header labels; bump patch version in `Cargo.toml`
+- [x] `GridListing.tsx`: dim grid section header labels; bump patch version in `Cargo.toml`
