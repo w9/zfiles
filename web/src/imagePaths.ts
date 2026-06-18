@@ -11,6 +11,7 @@ const IMAGE_EXTENSIONS = [
   ".ico",
   ".heic",
   ".heif",
+  ".svg",
   ".nef",
   ".cr2",
   ".arw",
@@ -28,6 +29,7 @@ const BROWSER_PREVIEW_EXTENSIONS = [
   ".avif",
   ".bmp",
   ".ico",
+  ".svg",
 ];
 
 const BROWSER_PREVIEW_VIDEO_EXTENSIONS = [".mp4", ".webm"];
@@ -47,7 +49,62 @@ const PREVIEW_AUDIO_EXTENSIONS = [
   ".oga",
 ];
 
-export type PreviewKind = "image" | "video" | "audio";
+const PREVIEW_PDF_EXTENSIONS = [".pdf"];
+
+const PREVIEW_MARKDOWN_EXTENSIONS = [".md", ".markdown"];
+
+const PREVIEW_TEXT_EXTENSIONS = [
+  ".txt",
+  ".text",
+  ".log",
+  ".json",
+  ".jsonl",
+  ".csv",
+  ".tsv",
+  ".xml",
+  ".yaml",
+  ".yml",
+  ".toml",
+  ".ini",
+  ".cfg",
+  ".conf",
+  ".html",
+  ".htm",
+  ".css",
+  ".scss",
+  ".less",
+  ".js",
+  ".jsx",
+  ".ts",
+  ".tsx",
+  ".mjs",
+  ".cjs",
+  ".py",
+  ".rb",
+  ".rs",
+  ".go",
+  ".java",
+  ".c",
+  ".cpp",
+  ".h",
+  ".hpp",
+  ".cs",
+  ".swift",
+  ".kt",
+  ".sh",
+  ".bash",
+  ".zsh",
+  ".sql",
+  ".graphql",
+  ".vue",
+  ".svelte",
+  ".dockerfile",
+  ".env",
+  ".gitignore",
+  ".editorconfig",
+];
+
+export type PreviewKind = "image" | "video" | "audio" | "pdf" | "text" | "markdown";
 
 export function isImagePath(path: string): boolean {
   const lower = path.toLowerCase();
@@ -69,11 +126,25 @@ export function previewKind(path: string): PreviewKind | null {
     return "image";
   }
   const lower = path.toLowerCase();
+  const baseName = lower.split("/").pop() ?? lower;
+  if (PREVIEW_PDF_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
+    return "pdf";
+  }
+  if (PREVIEW_MARKDOWN_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
+    return "markdown";
+  }
   if (PREVIEW_VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
     return "video";
   }
   if (PREVIEW_AUDIO_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
     return "audio";
+  }
+  if (
+    PREVIEW_TEXT_EXTENSIONS.some((ext) => lower.endsWith(ext)) ||
+    baseName === "dockerfile" ||
+    baseName === "makefile"
+  ) {
+    return "text";
   }
   return null;
 }

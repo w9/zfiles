@@ -16,14 +16,14 @@ test("resolveViewerPreviewPaths filters selected paths to previewable types", ()
   ];
   assert.deepEqual(
     resolveViewerPreviewPaths(["/b.txt", "/d.mp3", "/c.mp4", "/a.png"], listing),
-    ["/a.png", "/c.mp4", "/d.mp3"],
+    ["/a.png", "/b.txt", "/c.mp4", "/d.mp3"],
   );
 });
 
 test("resolveViewerPreviewPaths uses listing previewables when nothing is selected", () => {
   const listing = [
     { path: "/a.png", isDir: false },
-    { path: "/b.txt", isDir: false },
+    { path: "/b.zip", isDir: false },
     { path: "/dir", isDir: true },
     { path: "/c.webm", isDir: false },
     { path: "/d.flac", isDir: false },
@@ -32,6 +32,24 @@ test("resolveViewerPreviewPaths uses listing previewables when nothing is select
     "/a.png",
     "/c.webm",
     "/d.flac",
+  ]);
+});
+
+test("resolveViewerPreviewPaths includes pdf, text, markdown, and svg", () => {
+  const listing = [
+    { path: "/a.png", isDir: false },
+    { path: "/b.pdf", isDir: false },
+    { path: "/c.txt", isDir: false },
+    { path: "/d.md", isDir: false },
+    { path: "/e.svg", isDir: false },
+    { path: "/f.zip", isDir: false },
+  ];
+  assert.deepEqual(resolveViewerPreviewPaths([], listing), [
+    "/a.png",
+    "/b.pdf",
+    "/c.txt",
+    "/d.md",
+    "/e.svg",
   ]);
 });
 

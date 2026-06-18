@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -69,6 +70,8 @@ import {
 } from "./slideshowZoom";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
 import { previewKind, type PreviewKind } from "./imagePaths";
+import { fetchPreviewText } from "./previewTextContent";
+import { renderMarkdownToSafeHtml } from "./renderMarkdown";
 
 const CHROME_IDLE_MS = 2000;
 const TOOLTIP_DELAY_MS = 1000;
@@ -185,6 +188,12 @@ export default function SlideshowOverlay({
   const [stat, setStat] = useState<FileStat | null>(null);
   const [panOffset, setPanOffset] = useState<PanOffset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [textContent, setTextContent] = useState<string | null>(null);
+  const [textTruncated, setTextTruncated] = useState(false);
+  const [textLoading, setTextLoading] = useState(false);
+  const [textError, setTextError] = useState<"fetch_failed" | "too_large" | null>(
+    null,
+  );
   const viewportRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
@@ -202,6 +211,14 @@ export default function SlideshowOverlay({
   const fileName = currentPath?.split("/").pop() ?? currentPath ?? "";
   const kind: PreviewKind = (currentPath && previewKind(currentPath)) || "image";
   const isImageKind = kind === "image";
+  const isTextKind = kind === "text" || kind === "markdown";
+
+  const markdownHtml = useMemo(() => {
+    if (kind !== "markdown" || !textContent) {
+      return null;
+    }
+    return renderMarkdownToSafeHtml(textContent);
+  }, [kind, textContent]);
 
   const syncNaturalSizeFromVideo = useCallback((video: HTMLVideoElement) => {
     if (video.videoWidth <= 0 || video.videoHeight <= 0) {
@@ -288,6 +305,36 @@ export default function SlideshowOverlay({
       cancelled = true;
     };
   }, [open, currentPath, backend]);
+
+  useEffect(() => {
+    if (!open || !previewUrl || !isTextKind) {
+      setTextContent(null);
+      setTextTruncated(false);
+      setTextError(null);
+      setTextLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTextLoading(true);
+    setTextContent(null);
+    setTextTruncated(false);
+    setTextError(null);
+    void fetchPreviewText(previewUrl).then((result) => {
+      if (cancelled) {
+        return;
+      }
+      setTextLoading(false);
+      if (!result.ok) {
+        setTextError(result.error);
+        return;
+      }
+      setTextContent(result.text);
+      setTextTruncated(result.truncated);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, previewUrl, isTextKind, currentPath]);
 
   useEffect(() => {
     if (!open || !viewportRef.current) {
@@ -597,7 +644,12 @@ export default function SlideshowOverlay({
         onTouchCancel={isImageKind ? handleTouchEnd : undefined}
       >
         <div
-          className="flex h-full w-full items-center justify-center p-6"
+          className={cn(
+            "flex h-full w-full",
+            kind === "pdf"
+              ? "items-stretch justify-stretch p-2"
+              : "items-center justify-center p-6",
+          )}
           onClick={handleLetterboxClick}
         >
           {!previewUrl ? (
@@ -643,7 +695,7 @@ export default function SlideshowOverlay({
                 syncNaturalSizeFromVideo(event.currentTarget);
               }}
             />
-          ) : (
+          ) : kind === "audio" ? (
             <div className="flex flex-col items-center gap-4">
               <Music className="h-16 w-16 text-white/70" aria-hidden />
               <audio
@@ -654,7 +706,53 @@ export default function SlideshowOverlay({
                 className="w-[min(80vw,28rem)]"
               />
             </div>
-          )}
+          ) : kind === "pdf" ? (
+            <iframe
+              key={currentPath}
+              src={previewUrl}
+              title={fileName}
+              className="h-full w-full max-w-6xl rounded-sm bg-white"
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : isTextKind ? (
+            <div
+              className="flex h-full w-full max-w-5xl flex-col"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {textLoading ? (
+                <p className="text-sm text-white/80">{t("preview.loading")}</p>
+              ) : textError === "too_large" ? (
+                <p className="text-sm text-white/80">{t("preview.textTooLarge")}</p>
+              ) : textError === "fetch_failed" ? (
+                <p className="text-sm text-white/80">{t("preview.textLoadError")}</p>
+              ) : kind === "markdown" && markdownHtml ? (
+                <>
+                  {textTruncated ? (
+                    <p className="mb-2 shrink-0 text-xs text-amber-200/90">
+                      {t("preview.textTruncated")}
+                    </p>
+                  ) : null}
+                  <div
+                    className="min-h-0 flex-1 overflow-auto rounded-lg bg-zinc-900/80 p-6 text-left text-sm leading-relaxed text-white/90 [&_a]:text-sky-300 [&_a]:underline [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-4 [&_ol]:my-2 [&_ol]:list-decimal [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/40 [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc"
+                    dangerouslySetInnerHTML={{ __html: markdownHtml }}
+                  />
+                </>
+              ) : textContent != null ? (
+                <>
+                  {textTruncated ? (
+                    <p className="mb-2 shrink-0 text-xs text-amber-200/90">
+                      {t("preview.textTruncated")}
+                    </p>
+                  ) : null}
+                  <pre className="min-h-0 flex-1 overflow-auto rounded-lg bg-black/40 p-4 text-left font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/90">
+                    {textContent}
+                  </pre>
+                </>
+              ) : (
+                <p className="text-sm text-white/80">{t("preview.loading")}</p>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
