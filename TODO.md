@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Upload panel: per-row dismiss (X) on queue rows with status Done only; header “Clear finished” unchanged (still clears done + failed + cancelled). Available in read-only. Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation, overlay delay alignment).
+Copy Path action icon: swap placeholder `ListFilter` for Lucide `CopySlash` (copy sheets + slash path). Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation, overlay delay alignment).
 
 ## TODO List
 
@@ -145,3 +145,6 @@ Upload panel: per-row dismiss (X) on queue rows with status Done only; header �
 - [x] `upload-queue.ts`: `removeDoneUploadItem` helper + `clearDone` callback (done rows only)
 - [x] `UploadPanel.tsx` + `UploadIndicator.tsx` + `ExplorerApp.tsx`: per-row dismiss X on Done queue rows; wire `onClearDone`
 - [x] i18n (14 locales): `upload.clearDone` aria label; unit test for `removeDoneUploadItem`; run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `icons.ts`: map `selection.copy-paths` to `CopySlash` (replace `ListFilter`)
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
