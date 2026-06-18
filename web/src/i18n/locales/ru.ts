@@ -262,6 +262,8 @@ export const ru: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Вкл.",
   "settings.slideshow.startAtActiveItem.disabled": "Выкл.",
   "listing.grid.resizeHandle": "Изменить размер всех карточек",
+  "listing.grid.sectionFolders": "Папки",
+  "listing.grid.sectionFiles": "Файлы",
   "statusBar.label": "Строка состояния",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "О zfiles (v{{version}})",

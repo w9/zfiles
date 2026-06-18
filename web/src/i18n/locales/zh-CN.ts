@@ -252,6 +252,8 @@ export const zhCN: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "开启",
   "settings.slideshow.startAtActiveItem.disabled": "关闭",
   "listing.grid.resizeHandle": "调整所有网格卡片大小",
+  "listing.grid.sectionFolders": "文件夹",
+  "listing.grid.sectionFiles": "文件",
   "statusBar.label": "状态栏",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "关于 zfiles（v{{version}}）",

@@ -261,6 +261,8 @@ export const en = {
   "settings.slideshow.startAtActiveItem.enabled": "On",
   "settings.slideshow.startAtActiveItem.disabled": "Off",
   "listing.grid.resizeHandle": "Resize all grid cards",
+  "listing.grid.sectionFolders": "Folders",
+  "listing.grid.sectionFiles": "Files",
   "statusBar.label": "Status bar",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "About zfiles (v{{version}})",

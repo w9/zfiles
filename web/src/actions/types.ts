@@ -48,6 +48,7 @@ export type BuiltinActionDeps = {
   getListingLength: () => number;
   getListingViewMode: () => ListingViewMode;
   getGridColumnCount: () => number;
+  getGridSectionFolderCount: () => number;
   getSelectedIndex: () => number;
   getSelectedPaths: () => string[];
   getCurrentPath: () => string;

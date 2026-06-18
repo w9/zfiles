@@ -20,7 +20,10 @@ function moveSelection(
   const extendRange = args?.extendRange === true;
   deps.setSelectedIndex((index) => {
     if (deps.getListingViewMode() === "grid") {
-      return moveGridIndex(index, direction, deps.getGridColumnCount(), length);
+      const folderCount = deps.getGridSectionFolderCount();
+      return moveGridIndex(index, direction, deps.getGridColumnCount(), length, {
+        folderCount: folderCount > 0 ? folderCount : undefined,
+      });
     }
     if (direction === "down") {
       return moveLinearIndex(index, 1, length);

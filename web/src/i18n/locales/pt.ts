@@ -263,6 +263,8 @@ export const pt: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Ativado",
   "settings.slideshow.startAtActiveItem.disabled": "Desativado",
   "listing.grid.resizeHandle": "Redimensionar todos os cartões",
+  "listing.grid.sectionFolders": "Pastas",
+  "listing.grid.sectionFiles": "Arquivos",
   "statusBar.label": "Barra de status",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "Sobre o zfiles (v{{version}})",

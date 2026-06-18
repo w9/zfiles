@@ -1,3 +1,10 @@
+import {
+  buildGridVirtualRows,
+  type GridListingLayoutMetrics,
+  type GridVirtualRow,
+  gridEntryContentRect,
+} from "./gridListingLayout";
+
 export type ClientRect = {
   left: number;
   top: number;
@@ -168,13 +175,15 @@ export function hitTestGridPathsWithContentMarquee(
     cardHeight: number;
     gap: number;
     padding: number;
+    virtualRows?: readonly GridVirtualRow[];
   },
 ): string[] {
-  const { columnCount, cardWidth, cardHeight, gap, padding } = options;
+  const { columnCount } = options;
   if (columnCount <= 0) {
     return [];
   }
 
+  const metrics = resolveGridMarqueeMetrics(paths, options);
   const contentTop = Math.min(bounds.contentTop, bounds.contentBottom);
   const contentBottom = Math.max(bounds.contentTop, bounds.contentBottom);
   const contentLeft = Math.min(
@@ -186,34 +195,17 @@ export function hitTestGridPathsWithContentMarquee(
     clientXToContentX(scrollElement, bounds.clientRight),
   );
 
-  const rowStride = cardHeight + gap;
-  const colStride = cardWidth + gap;
   const hits: string[] = [];
-
-  const minRow = Math.max(0, Math.floor((contentTop - padding) / rowStride));
-  const maxRow = Math.ceil((contentBottom - padding) / rowStride);
-  const minCol = Math.max(0, Math.floor((contentLeft - padding) / colStride));
-  const maxCol = Math.min(
-    columnCount,
-    Math.ceil((contentRight - padding) / colStride),
-  );
-
-  for (let row = minRow; row < maxRow; row++) {
-    for (let col = minCol; col < maxCol; col++) {
-      const index = row * columnCount + col;
-      if (index >= paths.length) {
-        continue;
-      }
-      const cellTop = padding + row * rowStride;
-      const cellBottom = cellTop + cardHeight;
-      const cellLeft = padding + col * colStride;
-      const cellRight = cellLeft + cardWidth;
-      if (
-        contentRangesOverlap(cellTop, cellBottom, contentTop, contentBottom) &&
-        contentRangesOverlap(cellLeft, cellRight, contentLeft, contentRight)
-      ) {
-        hits.push(paths[index]);
-      }
+  for (let index = 0; index < paths.length; index += 1) {
+    const cell = gridEntryContentRect(index, metrics);
+    if (!cell) {
+      continue;
+    }
+    if (
+      contentRangesOverlap(cell.top, cell.top + cell.height, contentTop, contentBottom) &&
+      contentRangesOverlap(cell.left, cell.left + cell.width, contentLeft, contentRight)
+    ) {
+      hits.push(paths[index]!);
     }
   }
 
@@ -231,9 +223,10 @@ export function findGridPathAtClientPoint(
     cardHeight: number;
     gap: number;
     padding: number;
+    virtualRows?: readonly GridVirtualRow[];
   },
 ): string | null {
-  const { columnCount, cardWidth, cardHeight, gap, padding } = options;
+  const { columnCount } = options;
   if (columnCount <= 0) {
     return null;
   }
@@ -248,33 +241,26 @@ export function findGridPathAtClientPoint(
     return null;
   }
 
+  const metrics = resolveGridMarqueeMetrics(paths, options);
   const contentX = clientXToContentX(scrollElement, clientX);
   const contentY = clientYToContentY(scrollElement, clientY);
-  const rowStride = cardHeight + gap;
-  const colStride = cardWidth + gap;
-  const row = Math.floor((contentY - padding) / rowStride);
-  const col = Math.floor((contentX - padding) / colStride);
-  if (row < 0 || col < 0 || col >= columnCount) {
-    return null;
+
+  for (let index = paths.length - 1; index >= 0; index -= 1) {
+    const cell = gridEntryContentRect(index, metrics);
+    if (!cell) {
+      continue;
+    }
+    if (
+      contentY >= cell.top &&
+      contentY <= cell.top + cell.height &&
+      contentX >= cell.left &&
+      contentX <= cell.left + cell.width
+    ) {
+      return paths[index] ?? null;
+    }
   }
 
-  const index = row * columnCount + col;
-  if (index >= paths.length) {
-    return null;
-  }
-
-  const cellTop = padding + row * rowStride;
-  const cellLeft = padding + col * colStride;
-  if (
-    contentY < cellTop ||
-    contentY > cellTop + cardHeight ||
-    contentX < cellLeft ||
-    contentX > cellLeft + cardWidth
-  ) {
-    return null;
-  }
-
-  return paths[index];
+  return null;
 }
 
 export function collectTableEntryRects(
@@ -308,32 +294,59 @@ export function collectGridEntryRects(
     cardHeight: number;
     gap: number;
     padding: number;
+    virtualRows?: readonly GridVirtualRow[];
   },
 ): ListingMarqueeEntryRect[] {
   const viewportRect = scrollElement.getBoundingClientRect();
   const scrollTop = scrollElement.scrollTop;
-  const { columnCount, cardWidth, cardHeight, gap, padding } = options;
+  const { columnCount } = options;
   if (columnCount <= 0) {
     return [];
   }
 
-  const rowStride = cardHeight + gap;
-  const colStride = cardWidth + gap;
-  return paths.map((path, index) => {
-    const row = Math.floor(index / columnCount);
-    const col = index % columnCount;
-    const top = viewportRect.top + padding + row * rowStride - scrollTop;
-    const left = viewportRect.left + padding + col * colStride;
-    return {
-      path,
-      rect: {
-        left,
-        top,
-        right: left + cardWidth,
-        bottom: top + cardHeight,
+  const metrics = resolveGridMarqueeMetrics(paths, options);
+  return paths.flatMap((path, index) => {
+    const cell = gridEntryContentRect(index, metrics);
+    if (!cell) {
+      return [];
+    }
+    const top = viewportRect.top + cell.top - scrollTop;
+    const left = viewportRect.left + cell.left;
+    return [
+      {
+        path,
+        rect: {
+          left,
+          top,
+          right: left + cell.width,
+          bottom: top + cell.height,
+        },
       },
-    };
+    ];
   });
+}
+
+function resolveGridMarqueeMetrics(
+  paths: readonly string[],
+  options: {
+    columnCount: number;
+    cardWidth: number;
+    cardHeight: number;
+    gap: number;
+    padding: number;
+    virtualRows?: readonly GridVirtualRow[];
+  },
+): GridListingLayoutMetrics {
+  return {
+    columnCount: options.columnCount,
+    cardWidth: options.cardWidth,
+    cardHeight: options.cardHeight,
+    gap: options.gap,
+    padding: options.padding,
+    virtualRows:
+      options.virtualRows ??
+      buildGridVirtualRows(paths.length, options.columnCount, 0),
+  };
 }
 
 export function collectDomEntryRectsFromViewport(

@@ -262,6 +262,8 @@ export const ja: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "オン",
   "settings.slideshow.startAtActiveItem.disabled": "オフ",
   "listing.grid.resizeHandle": "すべてのグリッドカードをリサイズ",
+  "listing.grid.sectionFolders": "フォルダー",
+  "listing.grid.sectionFiles": "ファイル",
   "statusBar.label": "ステータスバー",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "zfiles について（v{{version}}）",

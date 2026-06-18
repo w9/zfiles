@@ -114,6 +114,7 @@ import { connectionConfigToShareInput } from "../cloud/shareUrl";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
+import { resolveGridSectionFolderCount } from "./gridListingLayout";
 
 function multipartToUnfinishedSession(session: MultipartSessionView): UnfinishedSessionView {
   return {
@@ -802,6 +803,8 @@ export default function ExplorerApp() {
   gridColumnCountRef.current = gridColumnCount;
   const listingViewModeRef = useRef(listingViewMode);
   listingViewModeRef.current = listingViewMode;
+  const listingSortOrderRef = useRef(listingSortOrder);
+  listingSortOrderRef.current = listingSortOrder;
   const columnSortingRef = useRef(columnSorting);
   columnSortingRef.current = columnSorting;
   const cardSizeRef = useRef(cardSize);
@@ -1251,6 +1254,15 @@ export default function ExplorerApp() {
       getListingLength: () => listingEntriesRef.current.length,
       getListingViewMode: () => listingViewModeRef.current,
       getGridColumnCount: () => gridColumnCountRef.current,
+      getGridSectionFolderCount: () => {
+        if (listingViewModeRef.current !== "grid") {
+          return 0;
+        }
+        return resolveGridSectionFolderCount(
+          listingEntriesRef.current,
+          listingSortOrderRef.current,
+        );
+      },
       getSelectedIndex: () => selectedIndexRef.current,
       getSelectedPaths: () => Array.from(selectedPathsRef.current),
       getCurrentPath: () => currentPathRef.current,
@@ -1670,6 +1682,7 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
+                listingSortOrder={listingSortOrder}
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}

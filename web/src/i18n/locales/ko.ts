@@ -262,6 +262,8 @@ export const ko: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "켜기",
   "settings.slideshow.startAtActiveItem.disabled": "끄기",
   "listing.grid.resizeHandle": "모든 그리드 카드 크기 조정",
+  "listing.grid.sectionFolders": "폴더",
+  "listing.grid.sectionFiles": "파일",
   "statusBar.label": "상태 표시줄",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "zfiles 정보(v{{version}})",

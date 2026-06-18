@@ -14,6 +14,7 @@ import {
   selectionSetsEqual,
   shouldClearMultiSelectionOnEmptyClick,
 } from "./listingMarqueeSelect";
+import { buildGridVirtualRows } from "./gridListingLayout";
 
 function mockScrollElement(scrollTop: number) {
   return {
@@ -383,4 +384,20 @@ test("shouldClearMultiSelectionOnEmptyClick rejects drag, modifiers, and entry t
     }),
     false,
   );
+});
+
+test("collectGridEntryRects offsets file rows below section headers", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = ["/folder-a", "/folder-b", "/file-a", "/file-b"];
+  const virtualRows = buildGridVirtualRows(paths.length, 2, 2);
+  const rects = collectGridEntryRects(scrollElement, paths, {
+    columnCount: 2,
+    cardWidth: 100,
+    cardHeight: 80,
+    gap: 12,
+    padding: 12,
+    virtualRows,
+  });
+
+  assert.ok(rects[2]!.rect.top > rects[0]!.rect.top);
 });

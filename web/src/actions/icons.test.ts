@@ -16,6 +16,7 @@ function allRegisteredActionIds(): string[] {
       getListingLength: () => 0,
       getListingViewMode: () => "table" as const,
       getGridColumnCount: () => 1,
+      getGridSectionFolderCount: () => 0,
       getSelectedIndex: () => 0,
       getSelectedPaths: () => [],
       getCurrentPath: () => "/",

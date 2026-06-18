@@ -262,6 +262,8 @@ export const tr: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Açık",
   "settings.slideshow.startAtActiveItem.disabled": "Kapalı",
   "listing.grid.resizeHandle": "Tüm ızgara kartlarını yeniden boyutlandır",
+  "listing.grid.sectionFolders": "Klasörler",
+  "listing.grid.sectionFiles": "Dosyalar",
   "statusBar.label": "Durum çubuğu",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "zfiles hakkında (v{{version}})",

@@ -32,3 +32,8 @@ test("moveGridIndex clamps at vertical edges and partial last row", () => {
   assert.equal(moveGridIndex(8, "down", 4, 10), 8);
   assert.equal(moveGridIndex(8, "right", 4, 10), 9);
 });
+
+test("moveGridIndex crosses section boundaries when folderCount is set", () => {
+  assert.equal(moveGridIndex(1, "down", 4, 6, { folderCount: 2 }), 3);
+  assert.equal(moveGridIndex(5, "up", 4, 6, { folderCount: 2 }), 1);
+});

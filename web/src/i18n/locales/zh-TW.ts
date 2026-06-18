@@ -252,6 +252,8 @@ export const zhTW: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "開啟",
   "settings.slideshow.startAtActiveItem.disabled": "關閉",
   "listing.grid.resizeHandle": "調整所有格狀卡片大小",
+  "listing.grid.sectionFolders": "資料夾",
+  "listing.grid.sectionFiles": "檔案",
   "statusBar.label": "狀態列",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "關於 zfiles（v{{version}}）",

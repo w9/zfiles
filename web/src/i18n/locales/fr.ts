@@ -263,6 +263,8 @@ export const fr: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Activé",
   "settings.slideshow.startAtActiveItem.disabled": "Désactivé",
   "listing.grid.resizeHandle": "Redimensionner toutes les cartes",
+  "listing.grid.sectionFolders": "Dossiers",
+  "listing.grid.sectionFiles": "Fichiers",
   "statusBar.label": "Barre d'état",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "À propos de zfiles (v{{version}})",

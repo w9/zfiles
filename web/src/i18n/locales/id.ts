@@ -262,6 +262,8 @@ export const id: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Aktif",
   "settings.slideshow.startAtActiveItem.disabled": "Nonaktif",
   "listing.grid.resizeHandle": "Ubah ukuran semua kartu grid",
+  "listing.grid.sectionFolders": "Folder",
+  "listing.grid.sectionFiles": "File",
   "statusBar.label": "Bilah status",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "Tentang zfiles (v{{version}})",

@@ -4,6 +4,13 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import GridCardPreview from "@/GridCardPreview";
 import InlineNameInput from "@/explorer/InlineNameInput";
 import {
+  buildGridVirtualRows,
+  estimateGridVirtualRowSize,
+  GRID_SECTION_HEADER_TOP_GAP_PX,
+  resolveGridSectionFolderCount,
+  virtualRowIndexForEntryIndex,
+} from "@/explorer/gridListingLayout";
+import {
   collectGridEntryRects,
   findGridPathAtClientPoint,
   hitTestGridPathsWithContentMarquee,
@@ -24,6 +31,7 @@ import {
 } from "@/settings/gridCardSize";
 import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
+import type { ListingSortOrder } from "@/settings/listingSortOrder";
 
 type GridListingProps = {
   entries: ListingEntry[];
@@ -35,6 +43,7 @@ type GridListingProps = {
   onInlineCommit?: (path: string, name: string) => void;
   onInlineCancel?: (path: string, initialName: string) => void;
   ariaLabel: string;
+  listingSortOrder: ListingSortOrder;
   iconTheme?: FileIconTheme;
   className?: string;
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
@@ -66,6 +75,7 @@ export default function GridListing({
   onInlineCommit,
   onInlineCancel,
   ariaLabel,
+  listingSortOrder,
   iconTheme = "dark",
   className,
   listingViewportRef,
@@ -88,12 +98,33 @@ export default function GridListing({
     [cardSize.width, viewportWidth],
   );
 
-  const rowCount = Math.ceil(entries.length / columnCount);
+  const sectionFolderCount = useMemo(
+    () => resolveGridSectionFolderCount(entries, listingSortOrder),
+    [entries, listingSortOrder],
+  );
+
+  const virtualRows = useMemo(
+    () => buildGridVirtualRows(entries.length, columnCount, sectionFolderCount),
+    [columnCount, entries.length, sectionFolderCount],
+  );
+
   const listingPaths = useMemo(
     () => entries.map((entry) => entry.path),
     [entries],
   );
   const iconPixelSize = gridIconPixelSize(cardSize.width, cardSize.height);
+
+  const gridMarqueeOptions = useMemo(
+    () => ({
+      columnCount,
+      cardWidth: cardSize.width,
+      cardHeight: cardSize.height,
+      gap: GRID_GAP_PX,
+      padding: VIEWPORT_PADDING_PX,
+      virtualRows,
+    }),
+    [cardSize.height, cardSize.width, columnCount, virtualRows],
+  );
 
   const { onHandlePointerDown, onHandleDoubleClick, resizingPath } = useGridCardResize({
     cardSize,
@@ -127,23 +158,24 @@ export default function GridListing({
   }, []);
 
   const virtualizer = useVirtualizer({
-    count: rowCount,
+    count: virtualRows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => cardSize.height,
+    estimateSize: (index) =>
+      estimateGridVirtualRowSize(virtualRows[index]!, cardSize.height),
     gap: GRID_GAP_PX,
     overscan: GRID_VIRTUAL_OVERSCAN_ROWS,
   });
 
   useEffect(() => {
     virtualizer.measure();
-  }, [cardSize.height, virtualizer]);
+  }, [cardSize.height, virtualRows, virtualizer]);
 
   useEffect(() => {
-    const row = Math.floor(selectedIndex / columnCount);
-    if (row >= 0 && row < rowCount) {
+    const row = virtualRowIndexForEntryIndex(virtualRows, selectedIndex);
+    if (row >= 0 && row < virtualRows.length) {
       virtualizer.scrollToIndex(row, { align: "auto" });
     }
-  }, [columnCount, rowCount, selectedIndex, virtualizer]);
+  }, [selectedIndex, virtualRows, virtualizer]);
 
   useEffect(() => {
     if (!marqueeLayoutRef) {
@@ -152,29 +184,13 @@ export default function GridListing({
     marqueeLayoutRef.current = {
       entryCount: listingPaths.length,
       getEntryRects: (scrollElement) =>
-        collectGridEntryRects(
-          scrollElement,
-          listingPaths,
-          {
-            columnCount,
-            cardWidth: cardSize.width,
-            cardHeight: cardSize.height,
-            gap: GRID_GAP_PX,
-            padding: VIEWPORT_PADDING_PX,
-          },
-        ),
+        collectGridEntryRects(scrollElement, listingPaths, gridMarqueeOptions),
       hitTestContentMarquee: (scrollElement, bounds) =>
         hitTestGridPathsWithContentMarquee(
           scrollElement,
           listingPaths,
           bounds,
-          {
-            columnCount,
-            cardWidth: cardSize.width,
-            cardHeight: cardSize.height,
-            gap: GRID_GAP_PX,
-            padding: VIEWPORT_PADDING_PX,
-          },
+          gridMarqueeOptions,
         ),
       findPathAtClientPoint: (scrollElement, clientX, clientY) =>
         findGridPathAtClientPoint(
@@ -182,25 +198,13 @@ export default function GridListing({
           listingPaths,
           clientX,
           clientY,
-          {
-            columnCount,
-            cardWidth: cardSize.width,
-            cardHeight: cardSize.height,
-            gap: GRID_GAP_PX,
-            padding: VIEWPORT_PADDING_PX,
-          },
+          gridMarqueeOptions,
         ),
     };
     return () => {
       marqueeLayoutRef.current = null;
     };
-  }, [
-    cardSize.height,
-    cardSize.width,
-    columnCount,
-    listingPaths,
-    marqueeLayoutRef,
-  ]);
+  }, [gridMarqueeOptions, listingPaths, marqueeLayoutRef]);
 
   const gridTemplateColumns = `repeat(${columnCount}, ${cardSize.width}px)`;
 
@@ -222,21 +226,45 @@ export default function GridListing({
           className="relative w-full"
           style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
-          {virtualizer.getVirtualItems().map((virtualRow) => {
-            const startIndex = virtualRow.index * columnCount;
-            const rowEntries = entries.slice(startIndex, startIndex + columnCount);
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const row = virtualRows[virtualItem.index]!;
+            if (row.kind === "header") {
+              return (
+                <div
+                  key={virtualItem.key}
+                  className="absolute left-0 flex w-full items-end"
+                  style={{
+                    transform: `translateY(${virtualItem.start}px)`,
+                    height: `${virtualItem.size}px`,
+                    paddingTop:
+                      row.section === "files" ? GRID_SECTION_HEADER_TOP_GAP_PX : 0,
+                  }}
+                >
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {row.section === "folders"
+                      ? t("listing.grid.sectionFolders")
+                      : t("listing.grid.sectionFiles")}
+                  </p>
+                </div>
+              );
+            }
+
+            const rowEntries = entries.slice(
+              row.entryStartIndex,
+              row.entryStartIndex + row.entryCount,
+            );
             return (
               <div
-                key={virtualRow.key}
+                key={virtualItem.key}
                 className="absolute left-0 grid justify-start gap-3"
                 style={{
                   gridTemplateColumns,
-                  transform: `translateY(${virtualRow.start}px)`,
-                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualItem.start}px)`,
+                  height: `${virtualItem.size}px`,
                 }}
               >
                 {rowEntries.map((entry, columnIndex) => {
-                  const index = startIndex + columnIndex;
+                  const index = row.entryStartIndex + columnIndex;
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   const isFocused = focusedPath != null && entry.path === focusedPath;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);

@@ -262,6 +262,8 @@ export const vi: Record<MessageKey, string> = {
   "settings.slideshow.startAtActiveItem.enabled": "Bật",
   "settings.slideshow.startAtActiveItem.disabled": "Tắt",
   "listing.grid.resizeHandle": "Thay đổi kích thước tất cả thẻ lưới",
+  "listing.grid.sectionFolders": "Thư mục",
+  "listing.grid.sectionFiles": "Tệp",
   "statusBar.label": "Thanh trạng thái",
   "statusBar.serverVersion": "v{{version}}",
   "statusBar.openAbout": "Giới thiệu zfiles (v{{version}})",
