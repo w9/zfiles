@@ -66,18 +66,42 @@ export type QuickFilterMode =
   | { kind: "substring"; pattern: string }
   | { kind: "regex"; pattern: string; caseSensitive: boolean };
 
+function indexOfUnescapedSlash(value: string): number {
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "/") {
+      continue;
+    }
+    let backslashes = 0;
+    for (let scan = index - 1; scan >= 0 && value[scan] === "\\"; scan -= 1) {
+      backslashes += 1;
+    }
+    if (backslashes % 2 === 0) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function parseRegexQuickFilter(
+  query: string,
+): { pattern: string; caseSensitive: boolean } {
+  const body = query.slice(1);
+  const closingSlashIndex = indexOfUnescapedSlash(body);
+  if (closingSlashIndex < 0) {
+    return { pattern: body, caseSensitive: true };
+  }
+  const pattern = body.slice(0, closingSlashIndex);
+  const flags = body.slice(closingSlashIndex + 1);
+  return { pattern, caseSensitive: !flags.includes("i") };
+}
+
 export function parseQuickFilterMode(query: string): QuickFilterMode | null {
   const normalized = normalizeQuickFilterQuery(query);
   if (!normalized) {
     return null;
   }
   if (normalized.startsWith("/")) {
-    let pattern = normalized.slice(1);
-    let caseSensitive = true;
-    if (pattern.endsWith("/i")) {
-      pattern = pattern.slice(0, -2);
-      caseSensitive = false;
-    }
+    const { pattern, caseSensitive } = parseRegexQuickFilter(normalized);
     return { kind: "regex", pattern, caseSensitive };
   }
   return { kind: "substring", pattern: normalized };

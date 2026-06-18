@@ -32,6 +32,16 @@ test("leading / starts case-sensitive regex (slash consumed)", () => {
   assert.equal(entryMatchesQuickFilter("file-01.txt", "/["), false);
 });
 
+test("regex closing delimiter ignores unescaped trailing slash", () => {
+  assert.equal(entryMatchesQuickFilter("alpha.txt", "/alpha/"), true);
+  assert.equal(entryMatchesQuickFilter("beta.txt", "/alpha/"), false);
+  assert.equal(entryMatchesQuickFilter("path/to.txt", "/path\\/to/"), true);
+  assert.equal(entryMatchesQuickFilter("pathXto.txt", "/path\\/to/"), false);
+  assert.equal(entryMatchesQuickFilter("i.txt", "/i/"), true);
+  assert.equal(entryMatchesQuickFilter("a.txt", "/i/"), false);
+  assert.equal(entryMatchesQuickFilter("anything.txt", "//"), true);
+});
+
 test("/.../i suffix enables case-insensitive regex", () => {
   assert.equal(entryMatchesQuickFilter("File-01.txt", "/^file-/i"), true);
   assert.equal(entryMatchesQuickFilter("FILE-01.TXT", "/^file-\\d+/i"), true);
@@ -85,6 +95,26 @@ test("parseQuickFilterMode detects plain vs regex and /i", () => {
     caseSensitive: true,
   });
   assert.deepEqual(parseQuickFilterMode("/foo/i"), {
+    kind: "regex",
+    pattern: "foo",
+    caseSensitive: false,
+  });
+  assert.deepEqual(parseQuickFilterMode("/foo/"), {
+    kind: "regex",
+    pattern: "foo",
+    caseSensitive: true,
+  });
+  assert.deepEqual(parseQuickFilterMode("/i/"), {
+    kind: "regex",
+    pattern: "i",
+    caseSensitive: true,
+  });
+  assert.deepEqual(parseQuickFilterMode("//"), {
+    kind: "regex",
+    pattern: "",
+    caseSensitive: true,
+  });
+  assert.deepEqual(parseQuickFilterMode("/foo/i/"), {
     kind: "regex",
     pattern: "foo",
     caseSensitive: false,

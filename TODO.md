@@ -112,3 +112,7 @@ Parse quick-filter **regex mode** like JS `/pattern/flags`: first unescaped clos
 - [x] `ExplorerApp.tsx`: wire type-to-filter handler to new helper
 - [x] `quickFilter.test.ts`: cover digits, symbols, `/`, Shift symbols, rejects Space/`\`/modifiers/control keys
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [x] `quickFilter.ts`: parse regex mode like JS `/pattern/flags` — first unescaped closing `/` delimits pattern; `i` flag for case-insensitivity; no closing `/` keeps open-ended pattern
+- [x] `quickFilter.test.ts`: closing `/`, `/i/`, `//`, escaped trailing slash, `/foo/i/` flag edge cases
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
