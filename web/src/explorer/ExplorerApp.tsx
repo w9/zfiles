@@ -1504,7 +1504,7 @@ export default function ExplorerApp() {
             invoke={(id) => void actionSystem.invoke(id)}
             ariaLabel={t("actions.menuBar.label")}
           />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-0.5">
             <UploadIndicator
               items={uploadItems}
               onSelect={onUpload}
