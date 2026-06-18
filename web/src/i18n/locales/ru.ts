@@ -422,6 +422,7 @@ export const ru: Record<MessageKey, string> = {
   "actions.confirm.title": "Подтвердить действие",
   "actions.confirm.cancel": "Отмена",
   "actions.confirm.confirm": "Подтвердить",
+  "actions.confirm.working": "Выполнение…",
   "actions.confirm.defaultMessage": "Выполнить {{name}}?",
   "actions.test.name": "Тестовое действие",
   "actions.test.category": "Тест",

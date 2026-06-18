@@ -421,6 +421,7 @@ export const vi: Record<MessageKey, string> = {
   "actions.confirm.title": "Xác nhận thao tác",
   "actions.confirm.cancel": "Hủy",
   "actions.confirm.confirm": "Xác nhận",
+  "actions.confirm.working": "Đang xử lý…",
   "actions.confirm.defaultMessage": "Chạy {{name}}?",
   "actions.test.name": "Thao tác thử nghiệm",
   "actions.test.category": "Thử nghiệm",

@@ -421,6 +421,7 @@ export const id: Record<MessageKey, string> = {
   "actions.confirm.title": "Konfirmasi tindakan",
   "actions.confirm.cancel": "Batal",
   "actions.confirm.confirm": "Konfirmasi",
+  "actions.confirm.working": "Memproses…",
   "actions.confirm.defaultMessage": "Jalankan {{name}}?",
   "actions.test.name": "Tindakan uji",
   "actions.test.category": "Uji",

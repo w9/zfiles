@@ -78,6 +78,7 @@ export type BuiltinActionDeps = {
   pasteFromClipboard: () => Promise<void>;
   createNewFolder: () => Promise<void>;
   startRename: () => void;
+  runWithPending: (actionId: string, fn: () => Promise<void>) => Promise<void>;
   selectAllVisible: () => void;
   toggleListingViewMode: (options?: { global?: boolean }) => void;
   applyGlobalListingSettings: () => void;

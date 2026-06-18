@@ -134,10 +134,10 @@ Add high-priority loading states for slow file operations: global pending guard 
 - [x] `gridListingLayout.ts`: `GridListingLayoutMetrics.virtualRows` → `readonly GridVirtualRow[]` (fix cloud build TS4104)
 - [x] Run `pnpm test` + `pnpm build:cloud`
 
-- [ ] `asyncVisualDelay.ts` + `useOperationPending.ts`: shared 300ms delayed visual flag; unit tests
-- [ ] `operationPendingGuard.ts` + `contextKeys`: `operation.pending` key; invoke guard for blocked async actions
-- [ ] `invoke.ts` + `useActionSystem` + `ActionConfirmDialog`: `runHandler` pending wrap; confirm stays open with delayed spinner
-- [ ] `ExplorerApp.tsx`: wire pending hook into contextKeys, action system, download/rename-replace paths
-- [ ] `useExplorerFileOps.ts`: wrap inline rename commit; expose `renameCommittingPath`
-- [ ] `InlineNameInput` + listings: disabled input + row spinner while committing
-- [ ] i18n (14 locales): `actions.confirm.working`; run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `asyncVisualDelay.ts` + `useOperationPending.ts`: shared 300ms delayed visual flag; unit tests
+- [x] `operationPendingGuard.ts` + `contextKeys`: `operation.pending` key; invoke guard for blocked async actions
+- [x] `invoke.ts` + `useActionSystem` + `ActionConfirmDialog`: confirm stays open with delayed spinner
+- [x] `ExplorerApp.tsx`: wire pending hook into contextKeys, action system, download/rename-replace paths
+- [x] `useExplorerFileOps.ts`: wrap inline rename commit; expose `renameCommittingPath`
+- [x] `InlineNameInput` + listings: disabled input + row spinner while committing
+- [x] i18n (14 locales): `actions.confirm.working`; run `pnpm test`; bump patch version in `Cargo.toml`

@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 import type { ActionDefinition } from "./types";
 import type { ArgSchema } from "./types";
 
@@ -14,7 +15,10 @@ type ConfirmDialogProps = {
   title: string;
   cancelLabel: string;
   confirmLabel: string;
+  workingLabel: string;
   message: string;
+  executing?: boolean;
+  showExecutingVisual?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -24,23 +28,42 @@ export function ActionConfirmDialog({
   title,
   cancelLabel,
   confirmLabel,
+  workingLabel,
   message,
+  executing = false,
+  showExecutingVisual = false,
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
   return (
-    <Dialog open={action != null} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog
+      open={action != null}
+      onOpenChange={(open) => {
+        if (!open && !executing) {
+          onCancel();
+        }
+      }}
+    >
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">{message}</p>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={executing}>
             {cancelLabel}
           </Button>
-          <Button type="button" variant="default" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={onConfirm}>
-            {confirmLabel}
+          <Button
+            type="button"
+            variant="default"
+            className="inline-flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+            disabled={executing}
+          >
+            {executing && showExecutingVisual ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            {executing ? workingLabel : confirmLabel}
           </Button>
         </div>
       </DialogContent>

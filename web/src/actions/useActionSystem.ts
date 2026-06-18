@@ -39,6 +39,7 @@ type ConfirmState = {
   messageKey?: string;
   messageParams?: Record<string, string>;
   resolve: (approved: boolean) => void;
+  executing?: boolean;
 };
 
 type ArgPromptState = {
@@ -160,8 +161,11 @@ export function useActionSystem(
   );
 
   const invoke = useCallback(
-    async (id: string, options: InvokeOptions = {}) =>
-      invokeAction(registry, contextKeys, id, options, hooks),
+    async (id: string, options: InvokeOptions = {}) => {
+      const result = await invokeAction(registry, contextKeys, id, options, hooks);
+      setConfirmState((current) => (current?.executing ? null : current));
+      return result;
+    },
     [registry, contextKeys, hooks],
   );
 
@@ -205,8 +209,14 @@ export function useActionSystem(
 
   const dismissConfirm = useCallback((approved: boolean) => {
     setConfirmState((current) => {
-      current?.resolve(approved);
-      return null;
+      if (!current) {
+        return null;
+      }
+      current.resolve(approved);
+      if (!approved) {
+        return null;
+      }
+      return { ...current, executing: true };
     });
   }, []);
 
@@ -228,6 +238,7 @@ export function useActionSystem(
       paletteOpen,
       setPaletteOpen,
       confirmState,
+      confirmExecuting: confirmState?.executing ?? false,
       dismissConfirm,
       confirmMessage: hooks.confirmMessage,
       argPromptState,

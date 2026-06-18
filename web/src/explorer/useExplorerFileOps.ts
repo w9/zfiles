@@ -40,6 +40,7 @@ export type ExplorerFileOpsDeps = {
   getPrimaryPath: () => string | null;
   loadListing: (path: string, options?: { preserveSelection?: boolean }) => Promise<boolean>;
   t: (key: MessageKey, params?: Record<string, string>) => string;
+  runWithPending: (actionId: string, fn: () => Promise<void>) => Promise<void>;
 };
 
 export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
@@ -57,6 +58,8 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
     path: string;
     newName: string;
   } | null>(null);
+  const [renameCommittingPath, setRenameCommittingPath] = useState<string | null>(null);
+  const [renameReplaceExecuting, setRenameReplaceExecuting] = useState(false);
 
   const pasteDestResolver = useRef<
     ((choice: PasteDestinationChoice | null, remember: boolean) => void) | null
@@ -232,22 +235,31 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
         setRenameReplace({ path, newName });
         return false;
       }
+      setRenameCommittingPath(path);
       try {
-        await deps.backend.runAction({
-          actionId: "file.rename",
-          paths: [path],
-          newName,
-          overwrite,
+        let succeeded = false;
+        await deps.runWithPending("file.rename", async () => {
+          try {
+            await deps.backend.runAction({
+              actionId: "file.rename",
+              paths: [path],
+              newName,
+              overwrite,
+            });
+          } catch (err) {
+            if (cloudAuth.handleAuthError(err)) {
+              return;
+            }
+            notifyError(deps.t("error.actionFailed", { status: "failed" }));
+            return;
+          }
+          await deps.loadListing(deps.currentPath, { preserveSelection: true });
+          succeeded = true;
         });
-      } catch (err) {
-        if (cloudAuth.handleAuthError(err)) {
-          return false;
-        }
-        notifyError(deps.t("error.actionFailed", { status: "failed" }));
-        return false;
+        return succeeded;
+      } finally {
+        setRenameCommittingPath(null);
       }
-      await deps.loadListing(deps.currentPath, { preserveSelection: true });
-      return true;
     },
     [cloudAuth, deps],
   );
@@ -308,16 +320,21 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
   );
 
   const confirmRenameReplace = useCallback(async () => {
-    if (!renameReplace) {
+    if (!renameReplace || renameReplaceExecuting) {
       return;
     }
     const { path, newName } = renameReplace;
-    setRenameReplace(null);
-    const ok = await commitRename(path, newName, true);
-    if (ok) {
-      setInlineEditPath(null);
+    setRenameReplaceExecuting(true);
+    try {
+      const ok = await commitRename(path, newName, true);
+      if (ok) {
+        setInlineEditPath(null);
+      }
+    } finally {
+      setRenameReplaceExecuting(false);
+      setRenameReplace(null);
     }
-  }, [renameReplace, commitRename]);
+  }, [renameReplace, renameReplaceExecuting, commitRename]);
 
   return {
     clipboard,
@@ -340,6 +357,8 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
     onPasteConflictResolve,
     renameReplace,
     setRenameReplace,
+    renameReplaceExecuting,
+    renameCommittingPath,
     confirmRenameReplace,
   };
 }

@@ -400,6 +400,7 @@ export const zhCN: Record<MessageKey, string> = {
   "actions.confirm.title": "确认操作",
   "actions.confirm.cancel": "取消",
   "actions.confirm.confirm": "确认",
+  "actions.confirm.working": "处理中…",
   "actions.confirm.defaultMessage": "运行 {{name}}？",
   "actions.test.name": "测试操作",
   "actions.test.category": "测试",

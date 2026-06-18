@@ -400,6 +400,7 @@ export const zhTW: Record<MessageKey, string> = {
   "actions.confirm.title": "確認動作",
   "actions.confirm.cancel": "取消",
   "actions.confirm.confirm": "確認",
+  "actions.confirm.working": "處理中…",
   "actions.confirm.defaultMessage": "執行 {{name}}？",
   "actions.test.name": "測試動作",
   "actions.test.category": "測試",

@@ -420,6 +420,7 @@ export const ja: Record<MessageKey, string> = {
   "actions.confirm.title": "操作の確認",
   "actions.confirm.cancel": "キャンセル",
   "actions.confirm.confirm": "確認",
+  "actions.confirm.working": "処理中…",
   "actions.confirm.defaultMessage": "{{name}} を実行しますか？",
   "actions.test.name": "テスト操作",
   "actions.test.category": "テスト",

@@ -420,6 +420,7 @@ export const en = {
   "actions.confirm.title": "Confirm action",
   "actions.confirm.cancel": "Cancel",
   "actions.confirm.confirm": "Confirm",
+  "actions.confirm.working": "Working…",
   "actions.confirm.defaultMessage": "Run {{name}}?",
   "actions.test.name": "Test Action",
   "actions.test.category": "Test",

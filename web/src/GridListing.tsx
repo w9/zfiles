@@ -40,6 +40,8 @@ type GridListingProps = {
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
+  renameCommittingPath?: string | null;
+  showRenameBusyVisual?: boolean;
   onInlineCommit?: (path: string, name: string) => void;
   onInlineCancel?: (path: string, initialName: string) => void;
   ariaLabel: string;
@@ -72,6 +74,8 @@ export default function GridListing({
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
+  renameCommittingPath,
+  showRenameBusyVisual = false,
   onInlineCommit,
   onInlineCancel,
   ariaLabel,
@@ -319,6 +323,8 @@ export default function GridListing({
                             <InlineNameInput
                               initialName={entry.name}
                               className="w-full text-left"
+                              busy={renameCommittingPath === entry.path}
+                              showBusyVisual={showRenameBusyVisual}
                               onCommit={(name) => onInlineCommit(entry.path, name)}
                               onCancel={() => onInlineCancel(entry.path, entry.name)}
                             />

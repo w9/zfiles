@@ -420,6 +420,7 @@ export const ko: Record<MessageKey, string> = {
   "actions.confirm.title": "작업 확인",
   "actions.confirm.cancel": "취소",
   "actions.confirm.confirm": "확인",
+  "actions.confirm.working": "처리 중…",
   "actions.confirm.defaultMessage": "{{name}}을(를) 실행하시겠습니까?",
   "actions.test.name": "테스트 작업",
   "actions.test.category": "테스트",

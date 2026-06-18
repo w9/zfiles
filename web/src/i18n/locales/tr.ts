@@ -421,6 +421,7 @@ export const tr: Record<MessageKey, string> = {
   "actions.confirm.title": "Eylemi onayla",
   "actions.confirm.cancel": "İptal",
   "actions.confirm.confirm": "Onayla",
+  "actions.confirm.working": "İşleniyor…",
   "actions.confirm.defaultMessage": "{{name}} çalıştırılsın mı?",
   "actions.test.name": "Test eylemi",
   "actions.test.category": "Test",

@@ -76,6 +76,7 @@ import {
   useUploadQueue,
 } from "../upload-queue";
 import { useGlobalFileDrop } from "../useGlobalFileDrop";
+import { useOperationPending } from "../useOperationPending";
 import { useAppRoute } from "../routing/AppRouteProvider";
 import { useModifiedTimeFormat } from "../settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "../settings/ListingSortOrderProvider";
@@ -599,6 +600,9 @@ export default function ExplorerApp() {
 
   const getPrimaryPath = useCallback(() => selectedPathRef.current, []);
 
+  const { isPending: operationPending, showPendingVisual, runWithPending } =
+    useOperationPending();
+
   const fileOps = useExplorerFileOps({
     backend,
     readOnly,
@@ -608,6 +612,7 @@ export default function ExplorerApp() {
     getPrimaryPath,
     loadListing,
     t,
+    runWithPending,
   });
 
   const runBulkAction = useCallback(
@@ -774,6 +779,7 @@ export default function ExplorerApp() {
       "listing.view": listingViewMode,
       "slideshow.open": slideshowOpen,
       "preview.info-open": infoDialogOpen,
+      "operation.pending": operationPending,
     }),
     [
       selectedPaths,
@@ -790,6 +796,7 @@ export default function ExplorerApp() {
       listingViewMode,
       slideshowOpen,
       infoDialogOpen,
+      operationPending,
     ],
   );
 
@@ -1287,6 +1294,7 @@ export default function ExplorerApp() {
       pasteFromClipboard: fileOps.pasteFromClipboard,
       createNewFolder: fileOps.createNewFolder,
       startRename: fileOps.startRename,
+      runWithPending,
       selectAllVisible,
       openSettings: () => navigate("settings"),
       toggleShowDotEntries,
@@ -1682,6 +1690,8 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
+                renameCommittingPath={fileOps.renameCommittingPath}
+                showRenameBusyVisual={showPendingVisual}
                 listingSortOrder={listingSortOrder}
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
@@ -1711,6 +1721,8 @@ export default function ExplorerApp() {
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
+                renameCommittingPath={fileOps.renameCommittingPath}
+                showRenameBusyVisual={showPendingVisual}
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={marqueeSelect.onViewportPointerDown}
@@ -1838,6 +1850,9 @@ export default function ExplorerApp() {
         title={t("actions.confirm.title")}
         cancelLabel={t("actions.confirm.cancel")}
         confirmLabel={t("actions.confirm.confirm")}
+        workingLabel={t("actions.confirm.working")}
+        executing={fileOps.renameReplaceExecuting || actionSystem.confirmExecuting}
+        showExecutingVisual={showPendingVisual}
         message={
           fileOps.renameReplace
             ? t("file.rename.replace.confirm", {
@@ -1857,6 +1872,9 @@ export default function ExplorerApp() {
                   : ""
         }
         onCancel={() => {
+          if (fileOps.renameReplaceExecuting || actionSystem.confirmExecuting) {
+            return;
+          }
           if (fileOps.renameReplace) {
             fileOps.setRenameReplace(null);
             return;
@@ -1864,6 +1882,9 @@ export default function ExplorerApp() {
           actionSystem.dismissConfirm(false);
         }}
         onConfirm={() => {
+          if (fileOps.renameReplaceExecuting || actionSystem.confirmExecuting) {
+            return;
+          }
           if (fileOps.renameReplace) {
             void fileOps.confirmRenameReplace();
             return;

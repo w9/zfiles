@@ -222,7 +222,9 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       contexts: ["file-list", "context-menu"],
       icon: "file.new-folder",
       handler: async () => {
-        await getDeps().createNewFolder();
+        await getDeps().runWithPending("file.new-folder", () =>
+          getDeps().createNewFolder(),
+        );
       },
     },
     {
@@ -274,7 +276,9 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       defaultKeybinding: "Mod+V",
       icon: "file.paste",
       handler: async () => {
-        await getDeps().pasteFromClipboard();
+        await getDeps().runWithPending("file.paste", () =>
+          getDeps().pasteFromClipboard(),
+        );
       },
     },
     {
@@ -294,7 +298,9 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
         if (paths.length === 0) {
           return;
         }
-        await deps.runBulkAction("file.delete", paths);
+        await deps.runWithPending("file.delete", () =>
+          deps.runBulkAction("file.delete", paths),
+        );
       },
     },
     {
@@ -335,7 +341,9 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
             return;
           }
         }
-        await deps.downloadPaths(paths);
+        await deps.runWithPending("selection.download", () =>
+          deps.downloadPaths(paths),
+        );
       },
     },
   ];

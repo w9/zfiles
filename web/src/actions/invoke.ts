@@ -1,5 +1,6 @@
 import type { ActionRegistry } from "./registry";
 import { evaluateWhen } from "./when";
+import { isActionBlockedByOperationPending } from "../operationPendingGuard";
 import { resolveActionArgs } from "./args";
 import type { ContextKeys } from "./contextKeys";
 import type { ActionDefinition } from "./types";
@@ -43,6 +44,10 @@ export async function invokeAction(
   }
   if (!evaluateWhen(action.when, context)) {
     return { ok: false, reason: "when-failed" };
+  }
+
+  if (isActionBlockedByOperationPending(context["operation.pending"], id)) {
+    return { ok: false, reason: "cancelled" };
   }
 
   const confirmDisabled =

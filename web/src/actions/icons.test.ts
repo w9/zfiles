@@ -37,6 +37,7 @@ function allRegisteredActionIds(): string[] {
       pasteFromClipboard: noop,
       createNewFolder: noop,
       startRename: noop,
+      runWithPending: async (_actionId, fn) => fn(),
       selectAllVisible: noop,
       openSettings: () => {},
       toggleShowDotEntries: () => {},

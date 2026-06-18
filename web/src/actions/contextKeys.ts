@@ -16,6 +16,7 @@ export type ContextKeys = {
   "listing.view": string;
   "slideshow.open": boolean;
   "preview.info-open": boolean;
+  "operation.pending": boolean;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -37,6 +38,7 @@ export function defaultContextKeys(): ContextKeys {
     "clipboard.count": 0,
     "slideshow.open": false,
     "preview.info-open": false,
+    "operation.pending": false,
   };
 }
 

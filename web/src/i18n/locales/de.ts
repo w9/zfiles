@@ -423,6 +423,7 @@ export const de: Record<MessageKey, string> = {
   "actions.confirm.title": "Aktion bestätigen",
   "actions.confirm.cancel": "Abbrechen",
   "actions.confirm.confirm": "Bestätigen",
+  "actions.confirm.working": "Wird ausgeführt…",
   "actions.confirm.defaultMessage": "{{name}} ausführen?",
   "actions.test.name": "Testaktion",
   "actions.test.category": "Test",

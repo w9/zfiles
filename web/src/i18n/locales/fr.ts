@@ -425,6 +425,7 @@ export const fr: Record<MessageKey, string> = {
   "actions.confirm.title": "Confirmer l'action",
   "actions.confirm.cancel": "Annuler",
   "actions.confirm.confirm": "Confirmer",
+  "actions.confirm.working": "En cours…",
   "actions.confirm.defaultMessage": "Exécuter {{name}} ?",
   "actions.test.name": "Action de test",
   "actions.test.category": "Test",
