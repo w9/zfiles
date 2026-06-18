@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Explorer header top-right icon buttons use ghost variant (utility toggles, settings, action toolbar, cloud share/disconnect); settings page and connect dialog keep outline. Upload tray keeps bg-accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Floating panel focus stacking: shared `FloatingPanel` stack manager — pointer-down or open brings panel to front; Escape closes topmost only; in-memory order. Then: explorer header ghost buttons, upload tray accent when open. Deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -393,3 +393,7 @@ Explorer header top-right icon buttons use ghost variant (utility toggles, setti
 - [x] Explorer-only icon buttons → ghost: `UploadIndicator`, `ShowDotEntriesToggle`, `ListingViewToggle`, `ActionToolbar`, `DisconnectButton`
 - [x] Shared toggles: optional `variant` prop on `ThemeToggle`, `LanguageToggle`, `ShareUrlButton` (default outline); pass `variant="ghost"` from `ExplorerApp` (+ inline settings button)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `floatingPanelStack.ts` + tests: in-memory stack (register/unregister, bring-to-front, z-index, is-topmost)
+- [ ] `FloatingPanel.tsx`: subscribe to stack — dynamic z-index; pointer-down + open bring to front; Escape closes only when topmost
+- [ ] Register stack tests in `pnpm test`; run `pnpm test`; bump patch version in `Cargo.toml`
