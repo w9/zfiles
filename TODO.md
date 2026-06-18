@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Preview for **all non-directory files**: broaden path collection and `viewer.preview-count` to every file (not only native preview kinds); unsupported types open the overlay with `preview.noPreview` and a **View as text** button (manual fetch into the existing size-capped `<pre>` flow). Double-click/Enter open Preview for files too (drop download-on-activate). Playlist includes all files in selection or listing. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Preview for **all non-directory files** is shipped: unsupported types show `preview.noPreview` with optional **View as text**; playlists and Space/activate include every file. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -100,10 +100,10 @@ Preview for **all non-directory files**: broaden path collection and `viewer.pre
 - [x] Update `fileActivation.test.ts` + `slideshowPathOrder.test.ts` for pdf/text/markdown/svg paths
 - [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
 
-- [ ] `slideshowPathOrder.ts` + test: `resolveViewerPreviewPaths` includes all non-directory files (drop `isPreviewable` filter); update tests for `.zip` and mixed sets
-- [ ] `fileActivation.ts` + test: files always activate to Preview; update `ExplorerApp.tsx` `onActivate` — open overlay with listing/selection playlist (same path helper), drop local download fallback
-- [ ] `SlideshowOverlay.tsx`: unsupported kind (`previewKind === null`) shows centered `preview.noPreview` + **View as text** button; button triggers existing text fetch/`pre` UI (reset on slide change); reuse truncation/error strings
-- [ ] i18n (14 locales): add `preview.viewAsText` button label; wire `preview.noPreview` in overlay
-- [ ] `ExplorerApp.tsx` + context keys: `viewer.preview-count` counts all non-dir files via updated path helper (Space/context menu available for any file selection)
-- [ ] Update `fileActivation.test.ts`, `slideshowPathOrder.test.ts`, `keybindings.test.ts` if needed
-- [ ] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
+- [x] `slideshowPathOrder.ts` + test: `resolveViewerPreviewPaths` includes all non-directory files (drop `isPreviewable` filter); update tests for `.zip` and mixed sets
+- [x] `fileActivation.ts` + test: files always activate to Preview; update `ExplorerApp.tsx` `onActivate` — open overlay with listing/selection playlist (same path helper), drop local download fallback
+- [x] `SlideshowOverlay.tsx`: unsupported kind (`previewKind === null`) shows centered `preview.noPreview` + **View as text** button; button triggers existing text fetch/`pre` UI (reset on slide change); reuse truncation/error strings
+- [x] i18n (14 locales): add `preview.viewAsText` button label; wire `preview.noPreview` in overlay
+- [x] `ExplorerApp.tsx` + context keys: `viewer.preview-count` counts all non-dir files via updated path helper (Space/context menu available for any file selection)
+- [x] Update `fileActivation.test.ts`, `slideshowPathOrder.test.ts`, `keybindings.test.ts` if needed
+- [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
