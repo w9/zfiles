@@ -146,5 +146,5 @@ Copy Path action icon: swap placeholder `ListFilter` for Lucide `CopySlash` (cop
 - [x] `UploadPanel.tsx` + `UploadIndicator.tsx` + `ExplorerApp.tsx`: per-row dismiss X on Done queue rows; wire `onClearDone`
 - [x] i18n (14 locales): `upload.clearDone` aria label; unit test for `removeDoneUploadItem`; run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `icons.ts`: map `selection.copy-paths` to `CopySlash` (replace `ListFilter`)
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `icons.ts`: map `selection.copy-paths` to `CopySlash` (replace `ListFilter`)
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
