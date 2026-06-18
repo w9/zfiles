@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Grid view: when sort is folders-first and both types are visible, split folders and files into separate virtualized sections with small scrollable headers; keep flat grid otherwise. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Polish grid section headers (bold labels). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
