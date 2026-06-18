@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Parse quick-filter **regex mode** like JS `/pattern/flags`: first unescaped closing `/` ends the pattern; optional `i` flag for case-insensitivity; escaped trailing slashes stay in the pattern (`/i/` → pattern `i`). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Center the PDF preview panel in the overlay (match text/other media layout). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -116,3 +116,6 @@ Parse quick-filter **regex mode** like JS `/pattern/flags`: first unescaped clos
 - [x] `quickFilter.ts`: parse regex mode like JS `/pattern/flags` — first unescaped closing `/` delimits pattern; `i` flag for case-insensitivity; no closing `/` keeps open-ended pattern
 - [x] `quickFilter.test.ts`: closing `/`, `/i/`, `//`, escaped trailing slash, `/foo/i/` flag edge cases
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `SlideshowOverlay.tsx`: center PDF iframe (shared stage flex centering + max-width wrapper like text preview)
+- [ ] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
