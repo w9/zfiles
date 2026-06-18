@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Polish grid section headers (bold, dimmer labels). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Fix `pnpm build:cloud` TS4104 (`GridListingLayoutMetrics.virtualRows` readonly mismatch). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -130,3 +130,6 @@ Polish grid section headers (bold, dimmer labels). Still deferred: CLI banner re
 - [x] `GridListing.tsx`: use bold styling for folder/file section headers; bump patch version in `Cargo.toml`
 
 - [x] `GridListing.tsx`: dim grid section header labels; bump patch version in `Cargo.toml`
+
+- [x] `gridListingLayout.ts`: `GridListingLayoutMetrics.virtualRows` → `readonly GridVirtualRow[]` (fix cloud build TS4104)
+- [x] Run `pnpm test` + `pnpm build:cloud`

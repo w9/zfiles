@@ -14,7 +14,7 @@ export type GridListingLayoutMetrics = {
   cardHeight: number;
   gap: number;
   padding: number;
-  virtualRows: GridVirtualRow[];
+  virtualRows: readonly GridVirtualRow[];
 };
 
 export function resolveGridSectionFolderCount(
