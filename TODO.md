@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Fix `pnpm build:cloud` TS4104 (`GridListingLayoutMetrics.virtualRows` readonly mismatch). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Add high-priority loading states for slow file operations: global pending guard (disable async actions), confirm dialogs stay open with delayed spinner (300ms), inline rename input disabled + row spinner. Reuse `ASYNC_VISUAL_DELAY_MS` (300) as the shared threshold; no listing overlay for mutations. Follow-up cycle: medium-priority (nav buttons, cloud session validation, overlay delay alignment).
 
 ## TODO List
 
@@ -133,3 +133,11 @@ Fix `pnpm build:cloud` TS4104 (`GridListingLayoutMetrics.virtualRows` readonly m
 
 - [x] `gridListingLayout.ts`: `GridListingLayoutMetrics.virtualRows` → `readonly GridVirtualRow[]` (fix cloud build TS4104)
 - [x] Run `pnpm test` + `pnpm build:cloud`
+
+- [ ] `asyncVisualDelay.ts` + `useOperationPending.ts`: shared 300ms delayed visual flag; unit tests
+- [ ] `operationPendingGuard.ts` + `contextKeys`: `operation.pending` key; invoke guard for blocked async actions
+- [ ] `invoke.ts` + `useActionSystem` + `ActionConfirmDialog`: `runHandler` pending wrap; confirm stays open with delayed spinner
+- [ ] `ExplorerApp.tsx`: wire pending hook into contextKeys, action system, download/rename-replace paths
+- [ ] `useExplorerFileOps.ts`: wrap inline rename commit; expose `renameCommittingPath`
+- [ ] `InlineNameInput` + listings: disabled input + row spinner while committing
+- [ ] i18n (14 locales): `actions.confirm.working`; run `pnpm test`; bump patch version in `Cargo.toml`
