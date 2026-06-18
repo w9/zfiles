@@ -3,15 +3,25 @@ export type QuickFilterKeyEvent = Pick<
   "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
 >;
 
-export function isPlainQuickFilterLetterKey(event: QuickFilterKeyEvent): boolean {
-  return (
-    event.key.length === 1 &&
-    /^[a-z]$/i.test(event.key) &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.shiftKey
-  );
+export function isQuickFilterTypeaheadKey(event: QuickFilterKeyEvent): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return false;
+  }
+  if (event.key.length !== 1) {
+    return false;
+  }
+  if (event.key === " " || event.key === "\\") {
+    return false;
+  }
+  const codePoint = event.key.codePointAt(0);
+  if (codePoint === undefined) {
+    return false;
+  }
+  // Printable characters only — mirrors server filename rules (no `\`) plus `/` for regex mode.
+  if (codePoint <= 0x1f || codePoint === 0x7f) {
+    return false;
+  }
+  return true;
 }
 
 export type QuickFilterNavigableEntry = {

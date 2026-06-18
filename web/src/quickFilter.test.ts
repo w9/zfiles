@@ -5,7 +5,7 @@ import {
   entryMatchesQuickFilter,
   filterEntriesByQuickFilter,
   firstQuickFilterMatchIndex,
-  isPlainQuickFilterLetterKey,
+  isQuickFilterTypeaheadKey,
   isValidQuickFilterRegex,
   nextQuickFilterMatchIndex,
   normalizeQuickFilterQuery,
@@ -99,19 +99,31 @@ test("isValidQuickFilterRegex reports compile success", () => {
   assert.equal(isValidQuickFilterRegex(""), true); // empty pattern is valid regex (matches empty)
 });
 
-test("isPlainQuickFilterLetterKey accepts only unmodified letters", () => {
+test("isQuickFilterTypeaheadKey accepts printable filename chars and slash", () => {
+  const base = {
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  };
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "a" }), true);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "1" }), true);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "-" }), true);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "." }), true);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "/" }), true);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "@" }), true);
   assert.equal(
-    isPlainQuickFilterLetterKey({
-      key: "a",
-      ctrlKey: false,
-      metaKey: false,
-      altKey: false,
-      shiftKey: false,
-    }),
+    isQuickFilterTypeaheadKey({ ...base, shiftKey: true, key: "@" }),
     true,
   );
   assert.equal(
-    isPlainQuickFilterLetterKey({
+    isQuickFilterTypeaheadKey({ ...base, shiftKey: true, key: "A" }),
+    true,
+  );
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: " " }), false);
+  assert.equal(isQuickFilterTypeaheadKey({ ...base, key: "\\" }), false);
+  assert.equal(
+    isQuickFilterTypeaheadKey({
       key: "ArrowDown",
       ctrlKey: false,
       metaKey: false,
@@ -121,22 +133,12 @@ test("isPlainQuickFilterLetterKey accepts only unmodified letters", () => {
     false,
   );
   assert.equal(
-    isPlainQuickFilterLetterKey({
+    isQuickFilterTypeaheadKey({
       key: "j",
       ctrlKey: true,
       metaKey: false,
       altKey: false,
       shiftKey: false,
-    }),
-    false,
-  );
-  assert.equal(
-    isPlainQuickFilterLetterKey({
-      key: "K",
-      ctrlKey: false,
-      metaKey: false,
-      altKey: false,
-      shiftKey: true,
     }),
     false,
   );

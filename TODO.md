@@ -108,7 +108,7 @@ Extend **type-to-filter** in the file listing: any printable filename character 
 - [x] Update `fileActivation.test.ts`, `slideshowPathOrder.test.ts`, `keybindings.test.ts` if needed
 - [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
 
-- [ ] `quickFilter.ts`: replace `isPlainQuickFilterLetterKey` with `isQuickFilterTypeaheadKey` — printable chars except `\` and Space, plus `/`; Shift allowed; no Ctrl/Meta/Alt
-- [ ] `ExplorerApp.tsx`: wire type-to-filter handler to new helper
-- [ ] `quickFilter.test.ts`: cover digits, symbols, `/`, Shift symbols, rejects Space/`\`/modifiers/control keys
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `quickFilter.ts`: replace `isPlainQuickFilterLetterKey` with `isQuickFilterTypeaheadKey` — printable chars except `\` and Space, plus `/`; Shift allowed; no Ctrl/Meta/Alt
+- [x] `ExplorerApp.tsx`: wire type-to-filter handler to new helper
+- [x] `quickFilter.test.ts`: cover digits, symbols, `/`, Shift symbols, rejects Space/`\`/modifiers/control keys
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

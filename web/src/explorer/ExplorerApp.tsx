@@ -98,7 +98,7 @@ import {
   entryMatchesQuickFilter,
   filterEntriesByQuickFilter,
   firstQuickFilterMatchIndex,
-  isPlainQuickFilterLetterKey,
+  isQuickFilterTypeaheadKey,
   nextQuickFilterMatchIndex,
   normalizeQuickFilterQuery,
 } from "../quickFilter";
@@ -917,7 +917,7 @@ export default function ExplorerApp() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         slideshowOpen ||
-        !isPlainQuickFilterLetterKey(event) ||
+        !isQuickFilterTypeaheadKey(event) ||
         isNativeTypingTarget(event.target)
       ) {
         return;
