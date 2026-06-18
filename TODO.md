@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Extend Preview with the remaining browser-native types: **PDF** (`<iframe>`), **text & source** (incl. HTML as escaped source in `<pre>`, size-capped fetch), **SVG** (via existing `<img>` path), and **Markdown** (sanitized HTML via `marked` + `dompurify`). Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
+Preview for **all non-directory files**: broaden path collection and `viewer.preview-count` to every file (not only native preview kinds); unsupported types open the overlay with `preview.noPreview` and a **View as text** button (manual fetch into the existing size-capped `<pre>` flow). Double-click/Enter open Preview for files too (drop download-on-activate). Playlist includes all files in selection or listing. Still deferred: CLI banner redesign, cloud auth expired-token debug cycle.
 
 ## TODO List
 
@@ -99,3 +99,11 @@ Extend Preview with the remaining browser-native types: **PDF** (`<iframe>`), **
 - [x] i18n (14 locales): add `preview.textTruncated`, `preview.textLoadError`, `preview.textTooLarge` (or equivalent) for text/markdown fetch states
 - [x] Update `fileActivation.test.ts` + `slideshowPathOrder.test.ts` for pdf/text/markdown/svg paths
 - [x] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
+
+- [ ] `slideshowPathOrder.ts` + test: `resolveViewerPreviewPaths` includes all non-directory files (drop `isPreviewable` filter); update tests for `.zip` and mixed sets
+- [ ] `fileActivation.ts` + test: files always activate to Preview; update `ExplorerApp.tsx` `onActivate` — open overlay with listing/selection playlist (same path helper), drop local download fallback
+- [ ] `SlideshowOverlay.tsx`: unsupported kind (`previewKind === null`) shows centered `preview.noPreview` + **View as text** button; button triggers existing text fetch/`pre` UI (reset on slide change); reuse truncation/error strings
+- [ ] i18n (14 locales): add `preview.viewAsText` button label; wire `preview.noPreview` in overlay
+- [ ] `ExplorerApp.tsx` + context keys: `viewer.preview-count` counts all non-dir files via updated path helper (Space/context menu available for any file selection)
+- [ ] Update `fileActivation.test.ts`, `slideshowPathOrder.test.ts`, `keybindings.test.ts` if needed
+- [ ] Run `pnpm test` + `pnpm build`; bump patch version in `Cargo.toml`
