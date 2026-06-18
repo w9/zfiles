@@ -13,7 +13,6 @@ export type ListingEntry = {
   onSelect: (event: React.MouseEvent, displayIndex: number) => void;
   onActivate: () => void;
   onContextMenu?: (event: React.MouseEvent) => void;
-  href?: string;
 };
 
 export type ListingColumnLabels = {

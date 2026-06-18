@@ -360,10 +360,10 @@ export const es: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Para Amazon S3, opcionalmente calcula hashes antes y después de la subida y pide a S3 que valide sumas de comprobación SHA-256. Cloudflare R2 nunca usa validación por suma de comprobación (R2 no admite los encabezados flexibles de suma de comprobación de S3).",
   "settings.uploadChecksum.label": "Validar subidas con sumas de comprobación (solo Amazon S3)",
-  "viewer.category": "Visor de imágenes",
+  "viewer.category": "Vista previa",
   "viewer.nextImage.name": "Imagen siguiente",
   "viewer.prevImage.name": "Imagen anterior",
-  "viewer.slideshow.name": "Presentación",
+  "viewer.preview.name": "Vista previa",
   "actions.help.category": "Ayuda",
   "actions.help.openAbout.name": "Acerca de zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Atajos de teclado…",

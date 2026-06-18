@@ -359,10 +359,10 @@ export const vi: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Với Amazon S3, tùy chọn băm tệp trước và sau khi tải lên và yêu cầu S3 xác thực checksum SHA-256. Cloudflare R2 không bao giờ dùng xác thực checksum (R2 không hỗ trợ header checksum linh hoạt của S3).",
   "settings.uploadChecksum.label": "Xác thực tải lên bằng checksum (chỉ Amazon S3)",
-  "viewer.category": "Trình xem ảnh",
+  "viewer.category": "Xem trước",
   "viewer.nextImage.name": "Ảnh tiếp theo",
   "viewer.prevImage.name": "Ảnh trước",
-  "viewer.slideshow.name": "Trình chiếu",
+  "viewer.preview.name": "Xem trước",
   "actions.help.category": "Trợ giúp",
   "actions.help.openAbout.name": "Giới thiệu zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Phím tắt…",

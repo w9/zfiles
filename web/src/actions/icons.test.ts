@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { createBuiltinActions } from "./builtins";
 import { createHelpActions } from "./helpActions";
-import { createImageViewerActions } from "./imageViewerActions";
+import { createPreviewViewerActions } from "./previewViewerActions";
 import { createPreviewActions } from "./previewActions";
 import { actionIcon } from "./icons";
 
@@ -46,10 +46,10 @@ function allRegisteredActionIds(): string[] {
       openAbout: () => {},
       openKeyboardShortcuts: () => {},
     })),
-    ...createImageViewerActions(() => ({
-      getImagePaths: () => [],
+    ...createPreviewViewerActions(() => ({
+      getPreviewPaths: () => [],
       getCurrentPreviewPath: () => null,
-      openSlideshow: () => {},
+      openPreview: () => {},
     })),
     ...createPreviewActions(() => ({
       toggleInfoDialog: () => {},

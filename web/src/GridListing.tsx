@@ -274,13 +274,7 @@ export default function GridListing({
                           }
                         }}
                         onClick={(event) => entry.onSelect(event, index)}
-                        onDoubleClick={() => {
-                          if (entry.href) {
-                            window.location.href = entry.href;
-                            return;
-                          }
-                          entry.onActivate();
-                        }}
+                        onDoubleClick={() => entry.onActivate()}
                         onContextMenu={entry.onContextMenu}
                       >
                         <GridCardPreview

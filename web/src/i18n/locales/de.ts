@@ -361,10 +361,10 @@ export const de: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Für Amazon S3 können Dateien vor und nach dem Upload gehasht und S3 zur SHA-256-Prüfsummenvalidierung aufgefordert werden. Cloudflare R2 verwendet niemals Prüfsummenvalidierung (R2 unterstützt keine flexiblen S3-Prüfsummen-Header).",
   "settings.uploadChecksum.label": "Uploads mit Prüfsummen validieren (nur Amazon S3)",
-  "viewer.category": "Bildbetrachter",
+  "viewer.category": "Vorschau",
   "viewer.nextImage.name": "Nächstes Bild",
   "viewer.prevImage.name": "Vorheriges Bild",
-  "viewer.slideshow.name": "Diashow",
+  "viewer.preview.name": "Vorschau",
   "actions.help.category": "Hilfe",
   "actions.help.openAbout.name": "Über zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Tastenkürzel…",

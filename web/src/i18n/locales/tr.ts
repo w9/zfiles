@@ -359,10 +359,10 @@ export const tr: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Amazon S3 için dosyaları yüklemeden önce ve sonra isteğe bağlı olarak hashleyip S3'ten SHA-256 sağlama toplamı doğrulaması isteyebilirsiniz. Cloudflare R2 asla sağlama toplamı doğrulaması kullanmaz (R2, S3 esnek sağlama toplamı başlıklarını desteklemez).",
   "settings.uploadChecksum.label": "Yüklemeleri sağlama toplamlarıyla doğrula (yalnızca Amazon S3)",
-  "viewer.category": "Görüntü görüntüleyici",
+  "viewer.category": "Önizleme",
   "viewer.nextImage.name": "Sonraki görüntü",
   "viewer.prevImage.name": "Önceki görüntü",
-  "viewer.slideshow.name": "Slayt gösterisi",
+  "viewer.preview.name": "Önizleme",
   "actions.help.category": "Yardım",
   "actions.help.openAbout.name": "zfiles hakkında…",
   "actions.help.openKeyboardShortcuts.name": "Klavye kısayolları…",

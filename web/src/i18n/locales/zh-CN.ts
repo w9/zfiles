@@ -341,10 +341,10 @@ export const zhCN: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "对于 Amazon S3，可选择在前后对文件进行哈希并让 S3 验证 SHA-256 校验和。Cloudflare R2 从不使用校验和验证（R2 不支持 S3 灵活校验和标头）。",
   "settings.uploadChecksum.label": "使用校验和验证上传（仅 Amazon S3）",
-  "viewer.category": "图片查看",
+  "viewer.category": "预览",
   "viewer.nextImage.name": "下一张",
   "viewer.prevImage.name": "上一张",
-  "viewer.slideshow.name": "幻灯片",
+  "viewer.preview.name": "预览",
   "actions.help.category": "帮助",
   "actions.help.openAbout.name": "关于 zfiles…",
   "actions.help.openKeyboardShortcuts.name": "键盘快捷键…",

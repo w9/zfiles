@@ -23,7 +23,7 @@ The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scroll
 
 ### What we removed
 
-Plugins and filename search are **out of scope** for the project going forward — not deferred, removed. There is no plugin supervisor, no JSON-RPC subprocess protocol, no `/api/search`, and no bundled thumbnail/search/viewer plugins. Preview is client-side for common image types; everything else shows metadata and a download link.
+Plugins and filename search are **out of scope** for the project going forward — not deferred, removed. There is no plugin supervisor, no JSON-RPC subprocess protocol, no `/api/search`, and no bundled thumbnail/search/viewer plugins. Preview is client-side and browser-native: images, video, and audio render in a fullscreen overlay fed by the file download URL (no kernel transcoding). Other types show metadata and a download link; PDF, text/source (incl. HTML as source), SVG, and sanitized Markdown preview are planned along the same browser-native path.
 
 Implementation phases and migration checklist: [dual_mode_refactor.md](dual_mode_refactor.md).
 
@@ -214,7 +214,7 @@ Removed: `/api/search`, `/api/plugins*`, `/api/thumbnail`, `/api/preview`, `/plu
 The React UI is compiled by Vite. **Local:** output embedded in the binary; dev mode may proxy to Vite HMR via the `dev-frontend` feature. **Cloud:** static build deployed to CDN or object storage.
 
 - **Backend injection.** `useExplorerBackend()` (or equivalent context) is the only path from components to storage.
-- **Preview.** Client-side decode for common images (JPEG, PNG, WebP, GIF). Other types: metadata panel + download link. No dynamic plugin viewer imports.
+- **Preview.** Browser-native rendering in a fullscreen overlay: images (`<img>`: JPEG, PNG, WebP, GIF, AVIF, …), video (`<video>`: mp4, webm, mov, …), and audio (`<audio>`: mp3, flac, m4a, …), all fed by `downloadUrl` — no kernel transcoding. Double-click or Enter on a previewable file opens the overlay; non-previewable files fall back to download. Slideshow auto-advance and zoom/pan apply to images only. Other types show a metadata panel + download link. Planned along the same path: PDF (`<iframe>`/`<embed>`), text/source (incl. HTML as source) in a size-capped `<pre>`, SVG, and sanitized Markdown. No dynamic plugin viewer imports.
 - **Actions.** Built-in actions only; see [action_system.md](action_system.md). No plugin action registration or `plugin.*` context keys.
 - **i18n.** All user-visible strings ship in 14 locales: English (`en`), Simplified Chinese (`zh-CN`), Traditional Chinese (`zh-TW`), Spanish (`es`), French (`fr`), Italian (`it`), Portuguese (`pt`), Russian (`ru`), German (`de`), Japanese (`ja`), Korean (`ko`), Turkish (`tr`), Indonesian (`id`), and Vietnamese (`vi`). `resolveLocale` normalizes BCP-47 tags (region/script subtags, casing) to a supported locale and falls back to English; each catalog implements the full `MessageKey` set, with English as the runtime fallback for any missing key.
 
@@ -411,8 +411,8 @@ Detailed acceptance checklist and success metrics for the refactor: [dual_mode_r
 | Default port (local) | Ephemeral with browser auto-open |
 | Auth default policy | Refuse any non-loopback bind without `--token`; loopback (incl. `127.0.0.0/8`, `::1`) token-free |
 | Local listing pagination | Defer until needed; cloud pagination required at launch |
-| Text file preview | Omit in v1; metadata + download |
-| Slideshow | Keep for client-decodable images in selection/cwd, or cut if blocking |
+| Text file preview | Planned: browser fetch into a size-capped `<pre>` (incl. HTML rendered as source) |
+| Preview overlay | Browser-native images, video, audio; default double-click/Enter action; PDF/text/SVG/Markdown planned |
 | Cloud CI | MinIO container or `@aws-sdk/client-mock` |
 | npm publish of explorer library | Optional; monorepo path first |
 

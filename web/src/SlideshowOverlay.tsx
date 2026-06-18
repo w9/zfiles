@@ -15,6 +15,7 @@ import {
   Download,
   ExternalLink,
   Maximize2,
+  Music,
   Pause,
   Play,
   Scan,
@@ -67,6 +68,7 @@ import {
   type ZoomMode,
 } from "./slideshowZoom";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
+import { previewKind, type PreviewKind } from "./imagePaths";
 
 const CHROME_IDLE_MS = 2000;
 const TOOLTIP_DELAY_MS = 1000;
@@ -196,8 +198,21 @@ export default function SlideshowOverlay({
   });
 
   const currentPath = paths[index] ?? null;
-  const imageUrl = useDownloadUrl(backend, currentPath);
+  const previewUrl = useDownloadUrl(backend, currentPath);
   const fileName = currentPath?.split("/").pop() ?? currentPath ?? "";
+  const kind: PreviewKind = (currentPath && previewKind(currentPath)) || "image";
+  const isImageKind = kind === "image";
+
+  const syncNaturalSizeFromVideo = useCallback((video: HTMLVideoElement) => {
+    if (video.videoWidth <= 0 || video.videoHeight <= 0) {
+      return;
+    }
+    setNaturalSize((prev) =>
+      prev.width === video.videoWidth && prev.height === video.videoHeight
+        ? prev
+        : { width: video.videoWidth, height: video.videoHeight },
+    );
+  }, []);
 
   const syncNaturalSizeFromImage = useCallback((img: HTMLImageElement) => {
     if (img.naturalWidth <= 0 || img.naturalHeight <= 0) {
@@ -304,12 +319,12 @@ export default function SlideshowOverlay({
   }, [paths.length, resetSlideView]);
 
   useEffect(() => {
-    if (!open || !playing || paths.length <= 1) {
+    if (!open || !playing || paths.length <= 1 || !isImageKind) {
       return;
     }
     const handle = window.setInterval(goNext, intervalSeconds * 1000);
     return () => window.clearInterval(handle);
-  }, [open, playing, paths.length, goNext, intervalSeconds]);
+  }, [open, playing, paths.length, goNext, intervalSeconds, isImageKind]);
 
   useEffect(() => {
     if (!open) {
@@ -340,7 +355,7 @@ export default function SlideshowOverlay({
   const imageSized = naturalSize.width > 0 && naturalSize.height > 0;
 
   useLayoutEffect(() => {
-    if (!open || !imageUrl) {
+    if (!open || !previewUrl || !isImageKind) {
       return;
     }
     const img = imageRef.current;
@@ -348,7 +363,7 @@ export default function SlideshowOverlay({
       return;
     }
     syncNaturalSizeFromImage(img);
-  }, [open, imageUrl, currentPath, syncNaturalSizeFromImage]);
+  }, [open, previewUrl, currentPath, isImageKind, syncNaturalSizeFromImage]);
 
   const zoomPercent = formatZoomPercentage(imageScale);
   const imageOverflows = imageOverflowsViewport(
@@ -574,18 +589,20 @@ export default function SlideshowOverlay({
 
       <div
         ref={viewportRef}
-        className="absolute inset-0 touch-none overflow-hidden"
-        onWheel={handleWheel}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
+        className={cn("absolute inset-0 overflow-hidden", isImageKind && "touch-none")}
+        onWheel={isImageKind ? handleWheel : undefined}
+        onTouchStart={isImageKind ? handleTouchStart : undefined}
+        onTouchMove={isImageKind ? handleTouchMove : undefined}
+        onTouchEnd={isImageKind ? handleTouchEnd : undefined}
+        onTouchCancel={isImageKind ? handleTouchEnd : undefined}
       >
         <div
           className="flex h-full w-full items-center justify-center p-6"
           onClick={handleLetterboxClick}
         >
-          {imageUrl ? (
+          {!previewUrl ? (
+            <p className="text-sm text-white/80">{t("preview.loading")}</p>
+          ) : isImageKind ? (
             <div
               className={cn("touch-none select-none", stageCursorClass)}
               style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}
@@ -598,7 +615,7 @@ export default function SlideshowOverlay({
               <img
                 key={currentPath}
                 ref={imageRef}
-                src={imageUrl}
+                src={previewUrl}
                 alt={fileName}
                 draggable={false}
                 className="max-w-none select-none"
@@ -614,8 +631,29 @@ export default function SlideshowOverlay({
                 }}
               />
             </div>
+          ) : kind === "video" ? (
+            <video
+              key={currentPath}
+              src={previewUrl}
+              controls
+              autoPlay={false}
+              className="max-h-full max-w-full"
+              aria-label={fileName}
+              onLoadedMetadata={(event) => {
+                syncNaturalSizeFromVideo(event.currentTarget);
+              }}
+            />
           ) : (
-            <p className="text-sm text-white/80">{t("preview.loading")}</p>
+            <div className="flex flex-col items-center gap-4">
+              <Music className="h-16 w-16 text-white/70" aria-hidden />
+              <audio
+                key={currentPath}
+                src={previewUrl}
+                controls
+                aria-label={fileName}
+                className="w-[min(80vw,28rem)]"
+              />
+            </div>
           )}
         </div>
       </div>
@@ -645,13 +683,15 @@ export default function SlideshowOverlay({
         </p>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <span
-            className="self-center px-0.5 text-xs tabular-nums text-white/90 drop-shadow-sm"
-            aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
-          >
-            {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
-          </span>
-          <div className="flex items-center gap-1 rounded-md bg-black/50 p-1 backdrop-blur-sm">
+          {isImageKind ? (
+            <>
+              <span
+                className="self-center px-0.5 text-xs tabular-nums text-white/90 drop-shadow-sm"
+                aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+              >
+                {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+              </span>
+              <div className="flex items-center gap-1 rounded-md bg-black/50 p-1 backdrop-blur-sm">
             <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
               <Button
                 type="button"
@@ -740,6 +780,8 @@ export default function SlideshowOverlay({
               <span aria-hidden>s</span>
             </Field>
           </div>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -754,7 +796,7 @@ export default function SlideshowOverlay({
         </p>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          {imageUrl ? (
+          {previewUrl ? (
             <>
               <Button
                 type="button"
@@ -763,7 +805,7 @@ export default function SlideshowOverlay({
                 className="bg-black/50 text-white hover:bg-black/70"
                 asChild
               >
-                <a href={imageUrl} download={fileName}>
+                <a href={previewUrl} download={fileName}>
                   <Download className="h-4 w-4" />
                   {t("slideshow.download")}
                 </a>
@@ -775,7 +817,7 @@ export default function SlideshowOverlay({
                 className="bg-black/50 text-white hover:bg-black/70"
                 onClick={() => {
                   bumpActivity();
-                  window.open(imageUrl, "_blank", "noopener,noreferrer");
+                  window.open(previewUrl, "_blank", "noopener,noreferrer");
                 }}
               >
                 <ExternalLink className="h-4 w-4" />

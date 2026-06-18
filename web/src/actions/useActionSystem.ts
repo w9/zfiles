@@ -4,7 +4,10 @@ import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
 import { createBuiltinActions } from "./builtins";
 import { createHelpActions, type HelpActionDeps } from "./helpActions";
-import { createImageViewerActions, type ImageViewerActionDeps } from "./imageViewerActions";
+import {
+  createPreviewViewerActions,
+  type PreviewViewerActionDeps,
+} from "./previewViewerActions";
 import { createPreviewActions, type PreviewActionDeps } from "./previewActions";
 import type { KeybindingDefinition } from "./types";
 import {
@@ -48,7 +51,7 @@ type ArgPromptState = {
 export function useActionSystem(
   contextKeys: ContextKeys,
   deps: Omit<BuiltinActionDeps, "openCommandPalette">,
-  imageViewerDeps?: () => ImageViewerActionDeps,
+  previewViewerDeps?: () => PreviewViewerActionDeps,
   previewActionDeps?: () => PreviewActionDeps,
   helpActionDeps?: () => HelpActionDeps,
 ) {
@@ -60,8 +63,8 @@ export function useActionSystem(
   const registryRef = useRef<ActionRegistry | null>(null);
   const depsRef = useRef(deps);
   depsRef.current = deps;
-  const imageViewerDepsRef = useRef(imageViewerDeps);
-  imageViewerDepsRef.current = imageViewerDeps;
+  const previewViewerDepsRef = useRef(previewViewerDeps);
+  previewViewerDepsRef.current = previewViewerDeps;
   const previewActionDepsRef = useRef(previewActionDeps);
   previewActionDepsRef.current = previewActionDeps;
   const helpActionDepsRef = useRef(helpActionDeps);
@@ -75,9 +78,9 @@ export function useActionSystem(
     }))) {
       registry.register(action);
     }
-    if (imageViewerDepsRef.current) {
-      for (const action of createImageViewerActions(
-        () => imageViewerDepsRef.current!(),
+    if (previewViewerDepsRef.current) {
+      for (const action of createPreviewViewerActions(
+        () => previewViewerDepsRef.current!(),
       )) {
         registry.register(action);
       }

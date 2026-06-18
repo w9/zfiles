@@ -358,10 +358,10 @@ export const ja: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Amazon S3 では、アップロード前後にファイルをハッシュし、S3 に SHA-256 チェックサムの検証を依頼できます。Cloudflare R2 ではチェックサム検証は行いません（R2 は S3 の柔軟なチェックサムヘッダーに非対応）。",
   "settings.uploadChecksum.label": "チェックサムでアップロードを検証する（Amazon S3 のみ）",
-  "viewer.category": "画像ビューアー",
+  "viewer.category": "プレビュー",
   "viewer.nextImage.name": "次の画像",
   "viewer.prevImage.name": "前の画像",
-  "viewer.slideshow.name": "スライドショー",
+  "viewer.preview.name": "プレビュー",
   "actions.help.category": "ヘルプ",
   "actions.help.openAbout.name": "zfiles について…",
   "actions.help.openKeyboardShortcuts.name": "キーボードショートカット…",

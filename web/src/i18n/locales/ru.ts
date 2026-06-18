@@ -360,10 +360,10 @@ export const ru: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Для Amazon S3 можно хешировать файлы до и после загрузки и просить S3 проверять контрольные суммы SHA-256. Cloudflare R2 никогда не использует проверку контрольных сумм (R2 не поддерживает гибкие заголовки контрольных сумм S3).",
   "settings.uploadChecksum.label": "Проверять загрузки контрольными суммами (только Amazon S3)",
-  "viewer.category": "Просмотр изображений",
+  "viewer.category": "Предпросмотр",
   "viewer.nextImage.name": "Следующее изображение",
   "viewer.prevImage.name": "Предыдущее изображение",
-  "viewer.slideshow.name": "Слайд-шоу",
+  "viewer.preview.name": "Предпросмотр",
   "actions.help.category": "Справка",
   "actions.help.openAbout.name": "О zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Сочетания клавиш…",

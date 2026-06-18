@@ -243,7 +243,7 @@ test("grid view toggle switches listing layout", async ({ page }) => {
   await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
 });
 
-test("slideshow opens for image preview", async ({ page }) => {
+test("preview overlay opens for images", async ({ page }) => {
   const imageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zfiles-e2e-slideshow-"));
   fs.writeFileSync(
     path.join(imageDir, "slide-a.png"),
@@ -285,13 +285,13 @@ test("slideshow opens for image preview", async ({ page }) => {
       .click({ modifiers: ["ControlOrMeta"] });
     await page.keyboard.press("Control+P");
     const palette = page.getByRole("dialog");
-    await palette.getByPlaceholder("Type a command…").fill("Slideshow");
-    await palette.getByText("Slideshow", { exact: true }).click();
-    const slideshow = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
-    await expect(slideshow).toBeVisible();
-    await expect(slideshow.getByRole("button", { name: "Play" })).toBeEnabled();
+    await palette.getByPlaceholder("Type a command…").fill("Preview");
+    await palette.getByRole("option", { name: "Preview" }).click();
+    const preview = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
+    await expect(preview).toBeVisible();
+    await expect(preview.getByRole("button", { name: "Play" })).toBeEnabled();
     await page.keyboard.press("Escape");
-    await expect(slideshow).not.toBeVisible();
+    await expect(preview).not.toBeVisible();
   } finally {
     imageServer.kill("SIGTERM");
   }

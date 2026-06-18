@@ -367,13 +367,7 @@ export default function VirtualListing({
                   }
                 }}
                 onClick={(event) => entry.onSelect(event, item.index)}
-                onDoubleClick={() => {
-                  if (entry.href) {
-                    window.location.href = entry.href;
-                    return;
-                  }
-                  entry.onActivate();
-                }}
+                onDoubleClick={() => entry.onActivate()}
                 onContextMenu={entry.onContextMenu}
               >
                 {row.getVisibleCells().map((cell, columnIndex) => {

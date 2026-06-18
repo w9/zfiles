@@ -362,10 +362,10 @@ export const fr: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Pour Amazon S3, hachez optionnellement les fichiers avant et après le téléversement et demandez à S3 de valider les sommes de contrôle SHA-256. Cloudflare R2 n’utilise jamais la validation par somme de contrôle (R2 ne prend pas en charge les en-têtes de somme de contrôle flexibles S3).",
   "settings.uploadChecksum.label": "Valider les téléversements avec des sommes de contrôle (Amazon S3 uniquement)",
-  "viewer.category": "Visionneuse d'images",
+  "viewer.category": "Aperçu",
   "viewer.nextImage.name": "Image suivante",
   "viewer.prevImage.name": "Image précédente",
-  "viewer.slideshow.name": "Diaporama",
+  "viewer.preview.name": "Aperçu",
   "actions.help.category": "Aide",
   "actions.help.openAbout.name": "À propos de zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Raccourcis clavier…",

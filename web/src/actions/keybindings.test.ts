@@ -151,7 +151,7 @@ test("matchKeybinding matches grid-only horizontal navigation", () => {
   assert.equal(matchKeybinding(bindings, event, tableAvailable), null);
 });
 
-test("matchKeybinding matches Space slideshow when images are available in file list", () => {
+test("matchKeybinding matches Space preview when previewables are available in file list", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -164,15 +164,15 @@ test("matchKeybinding matches Space slideshow when images are available in file 
     evaluateWhen(binding.when, {
       ...defaultContextKeys(),
       "preview.is-image": true,
-      "viewer.image-count": 1,
+      "viewer.preview-count": 1,
     });
   assert.equal(
     matchKeybinding(bindings, event, bindingAvailable)?.command,
-    "viewer.slideshow",
+    "viewer.preview",
   );
 });
 
-test("matchKeybinding matches Space when selection has images despite non-image focus", () => {
+test("matchKeybinding matches Space when selection has previewables despite non-image focus", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -185,15 +185,15 @@ test("matchKeybinding matches Space when selection has images despite non-image 
     evaluateWhen(binding.when, {
       ...defaultContextKeys(),
       "preview.is-image": false,
-      "viewer.image-count": 2,
+      "viewer.preview-count": 2,
     });
   assert.equal(
     matchKeybinding(bindings, event, bindingAvailable)?.command,
-    "viewer.slideshow",
+    "viewer.preview",
   );
 });
 
-test("matchKeybinding ignores Space when no images are available", () => {
+test("matchKeybinding ignores Space when no previewables are available", () => {
   const bindings = defaultKeybindings();
   const event = {
     key: " ",
@@ -212,21 +212,21 @@ test("keybindingChordForContext prefers binding whose when matches context", () 
   const gridContext = {
     "focus.pane": "file-list",
     "listing.view": "grid",
-    "viewer.image-count": 1,
+    "viewer.preview-count": 1,
   };
   const tableContext = {
     "focus.pane": "file-list",
     "listing.view": "table",
-    "viewer.image-count": 1,
+    "viewer.preview-count": 1,
   };
   assert.equal(
-    keybindingChordForContext("viewer.slideshow", bindings, gridContext, {
+    keybindingChordForContext("viewer.preview", bindings, gridContext, {
       defaultKeybinding: "Space",
     }),
     "Space",
   );
   assert.equal(
-    keybindingChordForContext("viewer.slideshow", bindings, tableContext, {
+    keybindingChordForContext("viewer.preview", bindings, tableContext, {
       defaultKeybinding: "Space",
     }),
     "Space",

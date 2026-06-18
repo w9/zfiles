@@ -359,10 +359,10 @@ export const en = {
   "settings.uploadChecksum.description":
     "For Amazon S3, optionally hash files before and after upload and ask S3 to validate SHA-256 checksums. Cloudflare R2 never uses checksum validation (R2 does not support S3 flexible checksum headers).",
   "settings.uploadChecksum.label": "Validate uploads with checksums (Amazon S3 only)",
-  "viewer.category": "Image viewer",
+  "viewer.category": "Preview",
   "viewer.nextImage.name": "Next Image",
   "viewer.prevImage.name": "Previous Image",
-  "viewer.slideshow.name": "Slideshow",
+  "viewer.preview.name": "Preview",
   "actions.help.category": "Help",
   "actions.help.openAbout.name": "About zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Keyboard shortcuts…",

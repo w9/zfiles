@@ -44,7 +44,8 @@ import { useActionSystem } from "../actions/useActionSystem";
 import type { ActionDefinition } from "../actions/types";
 import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
-import { resolveViewerImagePaths } from "../slideshowPathOrder";
+import { resolveViewerPreviewPaths } from "../slideshowPathOrder";
+import { resolveFileActivation } from "../fileActivation";
 import {
   nextListingViewMode,
   type ListingViewMode,
@@ -668,16 +669,16 @@ export default function ExplorerApp() {
     [t],
   );
 
-  const getImagePaths = useCallback(
+  const getPreviewPaths = useCallback(
     () =>
-      resolveViewerImagePaths(
+      resolveViewerPreviewPaths(
         Array.from(selectedPathsRef.current),
         listingEntriesRef.current,
       ),
     [],
   );
 
-  const openSlideshow = useCallback((paths: string[], startPath: string | null) => {
+  const openPreview = useCallback((paths: string[], startPath: string | null) => {
     setSlideshowPaths(paths);
     setSlideshowStartPath(startPath);
     setSlideshowOpen(true);
@@ -745,12 +746,13 @@ export default function ExplorerApp() {
     );
   }, [fileOps.cutPaths, entryByPath, statusTextTranslate]);
 
-  const viewerImageCount = useMemo(() => {
+  const viewerPreviewCount = useMemo(() => {
     const listingSource = quickFilteredEntries.map((entry) => ({
       path: entry.path,
       isDir: entry.is_dir,
     }));
-    return resolveViewerImagePaths(Array.from(selectedPaths), listingSource).length;
+    return resolveViewerPreviewPaths(Array.from(selectedPaths), listingSource)
+      .length;
   }, [selectedPaths, quickFilteredEntries]);
 
   const contextKeys = useMemo<ContextKeys>(
@@ -765,7 +767,7 @@ export default function ExplorerApp() {
       "clipboard.count": fileOps.clipboard?.paths.length ?? 0,
       "preview.is-image": selectedPath ? isImagePath(selectedPath) : false,
       "preview.path": selectedPath ?? "",
-      "viewer.image-count": viewerImageCount,
+      "viewer.preview-count": viewerPreviewCount,
       "listing.show-dot-entries": showDotEntries,
       "listing.loaded": listingLoaded,
       "listing.visible-count": quickFilteredEntries.length,
@@ -781,7 +783,7 @@ export default function ExplorerApp() {
       readOnly,
       selectedPath,
       showDotEntries,
-      viewerImageCount,
+      viewerPreviewCount,
       fileOps.clipboard,
       listingLoaded,
       quickFilteredEntries.length,
@@ -986,18 +988,20 @@ export default function ExplorerApp() {
         onActivate: () => {
           if (entry.is_dir) {
             navigateTo(entry.path);
-          } else {
-            setSelectedPath(entry.path);
+            return;
+          }
+          if (resolveFileActivation(entry.path) === "preview") {
+            openPreview([entry.path], entry.path);
+            return;
+          }
+          if (backend.mode !== "s3") {
+            window.location.href = backend.downloadUrl(entry.path) as string;
           }
         },
         onContextMenu: (event) => {
           event.stopPropagation();
           void openContextMenuRef.current(event, entry.path);
         },
-        href:
-          entry.is_dir || backend.mode === "s3"
-            ? undefined
-            : (backend.downloadUrl(entry.path) as string),
       };
       return listingEntry;
     });
@@ -1006,6 +1010,7 @@ export default function ExplorerApp() {
     quickFilterActive,
     quickFilter,
     navigateTo,
+    openPreview,
     backend,
   ]);
 
@@ -1279,9 +1284,9 @@ export default function ExplorerApp() {
       applyGlobalListingSettings: applyGlobalListingSettingsHandler,
     },
     () => ({
-      getImagePaths,
+      getPreviewPaths,
       getCurrentPreviewPath: () => selectedPathRef.current,
-      openSlideshow,
+      openPreview,
     }),
     () => ({
       toggleInfoDialog: () => setInfoDialogOpen((open) => !open),
@@ -1299,8 +1304,8 @@ export default function ExplorerApp() {
 
       let menuContextKeys = contextKeys;
       const listingRows = listingEntriesRef.current;
-      const imageCountForSelection = (paths: string[]) =>
-        resolveViewerImagePaths(paths, listingRows).length;
+      const previewCountForSelection = (paths: string[]) =>
+        resolveViewerPreviewPaths(paths, listingRows).length;
       if (path == null) {
         setSelectedPaths(new Set());
         setSelectedPath(null);
@@ -1310,7 +1315,7 @@ export default function ExplorerApp() {
           "selection.paths": [],
           "preview.path": "",
           "preview.is-image": false,
-          "viewer.image-count": 0,
+          "viewer.preview-count": 0,
         };
       } else if (!selectedPathsRef.current.has(path)) {
         const rows = listingEntriesRef.current;
@@ -1327,14 +1332,14 @@ export default function ExplorerApp() {
           "selection.paths": [path],
           "preview.path": path,
           "preview.is-image": isImagePath(path),
-          "viewer.image-count": imageCountForSelection([path]),
+          "viewer.preview-count": previewCountForSelection([path]),
         };
       } else {
         menuContextKeys = {
           ...contextKeys,
           "preview.path": path,
           "preview.is-image": isImagePath(path),
-          "viewer.image-count": imageCountForSelection(
+          "viewer.preview-count": previewCountForSelection(
             Array.from(selectedPathsRef.current),
           ),
         };

@@ -9,7 +9,7 @@ export type ContextKeys = {
   "clipboard.count": number;
   "preview.is-image": boolean;
   "preview.path": string;
-  "viewer.image-count": number;
+  "viewer.preview-count": number;
   "listing.show-dot-entries": boolean;
   "listing.loaded": boolean;
   "listing.visible-count": number;
@@ -29,7 +29,7 @@ export function defaultContextKeys(): ContextKeys {
     "server.read-only": false,
     "preview.is-image": false,
     "preview.path": "",
-    "viewer.image-count": 0,
+    "viewer.preview-count": 0,
     "listing.show-dot-entries": false,
     "listing.loaded": false,
     "listing.visible-count": 0,

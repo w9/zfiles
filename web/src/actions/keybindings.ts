@@ -116,8 +116,8 @@ export function defaultKeybindings(): KeybindingDefinition[] {
     { key: "Backspace", command: "navigation.up", when: fileList },
     {
       key: "Space",
-      command: "viewer.slideshow",
-      when: `${fileList} && viewer.image-count > 0`,
+      command: "viewer.preview",
+      when: `${fileList} && viewer.preview-count > 0`,
     },
     {
       key: "Mod+A",

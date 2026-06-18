@@ -3,30 +3,36 @@ import test from "node:test";
 
 import {
   resolveSlideshowStartIndex,
-  resolveViewerImagePaths,
+  resolveViewerPreviewPaths,
   sortPathsByListingOrder,
 } from "./slideshowPathOrder";
 
-test("resolveViewerImagePaths filters selected paths to images", () => {
+test("resolveViewerPreviewPaths filters selected paths to previewable types", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.txt", isDir: false },
-    { path: "/c.png", isDir: false },
+    { path: "/c.mp4", isDir: false },
+    { path: "/d.mp3", isDir: false },
   ];
   assert.deepEqual(
-    resolveViewerImagePaths(["/b.txt", "/c.png", "/a.png"], listing),
-    ["/a.png", "/c.png"],
+    resolveViewerPreviewPaths(["/b.txt", "/d.mp3", "/c.mp4", "/a.png"], listing),
+    ["/a.png", "/c.mp4", "/d.mp3"],
   );
 });
 
-test("resolveViewerImagePaths uses listing images when nothing is selected", () => {
+test("resolveViewerPreviewPaths uses listing previewables when nothing is selected", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.txt", isDir: false },
     { path: "/dir", isDir: true },
-    { path: "/c.png", isDir: false },
+    { path: "/c.webm", isDir: false },
+    { path: "/d.flac", isDir: false },
   ];
-  assert.deepEqual(resolveViewerImagePaths([], listing), ["/a.png", "/c.png"]);
+  assert.deepEqual(resolveViewerPreviewPaths([], listing), [
+    "/a.png",
+    "/c.webm",
+    "/d.flac",
+  ]);
 });
 
 test("sortPathsByListingOrder sorts selected paths by listing order", () => {

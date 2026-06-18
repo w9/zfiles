@@ -362,10 +362,10 @@ export const pt: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "Para o Amazon S3, opcionalmente faça hash dos arquivos antes e depois do envio e peça ao S3 para validar checksums SHA-256. O Cloudflare R2 nunca usa validação por checksum (o R2 não suporta cabeçalhos flexíveis de checksum do S3).",
   "settings.uploadChecksum.label": "Validar envios com checksums (somente Amazon S3)",
-  "viewer.category": "Visualizador de imagens",
+  "viewer.category": "Pré-visualização",
   "viewer.nextImage.name": "Próxima imagem",
   "viewer.prevImage.name": "Imagem anterior",
-  "viewer.slideshow.name": "Apresentação de slides",
+  "viewer.preview.name": "Pré-visualização",
   "actions.help.category": "Ajuda",
   "actions.help.openAbout.name": "Sobre o zfiles…",
   "actions.help.openKeyboardShortcuts.name": "Atalhos de teclado…",

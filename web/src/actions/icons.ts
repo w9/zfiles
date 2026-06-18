@@ -19,7 +19,6 @@ import {
   ListFilter,
   Info,
   Pencil,
-  Play,
   Scissors,
   Settings,
   Square,
@@ -54,7 +53,7 @@ const ICONS: Record<string, LucideIcon> = {
   "file.paste": ClipboardPaste,
   "file.delete": Trash2,
   "preview.get-info": Info,
-  "viewer.slideshow": Play,
+  "viewer.preview": Eye,
   "help.open-keyboard-shortcuts": Keyboard,
   "help.open-about": CircleHelp,
 };

@@ -341,10 +341,10 @@ export const zhTW: Record<MessageKey, string> = {
   "settings.uploadChecksum.description":
     "對於 Amazon S3，可選擇在上傳前後對檔案進行雜湊並要求 S3 驗證 SHA-256 校驗和。Cloudflare R2 從不使用校驗和驗證（R2 不支援 S3 彈性校驗和標頭）。",
   "settings.uploadChecksum.label": "使用校驗和驗證上傳（僅 Amazon S3）",
-  "viewer.category": "圖片檢視器",
+  "viewer.category": "預覽",
   "viewer.nextImage.name": "下一張圖片",
   "viewer.prevImage.name": "上一張圖片",
-  "viewer.slideshow.name": "投影片",
+  "viewer.preview.name": "預覽",
   "actions.help.category": "說明",
   "actions.help.openAbout.name": "關於 zfiles…",
   "actions.help.openKeyboardShortcuts.name": "鍵盤快捷鍵…",
