@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Raise collapsed menubar breakpoint to `md` (768px). Follow-up: unified focus-ring treatment across inputs.
+Prevent iOS Safari focus zoom on form controls (16px minimum on viewports below `md`). Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -215,3 +215,8 @@ Raise collapsed menubar breakpoint to `md` (768px). Follow-up: unified focus-rin
 
 - [x] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs (inherit `text-base` from `Input`)
+- [ ] `InlineNameInput.tsx`: `text-base` below `md`, 14px from `md` up
+- [ ] `command.tsx` + `select.tsx`: `text-base md:text-sm` on focusable controls (`CommandInput`, `SelectTrigger`)
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
