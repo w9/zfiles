@@ -205,5 +205,5 @@ Narrow header menu: below `sm`, collapse the application menubar into a ghost `M
 - [x] `ExplorerBreadcrumb.tsx`: narrow collapsed ListFilter icon on address row; focus/typeahead expands filter over breadcrumb; active icon when filtered
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `MenuBar.tsx`: below `sm`, hide horizontal menubar; show ghost size-7 `Menu` icon with tooltip (`actions.menuBar.label`); dropdown uses category submenus with same items, icons, shortcuts, and empty-category hiding as desktop
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `MenuBar.tsx`: below `sm`, hide horizontal menubar; show ghost size-7 `Menu` icon with tooltip (`actions.menuBar.label`); dropdown uses category submenus with same items, icons, shortcuts, and empty-category hiding as desktop
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

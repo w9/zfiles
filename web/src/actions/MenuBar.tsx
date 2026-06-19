@@ -1,3 +1,16 @@
+import { Menu } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Menubar,
   MenubarContent,
@@ -6,6 +19,11 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from "@/components/ui/menubar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import ChordKbd from "./ChordKbd";
 import { isActionAvailable } from "./dispatch";
 import { actionIcon } from "./icons";
@@ -23,6 +41,11 @@ type MenuBarProps = {
   labelForKey: (key: string) => string;
   invoke: (id: string) => void;
   ariaLabel: string;
+};
+
+type CategoryMenu = {
+  categoryKey: string;
+  items: ActionDefinition[];
 };
 
 function menuItemChord(
@@ -45,6 +68,30 @@ function menuItemsForCategory(
   });
 }
 
+function buildCategoryMenus(
+  actions: ActionDefinition[],
+  contextKeys: ContextKeys,
+): CategoryMenu[] {
+  return MENU_CATEGORIES.flatMap((categoryKey) => {
+    const items = menuItemsForCategory(actions, categoryKey, contextKeys);
+    if (items.length === 0) {
+      return [];
+    }
+    return [{ categoryKey, items }];
+  });
+}
+
+function renderActionLabel(
+  action: ActionDefinition,
+  keybindings: KeybindingDefinition[],
+  labelForKey: (key: string) => string,
+) {
+  const chord = menuItemChord(action, keybindings);
+  const label = labelForKey(action.nameKey);
+  const Icon = actionIcon(action.id);
+  return { chord, label, Icon };
+}
+
 export default function MenuBar({
   registry,
   contextKeys,
@@ -53,23 +100,30 @@ export default function MenuBar({
   invoke,
   ariaLabel,
 }: MenuBarProps) {
-  const actions = registry.list();
+  const categoryMenus = buildCategoryMenus(registry.list(), contextKeys);
+
+  if (categoryMenus.length === 0) {
+    return null;
+  }
 
   return (
-    <Menubar aria-label={ariaLabel} className="h-8 border-none bg-transparent p-0 shadow-none">
-      {MENU_CATEGORIES.map((categoryKey) => {
-        const items = menuItemsForCategory(actions, categoryKey, contextKeys);
-        if (items.length === 0) {
-          return null;
-        }
-        return (
+    <>
+      <Menubar
+        aria-label={ariaLabel}
+        className="hidden h-8 border-none bg-transparent p-0 shadow-none sm:flex"
+      >
+        {categoryMenus.map(({ categoryKey, items }) => (
           <MenubarMenu key={categoryKey}>
-            <MenubarTrigger className="h-8 px-2">{labelForKey(categoryKey)}</MenubarTrigger>
+            <MenubarTrigger className="h-8 px-2">
+              {labelForKey(categoryKey)}
+            </MenubarTrigger>
             <MenubarContent>
               {items.map((action) => {
-                const chord = menuItemChord(action, keybindings);
-                const label = labelForKey(action.nameKey);
-                const Icon = actionIcon(action.id);
+                const { chord, label, Icon } = renderActionLabel(
+                  action,
+                  keybindings,
+                  labelForKey,
+                );
                 return (
                   <MenubarItem
                     key={action.id}
@@ -89,8 +143,59 @@ export default function MenuBar({
               })}
             </MenubarContent>
           </MenubarMenu>
-        );
-      })}
-    </Menubar>
+        ))}
+      </Menubar>
+
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0 sm:hidden"
+                aria-label={ariaLabel}
+              >
+                <Menu className="size-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{ariaLabel}</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="start">
+          {categoryMenus.map(({ categoryKey, items }) => (
+            <DropdownMenuSub key={categoryKey}>
+              <DropdownMenuSubTrigger>{labelForKey(categoryKey)}</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {items.map((action) => {
+                  const { chord, label, Icon } = renderActionLabel(
+                    action,
+                    keybindings,
+                    labelForKey,
+                  );
+                  return (
+                    <DropdownMenuItem
+                      key={action.id}
+                      inset={Icon == null}
+                      variant={action.destructive ? "destructive" : "default"}
+                      onSelect={() => invoke(action.id)}
+                    >
+                      {Icon ? <Icon /> : null}
+                      {label}
+                      {chord ? (
+                        <DropdownMenuShortcut>
+                          <ChordKbd chord={chord} />
+                        </DropdownMenuShortcut>
+                      ) : null}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
