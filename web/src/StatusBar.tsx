@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react";
 
 import BackendStatus from "./BackendStatus";
+import { APP_VERSION } from "@/appVersion";
 import { useTranslation } from "@/i18n";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,6 +37,8 @@ export default function StatusBar({
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
+  const displayVersion = backendMode === "local" ? kernelVersion : APP_VERSION;
+  const showVersion = Boolean(displayVersion);
 
   return (
     <div
@@ -76,15 +79,15 @@ export default function StatusBar({
           <p className="shrink-0 text-xs text-muted-foreground">{selectionStatusText}</p>
         ) : null}
       </div>
-      {backendMode === "local" && kernelVersion ? (
+      {showVersion ? (
         <div className="flex shrink-0 items-center">
           <button
             type="button"
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             onClick={onVersionClick}
-            aria-label={t("statusBar.openAbout", { version: kernelVersion })}
+            aria-label={t("statusBar.openAbout", { version: displayVersion })}
           >
-            {t("statusBar.serverVersion", { version: kernelVersion })}
+            {t("statusBar.serverVersion", { version: displayVersion })}
           </button>
         </div>
       ) : null}
