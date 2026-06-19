@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Quick-filter help uses Lucide `CircleQuestionMark` instead of a text `?`. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Quick-filter help uses a custom `QuestionMarkIcon` SVG component. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -160,3 +160,7 @@ Quick-filter help uses Lucide `CircleQuestionMark` instead of a text `?`. Follow
 
 - [x] `ExplorerBreadcrumb.tsx`: replace help `?` text with `CircleQuestionMark` icon
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `QuestionMarkIcon.tsx`: custom quick-filter help SVG (Lucide-like props)
+- [ ] `ExplorerBreadcrumb.tsx`: swap `CircleQuestionMark` for `QuestionMarkIcon`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
