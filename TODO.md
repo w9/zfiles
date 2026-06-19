@@ -1,6 +1,6 @@
 ## High-level plan next
 
-CLI `--share-host` for wildcard (`0.0.0.0`) LAN share URLs: resolve banner → line, QR, and browser-open host as CLI override → `$HOSTNAME` → external IP → `127.0.0.1` with note; append bound port; specific bind IPs unchanged; serve mode only. Follow-up: config.toml key and daemon start passthrough.
+Quick filter styling: flat, borderless input on `bg-background` in the breadcrumb bar; keep existing focus ring for now (focus-ring refresh is a follow-up). Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -187,3 +187,6 @@ CLI `--share-host` for wildcard (`0.0.0.0`) LAN share URLs: resolve banner → l
 - [x] `transport.rs`: pass `share_host` into `public_share_url` for banner, QR, and browser-open
 - [x] Integration tests: banner shows `--share-host` and `$HOSTNAME` fallback on `0.0.0.0` + `--token`
 - [x] Run `cargo test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: quick-filter `InputGroup` — no border, `bg-background`, no shadow; leave focus ring unchanged
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
