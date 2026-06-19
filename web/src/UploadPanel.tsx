@@ -260,11 +260,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0"
+            className="h-9 w-9 shrink-0"
             aria-label={t("upload.clearDone")}
             onClick={() => onClearDone(item.id)}
           >
-            <X className="size-4" />
+            <X className="size-5" />
           </Button>
         ) : item.status === "active" ||
           item.status === "paused" ||
@@ -275,11 +275,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
                 aria-label={t("upload.pause")}
                 onClick={() => onPause(item.id)}
               >
-                <Pause className="size-4" />
+                <Pause className="size-5" />
               </Button>
             ) : null}
             {item.status === "paused" ? (
@@ -287,11 +287,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
                 aria-label={t("upload.resume")}
                 onClick={() => onResume(item.id)}
               >
-                <Play className="size-4" />
+                <Play className="size-5" />
               </Button>
             ) : null}
             {cancellable ? (
@@ -299,11 +299,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
                 aria-label={t("upload.cancel")}
                 onClick={() => onCancel(item.id)}
               >
-                <X className="size-4" />
+                <X className="size-5" />
               </Button>
             ) : null}
           </div>
@@ -415,12 +415,12 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   disabled={busy}
                   aria-label={resumeLabel}
                   onClick={() => onResume(session.uploadId)}
                 >
-                  <Play className="size-4" />
+                  <Play className="size-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">{resumeLabel}</TooltipContent>
@@ -432,12 +432,12 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
                 disabled={busy}
                 aria-label={abortLabel}
                 onClick={() => onAbort(session.uploadId)}
               >
-                <X className="size-4" />
+                <X className="size-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">{abortLabel}</TooltipContent>
@@ -523,12 +523,12 @@ export default function UploadPanel({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9"
               aria-label={t("upload.tray.close")}
               onClick={onClose}
               onPointerDown={(event) => event.stopPropagation()}
             >
-              <X className="size-4" />
+              <X className="size-5" />
             </Button>
           ) : null}
         </div>

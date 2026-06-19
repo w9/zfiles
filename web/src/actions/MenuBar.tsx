@@ -154,10 +154,10 @@ export default function MenuBar({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 shrink-0 md:hidden"
+                className="size-8 shrink-0 md:hidden"
                 aria-label={ariaLabel}
               >
-                <Menu className="size-4" aria-hidden="true" />
+                <Menu className="size-5" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>

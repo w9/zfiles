@@ -31,11 +31,11 @@ export function DataTableColumnHeader<TData, TValue>({
       >
         <span className="truncate">{title}</span>
         {column.getIsSorted() === "desc" ? (
-          <ChevronDown className="size-4 shrink-0" />
+          <ChevronDown className="size-5 shrink-0" />
         ) : column.getIsSorted() === "asc" ? (
-          <ChevronUp className="size-4 shrink-0" />
+          <ChevronUp className="size-5 shrink-0" />
         ) : (
-          <ChevronsUpDown className="size-4 shrink-0" />
+          <ChevronsUpDown className="size-5 shrink-0" />
         )}
       </Button>
     </div>

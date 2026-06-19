@@ -877,14 +877,14 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+                className="h-9 w-9 text-white hover:bg-white/15 hover:text-white"
                 aria-label={t("slideshow.zoomFit")}
                 onClick={() => {
                   bumpActivity();
                   setZoomMode("fit");
                 }}
               >
-                <Maximize2 className="h-4 w-4" />
+                <Maximize2 className="h-5 w-5" />
               </Button>
             </SlideshowIconTooltip>
             <SlideshowIconTooltip label={t("slideshow.zoomActual")}>
@@ -892,14 +892,14 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+                className="h-9 w-9 text-white hover:bg-white/15 hover:text-white"
                 aria-label={t("slideshow.zoomActual")}
                 onClick={() => {
                   bumpActivity();
                   setZoomMode("one-to-one");
                 }}
               >
-                <Scan className="h-4 w-4" />
+                <Scan className="h-5 w-5" />
               </Button>
             </SlideshowIconTooltip>
             <SlideshowIconTooltip label={t("slideshow.zoomOut")}>
@@ -907,11 +907,11 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+                className="h-9 w-9 text-white hover:bg-white/15 hover:text-white"
                 aria-label={t("slideshow.zoomOut")}
                 onClick={handleZoomOut}
               >
-                <ZoomOut className="h-4 w-4" />
+                <ZoomOut className="h-5 w-5" />
               </Button>
             </SlideshowIconTooltip>
             <SlideshowIconTooltip label={t("slideshow.zoomIn")}>
@@ -919,11 +919,11 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+                className="h-9 w-9 text-white hover:bg-white/15 hover:text-white"
                 aria-label={t("slideshow.zoomIn")}
                 onClick={handleZoomIn}
               >
-                <ZoomIn className="h-4 w-4" />
+                <ZoomIn className="h-5 w-5" />
               </Button>
             </SlideshowIconTooltip>
           </div>
@@ -936,7 +936,7 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+                className="h-9 w-9 text-white hover:bg-white/15 hover:text-white"
                 aria-label={playing ? t("slideshow.pause") : t("slideshow.play")}
                 onClick={() => {
                   bumpActivity();
@@ -944,7 +944,7 @@ export default function SlideshowOverlay({
                 }}
                 disabled={paths.length <= 1}
               >
-                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               </Button>
             </SlideshowIconTooltip>
             <Field orientation="horizontal" className="w-auto items-center gap-1.5 text-sm text-white/90">
@@ -986,7 +986,7 @@ export default function SlideshowOverlay({
                 asChild
               >
                 <a href={previewUrl} download={fileName}>
-                  <Download className="h-4 w-4" />
+                  <Download className="h-5 w-5" />
                   {t("slideshow.download")}
                 </a>
               </Button>
@@ -1000,7 +1000,7 @@ export default function SlideshowOverlay({
                   window.open(previewUrl, "_blank", "noopener,noreferrer");
                 }}
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-5 w-5" />
                 {t("slideshow.openInNewTab")}
               </Button>
             </>
@@ -1012,7 +1012,7 @@ export default function SlideshowOverlay({
             className="bg-black/50 text-white hover:bg-black/70"
             onClick={() => onOpenChange(false)}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
             {t("slideshow.close")}
           </Button>
         </div>

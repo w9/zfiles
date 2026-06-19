@@ -128,7 +128,7 @@ export default function ExplorerBreadcrumb({
   );
 
   const renderRootIcon = () => (
-    <Home aria-hidden="true" className="size-4 shrink-0" />
+    <Home aria-hidden="true" className="size-5 shrink-0" />
   );
 
   const renderSegmentLink = (index: number) => {
@@ -243,35 +243,35 @@ export default function ExplorerBreadcrumb({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className="size-8 shrink-0"
           aria-label={backLabel}
           disabled={!canGoBack}
           onClick={onBack}
         >
-          <ArrowLeft className="size-4" aria-hidden="true" />
+          <ArrowLeft className="size-5" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className="size-8 shrink-0"
           aria-label={forwardLabel}
           disabled={!canGoForward}
           onClick={onForward}
         >
-          <ArrowRight className="size-4" aria-hidden="true" />
+          <ArrowRight className="size-5" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className="size-8 shrink-0"
           aria-label={refreshLabel}
           disabled={refreshing}
           onClick={onRefresh}
         >
           <RefreshCw
-            className={cn("size-4", refreshing && "animate-spin")}
+            className={cn("size-5", refreshing && "animate-spin")}
             aria-hidden="true"
           />
         </Button>
@@ -304,7 +304,7 @@ export default function ExplorerBreadcrumb({
                         <DropdownMenuTrigger asChild>
                           <button
                             type="button"
-                            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
                             aria-label={hiddenSegmentsMenuLabel}
                             onClick={(event) => event.stopPropagation()}
                             onPointerDown={(event) => event.stopPropagation()}
@@ -411,28 +411,28 @@ export default function ExplorerBreadcrumb({
             );
           })()}
           <InputGroupAddon align="inline-end" className="gap-0 pr-0.5">
-            <span className="inline-flex size-4 shrink-0 items-center justify-center">
+            <span className="inline-flex size-5 shrink-0 items-center justify-center">
               {quickFilterValue.length > 0 ? (
                 <InputGroupButton
                   size="icon-xs"
-                  className="size-4"
+                  className="size-5"
                   aria-label={quickFilterClearLabel}
                   onClick={() => {
                     onQuickFilterChange("");
                     quickFilterInputRef?.current?.focus();
                   }}
                 >
-                  <X className="size-3" aria-hidden="true" />
+                  <X className="size-3.5" aria-hidden="true" />
                 </InputGroupButton>
               ) : null}
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
-                  className="inline-flex size-4 shrink-0 items-center justify-center select-none"
+                  className="inline-flex size-5 shrink-0 items-center justify-center select-none"
                   aria-hidden="true"
                 >
-                  <QuestionMarkIcon className="pointer-events-none size-3 text-muted-foreground" />
+                  <QuestionMarkIcon className="pointer-events-none size-3.5 text-muted-foreground" />
                 </span>
               </TooltipTrigger>
               <TooltipContent
@@ -453,13 +453,13 @@ export default function ExplorerBreadcrumb({
           variant="ghost"
           size="icon"
           className={cn(
-            "size-7 shrink-0 sm:hidden",
+            "size-8 shrink-0 sm:hidden",
             quickFilterActive && "text-primary",
           )}
           aria-label={quickFilterLabel}
           onClick={openQuickFilter}
         >
-          <ListFilter className="size-4" aria-hidden="true" />
+          <ListFilter className="size-5" aria-hidden="true" />
         </Button>
       ) : null}
     </div>

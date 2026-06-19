@@ -114,8 +114,8 @@ export default function GridCardPreview({
             aria-hidden
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
-            <div className="flex size-7 items-center justify-center rounded-full bg-black/40 text-white/80">
-              <Play className="size-3.5 fill-current" />
+            <div className="flex size-8 items-center justify-center rounded-full bg-black/40 text-white/80">
+              <Play className="size-4 fill-current" />
             </div>
           </div>
           {durationLabel ? (

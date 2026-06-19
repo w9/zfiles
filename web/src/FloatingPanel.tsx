@@ -70,10 +70,10 @@ const RESIZE_EDGES: Array<{
   { edge: "s", className: "right-2 bottom-0 left-2 h-1.5 cursor-ns-resize" },
   { edge: "e", className: "top-2 right-0 bottom-2 w-1.5 cursor-ew-resize" },
   { edge: "w", className: "top-2 bottom-2 left-0 w-1.5 cursor-ew-resize" },
-  { edge: "ne", className: "top-0 right-0 h-2 w-2 cursor-nesw-resize" },
-  { edge: "nw", className: "top-0 left-0 h-2 w-2 cursor-nwse-resize" },
-  { edge: "se", className: "right-0 bottom-0 h-2 w-2 cursor-nwse-resize" },
-  { edge: "sw", className: "bottom-0 left-0 h-2 w-2 cursor-nwse-resize" },
+  { edge: "ne", className: "top-0 right-0 h-2.5 w-2.5 cursor-nesw-resize" },
+  { edge: "nw", className: "top-0 left-0 h-2.5 w-2.5 cursor-nwse-resize" },
+  { edge: "se", className: "right-0 bottom-0 h-2.5 w-2.5 cursor-nwse-resize" },
+  { edge: "sw", className: "bottom-0 left-0 h-2.5 w-2.5 cursor-nwse-resize" },
 ];
 
 export default function FloatingPanel({

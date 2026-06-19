@@ -107,7 +107,7 @@ export default function UploadIndicator({
             variant="ghost"
             size="icon"
             className={cn(
-              "relative h-8 w-8",
+              "relative h-9 w-9",
               open && "bg-accent text-accent-foreground",
             )}
             aria-label={t("upload.tray.label")}
@@ -115,11 +115,11 @@ export default function UploadIndicator({
             aria-pressed={open}
             onClick={() => setOpen((value) => !value)}
           >
-            <Upload className="h-4 w-4" />
+            <Upload className="h-5 w-5" />
             {attention ? (
               <span
                 className={cn(
-                  "absolute top-0.5 right-0.5 size-2 rounded-full ring-2 ring-background",
+                  "absolute top-0.5 right-0.5 size-2.5 rounded-full ring-2 ring-background",
                   stats.failed > 0 ? "bg-destructive" : "bg-amber-500",
                 )}
                 aria-hidden

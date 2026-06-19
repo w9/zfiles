@@ -64,7 +64,7 @@ export function ActionConfirmDialog({
             aria-busy={executing}
           >
             {showWorkingVisual ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
             ) : null}
             {showWorkingVisual ? workingLabel : confirmLabel}
           </Button>

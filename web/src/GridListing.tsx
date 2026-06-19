@@ -349,14 +349,14 @@ export default function GridListing({
                         data-grid-resize-handle
                         data-prevent-marquee
                         className={cn(
-                          "absolute bottom-0 right-0 z-10 flex h-4 w-4 translate-x-0.5 translate-y-0.5 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
+                          "absolute bottom-0 right-0 z-10 flex h-5 w-5 translate-x-0.5 translate-y-0.5 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
                         )}
                         onPointerDown={onHandlePointerDown(entry.path)}
                         onDoubleClick={onHandleDoubleClick}
                       >
                         <span
                           aria-hidden
-                          className="h-2.5 w-2.5 border-r-2 border-b-2 border-muted-foreground/70"
+                          className="h-3 w-3 border-r-2 border-b-2 border-muted-foreground/70"
                         />
                       </div>
                     </div>

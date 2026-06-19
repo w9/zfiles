@@ -56,12 +56,12 @@ export default function ActionToolbar({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className={cn("h-8 w-8", !available && "opacity-50")}
+                  className={cn("h-9 w-9", !available && "opacity-50")}
                   disabled={!available}
                   aria-label={label}
                   onClick={() => invoke(actionId)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                 </Button>
               </span>
             </TooltipTrigger>

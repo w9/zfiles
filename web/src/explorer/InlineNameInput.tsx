@@ -68,7 +68,7 @@ export default function InlineNameInput({
       />
       {busy && showBusyVisual ? (
         <Loader2
-          className="size-3.5 shrink-0 animate-spin text-muted-foreground"
+          className="size-4 shrink-0 animate-spin text-muted-foreground"
           aria-hidden="true"
         />
       ) : null}

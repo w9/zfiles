@@ -121,12 +121,12 @@ function InfoPanelChrome({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-9 w-9 shrink-0"
           aria-label={t("preview.getInfo.close")}
           onClick={onClose}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <X className="size-4" />
+          <X className="size-5" />
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-4 py-3">{children}</div>

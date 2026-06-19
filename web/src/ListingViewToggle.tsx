@@ -35,14 +35,14 @@ export default function ListingViewToggle({ mode, onChange }: ListingViewToggleP
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
+          className="h-9 w-9"
           aria-label={label}
           aria-pressed={mode === "grid"}
           onClick={(event) =>
             onChange(nextListingViewMode(mode), { global: event.shiftKey })
           }
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-5 w-5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">

@@ -63,7 +63,7 @@ export default function StatusBar({
                 variant="outline"
                 className="gap-1 border-muted-foreground/30 text-muted-foreground"
               >
-                <Lock className="size-3" aria-hidden />
+                <Lock className="size-3.5" aria-hidden />
                 {t("statusBar.readOnly")}
               </Badge>
             </TooltipTrigger>

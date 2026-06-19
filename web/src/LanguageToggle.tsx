@@ -53,10 +53,10 @@ export default function LanguageToggle({
       type="button"
       variant={variant}
       size={iconOnly ? "icon" : "sm"}
-      className={iconOnly ? "h-8 w-8" : undefined}
+      className={iconOnly ? "h-9 w-9" : undefined}
       aria-label={t("language.group")}
     >
-      <Languages className="h-4 w-4" />
+      <Languages className="h-5 w-5" />
       {!iconOnly ? <span>{currentLabel}</span> : null}
     </Button>
   );

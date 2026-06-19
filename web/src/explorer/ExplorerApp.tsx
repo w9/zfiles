@@ -1673,11 +1673,11 @@ export default function ExplorerApp() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   aria-label={t("settings.title")}
                   onClick={() => navigate("settings")}
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">{t("settings.title")}</TooltipContent>
@@ -1688,7 +1688,7 @@ export default function ExplorerApp() {
                   type="button"
                   variant={selectionMode ? "default" : "ghost"}
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   aria-label={
                     selectionMode
                       ? t("selection.mode.done")
@@ -1705,9 +1705,9 @@ export default function ExplorerApp() {
                   }}
                 >
                   {selectionMode ? (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-5 w-5" />
                   ) : (
-                    <ListChecks className="h-4 w-4" />
+                    <ListChecks className="h-5 w-5" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -1819,7 +1819,7 @@ export default function ExplorerApp() {
                 {listingPaneOverlay === "listing.loading" ? (
                   <>
                     <Loader2
-                      className="size-6 animate-spin text-muted-foreground"
+                      className="size-7 animate-spin text-muted-foreground"
                       aria-hidden="true"
                     />
                     <p className="text-base text-muted-foreground">{t("listing.loading")}</p>

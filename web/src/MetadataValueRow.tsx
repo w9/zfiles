@@ -47,12 +47,12 @@ export default function MetadataValueRow({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0"
+            className="h-7 w-7 shrink-0"
             aria-label={t("preview.copyValue", { label })}
             onClick={() => void onCopy()}
             onPointerDown={(event) => event.stopPropagation()}
           >
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           </Button>
         ) : null}
         <div className={cn("min-w-0 flex-1", valueClassName)}>{children}</div>

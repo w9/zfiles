@@ -16,26 +16,26 @@ type FileIconProps = {
 };
 
 const SIZE_CLASS = {
-  xs: "h-4 w-4",
-  sm: "h-6 w-6",
+  xs: "h-5 w-5",
+  sm: "h-7 w-7",
   lg: "h-10 w-10",
 } as const;
 
 const BADGE_CLASS = {
-  xs: "h-2.5 w-2.5",
-  sm: "h-3 w-3",
-  lg: "h-4 w-4",
+  xs: "h-3 w-3",
+  sm: "h-4 w-4",
+  lg: "h-5 w-5",
 } as const;
 
 const BADGE_ICON_CLASS = {
-  xs: "h-1.5 w-1.5",
-  sm: "h-2 w-2",
-  lg: "h-2.5 w-2.5",
+  xs: "h-2 w-2",
+  sm: "h-2.5 w-2.5",
+  lg: "h-3 w-3",
 } as const;
 
 const SIZE_PX = {
-  xs: 16,
-  sm: 24,
+  xs: 20,
+  sm: 28,
   lg: 40,
 } as const;
 
@@ -52,7 +52,7 @@ export function FileIcon({
   const iconUrl = resolveFileIconUrl({ name, isDir, theme });
   const resolvedSize = pixelSize ?? SIZE_PX[size];
   const sizeClass = pixelSize == null ? SIZE_CLASS[size] : undefined;
-  const badgeScale = pixelSize == null ? size : resolvedSize <= 20 ? "xs" : resolvedSize <= 32 ? "sm" : "lg";
+  const badgeScale = pixelSize == null ? size : resolvedSize <= 24 ? "xs" : resolvedSize <= 36 ? "sm" : "lg";
 
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
