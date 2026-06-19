@@ -28,7 +28,7 @@ export default function AboutDialog({
           <DialogTitle>{t("about.title")}</DialogTitle>
           <DialogDescription className="sr-only">{t("about.tagline")}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 text-sm">
+        <div className="space-y-4 text-base">
           <div className="space-y-1 text-center sm:text-left">
             <p className="text-lg font-semibold text-foreground">{t("about.appName")}</p>
             <p className="text-muted-foreground">{t("about.tagline")}</p>
@@ -45,7 +45,7 @@ export default function AboutDialog({
               </div>
             ) : null}
           </dl>
-          <p className="text-center text-xs text-muted-foreground sm:text-left">
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
             {t("about.license")}
           </p>
         </div>

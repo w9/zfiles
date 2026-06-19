@@ -222,8 +222,8 @@ Bump remaining sub-16px UI text up one Tailwind step (xs→sm, sm→base, 12px�
 - [x] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] Shared UI primitives: one-step bump (`button`, `badge`, `tooltip`, `label`, `field`, `table`, `alert`, `dialog`, `sheet`, `toggle-group`, `input-group`, `breadcrumb`)
-- [ ] Menu/select/command primitives: items and shortcut hints (`menubar`, `dropdown-menu`, `context-menu`, `command`, `select`)
-- [ ] Listings: `VirtualListing`, `GridListing`, `data-table-column-header`
-- [ ] App chrome + dialogs: `StatusBar`, `ExplorerApp`, `PreviewPane`, `InfoDialog`, `AboutDialog`, `KeyboardShortcutsDialog`, `ActionDialogs`, `UploadPanel`, `ConnectDialog`, `SlideshowOverlay`, `ListingViewToggle`, `ChordKbd`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] Shared UI primitives: one-step bump (`button`, `badge`, `tooltip`, `label`, `field`, `table`, `alert`, `dialog`, `sheet`, `toggle-group`, `input-group`, `breadcrumb`)
+- [x] Menu/select/command primitives: items and shortcut hints (`menubar`, `dropdown-menu`, `context-menu`, `command`, `select`)
+- [x] Listings: `VirtualListing`, `GridListing`, `data-table-column-header`
+- [x] App chrome + dialogs: `StatusBar`, `ExplorerApp`, `PreviewPane`, `InfoDialog`, `AboutDialog`, `KeyboardShortcutsDialog`, `ActionDialogs`, `UploadPanel`, `ConnectDialog`, `SlideshowOverlay`, `ListingViewToggle`, `ChordKbd`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

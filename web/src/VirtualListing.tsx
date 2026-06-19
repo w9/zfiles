@@ -67,9 +67,9 @@ const DEFAULT_COLUMN_LAYOUT: Layout = {
 
 const LISTING_COLUMN_IDS = ["name", "size", "modified"] as const;
 
-const LISTING_TEXT_CLASS = "text-[14px] leading-5";
+const LISTING_TEXT_CLASS = "text-base";
 
-const LISTING_HEADER_TEXT_CLASS = "text-[12px] leading-4";
+const LISTING_HEADER_TEXT_CLASS = "text-sm leading-5";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
@@ -203,7 +203,7 @@ export default function VirtualListing({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 44,
+    estimateSize: () => 48,
     overscan: LISTING_VIRTUAL_OVERSCAN_ROWS,
   });
 

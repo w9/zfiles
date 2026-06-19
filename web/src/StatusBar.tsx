@@ -73,17 +73,17 @@ export default function StatusBar({
           </Tooltip>
         ) : null}
         {cutStatusText ? (
-          <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
+          <p className="truncate text-sm text-muted-foreground">{cutStatusText}</p>
         ) : null}
         {selectionStatusText ? (
-          <p className="shrink-0 text-xs text-muted-foreground">{selectionStatusText}</p>
+          <p className="shrink-0 text-sm text-muted-foreground">{selectionStatusText}</p>
         ) : null}
       </div>
       {showVersion ? (
         <div className="flex shrink-0 items-center">
           <button
             type="button"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             onClick={onVersionClick}
             aria-label={t("statusBar.openAbout", { version: displayVersion })}
           >

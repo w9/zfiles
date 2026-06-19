@@ -292,7 +292,7 @@ export default function ConnectDialog({
                 {t("connect.shareUrl.includeCredentials")}
               </FieldLabel>
             </Field>
-            <FieldDescription className="text-xs">{t("connect.privacy")}</FieldDescription>
+            <FieldDescription className="text-sm">{t("connect.privacy")}</FieldDescription>
             {error ? <FieldError>{error}</FieldError> : null}
             <DialogFooter>
               <Button type="submit" disabled={connecting}>

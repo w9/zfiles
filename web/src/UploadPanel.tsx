@@ -244,15 +244,15 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
           <TruncatedTextTooltip
             as="p"
             text={item.fileName}
-            className="truncate text-sm font-medium"
+            className="truncate text-base font-medium"
           />
           <TruncatedTextTooltip
             as="p"
             text={item.destPath}
-            className="truncate text-xs text-muted-foreground"
+            className="truncate text-sm text-muted-foreground"
           />
         </div>
-        <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
+        <div className="shrink-0 text-sm text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
         </div>
         {item.status === "done" ? (
@@ -310,7 +310,7 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
         ) : null}
         </div>
         {item.status === "failed" && item.error ? (
-          <p className="mt-2 text-xs text-destructive">{item.error}</p>
+          <p className="mt-2 text-sm text-destructive">{item.error}</p>
         ) : null}
       </div>
     </li>
@@ -374,15 +374,15 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
           <TruncatedTextTooltip
             as="p"
             text={session.fileName}
-            className="truncate text-sm font-medium"
+            className="truncate text-base font-medium"
           />
           <TruncatedTextTooltip
             as="p"
             text={session.destPath}
-            className="truncate text-xs text-muted-foreground"
+            className="truncate text-sm text-muted-foreground"
           />
         </div>
-        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+        <p className="shrink-0 text-sm text-muted-foreground tabular-nums">
           <Tooltip>
             <TooltipTrigger asChild>
               <span
@@ -493,7 +493,7 @@ export default function UploadPanel({
         <TruncatedTextTooltip
           as="h2"
           text={headerTitle}
-          className="min-w-0 flex-1 truncate text-sm font-medium"
+          className="min-w-0 flex-1 truncate text-base font-medium"
         />
         <div className="flex shrink-0 items-center gap-1">
           {onChooseFiles ? (
@@ -561,7 +561,7 @@ export default function UploadPanel({
           </ul>
         </ScrollArea>
       ) : (
-        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="px-4 py-6 text-center text-base text-muted-foreground">
           {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
         </p>
       )}

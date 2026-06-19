@@ -118,7 +118,7 @@ function CenteredPreviewMessage({
       className="flex h-full w-full items-center justify-center text-center"
       onClick={onClickStop ? (event) => event.stopPropagation() : undefined}
     >
-      <p className="max-w-md text-sm text-white/80">{children}</p>
+      <p className="max-w-md text-base text-white/80">{children}</p>
     </div>
   );
 }
@@ -702,7 +702,7 @@ export default function SlideshowOverlay({
           onClick={handleLetterboxClick}
         >
           {!previewUrl ? (
-            <p className="text-sm text-white/80">{t("preview.loading")}</p>
+            <p className="text-base text-white/80">{t("preview.loading")}</p>
           ) : isImageKind ? (
             <div
               className={cn("touch-none select-none", stageCursorClass)}
@@ -781,7 +781,7 @@ export default function SlideshowOverlay({
                 className="flex max-w-md flex-col items-center gap-4 text-center"
                 onClick={(event) => event.stopPropagation()}
               >
-                <p className="text-sm text-white/80">{t("preview.noPreview")}</p>
+                <p className="text-base text-white/80">{t("preview.noPreview")}</p>
                 <Button
                   type="button"
                   variant="secondary"
@@ -810,23 +810,23 @@ export default function SlideshowOverlay({
               ) : nativeKind === "markdown" && markdownHtml ? (
                 <>
                   {textTruncated ? (
-                    <p className="mb-2 shrink-0 text-xs text-amber-200/90">
+                    <p className="mb-2 shrink-0 text-sm text-amber-200/90">
                       {t("preview.textTruncated")}
                     </p>
                   ) : null}
                   <div
-                    className="min-h-0 flex-1 overflow-auto rounded-lg bg-zinc-900/80 p-6 text-left text-sm leading-relaxed text-white/90 [&_a]:text-sky-300 [&_a]:underline [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-4 [&_ol]:my-2 [&_ol]:list-decimal [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/40 [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc"
+                    className="min-h-0 flex-1 overflow-auto rounded-lg bg-zinc-900/80 p-6 text-left text-base leading-relaxed text-white/90 [&_a]:text-sky-300 [&_a]:underline [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-4 [&_ol]:my-2 [&_ol]:list-decimal [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/40 [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc"
                     dangerouslySetInnerHTML={{ __html: markdownHtml }}
                   />
                 </>
               ) : textContent != null ? (
                 <>
                   {textTruncated ? (
-                    <p className="mb-2 shrink-0 text-xs text-amber-200/90">
+                    <p className="mb-2 shrink-0 text-sm text-amber-200/90">
                       {t("preview.textTruncated")}
                     </p>
                   ) : null}
-                  <pre className="min-h-0 flex-1 overflow-auto rounded-lg bg-black/40 p-4 text-left font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/90">
+                  <pre className="min-h-0 flex-1 overflow-auto rounded-lg bg-black/40 p-4 text-left font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-white/90">
                     {textContent}
                   </pre>
                 </>
@@ -844,7 +844,7 @@ export default function SlideshowOverlay({
           chromeClass,
         )}
       >
-        <p className="max-w-[min(50vw,32rem)] truncate text-sm font-medium text-white drop-shadow-sm">
+        <p className="max-w-[min(50vw,32rem)] truncate text-base font-medium text-white drop-shadow-sm">
           {fileName}
           {paths.length > 1 ? (
             <span
@@ -866,7 +866,7 @@ export default function SlideshowOverlay({
           {isImageKind ? (
             <>
               <span
-                className="self-center px-0.5 text-xs tabular-nums text-white/90 drop-shadow-sm"
+                className="self-center px-0.5 text-sm tabular-nums text-white/90 drop-shadow-sm"
                 aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
               >
                 {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
@@ -947,7 +947,7 @@ export default function SlideshowOverlay({
                 {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
             </SlideshowIconTooltip>
-            <Field orientation="horizontal" className="w-auto items-center gap-1.5 text-xs text-white/90">
+            <Field orientation="horizontal" className="w-auto items-center gap-1.5 text-sm text-white/90">
               <FieldLabel htmlFor="slideshow-interval" className="sr-only">
                 {t("slideshow.interval")}
               </FieldLabel>
@@ -971,7 +971,7 @@ export default function SlideshowOverlay({
           chromeClass,
         )}
       >
-        <p className="max-w-[min(70vw,48rem)] truncate text-xs text-white/90 drop-shadow-sm">
+        <p className="max-w-[min(70vw,48rem)] truncate text-sm text-white/90 drop-shadow-sm">
           {metadataLine || "—"}
         </p>
 

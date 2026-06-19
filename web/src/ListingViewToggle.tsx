@@ -47,7 +47,7 @@ export default function ListingViewToggle({ mode, onChange }: ListingViewToggleP
       </TooltipTrigger>
       <TooltipContent side="bottom">
         <div>{label}</div>
-        <div className="text-muted-foreground text-xs">{hint}</div>
+        <div className="text-muted-foreground text-sm">{hint}</div>
       </TooltipContent>
     </Tooltip>
   );

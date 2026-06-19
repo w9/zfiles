@@ -122,7 +122,7 @@ export default function PreviewPane({
   if (!path) {
     return (
       <aside className={shellClass} aria-label={t("preview.label")}>
-        <p className="text-sm text-muted-foreground">{t("preview.selectFile")}</p>
+        <p className="text-base text-muted-foreground">{t("preview.selectFile")}</p>
       </aside>
     );
   }
@@ -142,7 +142,7 @@ export default function PreviewPane({
   if (!stat) {
     return (
       <aside className={shellClass} aria-label={t("preview.label")}>
-        <p className="text-sm text-muted-foreground">{t("preview.loading")}</p>
+        <p className="text-base text-muted-foreground">{t("preview.loading")}</p>
       </aside>
     );
   }
@@ -195,7 +195,7 @@ export default function PreviewPane({
       {showTitle ? (
         <h2 className="mb-3 text-lg font-semibold">{stat.path.split("/").pop()}</h2>
       ) : null}
-      <dl className="mb-4 grid gap-2 text-sm">
+      <dl className="mb-4 grid gap-2 text-base">
         <MetadataValueRow rowKey="path" label={t("preview.path")} copyText={stat.path}>
           <span className="break-all">{stat.path}</span>
         </MetadataValueRow>
@@ -217,16 +217,16 @@ export default function PreviewPane({
             {symlinkResolution?.inRoot && symlinkResolution.resolvedPath != null ? (
               <button
                 type="button"
-                className="break-all text-left font-mono text-xs text-primary underline-offset-4 hover:underline"
+                className="break-all text-left font-mono text-sm text-primary underline-offset-4 hover:underline"
                 onClick={() => onSymlinkTargetClick?.(symlinkResolution.resolvedPath!)}
               >
                 {stat.symlink_target}
               </button>
             ) : (
-              <span className="break-all font-mono text-xs text-muted-foreground">
+              <span className="break-all font-mono text-sm text-muted-foreground">
                 {stat.symlink_target}
                 {!symlinkResolution?.inRoot ? (
-                  <span className="mt-1 block font-sans text-xs">
+                  <span className="mt-1 block font-sans text-sm">
                     {t("preview.symlinkOutsideRoot")}
                   </span>
                 ) : null}

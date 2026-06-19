@@ -246,7 +246,7 @@ export default function GridListing({
                       row.section === "files" ? GRID_SECTION_HEADER_TOP_GAP_PX : 0,
                   }}
                 >
-                  <p className="text-xs font-bold text-muted-foreground/60">
+                  <p className="text-sm font-bold text-muted-foreground/60">
                     {row.section === "folders"
                       ? t("listing.grid.sectionFolders")
                       : t("listing.grid.sectionFiles")}
@@ -325,7 +325,7 @@ export default function GridListing({
                           iconTheme={iconTheme}
                           pixelSize={iconPixelSize}
                         />
-                        <div className="shrink-0 px-2 py-1.5 text-center text-sm">
+                        <div className="shrink-0 px-2 py-1.5 text-center text-base">
                           {isEditing && onInlineCommit && onInlineCancel ? (
                             <InlineNameInput
                               initialName={entry.name}

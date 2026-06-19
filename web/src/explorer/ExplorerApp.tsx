@@ -1822,10 +1822,10 @@ export default function ExplorerApp() {
                       className="size-6 animate-spin text-muted-foreground"
                       aria-hidden="true"
                     />
-                    <p className="text-sm text-muted-foreground">{t("listing.loading")}</p>
+                    <p className="text-base text-muted-foreground">{t("listing.loading")}</p>
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">{t(listingPaneOverlay)}</p>
+                  <p className="text-base text-muted-foreground">{t(listingPaneOverlay)}</p>
                 )}
               </div>
             ) : null}
