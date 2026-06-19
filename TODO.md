@@ -194,5 +194,5 @@ Breadcrumb bar responsive layout: below `sm`, quick filter on its own full-width
 - [x] `ExplorerBreadcrumb.tsx`: address-bar edit mode uses same flat `InputGroup` styling as quick filter; shared class constant
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerBreadcrumb.tsx`: below `sm`, stack quick filter full-width on second row; row 1 nav + breadcrumb only
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerBreadcrumb.tsx`: below `sm`, stack quick filter full-width on second row; row 1 nav + breadcrumb only
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

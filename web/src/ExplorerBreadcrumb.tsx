@@ -153,8 +153,9 @@ export default function ExplorerBreadcrumb({
   );
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1 px-1">
-      <div className="flex shrink-0 items-center gap-0.5">
+    <div className="flex shrink-0 flex-col gap-2 px-1 pb-1.5 sm:h-9 sm:flex-row sm:items-center sm:gap-1 sm:pb-0">
+      <div className="flex h-9 min-w-0 items-center gap-1 sm:min-w-0 sm:flex-1">
+        <div className="flex shrink-0 items-center gap-0.5">
         <Button
           type="button"
           variant="ghost"
@@ -191,11 +192,11 @@ export default function ExplorerBreadcrumb({
             aria-hidden="true"
           />
         </Button>
-      </div>
-      <div
-        className={cn("min-w-0 flex-1", !editing && "cursor-text")}
-        onClick={handleRegionClick}
-      >
+        </div>
+        <div
+          className={cn("min-w-0 flex-1", !editing && "cursor-text")}
+          onClick={handleRegionClick}
+        >
         {editing ? (
           <InputGroup
             className={cn(breadcrumbInputGroupClassName, "w-full flex-1")}
@@ -265,11 +266,12 @@ export default function ExplorerBreadcrumb({
             </BreadcrumbList>
           </Breadcrumb>
         )}
+        </div>
       </div>
       <InputGroup
         className={cn(
           breadcrumbInputGroupClassName,
-          "shrink-0 pr-1 sm:w-52 md:w-60",
+          "w-full pr-1 sm:w-52 sm:shrink-0 md:w-60",
         )}
         onClick={(event) => event.stopPropagation()}
       >
