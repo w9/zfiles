@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Quick filter styling: flat, borderless input on `bg-background` in the breadcrumb bar; keep existing focus ring for now (focus-ring refresh is a follow-up). Follow-up: unified focus-ring treatment across inputs.
+Breadcrumb address-bar edit mode: same flat `InputGroup` styling as quick filter. Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
