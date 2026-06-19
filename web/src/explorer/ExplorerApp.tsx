@@ -1781,6 +1781,7 @@ export default function ExplorerApp() {
           onForward={() => void goForward()}
           onRefresh={refreshListing}
           onNavigate={(path) => void navigateTo(path)}
+          hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
           quickFilterLabel={t("quickFilter.label")}
           quickFilterPlaceholder={t("quickFilter.placeholder")}
           quickFilterClearLabel={t("quickFilter.clear")}

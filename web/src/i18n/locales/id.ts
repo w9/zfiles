@@ -9,6 +9,7 @@ export const id: Record<MessageKey, string> = {
   "breadcrumb.back": "Kembali",
   "breadcrumb.forward": "Maju",
   "breadcrumb.refresh": "Segarkan",
+  "breadcrumb.hiddenSegmentsMenu": "Segmen path tersembunyi",
   "quickFilter.label": "Saring berkas",
   "quickFilter.placeholder": "Saring…",
   "quickFilter.clear": "Hapus filter",

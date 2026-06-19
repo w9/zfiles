@@ -9,6 +9,7 @@ export const ko: Record<MessageKey, string> = {
   "breadcrumb.back": "뒤로",
   "breadcrumb.forward": "앞으로",
   "breadcrumb.refresh": "새로 고침",
+  "breadcrumb.hiddenSegmentsMenu": "숨겨진 경로 세그먼트",
   "quickFilter.label": "파일 필터링",
   "quickFilter.placeholder": "필터…",
   "quickFilter.clear": "필터 지우기",

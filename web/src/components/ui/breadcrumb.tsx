@@ -8,9 +8,13 @@ function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
   return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />
 }
 
-function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
+const BreadcrumbList = React.forwardRef<
+  HTMLOListElement,
+  React.ComponentProps<"ol">
+>(({ className, ...props }, ref) => {
   return (
     <ol
+      ref={ref}
       data-slot="breadcrumb-list"
       className={cn(
         "flex flex-wrap items-center gap-1.5 text-sm break-words text-muted-foreground sm:gap-2.5",
@@ -19,7 +23,8 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
       {...props}
     />
   )
-}
+})
+BreadcrumbList.displayName = "BreadcrumbList"
 
 function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
@@ -49,9 +54,13 @@ function BreadcrumbLink({
   )
 }
 
-function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
+const BreadcrumbPage = React.forwardRef<
+  HTMLSpanElement,
+  React.ComponentProps<"span">
+>(({ className, ...props }, ref) => {
   return (
     <span
+      ref={ref}
       data-slot="breadcrumb-page"
       role="link"
       aria-disabled="true"
@@ -60,7 +69,8 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       {...props}
     />
   )
-}
+})
+BreadcrumbPage.displayName = "BreadcrumbPage"
 
 function BreadcrumbSeparator({
   children,
