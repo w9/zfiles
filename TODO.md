@@ -188,5 +188,5 @@ Quick filter styling: flat, borderless input on `bg-background` in the breadcrum
 - [x] Integration tests: banner shows `--share-host` and `$HOSTNAME` fallback on `0.0.0.0` + `--token`
 - [x] Run `cargo test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerBreadcrumb.tsx`: quick-filter `InputGroup` — no border, `bg-background`, no shadow; leave focus ring unchanged
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerBreadcrumb.tsx`: quick-filter `InputGroup` — no border, `bg-background`, no shadow; leave focus ring unchanged
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

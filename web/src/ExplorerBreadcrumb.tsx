@@ -261,7 +261,7 @@ export default function ExplorerBreadcrumb({
         )}
       </div>
       <InputGroup
-        className="h-7 min-w-0 shrink-0 rounded-lg pr-1 sm:w-52 md:w-60"
+        className="h-7 min-w-0 shrink-0 rounded-lg border-0 bg-background pr-1 shadow-none dark:bg-background sm:w-52 md:w-60"
         onClick={(event) => event.stopPropagation()}
       >
         {(() => {
