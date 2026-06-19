@@ -276,10 +276,10 @@ export default function ExplorerBreadcrumb({
           />
         </Button>
       </div>
-      <div className="relative flex min-w-0 flex-1 items-center gap-1">
+      <div className="relative flex min-w-0 flex-1 self-stretch items-center">
         <div
           className={cn(
-            "min-w-0 flex-1 overflow-hidden",
+            "flex h-full min-w-0 flex-1 items-center overflow-hidden",
             !editing && "cursor-text",
             quickFilterFocused && "max-sm:invisible",
           )}
@@ -368,10 +368,10 @@ export default function ExplorerBreadcrumb({
         <InputGroup
           className={cn(
             breadcrumbInputGroupClassName,
-            "pr-1",
             quickFilterFocused
-              ? "max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:flex max-sm:w-full"
+              ? "max-sm:absolute max-sm:inset-x-0 max-sm:top-1/2 max-sm:z-10 max-sm:flex max-sm:h-7 max-sm:min-w-0 max-sm:max-w-full max-sm:-translate-y-1/2 max-sm:has-[[data-slot=input-group-control]:focus-visible]:ring-inset"
               : "max-sm:pointer-events-none max-sm:absolute max-sm:h-0 max-sm:w-0 max-sm:overflow-hidden max-sm:opacity-0",
+            quickFilterFocused ? "max-sm:pr-0" : "pr-1",
             "sm:static sm:flex sm:h-7 sm:w-52 sm:shrink-0 sm:opacity-100 sm:pointer-events-auto md:w-60",
           )}
           onClick={(event) => event.stopPropagation()}
