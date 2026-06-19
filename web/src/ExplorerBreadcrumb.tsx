@@ -12,7 +12,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -30,6 +29,9 @@ import {
   isValidQuickFilterRegex,
   parseQuickFilterMode,
 } from "./quickFilter";
+
+const breadcrumbInputGroupClassName =
+  "h-7 min-w-0 rounded-lg border-0 bg-background shadow-none dark:bg-background";
 
 type ExplorerBreadcrumbProps = {
   currentPath: string;
@@ -195,16 +197,20 @@ export default function ExplorerBreadcrumb({
         onClick={handleRegionClick}
       >
         {editing ? (
-          <Input
-            ref={inputRef}
-            aria-label={addressBarLabel}
-            placeholder={addressBarPlaceholder}
-            value={draft}
-            className="h-full w-full rounded-none border-0 p-0 text-sm leading-5 shadow-none focus-visible:ring-0"
-            onBlur={cancelEditing}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleInputKeyDown}
-          />
+          <InputGroup
+            className={cn(breadcrumbInputGroupClassName, "w-full flex-1")}
+          >
+            <InputGroupInput
+              ref={inputRef}
+              aria-label={addressBarLabel}
+              placeholder={addressBarPlaceholder}
+              value={draft}
+              className="px-2 text-sm"
+              onBlur={cancelEditing}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleInputKeyDown}
+            />
+          </InputGroup>
         ) : (
           <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
             <BreadcrumbList className="flex-nowrap">
@@ -261,7 +267,10 @@ export default function ExplorerBreadcrumb({
         )}
       </div>
       <InputGroup
-        className="h-7 min-w-0 shrink-0 rounded-lg border-0 bg-background pr-1 shadow-none dark:bg-background sm:w-52 md:w-60"
+        className={cn(
+          breadcrumbInputGroupClassName,
+          "shrink-0 pr-1 sm:w-52 md:w-60",
+        )}
         onClick={(event) => event.stopPropagation()}
       >
         {(() => {

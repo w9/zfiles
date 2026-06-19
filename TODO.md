@@ -190,3 +190,6 @@ Breadcrumb address-bar edit mode: same flat `InputGroup` styling as quick filter
 
 - [x] `ExplorerBreadcrumb.tsx`: quick-filter `InputGroup` — no border, `bg-background`, no shadow; leave focus ring unchanged
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [x] `ExplorerBreadcrumb.tsx`: address-bar edit mode uses same flat `InputGroup` styling as quick filter; shared class constant
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
