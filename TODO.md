@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Touch browse: single tap opens (no selection outside Select mode); suppress double-tap activate on touch. Follow-up: breadcrumb/focus-ring polish.
+Narrow breadcrumb filter: collapsed ListFilter icon on the address row; focus/typeahead expands full filter over breadcrumb only; active icon when filtered. Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -201,3 +201,6 @@ Touch browse: single tap opens (no selection outside Select mode); suppress doub
 - [x] `ExplorerApp.tsx`: track last listing `pointerType`; touch browse → single-tap activate, no selection; clear selection on Done (touch)
 - [x] `GridListing.tsx` + `VirtualListing.tsx`: skip `onDoubleClick` activate when last pointer is touch
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: narrow collapsed ListFilter icon on address row; focus/typeahead expands filter over breadcrumb; active icon when filtered
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
