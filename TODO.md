@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Breadcrumb address-bar edit mode: same flat `InputGroup` styling as quick filter. Follow-up: unified focus-ring treatment across inputs.
+Breadcrumb bar responsive layout: below `sm`, quick filter on its own full-width row; row 1 stays nav + path. Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -193,3 +193,6 @@ Breadcrumb address-bar edit mode: same flat `InputGroup` styling as quick filter
 
 - [x] `ExplorerBreadcrumb.tsx`: address-bar edit mode uses same flat `InputGroup` styling as quick filter; shared class constant
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: below `sm`, stack quick filter full-width on second row; row 1 nav + breadcrumb only
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
