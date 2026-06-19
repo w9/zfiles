@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Status bar is a flat two-child row (left cluster + right version) with natural height, no fixed h-9. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Touch-friendly multi-select: toolbar Select/Done enters selection mode (tap toggles, swipe range on touch); disable marquee on touch; empty tap clears only outside selection mode. Follow-up: selection-mode chrome polish, swipe auto-scroll near viewport edges.
 
 ## TODO List
 
@@ -174,3 +174,10 @@ Status bar is a flat two-child row (left cluster + right version) with natural h
 
 - [x] `StatusBar.tsx`: flatten to two-child root (`justify-between`, `w-full min-w-0`, no `h-9`); left cluster + right version wrapper
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `listingSwipeRangeSelect.ts` + tests: swipe-range helpers (touch + selection mode gate, anchor→target index range)
+- [ ] `useListingSwipeRangeSelect.ts`: touch swipe range in selection mode; suppress post-swipe click
+- [ ] `useListingMarqueeSelect.ts`: skip marquee drag on `pointerType === "touch"`; gate empty-click clear via option
+- [ ] `ExplorerApp.tsx`: `selectionMode` state + header Select/Done; tap toggles in mode; compose swipe + marquee handlers; exit on navigate
+- [ ] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
