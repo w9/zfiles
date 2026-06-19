@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Quick-filter help uses a custom `QuestionMarkIcon` SVG component. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Sonner `<Toaster />` moved out of the explorer `<main>` flex column so its empty live-region section no longer consumes flex gap below the status bar. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -164,3 +164,6 @@ Quick-filter help uses a custom `QuestionMarkIcon` SVG component. Follow-up cycl
 - [x] `QuestionMarkIcon.tsx`: custom quick-filter help SVG (Lucide-like props)
 - [x] `ExplorerBreadcrumb.tsx`: swap `CircleQuestionMark` for `QuestionMarkIcon`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerApp.tsx`: render `<Toaster />` as a sibling of `<main>`, not inside the flex column
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
