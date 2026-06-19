@@ -149,5 +149,5 @@ Delay confirm-dialog "Working…" label until the shared 300ms visual threshold 
 - [x] `icons.ts`: map `selection.copy-paths` to `CopySlash` (replace `ListFilter`)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ActionConfirmDialog.tsx`: delay "Working…" label until `showExecutingVisual` (300ms); keep Confirm disabled immediately
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ActionConfirmDialog.tsx`: delay "Working…" label until `showExecutingVisual` (300ms); keep Confirm disabled immediately
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

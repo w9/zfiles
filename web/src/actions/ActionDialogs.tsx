@@ -35,6 +35,8 @@ export function ActionConfirmDialog({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
+  const showWorkingVisual = executing && showExecutingVisual;
+
   return (
     <Dialog
       open={action != null}
@@ -59,11 +61,12 @@ export function ActionConfirmDialog({
             className="inline-flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={onConfirm}
             disabled={executing}
+            aria-busy={executing}
           >
-            {executing && showExecutingVisual ? (
+            {showWorkingVisual ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            {executing ? workingLabel : confirmLabel}
+            {showWorkingVisual ? workingLabel : confirmLabel}
           </Button>
         </div>
       </DialogContent>
