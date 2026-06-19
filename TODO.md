@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Tighten quick-filter inline-end controls (× and `?` slots). Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Quick-filter help uses Lucide `CircleQuestionMark` instead of a text `?`. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -155,5 +155,8 @@ Tighten quick-filter inline-end controls (× and `?` slots). Follow-up cycle: co
 - [x] `ExplorerBreadcrumb.tsx`: quick-filter tooltip on inline-end `?` only (× then `?`); remove whole-input trigger; help text always
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerBreadcrumb.tsx`: shrink inline-end × and `?` slot widths
+- [x] `ExplorerBreadcrumb.tsx`: shrink inline-end × and `?` slot widths
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: replace help `?` text with `CircleQuestionMark` icon
 - [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
