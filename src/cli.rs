@@ -167,6 +167,10 @@ pub struct ServeArgs {
     #[arg(long, value_name = "LOCALE")]
     pub lang: Option<String>,
 
+    /// Hostname for the LAN share URL when binding `0.0.0.0` (falls back to `$HOSTNAME`, then external IP)
+    #[arg(long, value_name = "HOSTNAME")]
+    pub share_host: Option<String>,
+
     /// Proxy UI assets to a Vite dev server for hot module replacement
     #[cfg(feature = "dev-frontend")]
     #[arg(long, default_value_t = false)]
@@ -325,6 +329,21 @@ mod tests {
     fn reject_unsupported_lang_flag() {
         let cli = Cli::parse_from(["zfiles", "--lang", "fr"]);
         assert!(cli.serve.locale().is_err());
+    }
+
+    #[test]
+    fn parse_share_host_flag() {
+        let cli = Cli::parse_from([
+            "zfiles",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8080",
+            "--token",
+            "--share-host",
+            "mybox.local",
+        ]);
+        assert_eq!(cli.serve.share_host.as_deref(), Some("mybox.local"));
     }
 
     #[test]

@@ -162,8 +162,14 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
     let ui_lang = serve.locale()?;
     let explorer_url = browser::open_url(&bound, share_token.as_deref(), ui_lang);
     let public_share = serve.token && serve.is_public_bind()?;
-    let public_share_url =
-        public_share.then(|| browser::public_share_url(&bound, share_token.as_deref(), ui_lang));
+    let public_share_url = public_share.then(|| {
+        browser::public_share_url(
+            &bound,
+            share_token.as_deref(),
+            ui_lang,
+            serve.share_host.as_deref(),
+        )
+    });
     let banner_url = public_share_url
         .as_ref()
         .map_or_else(|| explorer_url.clone(), |share| share.url.clone());

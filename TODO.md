@@ -182,8 +182,8 @@ CLI `--share-host` for wildcard (`0.0.0.0`) LAN share URLs: resolve banner → l
 - [x] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `cli.rs`: add `--share-host` (`ServeArgs`); hostname only (no port)
-- [ ] `browser.rs` + tests: wildcard share-host resolution (CLI → `$HOSTNAME` → external IP → localhost note)
-- [ ] `transport.rs`: pass `share_host` into `public_share_url` for banner, QR, and browser-open
-- [ ] Integration tests: banner shows `--share-host` and `$HOSTNAME` fallback on `0.0.0.0` + `--token`
-- [ ] Run `cargo test`; bump patch version in `Cargo.toml`
+- [x] `cli.rs`: add `--share-host` (`ServeArgs`); hostname only (no port)
+- [x] `browser.rs` + tests: wildcard share-host resolution (CLI → `$HOSTNAME` → external IP → localhost note)
+- [x] `transport.rs`: pass `share_host` into `public_share_url` for banner, QR, and browser-open
+- [x] Integration tests: banner shows `--share-host` and `$HOSTNAME` fallback on `0.0.0.0` + `--token`
+- [x] Run `cargo test`; bump patch version in `Cargo.toml`

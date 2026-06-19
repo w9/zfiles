@@ -25,13 +25,26 @@ fn token_from_banner(output: &str) -> Option<String> {
 }
 
 fn collect_startup_stdout(args: &[&str], dir: &std::path::Path) -> String {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_zfiles"))
+    collect_startup_stdout_with_env(args, dir, &[])
+}
+
+fn collect_startup_stdout_with_env(
+    args: &[&str],
+    dir: &std::path::Path,
+    env: &[(&str, &str)],
+) -> String {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_zfiles"));
+    command
         .args(args)
         .arg(dir)
         .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("spawn zfiles");
+        .stderr(Stdio::null());
+
+    for (key, value) in env {
+        command.env(key, value);
+    }
+
+    let mut child = command.spawn().expect("spawn zfiles");
 
     let stdout = child.stdout.take().expect("stdout");
     let reader = BufReader::new(stdout);
@@ -99,6 +112,56 @@ fn token_startup_prints_hex_auth_token_in_banner() {
     assert!(
         is_hex_token(&token),
         "expected 32-char hex auth token, got {token:?}"
+    );
+}
+
+#[test]
+fn public_bind_with_share_host_uses_override_in_banner_url() {
+    let dir = tempdir().unwrap();
+    let output = collect_startup_stdout(
+        &[
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "0",
+            "--token",
+            "--no-open",
+            "--share-host",
+            "share.example",
+        ],
+        dir.path(),
+    );
+
+    assert!(
+        output.lines().any(|line| {
+            line.contains('→') && line.contains("http://share.example:") && line.contains("token=")
+        }),
+        "expected share-host override in banner URL:\n{output}"
+    );
+    assert!(
+        !output.lines().any(|line| line.contains("http://0.0.0.0:")),
+        "share URL must not expose the wildcard bind address:\n{output}"
+    );
+}
+
+#[test]
+fn public_bind_falls_back_to_hostname_env_in_banner_url() {
+    let dir = tempdir().unwrap();
+    let output = collect_startup_stdout_with_env(
+        &["--host", "0.0.0.0", "--port", "0", "--token", "--no-open"],
+        dir.path(),
+        &[("HOSTNAME", "mybox.local")],
+    );
+
+    assert!(
+        output.lines().any(|line| {
+            line.contains('→') && line.contains("http://mybox.local:") && line.contains("token=")
+        }),
+        "expected HOSTNAME fallback in banner URL:\n{output}"
+    );
+    assert!(
+        !output.lines().any(|line| line.contains("http://0.0.0.0:")),
+        "share URL must not expose the wildcard bind address:\n{output}"
     );
 }
 
