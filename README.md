@@ -111,7 +111,6 @@ Non-loopback binds reject symlinks that escape the serve root by default (`follo
 | Action system and keyboard commands | [design/action_system.md](design/action_system.md) |
 | Cloud connect flow, URL params, credentials | [docs/cloud-connect.md](docs/cloud-connect.md) |
 | Bucket CORS for the cloud SPA | [docs/cors.md](docs/cors.md) |
-| Implementation checklist | [TODO.md](TODO.md) |
 
 ### Kernel HTTP API (local mode)
 

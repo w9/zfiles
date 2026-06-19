@@ -4,7 +4,7 @@ Thanks for your interest in improving zfiles.
 
 ## Before you start
 
-Read [design/design.md](design/design.md) for architecture, invariants, and testing strategy. [TODO.md](TODO.md) tracks near-term implementation work. Large or structural changes should align with that design — especially the instant cold-start rule (nothing in startup scales with directory size) and the dual-mode backend split.
+Read [design/design.md](design/design.md) for architecture, invariants, and testing strategy. Large or structural changes should align with that design — especially the instant cold-start rule (nothing in startup scales with directory size) and the dual-mode backend split. Cursor agents follow [AGENTS.md](AGENTS.md) for development cycles.
 
 ## Getting set up
 

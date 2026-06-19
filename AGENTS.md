@@ -1,33 +1,34 @@
 # Agent instructions
 
-You are working on **zfiles**, a local file server with a browser-based explorer. Read [design/design.md](design/design.md) for architecture, invariants, and technical goals before structural changes; [TODO.md](TODO.md) is the implementation checklist; [README.md](README.md) has the quick start and API summary.
+You are working on **zfiles**, a local file server with a browser-based explorer. Read [design/design.md](design/design.md) for architecture, invariants, and technical goals before structural changes; [README.md](README.md) has the quick start and API summary.
 
 ## Development cycle
 
-**Every user request to change the codebase — implement, add, fix, move, refactor, etc. — runs one development cycle.** There is no exemption for small diffs, for scope already discussed in earlier turns or summaries, or for requests without **"Go!"** ("Go!" is just shorthand for: run one cycle on the current near-term plan in `TODO.md`). Only questions, reviews, planning, and read-only investigation are not cycles.
+**Every user request to change the codebase — implement, add, fix, move, refactor, etc. — runs one development cycle.** There is no exemption for small diffs, for scope already discussed in earlier turns or summaries, or for requests without **"Go!"** ("Go!" is just shorthand for: run one cycle on the current near-term plan in the session TODO list). Only questions, reviews, planning, and read-only investigation are not cycles.
 
-**Hard rule:** do not edit implementation files (`src/`, `web/`, `tests/`, `e2e/`, …) until steps 2–4 are **committed** for *this* request, in *this* session. Nothing carries over: a summarized conversation, an earlier discussion, or TODO edits sitting uncommitted in the same batch do not satisfy steps 2–4. Start a cycle by reading `design/design.md`, `TODO.md`, and `AGENTS.md`; until the planning commit exists, edit only `TODO.md`.
+**Hard rule:** do not edit implementation files (`src/`, `web/`, `tests/`, `e2e/`, …) until steps 2–3 are **complete** for *this* request, in *this* session. Nothing carries over: a summarized conversation, an earlier discussion, or TODO items from a prior turn do not satisfy steps 2–3. Start a cycle by reading `design/design.md` and `AGENTS.md`; during planning (steps 2–3), use only the **TodoWrite** tool and your plan message — not implementation files.
 
 0. **Dirty worktree** — Before AQ, check whether the git worktree is dirty (`git status` shows uncommitted or untracked changes). If it is, use **AskQuestion** to confirm how to proceed:
    - **(A) I just resolved it** — The user signals that they have just committed or otherwise cleared the worktree on their own; re-check `git status` and continue the cycle only if clean.
    - **(B) Commit in this conversation** — Commit the outstanding changes in this chat (respecting [commit-scope rules](#before-every-commit)), then continue the cycle.
    - **(C) Stop** — End this cycle without further edits.
    Skip this step when the worktree is clean.
-1. **AQ (ask before planning)** — When the user appends **"AQ"** to a request, or the request has meaningful behavioral/edge-case ambiguity even without it, use the **AskQuestion** tool to confirm behavior and edge cases before planning. Never skip a triggered AQ, however trivial the change. AQ confirms *what* to build; the [scope gate](#scope-gate) authorizes the work. Try to give every AQ question a recommended answer; when you do, put that option **first** and append **(Recommended)** to its label.
-2. **Plan** — Revise the "High-level plan next" paragraph in `TODO.md` to reflect current progress and the request; leave it unchanged if still accurate.
-3. **TODO items** — Append the cycle's scope as concrete unchecked items at the **bottom** of the TODO list (below all existing entries, including completed `[x]` ones). As many items as the work warrants, **maximum 7** per cycle — extras wait for a future cycle. Edit, split, or reorder **unfinished** items only; never remove completed ones. Keep the list near-term, not a roadmap.
-4. **Planning commit** — Commit the plan and new TODO items before writing any implementation code. This commit is required even when the user otherwise prefers no unprompted commits. If the scope gate requires approval, get it before this commit.
-5. **Implement** — Work through the new items: write tests first (design/design.md §5), implement the minimum to pass, and mark each item `[x]` when done. Update `.gitignore` when appropriate. Implementation commits follow the user's git instructions — ask first unless they explicitly asked you to commit or finish the cycle.
-6. **Verify** — Run the test suites covering what the cycle touched — `cargo test` for Rust, `pnpm test` for `web/`, both when unsure — and fix all failures before the cycle ends.
-7. **Follow-ups** — After a large batch, suggest further TODO items for a future cycle in the plan paragraph and/or your summary instead of exceeding the 7-item cap.
+1. **AQ (ask before planning)** — When the user appends **"AQ"** to a request, or the request has meaningful behavioral/edge-case ambiguity even without it, use the **AskQuestion** tool to confirm behavior and edge cases before planning. Never skip a triggered AQ, however trivial the change. AQ confirms *what* to build. Try to give every AQ question a recommended answer; when you do, put that option **first** and append **(Recommended)** to its label.
+2. **Plan** — State the high-level plan in your response to the user: what this cycle will accomplish, what is deferred, and any follow-ups. Update it when progress or scope changes.
+3. **TODO items** — Use the **TodoWrite** tool to create the cycle's scope as concrete items with `pending` status. As many items as the work warrants, **maximum 7** per cycle — extras wait for a future cycle. Edit, split, or reorder unfinished items only (`merge: true` to update without replacing the whole list). Mark each item `completed` when done; use `cancelled` if dropped. Keep the list near-term, not a roadmap.
+4. **Implement** — Work through the new items: write tests first (design/design.md §5), implement the minimum to pass, and mark each item `completed` when done. Update `.gitignore` when appropriate. Implementation commits follow the user's git instructions — ask first unless they explicitly asked you to commit or finish the cycle.
+5. **Verify** — Run the test suites covering what the cycle touched — `cargo test` for Rust, `pnpm test` for `web/`, both when unsure — and fix all failures before the cycle ends.
+6. **Follow-ups** — After a large batch, suggest further TODO items for a future cycle in the plan message and/or your summary instead of exceeding the 7-item cap.
+
+Completed work is tracked in git history and commit messages, not a repo checklist.
 
 Do not skip or reorder steps.
 
 ### Before every commit
 
 - **Commit scope** — commit only changes made in the current chat conversation. Never include edits made outside it (by the user or another session) unless the user explicitly asks.
-- **Commits touching Rust** (`src/`, `tests/`, `Cargo.*`, Rust helpers under `e2e/`): run `cargo fmt` and `cargo clippy -- -D warnings` first and fix every warning — CI fails on either. Doc-, TODO-, and web-only commits may skip both.
-- **Commits changing shipped behavior** (code or assets, not docs/TODO): bump the **patch** version in [Cargo.toml](Cargo.toml) `[package].version` in the same commit, so `zfiles --version` tracks the latest released change. Patch only, unless the user explicitly asks for minor/major; no standalone version-only commits.
+- **Commits touching Rust** (`src/`, `tests/`, `Cargo.*`, Rust helpers under `e2e/`): run `cargo fmt` and `cargo clippy -- -D warnings` first and fix every warning — CI fails on either. Doc- and web-only commits may skip both.
+- **Commits changing shipped behavior** (code or assets, not docs): bump the **patch** version in [Cargo.toml](Cargo.toml) `[package].version` in the same commit, so `zfiles --version` tracks the latest released change. Patch only, unless the user explicitly asks for minor/major; no standalone version-only commits.
 
 ## Frontend (web UI)
 
