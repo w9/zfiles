@@ -363,7 +363,7 @@ export default function ExplorerBreadcrumb({
               aria-label={addressBarLabel}
               placeholder={addressBarPlaceholder}
               value={draft}
-              className="px-2 text-sm"
+              className="px-2"
               onBlur={cancelEditing}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleInputKeyDown}
@@ -394,7 +394,7 @@ export default function ExplorerBreadcrumb({
                 placeholder={quickFilterPlaceholder}
                 value={quickFilterValue}
                 aria-invalid={hasRegexError || undefined}
-                className="px-2 text-sm"
+                className="px-2"
                 onFocus={() => setQuickFilterFocused(true)}
                 onBlur={() => setQuickFilterFocused(false)}
                 onChange={(event) => onQuickFilterChange(event.target.value)}

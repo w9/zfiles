@@ -216,8 +216,8 @@
 - [x] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `input.tsx` + `textarea.tsx`: drop `md:text-sm`; keep `text-base` on all viewports
-- [ ] `select.tsx` + `command.tsx`: `text-base` on `SelectTrigger` and `CommandInput`
-- [ ] `InlineNameInput.tsx`: 16px minimal styling (drop compact height/font overrides)
-- [ ] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `input.tsx` + `textarea.tsx`: drop `md:text-sm`; keep `text-base` on all viewports
+- [x] `select.tsx` + `command.tsx`: `text-base` on `SelectTrigger` and `CommandInput`
+- [x] `InlineNameInput.tsx`: 16px minimal styling (drop compact height/font overrides)
+- [x] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
