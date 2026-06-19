@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowLeft, ArrowRight, CircleQuestionMark, Home, RefreshCw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, RefreshCw, X } from "lucide-react";
+
+import { QuestionMarkIcon } from "@/components/icons/QuestionMarkIcon";
 
 import {
   Breadcrumb,
@@ -310,7 +312,7 @@ export default function ExplorerBreadcrumb({
                 className="inline-flex size-4 shrink-0 items-center justify-center select-none"
                 aria-hidden="true"
               >
-                <CircleQuestionMark className="pointer-events-none size-3 text-muted-foreground" />
+                <QuestionMarkIcon className="pointer-events-none size-3 text-muted-foreground" />
               </span>
             </TooltipTrigger>
             <TooltipContent

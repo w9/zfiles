@@ -161,6 +161,6 @@ Quick-filter help uses a custom `QuestionMarkIcon` SVG component. Follow-up cycl
 - [x] `ExplorerBreadcrumb.tsx`: replace help `?` text with `CircleQuestionMark` icon
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `QuestionMarkIcon.tsx`: custom quick-filter help SVG (Lucide-like props)
-- [ ] `ExplorerBreadcrumb.tsx`: swap `CircleQuestionMark` for `QuestionMarkIcon`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `QuestionMarkIcon.tsx`: custom quick-filter help SVG (Lucide-like props)
+- [x] `ExplorerBreadcrumb.tsx`: swap `CircleQuestionMark` for `QuestionMarkIcon`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
