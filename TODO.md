@@ -172,5 +172,5 @@ Status bar is a flat two-child row (left cluster + right version) with natural h
 - [x] `e2e/tests/smoke.spec.ts`: drop status-bar `bg-destructive` class assertion; offline still via BackendStatus role
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `StatusBar.tsx`: flatten to two-child root (`justify-between`, `w-full min-w-0`, no `h-9`); left cluster + right version wrapper
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `StatusBar.tsx`: flatten to two-child root (`justify-between`, `w-full min-w-0`, no `h-9`); left cluster + right version wrapper
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

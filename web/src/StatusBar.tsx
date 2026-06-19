@@ -40,7 +40,7 @@ export default function StatusBar({
   return (
     <div
       className={cn(
-        "flex h-9 shrink-0 items-center gap-3 overflow-hidden",
+        "flex w-full min-w-0 shrink-0 items-center justify-between overflow-hidden",
         className,
       )}
       role="contentinfo"
@@ -77,14 +77,16 @@ export default function StatusBar({
         ) : null}
       </div>
       {backendMode === "local" && kernelVersion ? (
-        <button
-          type="button"
-          className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          onClick={onVersionClick}
-          aria-label={t("statusBar.openAbout", { version: kernelVersion })}
-        >
-          {t("statusBar.serverVersion", { version: kernelVersion })}
-        </button>
+        <div className="flex shrink-0 items-center">
+          <button
+            type="button"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            onClick={onVersionClick}
+            aria-label={t("statusBar.openAbout", { version: kernelVersion })}
+          >
+            {t("statusBar.serverVersion", { version: kernelVersion })}
+          </button>
+        </div>
       ) : null}
     </div>
   );
