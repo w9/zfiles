@@ -202,5 +202,5 @@ Narrow breadcrumb filter: collapsed ListFilter icon on the address row; focus/ty
 - [x] `GridListing.tsx` + `VirtualListing.tsx`: skip `onDoubleClick` activate when last pointer is touch
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerBreadcrumb.tsx`: narrow collapsed ListFilter icon on address row; focus/typeahead expands filter over breadcrumb; active icon when filtered
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerBreadcrumb.tsx`: narrow collapsed ListFilter icon on address row; focus/typeahead expands filter over breadcrumb; active icon when filtered
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

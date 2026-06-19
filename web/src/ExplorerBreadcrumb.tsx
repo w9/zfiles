@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowLeft, ArrowRight, Home, RefreshCw, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Home,
+  ListFilter,
+  RefreshCw,
+  X,
+} from "lucide-react";
 
 import { QuestionMarkIcon } from "@/components/icons/QuestionMarkIcon";
 
@@ -27,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { normalizeExplorerPath } from "./explorer/path";
 import {
   isValidQuickFilterRegex,
+  normalizeQuickFilterQuery,
   parseQuickFilterMode,
 } from "./quickFilter";
 
@@ -86,9 +94,12 @@ export default function ExplorerBreadcrumb({
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentPath);
+  const [quickFilterFocused, setQuickFilterFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const parts = currentPath ? ["", ...currentPath.split("/")] : [""];
+  const quickFilterActive =
+    normalizeQuickFilterQuery(quickFilterValue).length > 0;
 
   useEffect(() => {
     if (!editing) {
@@ -152,10 +163,13 @@ export default function ExplorerBreadcrumb({
     [cancelEditing, commitEditing],
   );
 
+  const openQuickFilter = useCallback(() => {
+    quickFilterInputRef?.current?.focus();
+  }, [quickFilterInputRef]);
+
   return (
-    <div className="flex shrink-0 flex-col gap-2 px-1 pb-1.5 sm:h-9 sm:flex-row sm:items-center sm:gap-1 sm:pb-0">
-      <div className="flex h-9 min-w-0 items-center gap-1 sm:min-w-0 sm:flex-1">
-        <div className="flex shrink-0 items-center gap-0.5">
+    <div className="flex h-9 shrink-0 items-center gap-1 px-1">
+      <div className="flex shrink-0 items-center gap-0.5">
         <Button
           type="button"
           variant="ghost"
@@ -192,62 +206,44 @@ export default function ExplorerBreadcrumb({
             aria-hidden="true"
           />
         </Button>
-        </div>
+      </div>
+      <div className="relative flex min-w-0 flex-1 items-center gap-1">
         <div
-          className={cn("min-w-0 flex-1", !editing && "cursor-text")}
+          className={cn(
+            "min-w-0 flex-1 overflow-hidden",
+            !editing && "cursor-text",
+            quickFilterFocused && "max-sm:invisible",
+          )}
           onClick={handleRegionClick}
         >
-        {editing ? (
-          <InputGroup
-            className={cn(breadcrumbInputGroupClassName, "w-full flex-1")}
-          >
-            <InputGroupInput
-              ref={inputRef}
-              aria-label={addressBarLabel}
-              placeholder={addressBarPlaceholder}
-              value={draft}
-              className="px-2 text-sm"
-              onBlur={cancelEditing}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleInputKeyDown}
-            />
-          </InputGroup>
-        ) : (
-          <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
-            <BreadcrumbList className="flex-nowrap">
-              {parts.map((part, index) => {
-                const path = parts.slice(1, index + 1).join("/");
-                const isRoot = index === 0;
-                const isLast = index === parts.length - 1;
-                return (
-                  <span key={`${part}-${index}`} className="contents">
-                    {index > 0 ? <BreadcrumbSeparator /> : null}
-                    <BreadcrumbItem className={isRoot ? "ml-1" : undefined}>
-                      {isLast ? (
-                        <BreadcrumbPage>
-                          {isRoot ? (
-                            <Home
-                              aria-hidden="true"
-                              className="size-4 shrink-0"
-                            />
-                          ) : (
-                            part
-                          )}
-                          {isRoot ? (
-                            <span className="sr-only">{rootAriaLabel}</span>
-                          ) : null}
-                        </BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink asChild>
-                          <button
-                            type="button"
-                            className="cursor-pointer bg-transparent p-0"
-                            aria-label={isRoot ? rootAriaLabel : undefined}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onNavigate(path);
-                            }}
-                          >
+          {editing ? (
+            <InputGroup
+              className={cn(breadcrumbInputGroupClassName, "w-full flex-1")}
+            >
+              <InputGroupInput
+                ref={inputRef}
+                aria-label={addressBarLabel}
+                placeholder={addressBarPlaceholder}
+                value={draft}
+                className="px-2 text-sm"
+                onBlur={cancelEditing}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={handleInputKeyDown}
+              />
+            </InputGroup>
+          ) : (
+            <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
+              <BreadcrumbList className="flex-nowrap">
+                {parts.map((part, index) => {
+                  const path = parts.slice(1, index + 1).join("/");
+                  const isRoot = index === 0;
+                  const isLast = index === parts.length - 1;
+                  return (
+                    <span key={`${part}-${index}`} className="contents">
+                      {index > 0 ? <BreadcrumbSeparator /> : null}
+                      <BreadcrumbItem className={isRoot ? "ml-1" : undefined}>
+                        {isLast ? (
+                          <BreadcrumbPage>
                             {isRoot ? (
                               <Home
                                 aria-hidden="true"
@@ -256,87 +252,131 @@ export default function ExplorerBreadcrumb({
                             ) : (
                               part
                             )}
-                          </button>
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>
-                  </span>
-                );
-              })}
-            </BreadcrumbList>
-          </Breadcrumb>
-        )}
+                            {isRoot ? (
+                              <span className="sr-only">{rootAriaLabel}</span>
+                            ) : null}
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink asChild>
+                            <button
+                              type="button"
+                              className="cursor-pointer bg-transparent p-0"
+                              aria-label={isRoot ? rootAriaLabel : undefined}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onNavigate(path);
+                              }}
+                            >
+                              {isRoot ? (
+                                <Home
+                                  aria-hidden="true"
+                                  className="size-4 shrink-0"
+                                />
+                              ) : (
+                                part
+                              )}
+                            </button>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                    </span>
+                  );
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
         </div>
-      </div>
-      <InputGroup
-        className={cn(
-          breadcrumbInputGroupClassName,
-          "w-full pr-1 sm:w-52 sm:shrink-0 md:w-60",
-        )}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {(() => {
-          const mode = parseQuickFilterMode(quickFilterValue);
-          const hasRegexError =
-            mode?.kind === "regex" && !isValidQuickFilterRegex(mode.pattern);
-          return (
-            <InputGroupInput
-              ref={quickFilterInputRef}
-              type="text"
-              aria-label={quickFilterLabel}
-              placeholder={quickFilterPlaceholder}
-              value={quickFilterValue}
-              aria-invalid={hasRegexError || undefined}
-              className="px-2 text-sm"
-              onChange={(event) => onQuickFilterChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  onQuickFilterChange("");
-                  event.currentTarget.blur();
-                  return;
-                }
-                onQuickFilterKeyDown?.(event);
-              }}
-            />
-          );
-        })()}
-        <InputGroupAddon align="inline-end" className="gap-0 pr-0.5">
-          <span className="inline-flex size-4 shrink-0 items-center justify-center">
-            {quickFilterValue.length > 0 ? (
-              <InputGroupButton
-                size="icon-xs"
-                className="size-4"
-                aria-label={quickFilterClearLabel}
-                onClick={() => {
-                  onQuickFilterChange("");
-                  quickFilterInputRef?.current?.focus();
+        <InputGroup
+          className={cn(
+            breadcrumbInputGroupClassName,
+            "pr-1",
+            quickFilterFocused
+              ? "max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:flex max-sm:w-full"
+              : "max-sm:pointer-events-none max-sm:absolute max-sm:h-0 max-sm:w-0 max-sm:overflow-hidden max-sm:opacity-0",
+            "sm:static sm:flex sm:h-7 sm:w-52 sm:shrink-0 sm:opacity-100 sm:pointer-events-auto md:w-60",
+          )}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {(() => {
+            const mode = parseQuickFilterMode(quickFilterValue);
+            const hasRegexError =
+              mode?.kind === "regex" && !isValidQuickFilterRegex(mode.pattern);
+            return (
+              <InputGroupInput
+                ref={quickFilterInputRef}
+                type="text"
+                aria-label={quickFilterLabel}
+                placeholder={quickFilterPlaceholder}
+                value={quickFilterValue}
+                aria-invalid={hasRegexError || undefined}
+                className="px-2 text-sm"
+                onFocus={() => setQuickFilterFocused(true)}
+                onBlur={() => setQuickFilterFocused(false)}
+                onChange={(event) => onQuickFilterChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    onQuickFilterChange("");
+                    event.currentTarget.blur();
+                    return;
+                  }
+                  onQuickFilterKeyDown?.(event);
                 }}
+              />
+            );
+          })()}
+          <InputGroupAddon align="inline-end" className="gap-0 pr-0.5">
+            <span className="inline-flex size-4 shrink-0 items-center justify-center">
+              {quickFilterValue.length > 0 ? (
+                <InputGroupButton
+                  size="icon-xs"
+                  className="size-4"
+                  aria-label={quickFilterClearLabel}
+                  onClick={() => {
+                    onQuickFilterChange("");
+                    quickFilterInputRef?.current?.focus();
+                  }}
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </InputGroupButton>
+              ) : null}
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="inline-flex size-4 shrink-0 items-center justify-center select-none"
+                  aria-hidden="true"
+                >
+                  <QuestionMarkIcon className="pointer-events-none size-3 text-muted-foreground" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                align="end"
+                className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
               >
-                <X className="size-3" aria-hidden="true" />
-              </InputGroupButton>
-            ) : null}
-          </span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="inline-flex size-4 shrink-0 items-center justify-center select-none"
-                aria-hidden="true"
-              >
-                <QuestionMarkIcon className="pointer-events-none size-3 text-muted-foreground" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              sideOffset={6}
-              align="end"
-              className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
-            >
-              {quickFilterHelpText}
-            </TooltipContent>
-          </Tooltip>
-        </InputGroupAddon>
-      </InputGroup>
+                {quickFilterHelpText}
+              </TooltipContent>
+            </Tooltip>
+          </InputGroupAddon>
+        </InputGroup>
+      </div>
+      {!quickFilterFocused ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "size-7 shrink-0 sm:hidden",
+            quickFilterActive && "text-primary",
+          )}
+          aria-label={quickFilterLabel}
+          onClick={openQuickFilter}
+        >
+          <ListFilter className="size-4" aria-hidden="true" />
+        </Button>
+      ) : null}
     </div>
   );
 }
