@@ -582,18 +582,6 @@ export default function ExplorerApp() {
     setSelectionMode(false);
   }, [currentPath]);
 
-  useEffect(() => {
-    if (selectionMode) {
-      return;
-    }
-    if (
-      selectedPaths.size > 0 &&
-      lastListingPointerTypeRef.current === "touch"
-    ) {
-      clearSelection();
-    }
-  }, [selectionMode, selectedPaths.size, clearSelection]);
-
   const openSymlinkTarget = useCallback(
     async (resolvedPath: string) => {
       try {
@@ -691,6 +679,18 @@ export default function ExplorerApp() {
     setSelectedPaths(new Set());
     setSelectedPath(null);
   }, []);
+
+  useEffect(() => {
+    if (selectionMode) {
+      return;
+    }
+    if (
+      selectedPaths.size > 0 &&
+      lastListingPointerTypeRef.current === "touch"
+    ) {
+      clearSelection();
+    }
+  }, [selectionMode, selectedPaths.size, clearSelection]);
 
   const clearMultiSelection = useCallback(() => {
     setSelectedPaths((current) => (current.size === 0 ? current : new Set()));
