@@ -1639,7 +1639,6 @@ export default function ExplorerApp() {
           quickFilterPlaceholder={t("quickFilter.placeholder")}
           quickFilterClearLabel={t("quickFilter.clear")}
           quickFilterHelpText={t("quickFilter.help")}
-          quickFilterRegexErrorLabel={t("quickFilter.regexError")}
           quickFilterValue={quickFilter}
           onQuickFilterChange={setQuickFilter}
           onQuickFilterKeyDown={handleQuickFilterKeyDown}
