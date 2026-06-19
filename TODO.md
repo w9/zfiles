@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Sonner `<Toaster />` moved out of the explorer `<main>` flex column so its empty live-region section no longer consumes flex gap below the status bar. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Status bar root div is a naked flex row (no card bg, rounding, padding, or offline tint); offline state stays in `BackendStatus` only. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -167,3 +167,7 @@ Sonner `<Toaster />` moved out of the explorer `<main>` flex column so its empty
 
 - [x] `ExplorerApp.tsx`: render `<Toaster />` as a sibling of `<main>`, not inside the flex column
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `StatusBar.tsx`: remove card surface (`bg-card`, `rounded-xl`, `px-3`) and offline `bg-destructive/10` tint
+- [ ] `e2e/tests/smoke.spec.ts`: drop status-bar `bg-destructive` class assertion; offline still via BackendStatus role
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
