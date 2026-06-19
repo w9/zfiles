@@ -40,8 +40,7 @@ export default function StatusBar({
   return (
     <div
       className={cn(
-        "flex h-9 shrink-0 items-center gap-3 overflow-hidden rounded-xl bg-card px-3",
-        backendStatus === "offline" && "bg-destructive/10",
+        "flex h-9 shrink-0 items-center gap-3 overflow-hidden",
         className,
       )}
       role="contentinfo"

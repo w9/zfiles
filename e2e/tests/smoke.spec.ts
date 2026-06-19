@@ -132,9 +132,6 @@ test("header shows offline backend status after server stops", async ({ page }) 
     await expect(page.getByRole("status", { name: /backend connection lost/i })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByRole("contentinfo", { name: "Status bar" })).toHaveClass(
-      /bg-destructive/,
-    );
   } finally {
     offlineServer.kill("SIGTERM");
   }

@@ -168,6 +168,6 @@ Status bar root div is a naked flex row (no card bg, rounding, padding, or offli
 - [x] `ExplorerApp.tsx`: render `<Toaster />` as a sibling of `<main>`, not inside the flex column
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `StatusBar.tsx`: remove card surface (`bg-card`, `rounded-xl`, `px-3`) and offline `bg-destructive/10` tint
-- [ ] `e2e/tests/smoke.spec.ts`: drop status-bar `bg-destructive` class assertion; offline still via BackendStatus role
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `StatusBar.tsx`: remove card surface (`bg-card`, `rounded-xl`, `px-3`) and offline `bg-destructive/10` tint
+- [x] `e2e/tests/smoke.spec.ts`: drop status-bar `bg-destructive` class assertion; offline still via BackendStatus role
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
