@@ -10,7 +10,7 @@ export default function ChordKbd({ chord, className }: ChordKbdProps) {
   return (
     <span
       className={cn(
-        "text-sm text-muted-foreground",
+        "text-xs text-muted-foreground",
         "[[data-slot=tooltip-content]_&]:text-background/70",
         className,
       )}

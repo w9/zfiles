@@ -129,7 +129,7 @@ export function gridIconPixelSize(cardWidth: number, cardHeight: number): number
   const iconAreaHeight = Math.max(0, cardHeight - nameBandPx - verticalPaddingPx);
   const fromWidth = cardWidth * 0.45;
   const fromHeight = iconAreaHeight * 0.72;
-  return Math.round(Math.max(20, Math.min(fromWidth, fromHeight, 160)));
+  return Math.round(Math.max(16, Math.min(fromWidth, fromHeight, 160)));
 }
 
 export function readStoredGridCardDefaultSize(): GridCardSize {

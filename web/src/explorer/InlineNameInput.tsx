@@ -39,7 +39,7 @@ export default function InlineNameInput({
       <input
         ref={inputRef}
         className={cn(
-          "min-w-0 flex-1 rounded border border-input bg-background px-1 text-base outline-none ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60",
+          "h-6 min-w-0 flex-1 rounded border border-input bg-background px-1 text-[14px] leading-5 outline-none ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60",
           className,
         )}
         value={value}
@@ -68,7 +68,7 @@ export default function InlineNameInput({
       />
       {busy && showBusyVisual ? (
         <Loader2
-          className="size-4 shrink-0 animate-spin text-muted-foreground"
+          className="size-3.5 shrink-0 animate-spin text-muted-foreground"
           aria-hidden="true"
         />
       ) : null}

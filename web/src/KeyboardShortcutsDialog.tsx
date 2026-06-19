@@ -47,14 +47,14 @@ export default function KeyboardShortcutsDialog({
           <div className="space-y-6 px-6 py-4">
             {groups.map((group) => (
               <section key={group.categoryKey} className="space-y-2">
-                <h3 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   {labelForKey(group.categoryKey)}
                 </h3>
                 <ul className="divide-y divide-border rounded-lg border border-border">
                   {group.rows.map((row, index) => (
                     <li
                       key={`${row.chord}-${row.actionLabel}-${index}`}
-                      className="flex items-center justify-between gap-4 px-3 py-2 text-base"
+                      className="flex items-center justify-between gap-4 px-3 py-2 text-sm"
                     >
                       <span className="min-w-0 text-foreground">{row.actionLabel}</span>
                       <ChordKbd chord={row.chord} className="shrink-0" />

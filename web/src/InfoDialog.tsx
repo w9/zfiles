@@ -62,7 +62,7 @@ function InfoAggregateSummary({
   const sizeLabel = formatSize(summary.totalSize, false);
 
   return (
-    <dl className="grid gap-2 text-base">
+    <dl className="grid gap-2 text-sm">
       <MetadataValueRow rowKey="selection" label={t("preview.aggregate.items")} copyText={selectionLabel}>
         {selectionLabel}
       </MetadataValueRow>
@@ -116,17 +116,17 @@ function InfoPanelChrome({
         aria-label={onDragHandlePointerDown ? t("preview.getInfo.dragHandle") : undefined}
         onPointerDown={onDragHandlePointerDown}
       >
-        <h2 className="min-w-0 flex-1 truncate text-base font-medium">{title}</h2>
+        <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{title}</h2>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0"
+          className="h-8 w-8 shrink-0"
           aria-label={t("preview.getInfo.close")}
           onClick={onClose}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <X className="size-5" />
+          <X className="size-4" />
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-4 py-3">{children}</div>
@@ -167,7 +167,7 @@ export default function InfoDialog({
 
   const body =
     paths.length === 0 ? (
-      <p className="text-base text-muted-foreground">{t("preview.selectFile")}</p>
+      <p className="text-sm text-muted-foreground">{t("preview.selectFile")}</p>
     ) : singlePath != null ? (
       <PreviewPane
         path={singlePath}

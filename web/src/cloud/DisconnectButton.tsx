@@ -24,11 +24,11 @@ export default function DisconnectButton({ onClick }: DisconnectButtonProps) {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className="h-8 w-8"
             aria-label={label}
             onClick={onClick}
           >
-            <Unplug className="h-5 w-5" />
+            <Unplug className="h-4 w-4" />
           </Button>
         </span>
       </TooltipTrigger>

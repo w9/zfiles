@@ -44,11 +44,11 @@ export default function ThemeToggle({
           type="button"
           variant={variant}
           size="icon"
-          className="h-9 w-9"
+          className="h-8 w-8"
           aria-label={label}
           onClick={() => onChange(nextThemeMode(mode))}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4 w-4" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">{label}</TooltipContent>

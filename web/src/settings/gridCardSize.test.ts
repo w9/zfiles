@@ -68,6 +68,6 @@ test("parseGridCardMaxSizeJson accepts unlimited dimensions", () => {
 });
 
 test("gridIconPixelSize scales with card dimensions", () => {
-  assert.equal(gridIconPixelSize(48, 64), 20);
+  assert.equal(gridIconPixelSize(48, 64), 16);
   assert.ok(gridIconPixelSize(200, 240) > gridIconPixelSize(80, 100));
 });

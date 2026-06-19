@@ -54,11 +54,11 @@ export default function ShareUrlButton({
             type="button"
             variant={variant}
             size="icon"
-            className="h-9 w-9"
+            className="h-8 w-8"
             aria-label={label}
             onClick={() => void onClick()}
           >
-            <Link2 className="h-5 w-5" />
+            <Link2 className="h-4 w-4" />
           </Button>
         </span>
       </TooltipTrigger>

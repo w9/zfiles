@@ -50,7 +50,7 @@ export function ActionConfirmDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <p className="text-base text-muted-foreground">{message}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={executing}>
             {cancelLabel}
@@ -64,7 +64,7 @@ export function ActionConfirmDialog({
             aria-busy={executing}
           >
             {showWorkingVisual ? (
-              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
             {showWorkingVisual ? workingLabel : confirmLabel}
           </Button>

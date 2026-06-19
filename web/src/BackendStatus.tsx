@@ -31,7 +31,7 @@ const statusBadgeClass: Record<BackendStatus, string> = {
 };
 
 function StatusIcon({ status }: { status: BackendStatus }) {
-  const className = cn("size-3.5 shrink-0", statusIconClass[status]);
+  const className = cn("size-3 shrink-0", statusIconClass[status]);
   switch (status) {
     case "connected":
       return <Globe className={className} aria-hidden />;

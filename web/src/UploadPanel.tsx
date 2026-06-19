@@ -244,15 +244,15 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
           <TruncatedTextTooltip
             as="p"
             text={item.fileName}
-            className="truncate text-base font-medium"
+            className="truncate text-sm font-medium"
           />
           <TruncatedTextTooltip
             as="p"
             text={item.destPath}
-            className="truncate text-sm text-muted-foreground"
+            className="truncate text-xs text-muted-foreground"
           />
         </div>
-        <div className="shrink-0 text-sm text-muted-foreground tabular-nums">
+        <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <QueueRowStats item={item} />
         </div>
         {item.status === "done" ? (
@@ -260,11 +260,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-8 w-8 shrink-0"
             aria-label={t("upload.clearDone")}
             onClick={() => onClearDone(item.id)}
           >
-            <X className="size-5" />
+            <X className="size-4" />
           </Button>
         ) : item.status === "active" ||
           item.status === "paused" ||
@@ -275,11 +275,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-8 w-8 shrink-0"
                 aria-label={t("upload.pause")}
                 onClick={() => onPause(item.id)}
               >
-                <Pause className="size-5" />
+                <Pause className="size-4" />
               </Button>
             ) : null}
             {item.status === "paused" ? (
@@ -287,11 +287,11 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-8 w-8 shrink-0"
                 aria-label={t("upload.resume")}
                 onClick={() => onResume(item.id)}
               >
-                <Play className="size-5" />
+                <Play className="size-4" />
               </Button>
             ) : null}
             {cancellable ? (
@@ -299,18 +299,18 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-8 w-8 shrink-0"
                 aria-label={t("upload.cancel")}
                 onClick={() => onCancel(item.id)}
               >
-                <X className="size-5" />
+                <X className="size-4" />
               </Button>
             ) : null}
           </div>
         ) : null}
         </div>
         {item.status === "failed" && item.error ? (
-          <p className="mt-2 text-sm text-destructive">{item.error}</p>
+          <p className="mt-2 text-xs text-destructive">{item.error}</p>
         ) : null}
       </div>
     </li>
@@ -374,15 +374,15 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
           <TruncatedTextTooltip
             as="p"
             text={session.fileName}
-            className="truncate text-base font-medium"
+            className="truncate text-sm font-medium"
           />
           <TruncatedTextTooltip
             as="p"
             text={session.destPath}
-            className="truncate text-sm text-muted-foreground"
+            className="truncate text-xs text-muted-foreground"
           />
         </div>
-        <p className="shrink-0 text-sm text-muted-foreground tabular-nums">
+        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
           <Tooltip>
             <TooltipTrigger asChild>
               <span
@@ -415,12 +415,12 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 shrink-0"
+                  className="h-8 w-8 shrink-0"
                   disabled={busy}
                   aria-label={resumeLabel}
                   onClick={() => onResume(session.uploadId)}
                 >
-                  <Play className="size-5" />
+                  <Play className="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">{resumeLabel}</TooltipContent>
@@ -432,12 +432,12 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-8 w-8 shrink-0"
                 disabled={busy}
                 aria-label={abortLabel}
                 onClick={() => onAbort(session.uploadId)}
               >
-                <X className="size-5" />
+                <X className="size-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">{abortLabel}</TooltipContent>
@@ -493,7 +493,7 @@ export default function UploadPanel({
         <TruncatedTextTooltip
           as="h2"
           text={headerTitle}
-          className="min-w-0 flex-1 truncate text-base font-medium"
+          className="min-w-0 flex-1 truncate text-sm font-medium"
         />
         <div className="flex shrink-0 items-center gap-1">
           {onChooseFiles ? (
@@ -523,12 +523,12 @@ export default function UploadPanel({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9"
+              className="h-8 w-8"
               aria-label={t("upload.tray.close")}
               onClick={onClose}
               onPointerDown={(event) => event.stopPropagation()}
             >
-              <X className="size-5" />
+              <X className="size-4" />
             </Button>
           ) : null}
         </div>
@@ -561,7 +561,7 @@ export default function UploadPanel({
           </ul>
         </ScrollArea>
       ) : (
-        <p className="px-4 py-6 text-center text-base text-muted-foreground">
+        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
           {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
         </p>
       )}

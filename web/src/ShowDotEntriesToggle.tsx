@@ -24,12 +24,12 @@ export default function ShowDotEntriesToggle() {
           type="button"
           variant="ghost"
           size="icon"
-          className="h-9 w-9"
+          className="h-8 w-8"
           aria-label={label}
           aria-pressed={showDotEntries}
           onClick={toggleShowDotEntries}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4 w-4" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">{label}</TooltipContent>

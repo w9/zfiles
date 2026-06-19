@@ -221,14 +221,14 @@ export default function SettingsPage() {
             type="button"
             variant="outline"
             size="icon"
-            className="h-9 w-9"
+            className="h-8 w-8"
             aria-label={t("settings.back")}
             onClick={() => navigate("explorer")}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6 text-muted-foreground" aria-hidden />
+            <Settings className="h-5 w-5 text-muted-foreground" aria-hidden />
             <h1 className="text-xl font-semibold">{t("settings.title")}</h1>
           </div>
         </div>
