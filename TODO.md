@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Narrow header menu: below `sm`, collapse the application menubar into a ghost `Menu` icon button; tap opens a dropdown with the same category submenus (View, File, Help, …). Follow-up: unified focus-ring treatment across inputs.
+Progressive breadcrumb condensation: measure width, collapse middle segments into … with navigation menu; truncate current segment when still tight. Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -207,3 +207,8 @@ Narrow header menu: below `sm`, collapse the application menubar into a ghost `M
 
 - [x] `MenuBar.tsx`: below `sm`, hide horizontal menubar; show ghost size-7 `Menu` icon with tooltip (`actions.menuBar.label`); dropdown uses category submenus with same items, icons, shortcuts, and empty-category hiding as desktop
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `breadcrumbCollapse.ts` + tests: middle-segment collapse helpers
+- [ ] `ExplorerBreadcrumb.tsx`: ResizeObserver progressive collapse, … dropdown for hidden segments, truncate last segment
+- [ ] i18n (14 locales): `breadcrumb.hiddenSegmentsMenu`; wire label in `ExplorerApp.tsx`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
