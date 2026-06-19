@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Touch-friendly multi-select: toolbar Select/Done enters selection mode (tap toggles, swipe range on touch); disable marquee on touch; empty tap clears only outside selection mode. Follow-up: selection-mode chrome polish, swipe auto-scroll near viewport edges.
+CLI `--public-url` override for the banner share link (origin only, http/https): when set, banner → line, QR, and auto browser-open use it with token/lang query params appended; loopback default URL unchanged when omitted; loopback + override allowed (tunnels/reverse proxies). CLI serve mode only this cycle. Follow-up: config.toml key and daemon start passthrough.
 
 ## TODO List
 
@@ -181,3 +181,9 @@ Touch-friendly multi-select: toolbar Select/Done enters selection mode (tap togg
 - [x] `ExplorerApp.tsx`: `selectionMode` state + header Select/Done; tap toggles in mode; compose swipe + marquee handlers; exit on navigate
 - [x] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `cli.rs`: add `--public-url` (`ServeArgs`); validate http/https origin (no path/query/fragment)
+- [ ] `browser.rs` + tests: build share URL from origin override + token/lang query params
+- [ ] `transport.rs`: when override set, use it for banner URL, QR, and browser-open; skip LAN share-note
+- [ ] Integration tests: banner shows `--public-url` with token/lang on loopback and public bind
+- [ ] Run `cargo test`; bump patch version in `Cargo.toml`
