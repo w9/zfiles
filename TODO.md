@@ -1,6 +1,6 @@
 ## High-level plan next
 
-16px minimum font on all form controls (all viewports) to prevent iOS Safari focus zoom. Follow-up: unified focus-ring treatment across inputs; report remaining sub-16px UI text.
+Bump remaining sub-16px UI text up one Tailwind step (xs→sm, sm→base, 12px→sm, 14px→base). Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -221,3 +221,9 @@
 - [x] `InlineNameInput.tsx`: 16px minimal styling (drop compact height/font overrides)
 - [x] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] Shared UI primitives: one-step bump (`button`, `badge`, `tooltip`, `label`, `field`, `table`, `alert`, `dialog`, `sheet`, `toggle-group`, `input-group`, `breadcrumb`)
+- [ ] Menu/select/command primitives: items and shortcut hints (`menubar`, `dropdown-menu`, `context-menu`, `command`, `select`)
+- [ ] Listings: `VirtualListing`, `GridListing`, `data-table-column-header`
+- [ ] App chrome + dialogs: `StatusBar`, `ExplorerApp`, `PreviewPane`, `InfoDialog`, `AboutDialog`, `KeyboardShortcutsDialog`, `ActionDialogs`, `UploadPanel`, `ConnectDialog`, `SlideshowOverlay`, `ListingViewToggle`, `ChordKbd`
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
