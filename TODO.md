@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Progressive breadcrumb condensation: measure width, collapse middle segments into … with navigation menu; truncate current segment when still tight. Follow-up: unified focus-ring treatment across inputs.
+Raise collapsed menubar breakpoint to `md` (768px). Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -212,3 +212,6 @@ Progressive breadcrumb condensation: measure width, collapse middle segments int
 - [x] `ExplorerBreadcrumb.tsx`: ResizeObserver progressive collapse, … dropdown for hidden segments, truncate last segment
 - [x] i18n (14 locales): `breadcrumb.hiddenSegmentsMenu`; wire label in `ExplorerApp.tsx`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
