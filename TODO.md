@@ -165,5 +165,5 @@ Sonner `<Toaster />` moved out of the explorer `<main>` flex column so its empty
 - [x] `ExplorerBreadcrumb.tsx`: swap `CircleQuestionMark` for `QuestionMarkIcon`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerApp.tsx`: render `<Toaster />` as a sibling of `<main>`, not inside the flex column
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `ExplorerApp.tsx`: render `<Toaster />` as a sibling of `<main>`, not inside the flex column
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

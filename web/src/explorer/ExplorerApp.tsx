@@ -1517,6 +1517,7 @@ export default function ExplorerApp() {
   });
 
   return (
+    <>
     <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden p-2">
       <header className="shrink-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1923,7 +1924,8 @@ export default function ExplorerApp() {
         onSymlinkTargetClick={(resolvedPath) => void openSymlinkTarget(resolvedPath)}
       />
 
-      <Toaster richColors closeButton position="bottom-right" />
     </main>
+    <Toaster richColors closeButton position="bottom-right" />
+    </>
   );
 }
