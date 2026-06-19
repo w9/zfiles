@@ -121,6 +121,8 @@ export const ja: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}、{{folders}}を選択中",
   "selection.copyPaths": "パスをコピー",
   "selection.clear": "クリア",
+  "selection.mode.enter": "選択",
+  "selection.mode.done": "完了",
   "shortcuts.dialog.title": "キーボードショートカット",
   "shortcuts.dialog.description": "ファイルエクスプローラーのキーボードショートカット。",
   "listing.empty": "このフォルダーは空です",

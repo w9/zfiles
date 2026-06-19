@@ -121,6 +121,8 @@ export const ko: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}, {{folders}} 선택됨",
   "selection.copyPaths": "경로 복사",
   "selection.clear": "지우기",
+  "selection.mode.enter": "선택",
+  "selection.mode.done": "완료",
   "shortcuts.dialog.title": "키보드 단축키",
   "shortcuts.dialog.description": "파일 탐색기의 키보드 단축키입니다.",
   "listing.empty": "이 폴더는 비어 있습니다",

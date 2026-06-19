@@ -120,6 +120,8 @@ export const es: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}, {{folders}} seleccionados",
   "selection.copyPaths": "Copiar rutas",
   "selection.clear": "Borrar",
+  "selection.mode.enter": "Seleccionar",
+  "selection.mode.done": "Listo",
   "shortcuts.dialog.title": "Atajos de teclado",
   "shortcuts.dialog.description": "Atajos de teclado del explorador de archivos.",
   "listing.empty": "Esta carpeta está vacía",

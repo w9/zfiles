@@ -116,6 +116,8 @@ export const zhCN: Record<MessageKey, string> = {
   "selection.breakdownSelected": "已选择 {{files}}、{{folders}}",
   "selection.copyPaths": "复制路径",
   "selection.clear": "清除",
+  "selection.mode.enter": "选择",
+  "selection.mode.done": "完成",
   "shortcuts.dialog.title": "键盘快捷键",
   "shortcuts.dialog.description": "文件浏览器的键盘快捷键。",
   "listing.empty": "此文件夹为空",

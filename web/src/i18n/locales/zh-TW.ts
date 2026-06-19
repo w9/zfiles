@@ -116,6 +116,8 @@ export const zhTW: Record<MessageKey, string> = {
   "selection.breakdownSelected": "已選取 {{files}}、{{folders}}",
   "selection.copyPaths": "複製路徑",
   "selection.clear": "清除",
+  "selection.mode.enter": "選取",
+  "selection.mode.done": "完成",
   "shortcuts.dialog.title": "鍵盤快捷鍵",
   "shortcuts.dialog.description": "檔案瀏覽器的鍵盤快捷鍵。",
   "listing.empty": "此資料夾是空的",

@@ -5,10 +5,11 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { OnChangeFn, SortingState } from "@tanstack/react-table";
 
-import { Settings, Loader2 } from "lucide-react";
+import { Settings, Loader2, ListChecks, Check } from "lucide-react";
 
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
 import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
@@ -141,6 +142,7 @@ import MarqueeOverlay from "./MarqueeOverlay";
 import type { ListingMarqueeLayoutResolver } from "./listingMarqueeSelect";
 import { pathsInIndexRange } from "./listingSelection";
 import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
+import { useListingSwipeRangeSelect } from "./useListingSwipeRangeSelect";
 import { basename } from "@/fileOperations/paths";
 
 type ContextMenuState = {
@@ -223,6 +225,7 @@ export default function ExplorerApp() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readEffectiveFolderViewSettings(initialPath).viewMode,
@@ -249,6 +252,7 @@ export default function ExplorerApp() {
   const selectedIndexRef = useRef(selectedIndex);
   const selectedPathsRef = useRef(selectedPaths);
   const selectedPathRef = useRef(selectedPath);
+  const selectionModeRef = useRef(selectionMode);
   const listingLoadGenerationRef = useRef(0);
   const listingLoadingOverlayTimerRef = useRef<number | null>(null);
   const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
@@ -258,6 +262,7 @@ export default function ExplorerApp() {
   selectedIndexRef.current = selectedIndex;
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
+  selectionModeRef.current = selectionMode;
 
   const notifyStorageError = useCallback(
     (err: unknown) => {
@@ -567,6 +572,10 @@ export default function ExplorerApp() {
   useEffect(() => {
     trackCurrentPath(currentPath);
   }, [currentPath, trackCurrentPath]);
+
+  useEffect(() => {
+    setSelectionMode(false);
+  }, [currentPath]);
 
   const openSymlinkTarget = useCallback(
     async (resolvedPath: string) => {
@@ -968,6 +977,34 @@ export default function ExplorerApp() {
           const rows = listingEntriesRef.current;
           let nextSelectedPath: string | null = entry.path;
 
+          if (selectionModeRef.current) {
+            if (event.shiftKey) {
+              setSelectedPaths(
+                pathsInIndexRange(rows, selectionAnchorRef.current, displayIndex),
+              );
+              setSelectedIndex(displayIndex);
+              setSelectedPath(entry.path);
+              return;
+            }
+            const next = new Set(selectedPathsRef.current);
+            const removing = next.has(entry.path);
+            if (removing) {
+              next.delete(entry.path);
+            } else {
+              next.add(entry.path);
+            }
+            setSelectedPaths(next);
+            if (next.size === 0) {
+              nextSelectedPath = null;
+            } else if (removing) {
+              nextSelectedPath = next.values().next().value ?? null;
+            }
+            setSelectedIndex(displayIndex);
+            setSelectedPath(nextSelectedPath);
+            selectionAnchorRef.current = displayIndex;
+            return;
+          }
+
           if (event.shiftKey) {
             setSelectedPaths(
               pathsInIndexRange(rows, selectionAnchorRef.current, displayIndex),
@@ -996,6 +1033,9 @@ export default function ExplorerApp() {
           setSelectedPath(nextSelectedPath);
         },
         onActivate: () => {
+          if (selectionModeRef.current) {
+            return;
+          }
           if (entry.is_dir) {
             navigateTo(entry.path);
             return;
@@ -1080,11 +1120,34 @@ export default function ExplorerApp() {
       !listingPaneOverlay &&
       activeListingEntries.length > 0 &&
       !gridResizeActive,
+    allowEmptyClickClear: !selectionMode,
     scrollElementRef: listingViewportRef,
     layoutRef: listingMarqueeLayoutRef,
     onSelectionChange: applyMarqueeSelection,
     onEmptyClick: () => onListingEmptyClickRef.current(),
   });
+
+  const swipeRangeSelect = useListingSwipeRangeSelect({
+    selectionMode,
+    enabled:
+      listingLoaded &&
+      !listingLoading &&
+      !listingPaneOverlay &&
+      activeListingEntries.length > 0 &&
+      !gridResizeActive,
+    entries: activeListingEntries,
+    scrollElementRef: listingViewportRef,
+    layoutRef: listingMarqueeLayoutRef,
+    onSelectionChange: applyMarqueeSelection,
+  });
+
+  const onListingViewportPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      swipeRangeSelect.onViewportPointerDown(event);
+      marqueeSelect.onViewportPointerDown(event);
+    },
+    [marqueeSelect.onViewportPointerDown, swipeRangeSelect.onViewportPointerDown],
+  );
 
   useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
@@ -1572,6 +1635,33 @@ export default function ExplorerApp() {
               </TooltipTrigger>
               <TooltipContent side="bottom">{t("settings.title")}</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant={selectionMode ? "default" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label={
+                    selectionMode
+                      ? t("selection.mode.done")
+                      : t("selection.mode.enter")
+                  }
+                  onClick={() => setSelectionMode((current) => !current)}
+                >
+                  {selectionMode ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <ListChecks className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {selectionMode
+                  ? t("selection.mode.done")
+                  : t("selection.mode.enter")}
+              </TooltipContent>
+            </Tooltip>
             <ActionToolbar
               registry={actionSystem.registry}
               contextKeys={contextKeys}
@@ -1697,7 +1787,7 @@ export default function ExplorerApp() {
                 listingSortOrder={listingSortOrder}
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
-                onViewportPointerDown={marqueeSelect.onViewportPointerDown}
+                onViewportPointerDown={onListingViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
@@ -1727,7 +1817,7 @@ export default function ExplorerApp() {
                 showRenameBusyVisual={showPendingVisual}
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
-                onViewportPointerDown={marqueeSelect.onViewportPointerDown}
+                onViewportPointerDown={onListingViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {

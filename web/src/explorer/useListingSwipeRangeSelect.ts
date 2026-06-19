@@ -1,60 +1,45 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import {
   MARQUEE_AUTO_SCROLL_MARGIN_PX,
   MARQUEE_AUTO_SCROLL_STEP_PX,
   MARQUEE_DRAG_THRESHOLD_PX,
-  type ClientRect,
-  type ListingMarqueeLayoutResolver,
-  type MarqueeModifiers,
-  clientYToContentY,
   collectDomEntryRectsFromViewport,
-  computeMarqueeSelection,
   findEntryPathAtPoint,
-  hitTestEntryPaths,
-  normalizeMarqueeRect,
   pointerDistance,
-  selectionSetsEqual,
-  shouldClearMultiSelectionOnEmptyClick,
   shouldIgnoreMarqueePointerTarget,
+  type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
+import {
+  entryIndexForPath,
+  shouldHandleSwipeRangeSelect,
+  swipeRangeFromAnchor,
+} from "@/explorer/listingSwipeRangeSelect";
 
-export type UseListingMarqueeSelectOptions = {
-  selectedPaths: Set<string>;
+export type UseListingSwipeRangeSelectOptions = {
+  selectionMode: boolean;
   enabled?: boolean;
-  allowEmptyClickClear?: boolean;
-  scrollElementRef: React.RefObject<HTMLElement | null>;
+  entries: ReadonlyArray<{ path: string }>;
+  scrollElementRef: RefObject<HTMLElement | null>;
   layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>;
   onSelectionChange: (paths: Set<string>, primaryPath: string | null) => void;
-  onEmptyClick?: () => void;
 };
 
-export type UseListingMarqueeSelectResult = {
-  isActive: boolean;
-  marqueeRect: ClientRect | null;
-  onViewportPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
-};
-
-type DragSession = {
+type SwipeSession = {
   pointerId: number;
-  pointerType: string;
+  anchorIndex: number;
+  anchorPath: string;
   startX: number;
   startY: number;
   clientX: number;
   clientY: number;
   started: boolean;
-  baseSelection: Set<string>;
-  modifiers: MarqueeModifiers;
-  lastHoveredPath: string | null;
-  startContentY: number | null;
-  lastSelection: Set<string> | null;
-  pointerTarget: EventTarget | null;
 };
 
 function collectEntryRectsFromViewport(
   scrollElement: HTMLElement,
   layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>,
-): Array<{ path: string; rect: ClientRect }> {
+) {
   const layout = layoutRef?.current;
   if (layout) {
     return layout.getEntryRects(scrollElement);
@@ -62,7 +47,21 @@ function collectEntryRectsFromViewport(
   return collectDomEntryRectsFromViewport(scrollElement);
 }
 
-function suppressMarqueeEndClick(
+function resolvePathAtPoint(
+  scrollElement: HTMLElement,
+  layoutRef: RefObject<ListingMarqueeLayoutResolver | null> | undefined,
+  clientX: number,
+  clientY: number,
+): string | null {
+  const layout = layoutRef?.current;
+  if (layout) {
+    return layout.findPathAtClientPoint(scrollElement, clientX, clientY);
+  }
+  const entryRects = collectEntryRectsFromViewport(scrollElement, layoutRef);
+  return findEntryPathAtPoint(entryRects, clientX, clientY);
+}
+
+function suppressSwipeEndClick(
   pendingListenerRef: React.MutableRefObject<((event: MouseEvent) => void) | null>,
 ) {
   if (pendingListenerRef.current) {
@@ -80,31 +79,26 @@ function suppressMarqueeEndClick(
   window.addEventListener("click", suppressNextClick, true);
 }
 
-export function useListingMarqueeSelect({
-  selectedPaths,
+export function useListingSwipeRangeSelect({
+  selectionMode,
   enabled = true,
-  allowEmptyClickClear = true,
+  entries,
   scrollElementRef,
   layoutRef,
   onSelectionChange,
-  onEmptyClick,
-}: UseListingMarqueeSelectOptions): UseListingMarqueeSelectResult {
-  const [isActive, setIsActive] = useState(false);
-  const [marqueeRect, setMarqueeRect] = useState<ClientRect | null>(null);
-  const sessionRef = useRef<DragSession | null>(null);
+}: UseListingSwipeRangeSelectOptions) {
+  const sessionRef = useRef<SwipeSession | null>(null);
   const pendingClickSuppressRef = useRef<((event: MouseEvent) => void) | null>(
     null,
   );
   const autoScrollFrameRef = useRef<number | null>(null);
   const onSelectionChangeRef = useRef(onSelectionChange);
-  const selectedPathsRef = useRef(selectedPaths);
-  const onEmptyClickRef = useRef(onEmptyClick);
-  const allowEmptyClickClearRef = useRef(allowEmptyClickClear);
+  const entriesRef = useRef(entries);
+  const selectionModeRef = useRef(selectionMode);
 
   onSelectionChangeRef.current = onSelectionChange;
-  selectedPathsRef.current = selectedPaths;
-  onEmptyClickRef.current = onEmptyClick;
-  allowEmptyClickClearRef.current = allowEmptyClickClear;
+  entriesRef.current = entries;
+  selectionModeRef.current = selectionMode;
 
   const stopAutoScroll = useCallback(() => {
     if (autoScrollFrameRef.current != null) {
@@ -113,81 +107,29 @@ export function useListingMarqueeSelect({
     }
   }, []);
 
-  const applyMarqueeAt = useCallback(
-    (
-      clientX: number,
-      clientY: number,
-      session: DragSession,
-      options?: { finalize?: boolean },
-    ) => {
+  const applySwipeAt = useCallback(
+    (clientX: number, clientY: number, session: SwipeSession) => {
       const scrollElement = scrollElementRef.current;
       if (!scrollElement) {
         return;
       }
 
-      const marquee = normalizeMarqueeRect(
-        session.startX,
-        session.startY,
+      const targetPath = resolvePathAtPoint(
+        scrollElement,
+        layoutRef,
         clientX,
         clientY,
       );
-      setMarqueeRect(marquee);
-
-      if (session.started && session.startContentY == null) {
-        session.startContentY = clientYToContentY(scrollElement, session.startY);
-      }
-
-      const layout = layoutRef?.current;
-      const usesContentMarquee =
-        layout?.hitTestContentMarquee != null && session.startContentY != null;
-
-      const entryRects = usesContentMarquee
-        ? []
-        : collectEntryRectsFromViewport(scrollElement, layoutRef);
-
-      const hitPaths =
-        usesContentMarquee && layout != null
-          ? layout.hitTestContentMarquee(scrollElement, {
-              contentTop: session.startContentY!,
-              contentBottom: clientYToContentY(scrollElement, clientY),
-              clientLeft: Math.min(session.startX, clientX),
-              clientRight: Math.max(session.startX, clientX),
-            })
-          : hitTestEntryPaths(marquee, entryRects);
-
-      const nextSelection = computeMarqueeSelection(
-        session.baseSelection,
-        hitPaths,
-        session.modifiers,
+      const nextSelection = swipeRangeFromAnchor(
+        entriesRef.current,
+        session.anchorIndex,
+        targetPath,
       );
-
-      const isReplaceMode =
-        !session.modifiers.shiftKey &&
-        !session.modifiers.ctrlKey &&
-        !session.modifiers.metaKey;
-      const resolvedSelection =
-        isReplaceMode &&
-        hitPaths.length === 0 &&
-        session.started &&
-        !options?.finalize
-          ? (session.lastSelection ?? session.baseSelection)
-          : nextSelection;
-
-      const hoveredPath =
-        usesContentMarquee && layout != null
-          ? layout.findPathAtClientPoint(scrollElement, clientX, clientY)
-          : findEntryPathAtPoint(entryRects, clientX, clientY);
-      if (hoveredPath) {
-        session.lastHoveredPath = hoveredPath;
-      }
-
-      if (
-        session.lastSelection == null ||
-        !selectionSetsEqual(session.lastSelection, resolvedSelection)
-      ) {
-        onSelectionChangeRef.current(resolvedSelection, session.lastHoveredPath);
-        session.lastSelection = new Set(resolvedSelection);
-      }
+      const primaryPath =
+        targetPath && nextSelection.has(targetPath)
+          ? targetPath
+          : session.anchorPath;
+      onSelectionChangeRef.current(nextSelection, primaryPath);
     },
     [layoutRef, scrollElementRef],
   );
@@ -210,20 +152,18 @@ export function useListingMarqueeSelect({
 
     if (delta !== 0) {
       scrollElement.scrollTop += delta;
-      applyMarqueeAt(session.clientX, session.clientY, session);
+      applySwipeAt(session.clientX, session.clientY, session);
     }
 
     autoScrollFrameRef.current = requestAnimationFrame(startAutoScroll);
-  }, [applyMarqueeAt, scrollElementRef, stopAutoScroll]);
+  }, [applySwipeAt, scrollElementRef, stopAutoScroll]);
 
   const endSession = useCallback(
-    (session: DragSession | null, didMarquee: boolean) => {
+    (session: SwipeSession | null, didSwipe: boolean) => {
       sessionRef.current = null;
-      setIsActive(false);
-      setMarqueeRect(null);
       stopAutoScroll();
-      if (didMarquee) {
-        suppressMarqueeEndClick(pendingClickSuppressRef);
+      if (didSwipe) {
+        suppressSwipeEndClick(pendingClickSuppressRef);
       }
     },
     [stopAutoScroll],
@@ -249,10 +189,19 @@ export function useListingMarqueeSelect({
       if (event.button !== 0) {
         return;
       }
+      if (!enabled || !selectionModeRef.current) {
+        return;
+      }
       if (shouldIgnoreMarqueePointerTarget(event.target)) {
         return;
       }
-      if (!enabled && !onEmptyClickRef.current) {
+      if (
+        !shouldHandleSwipeRangeSelect({
+          selectionMode: selectionModeRef.current,
+          pointerType: event.pointerType,
+          target: event.target,
+        })
+      ) {
         return;
       }
 
@@ -261,34 +210,35 @@ export function useListingMarqueeSelect({
         return;
       }
 
-      const session: DragSession = {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const entry = target.closest("[data-listing-entry]");
+      const anchorPath = entry?.getAttribute("data-listing-path");
+      if (!anchorPath) {
+        return;
+      }
+      const anchorIndex = entryIndexForPath(entriesRef.current, anchorPath);
+      if (anchorIndex < 0) {
+        return;
+      }
+
+      const session: SwipeSession = {
         pointerId: event.pointerId,
-        pointerType: event.pointerType,
+        anchorIndex,
+        anchorPath,
         startX: event.clientX,
         startY: event.clientY,
         clientX: event.clientX,
         clientY: event.clientY,
         started: false,
-        baseSelection: new Set(selectedPathsRef.current),
-        modifiers: {
-          shiftKey: event.shiftKey,
-          ctrlKey: event.ctrlKey,
-          metaKey: event.metaKey,
-        },
-        lastHoveredPath: null,
-        startContentY: null,
-        lastSelection: null,
-        pointerTarget: event.target,
       };
       sessionRef.current = session;
 
       const onPointerMove = (moveEvent: PointerEvent) => {
         const active = sessionRef.current;
         if (!active || moveEvent.pointerId !== active.pointerId) {
-          return;
-        }
-
-        if (!enabled || active.pointerType === "touch") {
           return;
         }
 
@@ -303,13 +253,12 @@ export function useListingMarqueeSelect({
             return;
           }
           active.started = true;
-          setIsActive(true);
           scrollElement.setPointerCapture(active.pointerId);
         }
 
         active.clientX = moveEvent.clientX;
         active.clientY = moveEvent.clientY;
-        applyMarqueeAt(moveEvent.clientX, moveEvent.clientY, active);
+        applySwipeAt(moveEvent.clientX, moveEvent.clientY, active);
         stopAutoScroll();
         startAutoScroll();
       };
@@ -323,19 +272,10 @@ export function useListingMarqueeSelect({
         if (active.started) {
           active.clientX = endEvent.clientX;
           active.clientY = endEvent.clientY;
-          applyMarqueeAt(endEvent.clientX, endEvent.clientY, active, { finalize: true });
+          applySwipeAt(endEvent.clientX, endEvent.clientY, active);
           if (scrollElement.hasPointerCapture(active.pointerId)) {
             scrollElement.releasePointerCapture(active.pointerId);
           }
-        } else if (
-          allowEmptyClickClearRef.current &&
-          shouldClearMultiSelectionOnEmptyClick({
-            started: active.started,
-            modifiers: active.modifiers,
-            target: active.pointerTarget,
-          })
-        ) {
-          onEmptyClickRef.current?.();
         }
 
         endSession(active, active.started);
@@ -348,12 +288,8 @@ export function useListingMarqueeSelect({
       window.addEventListener("pointerup", onPointerEnd);
       window.addEventListener("pointercancel", onPointerEnd);
     },
-    [applyMarqueeAt, enabled, endSession, scrollElementRef, startAutoScroll, stopAutoScroll],
+    [applySwipeAt, enabled, endSession, scrollElementRef, startAutoScroll, stopAutoScroll],
   );
 
-  return {
-    isActive,
-    marqueeRect,
-    onViewportPointerDown,
-  };
+  return { onViewportPointerDown };
 }

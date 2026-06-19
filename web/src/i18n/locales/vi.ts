@@ -121,6 +121,8 @@ export const vi: Record<MessageKey, string> = {
   "selection.breakdownSelected": "Đã chọn {{files}}, {{folders}}",
   "selection.copyPaths": "Sao chép đường dẫn",
   "selection.clear": "Xóa",
+  "selection.mode.enter": "Chọn",
+  "selection.mode.done": "Xong",
   "shortcuts.dialog.title": "Phím tắt",
   "shortcuts.dialog.description": "Phím tắt cho trình khám phá tệp.",
   "listing.empty": "Thư mục này trống",

@@ -175,9 +175,9 @@ Touch-friendly multi-select: toolbar Select/Done enters selection mode (tap togg
 - [x] `StatusBar.tsx`: flatten to two-child root (`justify-between`, `w-full min-w-0`, no `h-9`); left cluster + right version wrapper
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `listingSwipeRangeSelect.ts` + tests: swipe-range helpers (touch + selection mode gate, anchor→target index range)
-- [ ] `useListingSwipeRangeSelect.ts`: touch swipe range in selection mode; suppress post-swipe click
-- [ ] `useListingMarqueeSelect.ts`: skip marquee drag on `pointerType === "touch"`; gate empty-click clear via option
-- [ ] `ExplorerApp.tsx`: `selectionMode` state + header Select/Done; tap toggles in mode; compose swipe + marquee handlers; exit on navigate
-- [ ] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `listingSwipeRangeSelect.ts` + tests: swipe-range helpers (touch + selection mode gate, anchor→target index range)
+- [x] `useListingSwipeRangeSelect.ts`: touch swipe range in selection mode; suppress post-swipe click
+- [x] `useListingMarqueeSelect.ts`: skip marquee drag on `pointerType === "touch"`; gate empty-click clear via option
+- [x] `ExplorerApp.tsx`: `selectionMode` state + header Select/Done; tap toggles in mode; compose swipe + marquee handlers; exit on navigate
+- [x] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`

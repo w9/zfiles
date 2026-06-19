@@ -121,6 +121,8 @@ export const tr: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}, {{folders}} seçildi",
   "selection.copyPaths": "Yolları kopyala",
   "selection.clear": "Temizle",
+  "selection.mode.enter": "Seç",
+  "selection.mode.done": "Bitti",
   "shortcuts.dialog.title": "Klavye kısayolları",
   "shortcuts.dialog.description": "Dosya gezgini klavye kısayolları.",
   "listing.empty": "Bu klasör boş",

@@ -119,6 +119,8 @@ export const en = {
   "selection.breakdownSelected": "{{files}}, {{folders}} selected",
   "selection.copyPaths": "Copy paths",
   "selection.clear": "Clear",
+  "selection.mode.enter": "Select",
+  "selection.mode.done": "Done",
   "shortcuts.dialog.title": "Keyboard shortcuts",
   "shortcuts.dialog.description": "Keyboard shortcuts for the file explorer.",
   "listing.empty": "This folder is empty",

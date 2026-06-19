@@ -121,6 +121,8 @@ export const de: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}, {{folders}} ausgewählt",
   "selection.copyPaths": "Pfade kopieren",
   "selection.clear": "Löschen",
+  "selection.mode.enter": "Auswählen",
+  "selection.mode.done": "Fertig",
   "shortcuts.dialog.title": "Tastenkürzel",
   "shortcuts.dialog.description": "Tastenkürzel für den Datei-Explorer.",
   "listing.empty": "Dieser Ordner ist leer",

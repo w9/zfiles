@@ -121,6 +121,8 @@ export const id: Record<MessageKey, string> = {
   "selection.breakdownSelected": "{{files}}, {{folders}} dipilih",
   "selection.copyPaths": "Salin jalur",
   "selection.clear": "Hapus",
+  "selection.mode.enter": "Pilih",
+  "selection.mode.done": "Selesai",
   "shortcuts.dialog.title": "Pintasan keyboard",
   "shortcuts.dialog.description": "Pintasan keyboard untuk penjelajah berkas.",
   "listing.empty": "Folder ini kosong",

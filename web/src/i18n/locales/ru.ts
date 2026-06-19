@@ -121,6 +121,8 @@ export const ru: Record<MessageKey, string> = {
   "selection.breakdownSelected": "Выбрано: {{files}}, {{folders}}",
   "selection.copyPaths": "Копировать пути",
   "selection.clear": "Очистить",
+  "selection.mode.enter": "Выбрать",
+  "selection.mode.done": "Готово",
   "shortcuts.dialog.title": "Сочетания клавиш",
   "shortcuts.dialog.description": "Сочетания клавиш для проводника файлов.",
   "listing.empty": "Эта папка пуста",
