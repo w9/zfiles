@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Breadcrumb bar responsive layout: below `sm`, quick filter on its own full-width row; row 1 stays nav + path. Follow-up: unified focus-ring treatment across inputs.
+Touch browse: single tap opens (no selection outside Select mode); suppress double-tap activate on touch. Follow-up: breadcrumb/focus-ring polish.
 
 ## TODO List
 
@@ -196,3 +196,8 @@ Breadcrumb bar responsive layout: below `sm`, quick filter on its own full-width
 
 - [x] `ExplorerBreadcrumb.tsx`: below `sm`, stack quick filter full-width on second row; row 1 nav + breadcrumb only
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `listingTouchSelect.ts` + tests: `shouldTouchTapActivate` / `shouldClearTouchSelectionOnBrowse`
+- [ ] `ExplorerApp.tsx`: track last listing `pointerType`; touch browse → single-tap activate, no selection; clear selection on Done (touch)
+- [ ] `GridListing.tsx` + `VirtualListing.tsx`: skip `onDoubleClick` activate when last pointer is touch
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
