@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Delay confirm-dialog "Working…" label until the shared 300ms visual threshold (same as spinner) to avoid layout shift. Follow-up cycle: medium-priority loading states (nav buttons, cloud session validation).
+Move quick-filter help from a whole-input tooltip to a muted inline-end `?` (× then `?` when clear is shown); hover the `?` zone only, always help text; regex errors stay on the input via `aria-invalid`. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -151,3 +151,6 @@ Delay confirm-dialog "Working…" label until the shared 300ms visual threshold 
 
 - [x] `ActionConfirmDialog.tsx`: delay "Working…" label until `showExecutingVisual` (300ms); keep Confirm disabled immediately
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `ExplorerBreadcrumb.tsx`: quick-filter tooltip on inline-end `?` only (× then `?`); remove whole-input trigger; help text always
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
