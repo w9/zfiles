@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Prevent iOS Safari focus zoom on form controls (16px minimum on viewports below `md`). Follow-up: unified focus-ring treatment across inputs.
+16px minimum font on all form controls (all viewports) to prevent iOS Safari focus zoom. Follow-up: unified focus-ring treatment across inputs; report remaining sub-16px UI text.
 
 ## TODO List
 
@@ -216,7 +216,8 @@ Prevent iOS Safari focus zoom on form controls (16px minimum on viewports below 
 - [x] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs (inherit `text-base` from `Input`)
-- [ ] `InlineNameInput.tsx`: `text-base` below `md`, 14px from `md` up
-- [ ] `command.tsx` + `select.tsx`: `text-base md:text-sm` on focusable controls (`CommandInput`, `SelectTrigger`)
+- [ ] `input.tsx` + `textarea.tsx`: drop `md:text-sm`; keep `text-base` on all viewports
+- [ ] `select.tsx` + `command.tsx`: `text-base` on `SelectTrigger` and `CommandInput`
+- [ ] `InlineNameInput.tsx`: 16px minimal styling (drop compact height/font overrides)
+- [ ] `ExplorerBreadcrumb.tsx`: drop `text-sm` override on address bar + quick-filter inputs
 - [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
