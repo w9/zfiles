@@ -110,7 +110,7 @@ export default function MenuBar({
     <>
       <Menubar
         aria-label={ariaLabel}
-        className="hidden h-8 border-none bg-transparent p-0 shadow-none sm:flex"
+        className="hidden h-8 border-none bg-transparent p-0 shadow-none md:flex"
       >
         {categoryMenus.map(({ categoryKey, items }) => (
           <MenubarMenu key={categoryKey}>
@@ -154,7 +154,7 @@ export default function MenuBar({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 shrink-0 sm:hidden"
+                className="size-7 shrink-0 md:hidden"
                 aria-label={ariaLabel}
               >
                 <Menu className="size-4" aria-hidden="true" />

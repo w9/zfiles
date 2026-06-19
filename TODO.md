@@ -213,5 +213,5 @@ Raise collapsed menubar breakpoint to `md` (768px). Follow-up: unified focus-rin
 - [x] i18n (14 locales): `breadcrumb.hiddenSegmentsMenu`; wire label in `ExplorerApp.tsx`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `MenuBar.tsx`: switch collapsed menu icon breakpoint from `sm` to `md` (768px)
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
