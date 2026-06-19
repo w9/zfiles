@@ -276,31 +276,16 @@ export default function ExplorerBreadcrumb({
           />
         </Button>
       </div>
-      <div className="relative flex min-w-0 flex-1 self-stretch items-center">
-        <div
-          className={cn(
-            "flex h-full min-w-0 flex-1 items-center overflow-hidden",
-            !editing && "cursor-text",
-            quickFilterFocused && "max-sm:invisible",
-          )}
-          onClick={handleRegionClick}
-        >
-          {editing ? (
-            <InputGroup
-              className={cn(breadcrumbInputGroupClassName, "w-full flex-1")}
-            >
-              <InputGroupInput
-                ref={inputRef}
-                aria-label={addressBarLabel}
-                placeholder={addressBarPlaceholder}
-                value={draft}
-                className="px-2 text-sm"
-                onBlur={cancelEditing}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={handleInputKeyDown}
-              />
-            </InputGroup>
-          ) : (
+      <div className="relative flex min-w-0 flex-1 self-stretch items-center sm:gap-1">
+        {!editing ? (
+          <div
+            className={cn(
+              "flex h-full min-w-0 flex-1 items-center overflow-hidden",
+              "cursor-text",
+              quickFilterFocused && "max-sm:invisible",
+            )}
+            onClick={handleRegionClick}
+          >
             <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
               <BreadcrumbList
                 ref={listRef}
@@ -363,11 +348,32 @@ export default function ExplorerBreadcrumb({
                 ) : null}
               </BreadcrumbList>
             </Breadcrumb>
-          )}
-        </div>
+          </div>
+        ) : (
+          <InputGroup
+            className={cn(
+              breadcrumbInputGroupClassName,
+              "min-w-0 flex-1",
+              "max-sm:absolute max-sm:inset-x-0 max-sm:top-1/2 max-sm:z-10 max-sm:flex max-sm:h-7 max-sm:max-w-full max-sm:-translate-y-1/2 max-sm:has-[[data-slot=input-group-control]:focus-visible]:ring-inset",
+            )}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <InputGroupInput
+              ref={inputRef}
+              aria-label={addressBarLabel}
+              placeholder={addressBarPlaceholder}
+              value={draft}
+              className="px-2 text-sm"
+              onBlur={cancelEditing}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleInputKeyDown}
+            />
+          </InputGroup>
+        )}
         <InputGroup
           className={cn(
             breadcrumbInputGroupClassName,
+            editing && "max-sm:hidden",
             quickFilterFocused
               ? "max-sm:absolute max-sm:inset-x-0 max-sm:top-1/2 max-sm:z-10 max-sm:flex max-sm:h-7 max-sm:min-w-0 max-sm:max-w-full max-sm:-translate-y-1/2 max-sm:has-[[data-slot=input-group-control]:focus-visible]:ring-inset"
               : "max-sm:pointer-events-none max-sm:absolute max-sm:h-0 max-sm:w-0 max-sm:overflow-hidden max-sm:opacity-0",
@@ -441,7 +447,7 @@ export default function ExplorerBreadcrumb({
           </InputGroupAddon>
         </InputGroup>
       </div>
-      {!quickFilterFocused ? (
+      {!quickFilterFocused && !editing ? (
         <Button
           type="button"
           variant="ghost"
