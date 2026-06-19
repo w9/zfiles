@@ -1,6 +1,6 @@
 ## High-level plan next
 
-CLI `--public-url` override for the banner share link (origin only, http/https): when set, banner → line, QR, and auto browser-open use it with token/lang query params appended; loopback default URL unchanged when omitted; loopback + override allowed (tunnels/reverse proxies). CLI serve mode only this cycle. Follow-up: config.toml key and daemon start passthrough.
+CLI `--share-host` for wildcard (`0.0.0.0`) LAN share URLs: resolve banner → line, QR, and browser-open host as CLI override → `$HOSTNAME` → external IP → `127.0.0.1` with note; append bound port; specific bind IPs unchanged; serve mode only. Follow-up: config.toml key and daemon start passthrough.
 
 ## TODO List
 
@@ -182,8 +182,8 @@ CLI `--public-url` override for the banner share link (origin only, http/https):
 - [x] i18n (14 locales): `selection.mode.enter` / `selection.mode.done`
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `cli.rs`: add `--public-url` (`ServeArgs`); validate http/https origin (no path/query/fragment)
-- [ ] `browser.rs` + tests: build share URL from origin override + token/lang query params
-- [ ] `transport.rs`: when override set, use it for banner URL, QR, and browser-open; skip LAN share-note
-- [ ] Integration tests: banner shows `--public-url` with token/lang on loopback and public bind
+- [ ] `cli.rs`: add `--share-host` (`ServeArgs`); hostname only (no port)
+- [ ] `browser.rs` + tests: wildcard share-host resolution (CLI → `$HOSTNAME` → external IP → localhost note)
+- [ ] `transport.rs`: pass `share_host` into `public_share_url` for banner, QR, and browser-open
+- [ ] Integration tests: banner shows `--share-host` and `$HOSTNAME` fallback on `0.0.0.0` + `--token`
 - [ ] Run `cargo test`; bump patch version in `Cargo.toml`
