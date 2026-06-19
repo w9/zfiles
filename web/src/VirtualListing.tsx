@@ -56,6 +56,7 @@ type VirtualListingProps = {
   marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
+  shouldSkipDoubleClickActivate?: () => boolean;
 };
 
 const DEFAULT_COLUMN_LAYOUT: Layout = {
@@ -160,6 +161,7 @@ export default function VirtualListing({
   marqueeLayoutRef,
   onViewportPointerDown,
   marqueeActive = false,
+  shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
   const [internalSorting, setInternalSorting] = useState<SortingState>([
@@ -371,7 +373,12 @@ export default function VirtualListing({
                   }
                 }}
                 onClick={(event) => entry.onSelect(event, item.index)}
-                onDoubleClick={() => entry.onActivate()}
+                onDoubleClick={() => {
+                  if (shouldSkipDoubleClickActivate?.()) {
+                    return;
+                  }
+                  entry.onActivate();
+                }}
                 onContextMenu={entry.onContextMenu}
               >
                 {row.getVisibleCells().map((cell, columnIndex) => {

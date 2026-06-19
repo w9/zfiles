@@ -143,6 +143,10 @@ import type { ListingMarqueeLayoutResolver } from "./listingMarqueeSelect";
 import { pathsInIndexRange } from "./listingSelection";
 import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
 import { useListingSwipeRangeSelect } from "./useListingSwipeRangeSelect";
+import {
+  shouldClearTouchSelectionOnBrowse,
+  shouldTouchTapActivate,
+} from "./listingTouchSelect";
 import { basename } from "@/fileOperations/paths";
 
 type ContextMenuState = {
@@ -253,6 +257,7 @@ export default function ExplorerApp() {
   const selectedPathsRef = useRef(selectedPaths);
   const selectedPathRef = useRef(selectedPath);
   const selectionModeRef = useRef(selectionMode);
+  const lastListingPointerTypeRef = useRef("mouse");
   const listingLoadGenerationRef = useRef(0);
   const listingLoadingOverlayTimerRef = useRef<number | null>(null);
   const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
@@ -576,6 +581,18 @@ export default function ExplorerApp() {
   useEffect(() => {
     setSelectionMode(false);
   }, [currentPath]);
+
+  useEffect(() => {
+    if (selectionMode) {
+      return;
+    }
+    if (
+      selectedPaths.size > 0 &&
+      lastListingPointerTypeRef.current === "touch"
+    ) {
+      clearSelection();
+    }
+  }, [selectionMode, selectedPaths.size, clearSelection]);
 
   const openSymlinkTarget = useCallback(
     async (resolvedPath: string) => {
@@ -962,6 +979,22 @@ export default function ExplorerApp() {
 
   const listingEntries = useMemo((): Array<ListingEntry> => {
     return quickFilteredEntries.map((entry) => {
+      const activateEntry = () => {
+        if (selectionModeRef.current) {
+          return;
+        }
+        if (entry.is_dir) {
+          navigateTo(entry.path);
+          return;
+        }
+        const selected = Array.from(selectedPathsRef.current);
+        const paths = resolveViewerPreviewPaths(
+          selected.length > 0 ? selected : [],
+          listingEntriesRef.current,
+        );
+        openPreview(paths.length > 0 ? paths : [entry.path], entry.path);
+      };
+
       const listingEntry: ListingEntry = {
         key: entry.path,
         name: entry.name,
@@ -975,7 +1008,29 @@ export default function ExplorerApp() {
         modified: entry.modified,
         onSelect: (event, displayIndex) => {
           const rows = listingEntriesRef.current;
+          const pointerType = lastListingPointerTypeRef.current;
           let nextSelectedPath: string | null = entry.path;
+
+          if (
+            shouldClearTouchSelectionOnBrowse({
+              pointerType,
+              selectionMode: selectionModeRef.current,
+              selectedCount: selectedPathsRef.current.size,
+            })
+          ) {
+            setSelectedPaths(new Set());
+            setSelectedPath(null);
+          }
+
+          if (
+            shouldTouchTapActivate({
+              pointerType,
+              selectionMode: selectionModeRef.current,
+            })
+          ) {
+            activateEntry();
+            return;
+          }
 
           if (selectionModeRef.current) {
             if (event.shiftKey) {
@@ -1032,21 +1087,7 @@ export default function ExplorerApp() {
           setSelectedIndex(displayIndex);
           setSelectedPath(nextSelectedPath);
         },
-        onActivate: () => {
-          if (selectionModeRef.current) {
-            return;
-          }
-          if (entry.is_dir) {
-            navigateTo(entry.path);
-            return;
-          }
-          const selected = Array.from(selectedPathsRef.current);
-          const paths = resolveViewerPreviewPaths(
-            selected.length > 0 ? selected : [],
-            listingEntriesRef.current,
-          );
-          openPreview(paths.length > 0 ? paths : [entry.path], entry.path);
-        },
+        onActivate: activateEntry,
         onContextMenu: (event) => {
           event.stopPropagation();
           void openContextMenuRef.current(event, entry.path);
@@ -1143,10 +1184,16 @@ export default function ExplorerApp() {
 
   const onListingViewportPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
+      lastListingPointerTypeRef.current = event.pointerType;
       swipeRangeSelect.onViewportPointerDown(event);
       marqueeSelect.onViewportPointerDown(event);
     },
     [marqueeSelect.onViewportPointerDown, swipeRangeSelect.onViewportPointerDown],
+  );
+
+  const shouldSkipDoubleClickActivate = useCallback(
+    () => lastListingPointerTypeRef.current === "touch",
+    [],
   );
 
   useEffect(() => {
@@ -1647,7 +1694,15 @@ export default function ExplorerApp() {
                       ? t("selection.mode.done")
                       : t("selection.mode.enter")
                   }
-                  onClick={() => setSelectionMode((current) => !current)}
+                  onClick={() => {
+                    setSelectionMode((current) => {
+                      const next = !current;
+                      if (current && lastListingPointerTypeRef.current === "touch") {
+                        clearSelection();
+                      }
+                      return next;
+                    });
+                  }}
                 >
                   {selectionMode ? (
                     <Check className="h-4 w-4" />
@@ -1789,6 +1844,7 @@ export default function ExplorerApp() {
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
+                shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
                 onInlineCommit={(path, name) => {
@@ -1819,6 +1875,7 @@ export default function ExplorerApp() {
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
                 marqueeActive={marqueeSelect.isActive}
+                shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {

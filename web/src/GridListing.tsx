@@ -52,6 +52,7 @@ type GridListingProps = {
   marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
   marqueeActive?: boolean;
+  shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
 };
@@ -86,6 +87,7 @@ export default function GridListing({
   marqueeLayoutRef,
   onViewportPointerDown,
   marqueeActive = false,
+  shouldSkipDoubleClickActivate,
   onResizeActiveChange,
   onCardSizeChange,
 }: GridListingProps) {
@@ -306,7 +308,12 @@ export default function GridListing({
                           }
                         }}
                         onClick={(event) => entry.onSelect(event, index)}
-                        onDoubleClick={() => entry.onActivate()}
+                        onDoubleClick={() => {
+                          if (shouldSkipDoubleClickActivate?.()) {
+                            return;
+                          }
+                          entry.onActivate();
+                        }}
                         onContextMenu={entry.onContextMenu}
                       >
                         <GridCardPreview

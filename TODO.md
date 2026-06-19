@@ -197,7 +197,7 @@ Touch browse: single tap opens (no selection outside Select mode); suppress doub
 - [x] `ExplorerBreadcrumb.tsx`: below `sm`, stack quick filter full-width on second row; row 1 nav + breadcrumb only
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
 
-- [ ] `listingTouchSelect.ts` + tests: `shouldTouchTapActivate` / `shouldClearTouchSelectionOnBrowse`
-- [ ] `ExplorerApp.tsx`: track last listing `pointerType`; touch browse → single-tap activate, no selection; clear selection on Done (touch)
-- [ ] `GridListing.tsx` + `VirtualListing.tsx`: skip `onDoubleClick` activate when last pointer is touch
-- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
+- [x] `listingTouchSelect.ts` + tests: `shouldTouchTapActivate` / `shouldClearTouchSelectionOnBrowse`
+- [x] `ExplorerApp.tsx`: track last listing `pointerType`; touch browse → single-tap activate, no selection; clear selection on Done (touch)
+- [x] `GridListing.tsx` + `VirtualListing.tsx`: skip `onDoubleClick` activate when last pointer is touch
+- [x] Run `pnpm test`; bump patch version in `Cargo.toml`
