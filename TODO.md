@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Status bar root div is a naked flex row (no card bg, rounding, padding, or offline tint); offline state stays in `BackendStatus` only. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
+Status bar is a flat two-child row (left cluster + right version) with natural height, no fixed h-9. Follow-up cycle: confirm-dialog "Working…" delay (300ms threshold).
 
 ## TODO List
 
@@ -171,3 +171,6 @@ Status bar root div is a naked flex row (no card bg, rounding, padding, or offli
 - [x] `StatusBar.tsx`: remove card surface (`bg-card`, `rounded-xl`, `px-3`) and offline `bg-destructive/10` tint
 - [x] `e2e/tests/smoke.spec.ts`: drop status-bar `bg-destructive` class assertion; offline still via BackendStatus role
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `StatusBar.tsx`: flatten to two-child root (`justify-between`, `w-full min-w-0`, no `h-9`); left cluster + right version wrapper
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
