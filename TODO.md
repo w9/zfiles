@@ -1,6 +1,6 @@
 ## High-level plan next
 
-Narrow breadcrumb filter: collapsed ListFilter icon on the address row; focus/typeahead expands full filter over breadcrumb only; active icon when filtered. Follow-up: unified focus-ring treatment across inputs.
+Narrow header menu: below `sm`, collapse the application menubar into a ghost `Menu` icon button; tap opens a dropdown with the same category submenus (View, File, Help, …). Follow-up: unified focus-ring treatment across inputs.
 
 ## TODO List
 
@@ -204,3 +204,6 @@ Narrow breadcrumb filter: collapsed ListFilter icon on the address row; focus/ty
 
 - [x] `ExplorerBreadcrumb.tsx`: narrow collapsed ListFilter icon on address row; focus/typeahead expands filter over breadcrumb; active icon when filtered
 - [x] Run `pnpm test`; bump patch version in `Cargo.toml`
+
+- [ ] `MenuBar.tsx`: below `sm`, hide horizontal menubar; show ghost size-7 `Menu` icon with tooltip (`actions.menuBar.label`); dropdown uses category submenus with same items, icons, shortcuts, and empty-category hiding as desktop
+- [ ] Run `pnpm test`; bump patch version in `Cargo.toml`
