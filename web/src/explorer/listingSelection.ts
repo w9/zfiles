@@ -1,5 +1,5 @@
 export function pathsInIndexRange(
-  entries: Array<{ path: string }>,
+  entries: ReadonlyArray<{ path: string }>,
   anchorIndex: number,
   targetIndex: number,
 ): Set<string> {

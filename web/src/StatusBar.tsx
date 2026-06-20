@@ -38,7 +38,6 @@ export default function StatusBar({
 }: StatusBarProps) {
   const { t } = useTranslation();
   const displayVersion = backendMode === "local" ? kernelVersion : APP_VERSION;
-  const showVersion = Boolean(displayVersion);
 
   return (
     <div
@@ -79,7 +78,7 @@ export default function StatusBar({
           <p className="shrink-0 text-xs text-muted-foreground">{selectionStatusText}</p>
         ) : null}
       </div>
-      {showVersion ? (
+      {displayVersion ? (
         <div className="flex shrink-0 items-center">
           <button
             type="button"
