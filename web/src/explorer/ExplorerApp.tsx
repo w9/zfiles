@@ -845,11 +845,14 @@ export default function ExplorerApp() {
   cardSizeRef.current = cardSize;
 
   useEffect(() => {
+    if (!listingLoaded) {
+      return;
+    }
     const effective = readEffectiveFolderViewSettings(currentPath);
     setListingViewMode(effective.viewMode);
     setColumnSorting(effective.columnSort);
     setCardSize(effective.gridCardSize);
-  }, [currentPath, setCardSize]);
+  }, [currentPath, listingLoaded, setCardSize]);
 
   const handleListingViewModeChange = useCallback(
     (mode: ListingViewMode, options?: { global?: boolean }) => {
