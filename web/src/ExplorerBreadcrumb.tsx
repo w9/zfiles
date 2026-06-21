@@ -116,7 +116,7 @@ export default function ExplorerBreadcrumb({
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSegmentRef = useRef<HTMLSpanElement>(null);
 
-  const parts = currentPath ? ["", ...currentPath.split("/")] : [""];
+  const parts = currentPath ? currentPath.split("/") : [];
   const maxHiddenMiddle = Math.max(0, parts.length - 2);
   const quickFilterActive =
     normalizeQuickFilterQuery(quickFilterValue).length > 0;
@@ -131,26 +131,20 @@ export default function ExplorerBreadcrumb({
     hiddenMiddleCount,
   );
 
-  const renderRootIcon = () => (
-    <Home aria-hidden="true" className="size-4 shrink-0" />
-  );
-
   const renderSegmentLink = (index: number) => {
     const part = parts[index];
     const path = pathForBreadcrumbPartIndex(parts, index);
-    const isRoot = index === 0;
     return (
       <BreadcrumbLink asChild>
         <button
           type="button"
           className="cursor-pointer bg-transparent p-0"
-          aria-label={isRoot ? rootAriaLabel : undefined}
           onClick={(event) => {
             event.stopPropagation();
             onNavigate(path);
           }}
         >
-          {isRoot ? renderRootIcon() : part}
+          {part}
         </button>
       </BreadcrumbLink>
     );
@@ -158,7 +152,6 @@ export default function ExplorerBreadcrumb({
 
   const renderCurrentSegment = (index: number) => {
     const part = parts[index];
-    const isRoot = index === 0;
     const atMaxCollapse = hiddenMiddleCount >= maxHiddenMiddle;
     return (
       <BreadcrumbPage
@@ -168,8 +161,7 @@ export default function ExplorerBreadcrumb({
           atMaxCollapse ? "min-w-0 max-w-full truncate" : "shrink-0",
         )}
       >
-        {isRoot ? renderRootIcon() : part}
-        {isRoot ? <span className="sr-only">{rootAriaLabel}</span> : null}
+        {part}
       </BreadcrumbPage>
     );
   };
@@ -280,7 +272,18 @@ export default function ExplorerBreadcrumb({
           )}
         </Button>
       </div>
-      <div className="relative flex min-w-0 flex-1 self-stretch items-center sm:gap-1">
+      <div className="relative flex min-w-0 flex-1 self-stretch items-center gap-0.5 sm:gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label={rootAriaLabel}
+          disabled={!currentPath}
+          onClick={() => onNavigate("")}
+        >
+          <Home className="size-4" aria-hidden="true" />
+        </Button>
         {!editing ? (
           <div
             className={cn(
@@ -290,76 +293,79 @@ export default function ExplorerBreadcrumb({
             )}
             onClick={handleRegionClick}
           >
-            <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
-              <BreadcrumbList
-                ref={listRef}
-                className="min-w-0 flex-nowrap gap-1 sm:gap-2.5"
-              >
-                <BreadcrumbItem className="ml-1 shrink-0">
-                  {parts.length === 1
-                    ? renderCurrentSegment(0)
-                    : renderSegmentLink(0)}
-                </BreadcrumbItem>
-                {collapsedMiddle.showEllipsis ? (
-                  <>
-                    <BreadcrumbSeparator className="shrink-0" />
+            {parts.length > 0 ? (
+              <Breadcrumb aria-label={ariaLabel} className="min-w-0 overflow-hidden">
+                <BreadcrumbList
+                  ref={listRef}
+                  className="min-w-0 flex-nowrap gap-1 sm:gap-2.5"
+                >
+                  <BreadcrumbSeparator className="shrink-0" />
+                  {parts.length === 1 ? (
                     <BreadcrumbItem className="shrink-0">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label={hiddenSegmentsMenuLabel}
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                          >
-                            <BreadcrumbEllipsis className="size-7" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          {collapsedMiddle.hiddenMiddleIndices.map((index) => {
-                            const part = parts[index];
-                            const path = pathForBreadcrumbPartIndex(parts, index);
-                            return (
-                              <DropdownMenuItem
-                                key={`${part}-${index}`}
-                                onClick={() => onNavigate(path)}
-                              >
-                                {part}
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {renderCurrentSegment(0)}
                     </BreadcrumbItem>
-                  </>
-                ) : null}
-                {collapsedMiddle.visibleMiddleIndices.map((index) => (
-                  <span key={`${parts[index]}-${index}`} className="contents">
-                    <BreadcrumbSeparator className="shrink-0" />
-                    <BreadcrumbItem className="shrink-0">
-                      {renderSegmentLink(index)}
-                    </BreadcrumbItem>
-                  </span>
-                ))}
-                {parts.length > 1 ? (
-                  <>
-                    <BreadcrumbSeparator className="shrink-0" />
-                    <BreadcrumbItem className="shrink-0">
-                      {renderCurrentSegment(parts.length - 1)}
-                    </BreadcrumbItem>
-                  </>
-                ) : null}
-              </BreadcrumbList>
-            </Breadcrumb>
+                  ) : (
+                    <>
+                      <BreadcrumbItem className="shrink-0">
+                        {renderSegmentLink(0)}
+                      </BreadcrumbItem>
+                      {collapsedMiddle.showEllipsis ? (
+                        <>
+                          <BreadcrumbSeparator className="shrink-0" />
+                          <BreadcrumbItem className="shrink-0">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                                  aria-label={hiddenSegmentsMenuLabel}
+                                  onClick={(event) => event.stopPropagation()}
+                                  onPointerDown={(event) => event.stopPropagation()}
+                                >
+                                  <BreadcrumbEllipsis className="size-7" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                {collapsedMiddle.hiddenMiddleIndices.map((index) => {
+                                  const part = parts[index];
+                                  const path = pathForBreadcrumbPartIndex(parts, index);
+                                  return (
+                                    <DropdownMenuItem
+                                      key={`${part}-${index}`}
+                                      onClick={() => onNavigate(path)}
+                                    >
+                                      {part}
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </BreadcrumbItem>
+                        </>
+                      ) : null}
+                      {collapsedMiddle.visibleMiddleIndices.map((index) => (
+                        <span key={`${parts[index]}-${index}`} className="contents">
+                          <BreadcrumbSeparator className="shrink-0" />
+                          <BreadcrumbItem className="shrink-0">
+                            {renderSegmentLink(index)}
+                          </BreadcrumbItem>
+                        </span>
+                      ))}
+                      <BreadcrumbSeparator className="shrink-0" />
+                      <BreadcrumbItem className="shrink-0">
+                        {renderCurrentSegment(parts.length - 1)}
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
+            ) : (
+              <div className="h-full min-w-0 flex-1" aria-hidden="true" />
+            )}
           </div>
         ) : (
           <InputGroup
-            className={cn(
-              breadcrumbInputGroupClassName,
-              "min-w-0 flex-1",
-              "max-sm:absolute max-sm:inset-x-0 max-sm:top-1/2 max-sm:z-10 max-sm:flex max-sm:h-7 max-sm:max-w-full max-sm:-translate-y-1/2 max-sm:has-[[data-slot=input-group-control]:focus-visible]:ring-inset",
-            )}
+            className={cn(breadcrumbInputGroupClassName, "min-w-0 flex-1")}
             onClick={(event) => event.stopPropagation()}
           >
             <InputGroupInput

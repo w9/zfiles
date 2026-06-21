@@ -4,7 +4,7 @@ export type CollapsedBreadcrumbMiddle = {
   hiddenMiddleIndices: number[];
 };
 
-/** Middle segment indices between root (0) and the current page (partCount - 1). */
+/** Middle segment indices between the first segment (0) and the current page (partCount - 1). */
 export function middleSegmentIndices(partCount: number): number[] {
   if (partCount <= 2) {
     return [];
@@ -42,8 +42,8 @@ export function pathForBreadcrumbPartIndex(
   parts: string[],
   index: number,
 ): string {
-  if (index <= 0) {
+  if (index < 0 || index >= parts.length) {
     return "";
   }
-  return parts.slice(1, index + 1).join("/");
+  return parts.slice(0, index + 1).join("/");
 }

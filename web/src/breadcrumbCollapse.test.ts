@@ -49,9 +49,9 @@ describe("collapsedBreadcrumbMiddle", () => {
 
 describe("pathForBreadcrumbPartIndex", () => {
   it("maps breadcrumb indices to explorer paths", () => {
-    const parts = ["", "alpha", "beta", "gamma"];
-    assert.equal(pathForBreadcrumbPartIndex(parts, 0), "");
-    assert.equal(pathForBreadcrumbPartIndex(parts, 1), "alpha");
-    assert.equal(pathForBreadcrumbPartIndex(parts, 3), "alpha/beta/gamma");
+    const parts = ["alpha", "beta", "gamma"];
+    assert.equal(pathForBreadcrumbPartIndex(parts, 0), "alpha");
+    assert.equal(pathForBreadcrumbPartIndex(parts, 1), "alpha/beta");
+    assert.equal(pathForBreadcrumbPartIndex(parts, 3), "");
   });
 });
