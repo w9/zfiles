@@ -107,7 +107,7 @@ export default function UploadIndicator({
             variant="ghost"
             size="icon"
             className={cn(
-              "relative h-8 w-8",
+              "relative h-8 w-8 touch-ui:h-11 touch-ui:w-11",
               open && "bg-accent text-accent-foreground",
             )}
             aria-label={t("upload.tray.label")}

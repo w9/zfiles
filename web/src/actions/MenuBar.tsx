@@ -1,6 +1,7 @@
 import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,8 @@ type MenuBarProps = {
   labelForKey: (key: string) => string;
   invoke: (id: string) => void;
   ariaLabel: string;
+  /** When true, always show the hamburger menu and hide the desktop menubar. */
+  mobileMenuOnly?: boolean;
 };
 
 type CategoryMenu = {
@@ -99,6 +102,7 @@ export default function MenuBar({
   labelForKey,
   invoke,
   ariaLabel,
+  mobileMenuOnly = false,
 }: MenuBarProps) {
   const categoryMenus = buildCategoryMenus(registry.list(), contextKeys);
 
@@ -110,7 +114,10 @@ export default function MenuBar({
     <>
       <Menubar
         aria-label={ariaLabel}
-        className="hidden h-8 border-none bg-transparent p-0 shadow-none md:flex"
+        className={cn(
+          "h-8 border-none bg-transparent p-0 shadow-none",
+          mobileMenuOnly ? "hidden" : "hidden md:flex",
+        )}
       >
         {categoryMenus.map(({ categoryKey, items }) => (
           <MenubarMenu key={categoryKey}>
@@ -154,7 +161,10 @@ export default function MenuBar({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 shrink-0 md:hidden"
+                className={cn(
+                  "size-7 shrink-0 touch-ui:h-11 touch-ui:w-11",
+                  mobileMenuOnly ? "flex" : "md:hidden",
+                )}
                 aria-label={ariaLabel}
               >
                 <Menu className="size-4" aria-hidden="true" />

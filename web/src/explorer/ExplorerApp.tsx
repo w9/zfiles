@@ -12,6 +12,7 @@ import type { OnChangeFn, SortingState } from "@tanstack/react-table";
 import { Settings, Loader2, ListChecks, Check } from "lucide-react";
 
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
+import ExplorerCompactToolbar from "../ExplorerCompactToolbar";
 import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
 import StatusBar from "../StatusBar";
 import LanguageToggle from "../LanguageToggle";
@@ -27,6 +28,7 @@ import { useTranslation, type MessageKey } from "../i18n";
 import { useBackendStatus, type BackendEvent } from "../useBackendStatus";
 import { useTheme } from "../useTheme";
 import { useUiMode } from "../useUiMode";
+import { useCompactTouchChrome } from "../useCompactTouchChrome";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -572,6 +574,7 @@ export default function ExplorerApp() {
   const { mode: themeMode, resolved: resolvedTheme, setMode: setThemeMode } = useTheme();
   const { mode: uiMode, resolved: resolvedUiMode, setMode: setUiMode } = useUiMode();
   const touchUi = resolvedUiMode === "touch";
+  const compactTouchChrome = useCompactTouchChrome(touchUi);
   const touchUiRef = useRef(touchUi);
   touchUiRef.current = touchUi;
 
@@ -1705,9 +1708,120 @@ export default function ExplorerApp() {
     onDrop: onUpload,
   });
 
+  const statusBarElement = (
+    <StatusBar
+      backendStatus={backendStatus}
+      backendMode={backend.mode}
+      cloudProvider={cloudSessionConfig?.provider ?? null}
+      kernelVersion={kernelVersion}
+      readOnly={readOnly}
+      selectionStatusText={selectionStatusText}
+      cutStatusText={cutStatusText}
+      onVersionClick={() => setAboutOpen(true)}
+    />
+  );
+
+  const addressBarSection = (
+    <section className="shrink-0 overflow-hidden rounded-xl bg-card">
+      <ExplorerBreadcrumb
+        currentPath={currentPath}
+        rootAriaLabel={t("breadcrumb.root")}
+        ariaLabel={t("breadcrumb.label")}
+        addressBarLabel={t("breadcrumb.addressBar")}
+        addressBarPlaceholder={t("breadcrumb.addressBarPlaceholder")}
+        backLabel={t("breadcrumb.back")}
+        forwardLabel={t("breadcrumb.forward")}
+        refreshLabel={t("breadcrumb.refresh")}
+        cancelLabel={t("breadcrumb.cancel")}
+        listingLoading={refreshing || listingLoading}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        onBack={() => void goBack()}
+        onForward={() => void goForward()}
+        onRefresh={refreshListing}
+        onCancel={cancelListingLoad}
+        onNavigate={(path) => void navigateTo(path)}
+        hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
+        quickFilterLabel={t("quickFilter.label")}
+        quickFilterPlaceholder={t("quickFilter.placeholder")}
+        quickFilterClearLabel={t("quickFilter.clear")}
+        quickFilterHelpText={t("quickFilter.help")}
+        quickFilterValue={quickFilter}
+        onQuickFilterChange={setQuickFilter}
+        onQuickFilterKeyDown={handleQuickFilterKeyDown}
+        quickFilterInputRef={quickFilterInputRef}
+        showNavButtons={!compactTouchChrome}
+      />
+    </section>
+  );
+
+  const compactToolbarElement = (
+    <ExplorerCompactToolbar
+      backLabel={t("breadcrumb.back")}
+      forwardLabel={t("breadcrumb.forward")}
+      refreshLabel={t("breadcrumb.refresh")}
+      cancelLabel={t("breadcrumb.cancel")}
+      listingLoading={refreshing || listingLoading}
+      canGoBack={canGoBack}
+      canGoForward={canGoForward}
+      onBack={() => void goBack()}
+      onForward={() => void goForward()}
+      onRefresh={refreshListing}
+      onCancel={cancelListingLoad}
+      ariaLabel={t("actions.toolbar.label")}
+      trailingActions={
+        <>
+          <ActionToolbar
+            registry={actionSystem.registry}
+            contextKeys={contextKeys}
+            keybindings={actionSystem.keybindings}
+            labelForKey={actionLabel}
+            invoke={(id) => void actionSystem.invoke(id)}
+            ariaLabel={t("actions.toolbar.label")}
+            embedded
+          />
+          <UploadIndicator
+            items={uploadItems}
+            onSelect={onUpload}
+            readOnly={readOnly}
+            onClearFinished={clearFinishedUploads}
+            onClearDone={clearDoneUpload}
+            onCancel={cancelUpload}
+            onPause={pauseUpload}
+            onResume={resumeUpload}
+            unfinishedSessions={
+              multipartSessions.enabled || tusSessions.enabled
+                ? {
+                    sessions: visibleUnfinishedSessions,
+                    readOnly: readOnly || multipartSessions.readOnly,
+                    onResume: resumeUnfinishedSession,
+                    onAbort: abortUnfinishedSession,
+                  }
+                : undefined
+            }
+          />
+          <ListingViewToggle
+            mode={listingViewMode}
+            onChange={handleListingViewModeChange}
+          />
+          <MenuBar
+            registry={actionSystem.registry}
+            contextKeys={contextKeys}
+            keybindings={actionSystem.keybindings}
+            labelForKey={actionLabel}
+            invoke={(id) => void actionSystem.invoke(id)}
+            ariaLabel={t("actions.menuBar.label")}
+            mobileMenuOnly
+          />
+        </>
+      }
+    />
+  );
+
   return (
     <>
     <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden p-2">
+      {!compactTouchChrome ? (
       <header className="shrink-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MenuBar
@@ -1822,6 +1936,7 @@ export default function ExplorerApp() {
           </div>
         </div>
       </header>
+      ) : null}
 
       {fileDragActive ? (
         <div
@@ -1846,36 +1961,11 @@ export default function ExplorerApp() {
 
       <CloudAuthExpiredBanner />
 
-      <section className="shrink-0 overflow-hidden rounded-xl bg-card">
-        <ExplorerBreadcrumb
-          currentPath={currentPath}
-          rootAriaLabel={t("breadcrumb.root")}
-          ariaLabel={t("breadcrumb.label")}
-          addressBarLabel={t("breadcrumb.addressBar")}
-          addressBarPlaceholder={t("breadcrumb.addressBarPlaceholder")}
-          backLabel={t("breadcrumb.back")}
-          forwardLabel={t("breadcrumb.forward")}
-          refreshLabel={t("breadcrumb.refresh")}
-          cancelLabel={t("breadcrumb.cancel")}
-          listingLoading={refreshing || listingLoading}
-          canGoBack={canGoBack}
-          canGoForward={canGoForward}
-          onBack={() => void goBack()}
-          onForward={() => void goForward()}
-          onRefresh={refreshListing}
-          onCancel={cancelListingLoad}
-          onNavigate={(path) => void navigateTo(path)}
-          hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
-          quickFilterLabel={t("quickFilter.label")}
-          quickFilterPlaceholder={t("quickFilter.placeholder")}
-          quickFilterClearLabel={t("quickFilter.clear")}
-          quickFilterHelpText={t("quickFilter.help")}
-          quickFilterValue={quickFilter}
-          onQuickFilterChange={setQuickFilter}
-          onQuickFilterKeyDown={handleQuickFilterKeyDown}
-          quickFilterInputRef={quickFilterInputRef}
-        />
-      </section>
+      {compactTouchChrome ? (
+        <section className="shrink-0">{statusBarElement}</section>
+      ) : null}
+
+      {!compactTouchChrome ? addressBarSection : null}
 
       <section
         ref={mainContentRef}
@@ -2002,18 +2092,16 @@ export default function ExplorerApp() {
         </div>
       </section>
 
-      <section className="shrink-0">
-        <StatusBar
-          backendStatus={backendStatus}
-          backendMode={backend.mode}
-          cloudProvider={cloudSessionConfig?.provider ?? null}
-          kernelVersion={kernelVersion}
-          readOnly={readOnly}
-          selectionStatusText={selectionStatusText}
-          cutStatusText={cutStatusText}
-          onVersionClick={() => setAboutOpen(true)}
-        />
-      </section>
+      {!compactTouchChrome ? (
+        <section className="shrink-0">{statusBarElement}</section>
+      ) : null}
+
+      {compactTouchChrome ? (
+        <>
+          {addressBarSection}
+          {compactToolbarElement}
+        </>
+      ) : null}
 
       {contextMenu ? (
         <ContextMenu

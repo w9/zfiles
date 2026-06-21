@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Home,
-  ListFilter,
-  RefreshCw,
-  X,
-} from "lucide-react";
+import { Home, ListFilter, X } from "lucide-react";
+
+import ExplorerNavButtons from "./ExplorerNavButtons";
 
 import { QuestionMarkIcon } from "@/components/icons/QuestionMarkIcon";
 
@@ -80,6 +75,7 @@ type ExplorerBreadcrumbProps = {
   onQuickFilterChange: (value: string) => void;
   onQuickFilterKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   quickFilterInputRef?: RefObject<HTMLInputElement | null>;
+  showNavButtons?: boolean;
 };
 
 export default function ExplorerBreadcrumb({
@@ -109,6 +105,7 @@ export default function ExplorerBreadcrumb({
   onQuickFilterChange,
   onQuickFilterKeyDown,
   quickFilterInputRef,
+  showNavButtons = true,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentPath);
@@ -234,44 +231,21 @@ export default function ExplorerBreadcrumb({
 
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 px-1">
-      <div className="flex shrink-0 items-center gap-0.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0"
-          aria-label={backLabel}
-          disabled={!canGoBack}
-          onClick={onBack}
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0"
-          aria-label={forwardLabel}
-          disabled={!canGoForward}
-          onClick={onForward}
-        >
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0"
-          aria-label={listingLoading ? cancelLabel : refreshLabel}
-          onClick={listingLoading ? onCancel : onRefresh}
-        >
-          {listingLoading ? (
-            <X className="size-4" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-        </Button>
-      </div>
+      {showNavButtons ? (
+        <ExplorerNavButtons
+          backLabel={backLabel}
+          forwardLabel={forwardLabel}
+          refreshLabel={refreshLabel}
+          cancelLabel={cancelLabel}
+          listingLoading={listingLoading}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
+          onBack={onBack}
+          onForward={onForward}
+          onRefresh={onRefresh}
+          onCancel={onCancel}
+        />
+      ) : null}
       <div className="relative flex min-w-0 flex-1 self-stretch items-center gap-0.5 sm:gap-1">
         <Button
           type="button"

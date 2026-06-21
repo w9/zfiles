@@ -35,7 +35,7 @@ export default function ListingViewToggle({ mode, onChange }: ListingViewToggleP
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
+          className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
           aria-label={label}
           aria-pressed={mode === "grid"}
           onClick={(event) =>

@@ -22,6 +22,8 @@ type ActionToolbarProps = {
   labelForKey: (key: string) => string;
   invoke: (id: string) => void;
   ariaLabel: string;
+  /** Omit outer toolbar semantics when nested inside another toolbar. */
+  embedded?: boolean;
 };
 
 export default function ActionToolbar({
@@ -31,10 +33,9 @@ export default function ActionToolbar({
   labelForKey,
   invoke,
   ariaLabel,
+  embedded = false,
 }: ActionToolbarProps) {
-  return (
-    <div className="flex flex-wrap items-center gap-1" role="toolbar" aria-label={ariaLabel}>
-      {DEFAULT_TOOLBAR_ACTIONS.map((actionId) => {
+  const buttons = DEFAULT_TOOLBAR_ACTIONS.map((actionId) => {
         const action = registry.get(actionId);
         if (!action) {
           return null;
@@ -56,7 +57,7 @@ export default function ActionToolbar({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className={cn("h-8 w-8", !available && "opacity-50")}
+                  className={cn("h-8 w-8 touch-ui:h-11 touch-ui:w-11", !available && "opacity-50")}
                   disabled={!available}
                   aria-label={label}
                   onClick={() => invoke(actionId)}
@@ -76,7 +77,13 @@ export default function ActionToolbar({
             </TooltipContent>
           </Tooltip>
         );
-      })}
+      });
+  if (embedded) {
+    return <div className="flex flex-wrap items-center gap-1">{buttons}</div>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1" role="toolbar" aria-label={ariaLabel}>
+      {buttons}
     </div>
   );
 }
