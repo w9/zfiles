@@ -9,6 +9,7 @@ export const tr: Record<MessageKey, string> = {
   "breadcrumb.back": "Geri",
   "breadcrumb.forward": "İleri",
   "breadcrumb.refresh": "Yenile",
+  "breadcrumb.cancel": "İptal",
   "breadcrumb.hiddenSegmentsMenu": "Gizli yol bölümleri",
   "quickFilter.label": "Dosyaları filtrele",
   "quickFilter.placeholder": "Filtrele…",

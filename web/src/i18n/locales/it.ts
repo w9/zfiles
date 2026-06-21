@@ -9,6 +9,7 @@ export const it: Record<MessageKey, string> = {
   "breadcrumb.back": "Indietro",
   "breadcrumb.forward": "Avanti",
   "breadcrumb.refresh": "Aggiorna",
+  "breadcrumb.cancel": "Annulla",
   "breadcrumb.hiddenSegmentsMenu": "Segmenti di percorso nascosti",
   "quickFilter.label": "Filtra file",
   "quickFilter.placeholder": "Filtra…",

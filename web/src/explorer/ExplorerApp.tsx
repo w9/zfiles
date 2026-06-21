@@ -113,6 +113,8 @@ import { CloudAuthExpiredBanner, useCloudAuth } from "../cloud/CloudAuthContext"
 import { loadSessionConfig } from "../cloud/credentials";
 import ShareUrlButton from "../cloud/ShareUrlButton";
 import { connectionConfigToShareInput } from "../cloud/shareUrl";
+import { captureListingNavigationSnapshot } from "./listingNavigationSnapshot";
+import type { ListingNavigationSnapshot } from "./listingNavigationSnapshot";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
@@ -259,11 +261,18 @@ export default function ExplorerApp() {
   const selectionModeRef = useRef(selectionMode);
   const lastListingPointerTypeRef = useRef("mouse");
   const listingLoadGenerationRef = useRef(0);
+  const listingNavigationSnapshotRef = useRef<ListingNavigationSnapshot | null>(null);
+  const entriesRef = useRef(entries);
+  const listCursorRef = useRef(listCursor);
+  const listingLoadedRef = useRef(listingLoaded);
   const listingLoadingOverlayTimerRef = useRef<number | null>(null);
   const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
     () => {},
   );
   currentPathRef.current = currentPath;
+  entriesRef.current = entries;
+  listCursorRef.current = listCursor;
+  listingLoadedRef.current = listingLoaded;
   selectedIndexRef.current = selectedIndex;
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
@@ -317,8 +326,16 @@ export default function ExplorerApp() {
     setListingLoading(true);
     scheduleListingLoadingOverlay(generation);
     if (!options?.preserveSelection) {
+      listingNavigationSnapshotRef.current = captureListingNavigationSnapshot({
+        path: currentPathRef.current,
+        entries: entriesRef.current,
+        listCursor: listCursorRef.current,
+        listingLoaded: listingLoadedRef.current,
+      });
       setListingLoaded(false);
       setCurrentPath(path);
+    } else {
+      listingNavigationSnapshotRef.current = null;
     }
     try {
       const { entries: data, nextCursor } = await backend.list(path);
@@ -367,6 +384,7 @@ export default function ExplorerApp() {
         setListingLoadingOverlay(false);
         setListingLoading(false);
         setListingLoaded(true);
+        listingNavigationSnapshotRef.current = null;
       }
     }
   }, [
@@ -577,6 +595,27 @@ export default function ExplorerApp() {
   useEffect(() => {
     trackCurrentPath(currentPath);
   }, [currentPath, trackCurrentPath]);
+
+  const cancelListingLoad = useCallback(() => {
+    if (!listingLoading && !refreshing) {
+      return;
+    }
+    listingLoadGenerationRef.current += 1;
+    clearListingLoadingOverlayTimer();
+    setListingLoadingOverlay(false);
+    setListingLoading(false);
+    setRefreshing(false);
+
+    const snapshot = listingNavigationSnapshotRef.current;
+    if (snapshot) {
+      setCurrentPath(snapshot.path);
+      trackCurrentPath(snapshot.path);
+      setEntries(snapshot.entries);
+      setListCursor(snapshot.listCursor);
+      setListingLoaded(snapshot.listingLoaded);
+      listingNavigationSnapshotRef.current = null;
+    }
+  }, [clearListingLoadingOverlayTimer, listingLoading, refreshing, trackCurrentPath]);
 
   useEffect(() => {
     setSelectionMode(false);
@@ -1777,12 +1816,14 @@ export default function ExplorerApp() {
           backLabel={t("breadcrumb.back")}
           forwardLabel={t("breadcrumb.forward")}
           refreshLabel={t("breadcrumb.refresh")}
-          refreshing={refreshing || listingLoading}
+          cancelLabel={t("breadcrumb.cancel")}
+          listingLoading={refreshing || listingLoading}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           onBack={() => void goBack()}
           onForward={() => void goForward()}
           onRefresh={refreshListing}
+          onCancel={cancelListingLoad}
           onNavigate={(path) => void navigateTo(path)}
           hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
           quickFilterLabel={t("quickFilter.label")}

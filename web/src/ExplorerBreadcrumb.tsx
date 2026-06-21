@@ -62,12 +62,14 @@ type ExplorerBreadcrumbProps = {
   backLabel: string;
   forwardLabel: string;
   refreshLabel: string;
-  refreshing: boolean;
+  cancelLabel: string;
+  listingLoading: boolean;
   canGoBack: boolean;
   canGoForward: boolean;
   onBack: () => void;
   onForward: () => void;
   onRefresh: () => void;
+  onCancel: () => void;
   onNavigate: (path: string) => void;
   hiddenSegmentsMenuLabel: string;
   quickFilterLabel: string;
@@ -89,12 +91,14 @@ export default function ExplorerBreadcrumb({
   backLabel,
   forwardLabel,
   refreshLabel,
-  refreshing,
+  cancelLabel,
+  listingLoading,
   canGoBack,
   canGoForward,
   onBack,
   onForward,
   onRefresh,
+  onCancel,
   onNavigate,
   hiddenSegmentsMenuLabel,
   quickFilterLabel,
@@ -266,14 +270,14 @@ export default function ExplorerBreadcrumb({
           variant="ghost"
           size="icon"
           className="size-7 shrink-0"
-          aria-label={refreshLabel}
-          disabled={refreshing}
-          onClick={onRefresh}
+          aria-label={listingLoading ? cancelLabel : refreshLabel}
+          onClick={listingLoading ? onCancel : onRefresh}
         >
-          <RefreshCw
-            className={cn("size-4", refreshing && "animate-spin")}
-            aria-hidden="true"
-          />
+          {listingLoading ? (
+            <X className="size-4" aria-hidden="true" />
+          ) : (
+            <RefreshCw className="size-4" aria-hidden="true" />
+          )}
         </Button>
       </div>
       <div className="relative flex min-w-0 flex-1 self-stretch items-center sm:gap-1">

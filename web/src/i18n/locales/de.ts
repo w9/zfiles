@@ -9,6 +9,7 @@ export const de: Record<MessageKey, string> = {
   "breadcrumb.back": "Zurück",
   "breadcrumb.forward": "Vorwärts",
   "breadcrumb.refresh": "Aktualisieren",
+  "breadcrumb.cancel": "Abbrechen",
   "breadcrumb.hiddenSegmentsMenu": "Ausgeblendete Pfadsegmente",
   "quickFilter.label": "Dateien filtern",
   "quickFilter.placeholder": "Filtern…",
