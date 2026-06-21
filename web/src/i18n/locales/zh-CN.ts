@@ -21,6 +21,17 @@ export const zhCN: Record<MessageKey, string> = {
   "theme.light": "浅色",
   "theme.dark": "深色",
   "theme.auto": "自动",
+  "uiMode.group": "界面模式",
+  "uiMode.mouse": "鼠标和键盘",
+  "uiMode.touch": "触控",
+  "uiMode.auto": "自动",
+  "uiMode.hint.touchOnMouse.message":
+    "您正在鼠标和键盘布局下使用触控。切换到触控模式可获得更大的控件以及浏览/选择行为。",
+  "uiMode.hint.touchOnMouse.switch": "切换到触控",
+  "uiMode.hint.mouseOnTouch.message":
+    "您正在触控布局下使用鼠标。切换到鼠标和键盘模式可使用桌面选择快捷键。",
+  "uiMode.hint.mouseOnTouch.switch": "切换到鼠标和键盘",
+  "uiMode.hint.dismiss": "不再显示",
   "backend.connected": "已连接",
   "backend.connecting": "连接中…",
   "backend.offline": "连接已断开",

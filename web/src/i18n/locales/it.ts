@@ -21,6 +21,17 @@ export const it: Record<MessageKey, string> = {
   "theme.light": "Chiaro",
   "theme.dark": "Scuro",
   "theme.auto": "Automatico",
+  "uiMode.group": "Modalità interfaccia",
+  "uiMode.mouse": "Mouse e tastiera",
+  "uiMode.touch": "Touch",
+  "uiMode.auto": "Automatico",
+  "uiMode.hint.touchOnMouse.message":
+    "Stai usando il touch con il layout mouse e tastiera. Passa alla modalità touch per controlli più grandi e comportamento sfoglia/seleziona.",
+  "uiMode.hint.touchOnMouse.switch": "Passa al touch",
+  "uiMode.hint.mouseOnTouch.message":
+    "Stai usando un mouse con il layout touch. Passa alla modalità mouse e tastiera per le scorciatoie di selezione desktop.",
+  "uiMode.hint.mouseOnTouch.switch": "Passa a mouse e tastiera",
+  "uiMode.hint.dismiss": "Non mostrare più",
   "backend.connected": "Connesso",
   "backend.connecting": "Connessione…",
   "backend.offline": "Connessione persa",

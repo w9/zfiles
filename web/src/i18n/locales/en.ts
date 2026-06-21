@@ -21,6 +21,17 @@ export const en = {
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.auto": "Auto",
+  "uiMode.group": "UI mode",
+  "uiMode.mouse": "Mouse & keyboard",
+  "uiMode.touch": "Touch",
+  "uiMode.auto": "Auto",
+  "uiMode.hint.touchOnMouse.message":
+    "You're using touch on the mouse & keyboard layout. Switch to touch mode for larger controls and browse/select behavior.",
+  "uiMode.hint.touchOnMouse.switch": "Switch to touch",
+  "uiMode.hint.mouseOnTouch.message":
+    "You're using a mouse on the touch layout. Switch to mouse & keyboard mode for desktop selection shortcuts.",
+  "uiMode.hint.mouseOnTouch.switch": "Switch to mouse & keyboard",
+  "uiMode.hint.dismiss": "Don't show again",
   "backend.connected": "Connected",
   "backend.connecting": "Connecting…",
   "backend.offline": "Connection lost",

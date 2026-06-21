@@ -21,6 +21,17 @@ export const id: Record<MessageKey, string> = {
   "theme.light": "Terang",
   "theme.dark": "Gelap",
   "theme.auto": "Otomatis",
+  "uiMode.group": "Mode UI",
+  "uiMode.mouse": "Mouse & keyboard",
+  "uiMode.touch": "Sentuh",
+  "uiMode.auto": "Otomatis",
+  "uiMode.hint.touchOnMouse.message":
+    "Anda menggunakan sentuhan pada tata letak mouse & keyboard. Beralih ke mode sentuh untuk kontrol lebih besar dan perilaku jelajah/pilih.",
+  "uiMode.hint.touchOnMouse.switch": "Beralih ke sentuh",
+  "uiMode.hint.mouseOnTouch.message":
+    "Anda menggunakan mouse pada tata letak sentuh. Beralih ke mode mouse & keyboard untuk pintasan seleksi desktop.",
+  "uiMode.hint.mouseOnTouch.switch": "Beralih ke mouse & keyboard",
+  "uiMode.hint.dismiss": "Jangan tampilkan lagi",
   "backend.connected": "Terhubung",
   "backend.connecting": "Menghubungkan…",
   "backend.offline": "Koneksi terputus",

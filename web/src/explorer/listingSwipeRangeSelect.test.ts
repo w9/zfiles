@@ -7,7 +7,7 @@ import {
   swipeRangeFromAnchor,
 } from "./listingSwipeRangeSelect";
 
-test("shouldHandleSwipeRangeSelect requires selection mode and touch on listing entry", () => {
+test("shouldHandleSwipeRangeSelect requires selection mode, touch UI, and touch on listing entry", () => {
   const entry = {
     closest(selector: string) {
       return selector === "[data-listing-entry]" ? entry : null;
@@ -20,6 +20,7 @@ test("shouldHandleSwipeRangeSelect requires selection mode and touch on listing 
   assert.equal(
     shouldHandleSwipeRangeSelect({
       selectionMode: true,
+      touchUi: true,
       pointerType: "touch",
       target: entry,
     }),
@@ -28,6 +29,7 @@ test("shouldHandleSwipeRangeSelect requires selection mode and touch on listing 
   assert.equal(
     shouldHandleSwipeRangeSelect({
       selectionMode: false,
+      touchUi: true,
       pointerType: "touch",
       target: entry,
     }),
@@ -36,6 +38,16 @@ test("shouldHandleSwipeRangeSelect requires selection mode and touch on listing 
   assert.equal(
     shouldHandleSwipeRangeSelect({
       selectionMode: true,
+      touchUi: false,
+      pointerType: "touch",
+      target: entry,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleSwipeRangeSelect({
+      selectionMode: true,
+      touchUi: true,
       pointerType: "mouse",
       target: entry,
     }),
@@ -44,6 +56,7 @@ test("shouldHandleSwipeRangeSelect requires selection mode and touch on listing 
   assert.equal(
     shouldHandleSwipeRangeSelect({
       selectionMode: true,
+      touchUi: true,
       pointerType: "touch",
       target: { closest: () => null },
     }),

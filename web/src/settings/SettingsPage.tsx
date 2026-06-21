@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import LanguageToggle from "@/LanguageToggle";
 import ThemeToggle from "@/ThemeToggle";
+import UiModeToggle from "@/UiModeToggle";
 import { useTranslation } from "@/i18n";
 import { useAppRoute } from "@/routing/AppRouteProvider";
 import { useGridCardSize } from "@/settings/GridCardSizeProvider";
@@ -41,6 +42,7 @@ import {
   type PasteDestinationWhenFolderSelected,
 } from "@/settings/pasteDestination";
 import { useTheme } from "@/useTheme";
+import { useUiMode } from "@/useUiMode";
 import { detectBootMode } from "@/cloud/bootParams";
 import {
   readShareUrlIncludeCredentials,
@@ -201,6 +203,7 @@ export default function SettingsPage() {
   } = useSlideshowSettings();
   const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds);
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
+  const { mode: uiMode, setMode: setUiMode } = useUiMode();
   const [pasteDestination, setPasteDestination] = useState(
     readStoredPasteDestination,
   );
@@ -234,6 +237,7 @@ export default function SettingsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ThemeToggle mode={themeMode} onChange={setThemeMode} />
+          <UiModeToggle mode={uiMode} onChange={setUiMode} />
           <LanguageToggle iconOnly />
         </div>
       </header>

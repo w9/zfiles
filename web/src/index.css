@@ -4,6 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@custom-variant touch-ui (&:is([data-ui-mode="touch"] *));
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -55,6 +57,11 @@
   --ring: #1a73e8;
   --success: #137333;
   --warning: #b06000;
+}
+
+[data-ui-mode="touch"] {
+  --text-xs: 1rem;
+  --text-sm: 1rem;
 }
 
 .dark {

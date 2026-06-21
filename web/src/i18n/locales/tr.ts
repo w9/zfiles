@@ -21,6 +21,17 @@ export const tr: Record<MessageKey, string> = {
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.auto": "Otomatik",
+  "uiMode.group": "UI modu",
+  "uiMode.mouse": "Fare ve klavye",
+  "uiMode.touch": "Dokunmatik",
+  "uiMode.auto": "Otomatik",
+  "uiMode.hint.touchOnMouse.message":
+    "Fare ve klavye düzeninde dokunmatik kullanıyorsunuz. Daha büyük denetimler ve gezinti/seçim davranışı için dokunmatik moda geçin.",
+  "uiMode.hint.touchOnMouse.switch": "Dokunmatiğe geç",
+  "uiMode.hint.mouseOnTouch.message":
+    "Dokunmatik düzeninde fare kullanıyorsunuz. Masaüstü seçim kısayolları için fare ve klavye moduna geçin.",
+  "uiMode.hint.mouseOnTouch.switch": "Fare ve klavyeye geç",
+  "uiMode.hint.dismiss": "Bir daha gösterme",
   "backend.connected": "Bağlandı",
   "backend.connecting": "Bağlanıyor…",
   "backend.offline": "Bağlantı koptu",

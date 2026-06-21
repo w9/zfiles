@@ -21,6 +21,17 @@ export const ja: Record<MessageKey, string> = {
   "theme.light": "ライト",
   "theme.dark": "ダーク",
   "theme.auto": "自動",
+  "uiMode.group": "UIモード",
+  "uiMode.mouse": "マウスとキーボード",
+  "uiMode.touch": "タッチ",
+  "uiMode.auto": "自動",
+  "uiMode.hint.touchOnMouse.message":
+    "マウスとキーボードレイアウトでタッチ操作しています。タッチモードに切り替えると、より大きなコントロールと閲覧/選択の動作が使えます。",
+  "uiMode.hint.touchOnMouse.switch": "タッチに切り替え",
+  "uiMode.hint.mouseOnTouch.message":
+    "タッチレイアウトでマウスを使用しています。マウスとキーボードモードに切り替えると、デスクトップの選択ショートカットが使えます。",
+  "uiMode.hint.mouseOnTouch.switch": "マウスとキーボードに切り替え",
+  "uiMode.hint.dismiss": "今後表示しない",
   "backend.connected": "接続済み",
   "backend.connecting": "接続中…",
   "backend.offline": "接続が切断されました",

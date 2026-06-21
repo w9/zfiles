@@ -21,6 +21,17 @@ export const fr: Record<MessageKey, string> = {
   "theme.light": "Clair",
   "theme.dark": "Sombre",
   "theme.auto": "Automatique",
+  "uiMode.group": "Mode d'interface",
+  "uiMode.mouse": "Souris et clavier",
+  "uiMode.touch": "Tactile",
+  "uiMode.auto": "Automatique",
+  "uiMode.hint.touchOnMouse.message":
+    "Vous utilisez le tactile avec la disposition souris et clavier. Passez au mode tactile pour des contrôles plus grands et un comportement parcourir/sélectionner.",
+  "uiMode.hint.touchOnMouse.switch": "Passer au tactile",
+  "uiMode.hint.mouseOnTouch.message":
+    "Vous utilisez une souris avec la disposition tactile. Passez au mode souris et clavier pour les raccourcis de sélection bureau.",
+  "uiMode.hint.mouseOnTouch.switch": "Passer à souris et clavier",
+  "uiMode.hint.dismiss": "Ne plus afficher",
   "backend.connected": "Connecté",
   "backend.connecting": "Connexion…",
   "backend.offline": "Connexion perdue",

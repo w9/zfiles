@@ -21,6 +21,17 @@ export const vi: Record<MessageKey, string> = {
   "theme.light": "Sáng",
   "theme.dark": "Tối",
   "theme.auto": "Tự động",
+  "uiMode.group": "Chế độ giao diện",
+  "uiMode.mouse": "Chuột & bàn phím",
+  "uiMode.touch": "Cảm ứng",
+  "uiMode.auto": "Tự động",
+  "uiMode.hint.touchOnMouse.message":
+    "Bạn đang dùng cảm ứng trên giao diện chuột & bàn phím. Chuyển sang chế độ cảm ứng để có điều khiển lớn hơn và hành vi duyệt/chọn.",
+  "uiMode.hint.touchOnMouse.switch": "Chuyển sang cảm ứng",
+  "uiMode.hint.mouseOnTouch.message":
+    "Bạn đang dùng chuột trên giao diện cảm ứng. Chuyển sang chế độ chuột & bàn phím để dùng phím tắt chọn trên desktop.",
+  "uiMode.hint.mouseOnTouch.switch": "Chuyển sang chuột & bàn phím",
+  "uiMode.hint.dismiss": "Không hiển thị lại",
   "backend.connected": "Đã kết nối",
   "backend.connecting": "Đang kết nối…",
   "backend.offline": "Mất kết nối",

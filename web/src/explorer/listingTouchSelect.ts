@@ -1,26 +1,22 @@
-export function isTouchPointerType(pointerType: string): boolean {
-  return pointerType === "touch";
-}
-
 export function shouldTouchTapActivate(options: {
-  pointerType: string;
+  touchUi: boolean;
   selectionMode: boolean;
 }): boolean {
-  return isTouchPointerType(options.pointerType) && !options.selectionMode;
+  return options.touchUi && !options.selectionMode;
 }
 
 export function shouldClearTouchSelectionOnBrowse(options: {
-  pointerType: string;
+  touchUi: boolean;
   selectionMode: boolean;
   selectedCount: number;
 }): boolean {
   return (
-    isTouchPointerType(options.pointerType) &&
+    options.touchUi &&
     !options.selectionMode &&
     options.selectedCount > 0
   );
 }
 
-export function shouldSkipDoubleClickActivate(pointerType: string): boolean {
-  return isTouchPointerType(pointerType);
+export function shouldSkipDoubleClickActivate(touchUi: boolean): boolean {
+  return touchUi;
 }

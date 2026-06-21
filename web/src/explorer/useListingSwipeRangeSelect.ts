@@ -18,6 +18,7 @@ import {
 
 export type UseListingSwipeRangeSelectOptions = {
   selectionMode: boolean;
+  touchUi: boolean;
   enabled?: boolean;
   entries: ReadonlyArray<{ path: string }>;
   scrollElementRef: RefObject<HTMLElement | null>;
@@ -81,6 +82,7 @@ function suppressSwipeEndClick(
 
 export function useListingSwipeRangeSelect({
   selectionMode,
+  touchUi,
   enabled = true,
   entries,
   scrollElementRef,
@@ -95,10 +97,12 @@ export function useListingSwipeRangeSelect({
   const onSelectionChangeRef = useRef(onSelectionChange);
   const entriesRef = useRef(entries);
   const selectionModeRef = useRef(selectionMode);
+  const touchUiRef = useRef(touchUi);
 
   onSelectionChangeRef.current = onSelectionChange;
   entriesRef.current = entries;
   selectionModeRef.current = selectionMode;
+  touchUiRef.current = touchUi;
 
   const stopAutoScroll = useCallback(() => {
     if (autoScrollFrameRef.current != null) {
@@ -198,6 +202,7 @@ export function useListingSwipeRangeSelect({
       if (
         !shouldHandleSwipeRangeSelect({
           selectionMode: selectionModeRef.current,
+          touchUi: touchUiRef.current,
           pointerType: event.pointerType,
           target: event.target,
         })

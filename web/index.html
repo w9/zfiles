@@ -30,6 +30,17 @@
         document.documentElement.dataset.theme = resolved;
         document.documentElement.dataset.themeMode = mode;
         document.documentElement.classList.toggle("dark", resolved === "dark");
+
+        var uiModeKey = "zfiles-ui-mode";
+        var uiMode = localStorage.getItem(uiModeKey);
+        if (uiMode !== "mouse" && uiMode !== "touch" && uiMode !== "auto") {
+          uiMode = "auto";
+        }
+        var coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+        var resolvedUiMode =
+          uiMode === "auto" ? (coarsePointer ? "touch" : "mouse") : uiMode;
+        document.documentElement.dataset.uiMode = resolvedUiMode;
+        document.documentElement.dataset.uiModeSetting = uiMode;
       })();
     </script>
   </head>

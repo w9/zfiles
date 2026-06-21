@@ -2,10 +2,11 @@ import { pathsInIndexRange } from "./listingSelection";
 
 export function shouldHandleSwipeRangeSelect(options: {
   selectionMode: boolean;
+  touchUi: boolean;
   pointerType: string;
   target: EventTarget | null;
 }): boolean {
-  if (!options.selectionMode || options.pointerType !== "touch") {
+  if (!options.selectionMode || !options.touchUi || options.pointerType !== "touch") {
     return false;
   }
   const target = options.target;

@@ -21,6 +21,17 @@ export const ko: Record<MessageKey, string> = {
   "theme.light": "밝게",
   "theme.dark": "어둡게",
   "theme.auto": "자동",
+  "uiMode.group": "UI 모드",
+  "uiMode.mouse": "마우스 및 키보드",
+  "uiMode.touch": "터치",
+  "uiMode.auto": "자동",
+  "uiMode.hint.touchOnMouse.message":
+    "마우스 및 키보드 레이아웃에서 터치를 사용 중입니다. 터치 모드로 전환하면 더 큰 컨트롤과 탐색/선택 동작을 사용할 수 있습니다.",
+  "uiMode.hint.touchOnMouse.switch": "터치로 전환",
+  "uiMode.hint.mouseOnTouch.message":
+    "터치 레이아웃에서 마우스를 사용 중입니다. 마우스 및 키보드 모드로 전환하면 데스크톱 선택 단축키를 사용할 수 있습니다.",
+  "uiMode.hint.mouseOnTouch.switch": "마우스 및 키보드로 전환",
+  "uiMode.hint.dismiss": "다시 표시하지 않음",
   "backend.connected": "연결됨",
   "backend.connecting": "연결 중…",
   "backend.offline": "연결 끊김",

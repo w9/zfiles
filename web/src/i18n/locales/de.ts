@@ -21,6 +21,17 @@ export const de: Record<MessageKey, string> = {
   "theme.light": "Hell",
   "theme.dark": "Dunkel",
   "theme.auto": "Automatisch",
+  "uiMode.group": "UI-Modus",
+  "uiMode.mouse": "Maus & Tastatur",
+  "uiMode.touch": "Touch",
+  "uiMode.auto": "Automatisch",
+  "uiMode.hint.touchOnMouse.message":
+    "Sie verwenden Touch im Maus-und-Tastatur-Layout. Wechseln Sie in den Touch-Modus für größere Steuerelemente und Browse/Auswahl-Verhalten.",
+  "uiMode.hint.touchOnMouse.switch": "Zu Touch wechseln",
+  "uiMode.hint.mouseOnTouch.message":
+    "Sie verwenden eine Maus im Touch-Layout. Wechseln Sie in den Maus-und-Tastatur-Modus für Desktop-Auswahl-Tastenkürzel.",
+  "uiMode.hint.mouseOnTouch.switch": "Zu Maus & Tastatur wechseln",
+  "uiMode.hint.dismiss": "Nicht mehr anzeigen",
   "backend.connected": "Verbunden",
   "backend.connecting": "Verbinden…",
   "backend.offline": "Verbindung verloren",

@@ -16,6 +16,7 @@ import ContextMenu, { type ContextMenuAction } from "../ContextMenu";
 import StatusBar from "../StatusBar";
 import LanguageToggle from "../LanguageToggle";
 import ThemeToggle from "../ThemeToggle";
+import UiModeToggle from "../UiModeToggle";
 import ListingViewToggle from "../ListingViewToggle";
 import InfoDialog from "../InfoDialog";
 import VirtualListing, { type ListingEntry } from "../VirtualListing";
@@ -25,6 +26,7 @@ import { useExplorerBackend, type FileEntry } from "../backend";
 import { useTranslation, type MessageKey } from "../i18n";
 import { useBackendStatus, type BackendEvent } from "../useBackendStatus";
 import { useTheme } from "../useTheme";
+import { useUiMode } from "../useUiMode";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -566,6 +568,10 @@ export default function ExplorerApp() {
 
   const backendStatus = useBackendStatus(handleKernelEvent);
   const { mode: themeMode, resolved: resolvedTheme, setMode: setThemeMode } = useTheme();
+  const { mode: uiMode, resolved: resolvedUiMode, setMode: setUiMode } = useUiMode();
+  const touchUi = resolvedUiMode === "touch";
+  const touchUiRef = useRef(touchUi);
+  touchUiRef.current = touchUi;
 
   const refreshListing = useCallback(() => {
     if (refreshing) {
@@ -720,16 +726,25 @@ export default function ExplorerApp() {
   }, []);
 
   useEffect(() => {
+    if (touchUi) {
+      return;
+    }
+    setSelectionMode(false);
+    clearSelection();
+  }, [touchUi, clearSelection]);
+
+  useEffect(() => {
     if (selectionMode) {
       return;
     }
     if (
       selectedPaths.size > 0 &&
+      touchUi &&
       lastListingPointerTypeRef.current === "touch"
     ) {
       clearSelection();
     }
-  }, [selectionMode, selectedPaths.size, clearSelection]);
+  }, [selectionMode, selectedPaths.size, clearSelection, touchUi]);
 
   const clearMultiSelection = useCallback(() => {
     setSelectedPaths((current) => (current.size === 0 ? current : new Set()));
@@ -1050,12 +1065,11 @@ export default function ExplorerApp() {
         modified: entry.modified,
         onSelect: (event, displayIndex) => {
           const rows = listingEntriesRef.current;
-          const pointerType = lastListingPointerTypeRef.current;
           let nextSelectedPath: string | null = entry.path;
 
           if (
             shouldClearTouchSelectionOnBrowse({
-              pointerType,
+              touchUi: touchUiRef.current,
               selectionMode: selectionModeRef.current,
               selectedCount: selectedPathsRef.current.size,
             })
@@ -1066,7 +1080,7 @@ export default function ExplorerApp() {
 
           if (
             shouldTouchTapActivate({
-              pointerType,
+              touchUi: touchUiRef.current,
               selectionMode: selectionModeRef.current,
             })
           ) {
@@ -1212,6 +1226,7 @@ export default function ExplorerApp() {
 
   const swipeRangeSelect = useListingSwipeRangeSelect({
     selectionMode,
+    touchUi,
     enabled:
       listingLoaded &&
       !listingLoading &&
@@ -1234,7 +1249,7 @@ export default function ExplorerApp() {
   );
 
   const shouldSkipDoubleClickActivate = useCallback(
-    () => lastListingPointerTypeRef.current === "touch",
+    () => touchUiRef.current,
     [],
   );
 
@@ -1708,6 +1723,7 @@ export default function ExplorerApp() {
               onChange={handleListingViewModeChange}
             />
             <ThemeToggle mode={themeMode} onChange={setThemeMode} variant="ghost" />
+            <UiModeToggle mode={uiMode} onChange={setUiMode} variant="ghost" />
             <LanguageToggle iconOnly variant="ghost" />
             <Tooltip>
               <TooltipTrigger asChild>
@@ -1715,7 +1731,7 @@ export default function ExplorerApp() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
                   aria-label={t("settings.title")}
                   onClick={() => navigate("settings")}
                 >
@@ -1724,41 +1740,43 @@ export default function ExplorerApp() {
               </TooltipTrigger>
               <TooltipContent side="bottom">{t("settings.title")}</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant={selectionMode ? "default" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  aria-label={
-                    selectionMode
-                      ? t("selection.mode.done")
-                      : t("selection.mode.enter")
-                  }
-                  onClick={() => {
-                    setSelectionMode((current) => {
-                      const next = !current;
-                      if (current && lastListingPointerTypeRef.current === "touch") {
-                        clearSelection();
-                      }
-                      return next;
-                    });
-                  }}
-                >
-                  {selectionMode ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <ListChecks className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {selectionMode
-                  ? t("selection.mode.done")
-                  : t("selection.mode.enter")}
-              </TooltipContent>
-            </Tooltip>
+            {touchUi ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={selectionMode ? "default" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
+                    aria-label={
+                      selectionMode
+                        ? t("selection.mode.done")
+                        : t("selection.mode.enter")
+                    }
+                    onClick={() => {
+                      setSelectionMode((current) => {
+                        const next = !current;
+                        if (current) {
+                          clearSelection();
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    {selectionMode ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <ListChecks className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {selectionMode
+                    ? t("selection.mode.done")
+                    : t("selection.mode.enter")}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
             <ActionToolbar
               registry={actionSystem.registry}
               contextKeys={contextKeys}

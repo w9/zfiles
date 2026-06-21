@@ -21,6 +21,17 @@ export const ru: Record<MessageKey, string> = {
   "theme.light": "Светлая",
   "theme.dark": "Тёмная",
   "theme.auto": "Авто",
+  "uiMode.group": "Режим интерфейса",
+  "uiMode.mouse": "Мышь и клавиатура",
+  "uiMode.touch": "Сенсорный",
+  "uiMode.auto": "Авто",
+  "uiMode.hint.touchOnMouse.message":
+    "Вы используете касания в режиме мыши и клавиатуры. Переключитесь на сенсорный режим для более крупных элементов и поведения просмотра/выбора.",
+  "uiMode.hint.touchOnMouse.switch": "Переключить на сенсорный",
+  "uiMode.hint.mouseOnTouch.message":
+    "Вы используете мышь в сенсорном режиме. Переключитесь на режим мыши и клавиатуры для сочетаний клавиш выбора на ПК.",
+  "uiMode.hint.mouseOnTouch.switch": "Переключить на мышь и клавиатуру",
+  "uiMode.hint.dismiss": "Больше не показывать",
   "backend.connected": "Подключено",
   "backend.connecting": "Подключение…",
   "backend.offline": "Соединение потеряно",

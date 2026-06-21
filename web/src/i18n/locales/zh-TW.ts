@@ -21,6 +21,17 @@ export const zhTW: Record<MessageKey, string> = {
   "theme.light": "淺色",
   "theme.dark": "深色",
   "theme.auto": "自動",
+  "uiMode.group": "介面模式",
+  "uiMode.mouse": "滑鼠和鍵盤",
+  "uiMode.touch": "觸控",
+  "uiMode.auto": "自動",
+  "uiMode.hint.touchOnMouse.message":
+    "您正在滑鼠和鍵盤版面下使用觸控。切換到觸控模式可獲得更大的控制項以及瀏覽/選取行為。",
+  "uiMode.hint.touchOnMouse.switch": "切換到觸控",
+  "uiMode.hint.mouseOnTouch.message":
+    "您正在觸控版面下使用滑鼠。切換到滑鼠和鍵盤模式可使用桌面選取快捷鍵。",
+  "uiMode.hint.mouseOnTouch.switch": "切換到滑鼠和鍵盤",
+  "uiMode.hint.dismiss": "不再顯示",
   "backend.connected": "已連線",
   "backend.connecting": "連線中…",
   "backend.offline": "連線已中斷",
