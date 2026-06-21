@@ -151,6 +151,8 @@ import {
   shouldClearTouchSelectionOnBrowse,
   shouldTouchTapActivate,
 } from "./listingTouchSelect";
+import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
+import { useListingLongPressContextMenu } from "./useListingLongPressContextMenu";
 import { basename } from "@/fileOperations/paths";
 
 type ContextMenuState = {
@@ -268,9 +270,9 @@ export default function ExplorerApp() {
   const listCursorRef = useRef(listCursor);
   const listingLoadedRef = useRef(listingLoaded);
   const listingLoadingOverlayTimerRef = useRef<number | null>(null);
-  const openContextMenuRef = useRef<(event: React.MouseEvent, path: string | null) => void>(
-    () => {},
-  );
+  const openContextMenuRef = useRef<
+    (event: ContextMenuPointerEvent, path: string | null) => void
+  >(() => {});
   currentPathRef.current = currentPath;
   entriesRef.current = entries;
   listCursorRef.current = listCursor;
@@ -1146,6 +1148,10 @@ export default function ExplorerApp() {
         onActivate: activateEntry,
         onContextMenu: (event) => {
           event.stopPropagation();
+          if (touchUiRef.current) {
+            event.preventDefault();
+            return;
+          }
           void openContextMenuRef.current(event, entry.path);
         },
       };
@@ -1239,13 +1245,29 @@ export default function ExplorerApp() {
     onSelectionChange: applyMarqueeSelection,
   });
 
+  const longPressContextMenu = useListingLongPressContextMenu({
+    enabled:
+      listingLoaded &&
+      !listingLoading &&
+      !listingPaneOverlay &&
+      activeListingEntries.length > 0 &&
+      !gridResizeActive,
+    touchUi,
+    onOpen: (event, path) => void openContextMenuRef.current(event, path),
+  });
+
   const onListingViewportPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       lastListingPointerTypeRef.current = event.pointerType;
+      longPressContextMenu.onViewportPointerDown(event);
       swipeRangeSelect.onViewportPointerDown(event);
       marqueeSelect.onViewportPointerDown(event);
     },
-    [marqueeSelect.onViewportPointerDown, swipeRangeSelect.onViewportPointerDown],
+    [
+      longPressContextMenu.onViewportPointerDown,
+      marqueeSelect.onViewportPointerDown,
+      swipeRangeSelect.onViewportPointerDown,
+    ],
   );
 
   const shouldSkipDoubleClickActivate = useCallback(
@@ -1485,7 +1507,7 @@ export default function ExplorerApp() {
   confirmMessageRef.current = actionSystem.confirmMessage;
 
   const openContextMenu = useCallback(
-    async (event: React.MouseEvent, path: string | null) => {
+    async (event: ContextMenuPointerEvent, path: string | null) => {
       event.preventDefault();
 
       let menuContextKeys = contextKeys;
@@ -1863,6 +1885,10 @@ export default function ExplorerApp() {
           <div
             className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
             onContextMenu={(event) => {
+              if (touchUi) {
+                event.preventDefault();
+                return;
+              }
               if (
                 event.target instanceof Element &&
                 event.target.closest("[data-listing-entry]")
@@ -1906,6 +1932,7 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
+                onEntryPointerDown={longPressContextMenu.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
@@ -1937,6 +1964,7 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
+                onEntryPointerDown={longPressContextMenu.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {

@@ -51,6 +51,10 @@ type GridListingProps = {
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
   marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onEntryPointerDown?: (
+    event: React.PointerEvent<HTMLElement>,
+    path: string,
+  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
@@ -86,6 +90,7 @@ export default function GridListing({
   listingViewportRef,
   marqueeLayoutRef,
   onViewportPointerDown,
+  onEntryPointerDown,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
@@ -308,6 +313,9 @@ export default function GridListing({
                           }
                         }}
                         onClick={(event) => entry.onSelect(event, index)}
+                        onPointerDown={(event) =>
+                          onEntryPointerDown?.(event, entry.path)
+                        }
                         onDoubleClick={() => {
                           if (shouldSkipDoubleClickActivate?.()) {
                             return;

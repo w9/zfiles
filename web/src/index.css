@@ -64,6 +64,10 @@
   --text-sm: 1rem;
 }
 
+[data-ui-mode="touch"] [data-listing-entry] {
+  -webkit-touch-callout: none;
+}
+
 .dark {
   --background: #111318;
   --foreground: #e8eaed;

@@ -55,6 +55,10 @@ type VirtualListingProps = {
   listingViewportRef?: React.RefObject<HTMLDivElement | null>;
   marqueeLayoutRef?: React.RefObject<ListingMarqueeLayoutResolver | null>;
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onEntryPointerDown?: (
+    event: React.PointerEvent<HTMLElement>,
+    path: string,
+  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
 };
@@ -160,6 +164,7 @@ export default function VirtualListing({
   listingViewportRef,
   marqueeLayoutRef,
   onViewportPointerDown,
+  onEntryPointerDown,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
@@ -373,6 +378,7 @@ export default function VirtualListing({
                   }
                 }}
                 onClick={(event) => entry.onSelect(event, item.index)}
+                onPointerDown={(event) => onEntryPointerDown?.(event, entry.path)}
                 onDoubleClick={() => {
                   if (shouldSkipDoubleClickActivate?.()) {
                     return;
