@@ -94,7 +94,8 @@ import {
   type GridCardSize,
 } from "../settings/gridCardSize";
 import ShowDotEntriesToggle from "../ShowDotEntriesToggle";
-import { listingPaneOverlayKey, LISTING_LOADING_OVERLAY_DELAY_MS } from "../listingEmpty";
+import { listingPaneOverlayKey } from "../listingEmpty";
+import { ASYNC_VISUAL_DELAY_MS } from "../asyncVisualDelay";
 import { filterDotEntries, isDotEntryName } from "../listingFilter";
 import {
   collectSelectAllWarnings,
@@ -316,7 +317,7 @@ export default function ExplorerApp() {
         if (generation === listingLoadGenerationRef.current) {
           setListingLoadingOverlay(true);
         }
-      }, LISTING_LOADING_OVERLAY_DELAY_MS);
+      }, ASYNC_VISUAL_DELAY_MS);
     },
     [clearListingLoadingOverlayTimer],
   );

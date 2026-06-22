@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslation } from "./i18n";
 import UploadFloatingPanel from "./UploadFloatingPanel";
-import UploadPanel, { type CloudMultipartPanelProps } from "./UploadPanel";
+import UploadPanel, { type UnfinishedSessionsPanelProps } from "./UploadPanel";
 import { pickUploadFiles } from "./pickUploadFiles";
 import type { DroppedUploadFile } from "./useGlobalFileDrop";
 import { isUploadTraySheetLayout } from "./uploadTrayGeometry";
@@ -32,9 +32,7 @@ type UploadIndicatorProps = {
   onPause: (queueId: string) => void;
   onResume: (queueId: string) => void;
   readOnly?: boolean;
-  unfinishedSessions?: CloudMultipartPanelProps;
-  /** @deprecated Use unfinishedSessions */
-  cloudMultipart?: CloudMultipartPanelProps;
+  unfinishedSessions?: UnfinishedSessionsPanelProps;
   onTrayClick?: () => void;
 };
 
@@ -71,12 +69,11 @@ export default forwardRef<UploadIndicatorHandle, UploadIndicatorProps>(
       onResume,
       readOnly = false,
       unfinishedSessions,
-      cloudMultipart,
       onTrayClick,
     },
     ref,
   ) {
-  const sessionPanel = unfinishedSessions ?? cloudMultipart;
+  const sessionPanel = unfinishedSessions;
   const { t } = useTranslation();
   const stats = useMemo(() => aggregateUploadStats(items), [items]);
   const attention = uploadTrayAttention(stats);
@@ -126,7 +123,6 @@ export default forwardRef<UploadIndicatorHandle, UploadIndicatorProps>(
     onClose: closePanel,
     readOnly,
     unfinishedSessions: sessionPanel,
-    cloudMultipart: sessionPanel,
     onChooseFiles: readOnly ? undefined : openFilePicker,
   };
 

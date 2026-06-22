@@ -7,8 +7,6 @@ export type SmithyHttpRequest = {
 };
 
 export const MULTIPART_UPLOAD_QUEUE_SIZE = 4;
-/** @deprecated Use MULTIPART_UPLOAD_QUEUE_SIZE */
-export const RESUME_UPLOAD_QUEUE_SIZE = MULTIPART_UPLOAD_QUEUE_SIZE;
 
 export function xhrHttpHandlerFromClient(client: S3Client): XhrHttpHandler | null {
   const handler = client.config.requestHandler;

@@ -4,7 +4,6 @@ import test from "node:test";
 import {
   listingOverlayMessageKey,
   listingPaneOverlayKey,
-  LISTING_LOADING_OVERLAY_DELAY_MS,
 } from "./listingEmpty";
 
 test("listingOverlayMessageKey is null before first listing load", () => {
@@ -104,8 +103,4 @@ test("listingPaneOverlayKey falls back to empty overlay when not loading", () =>
     }),
     "listing.empty",
   );
-});
-
-test("LISTING_LOADING_OVERLAY_DELAY_MS is 300", () => {
-  assert.equal(LISTING_LOADING_OVERLAY_DELAY_MS, 300);
 });

@@ -1,11 +1,6 @@
-import { ASYNC_VISUAL_DELAY_MS } from "./asyncVisualDelay";
-
 export type ListingOverlayMessageKey = "listing.empty" | "quickFilter.empty";
 
 export type ListingPaneOverlayKey = ListingOverlayMessageKey | "listing.loading";
-
-/** @deprecated Use {@link ASYNC_VISUAL_DELAY_MS}. */
-export const LISTING_LOADING_OVERLAY_DELAY_MS = ASYNC_VISUAL_DELAY_MS;
 
 /** Centered listing overlay when there are no rows to show after filtering. */
 export function listingOverlayMessageKey(options: {

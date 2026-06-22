@@ -35,9 +35,6 @@ export type UnfinishedSessionsPanelProps = {
   onAbort: (uploadId: string) => void;
 };
 
-/** @deprecated Use UnfinishedSessionsPanelProps */
-export type CloudMultipartPanelProps = UnfinishedSessionsPanelProps;
-
 type UploadPanelProps = {
   items: UploadQueueItem[];
   onClearFinished: () => void;
@@ -49,8 +46,6 @@ type UploadPanelProps = {
   onChooseFiles?: () => void;
   readOnly?: boolean;
   unfinishedSessions?: UnfinishedSessionsPanelProps;
-  /** @deprecated Use unfinishedSessions */
-  cloudMultipart?: UnfinishedSessionsPanelProps;
   onDragHandlePointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
 };
 
@@ -466,12 +461,11 @@ export default function UploadPanel({
   onChooseFiles,
   readOnly = false,
   unfinishedSessions,
-  cloudMultipart,
   onDragHandlePointerDown,
 }: UploadPanelProps) {
   const { t } = useTranslation();
   const { resolved: iconTheme } = useTheme();
-  const sessionPanel = unfinishedSessions ?? cloudMultipart;
+  const sessionPanel = unfinishedSessions;
   const sessions = sessionPanel?.sessions ?? [];
   const rows = mergeUploadPanelRows(items, sessions);
   const finishedCount = items.filter(
