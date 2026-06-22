@@ -7,6 +7,7 @@ import type { UnfinishedSessionView } from "@/unfinishedUploadSessions";
 import { pickFileForTusResume } from "./pickTusResumeFile";
 import {
   readScopedTusRecords,
+  removeOtherTusRecordsForDestPath,
   removeTusRecord,
   tusSessionScopeId,
   type TusSessionRecord,
@@ -198,14 +199,26 @@ export function useTusSessions({
   );
 
   const onUploadSessionFinished = useCallback(
-    async (uploadId: string) => {
-      if (!scopeId) {
+    async (uploadId: string, destPath?: string) => {
+      if (!scopeId || !kernelBackend) {
         return;
       }
       removeTusRecord(scopeId, uploadId);
+      if (destPath) {
+        const stale = removeOtherTusRecordsForDestPath(scopeId, destPath, uploadId);
+        await Promise.all(
+          stale.map(async (record) => {
+            try {
+              await kernelBackend.abortTusSession(record.uploadId);
+            } catch {
+              // Spool may already be gone.
+            }
+          }),
+        );
+      }
       await refresh();
     },
-    [refresh, scopeId],
+    [kernelBackend, refresh, scopeId],
   );
 
   return {

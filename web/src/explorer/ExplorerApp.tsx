@@ -465,8 +465,11 @@ export default function ExplorerApp() {
     onMultipartSessionFinished: (uploadId) => {
       void multipartSessionsRef.current.onUploadSessionFinished(uploadId);
     },
-    onTusSessionFinished: (uploadId) => {
-      void tusSessionsRef.current.onUploadSessionFinished(uploadId);
+    onTusSessionFinished: (uploadId, destPath) => {
+      void tusSessionsRef.current.onUploadSessionFinished(uploadId, destPath);
+    },
+    onTusSessionsChanged: () => {
+      void tusSessionsRef.current.refresh();
     },
   });
 
@@ -474,7 +477,8 @@ export default function ExplorerApp() {
     onUploadSessionFinished: async (_uploadId: string) => {},
   });
   const tusSessionsRef = useRef({
-    onUploadSessionFinished: async (_uploadId: string) => {},
+    onUploadSessionFinished: async (_uploadId: string, _destPath?: string) => {},
+    refresh: async () => {},
   });
   const multipartSessions = useMultipartSessions({
     backend,

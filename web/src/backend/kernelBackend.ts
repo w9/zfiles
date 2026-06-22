@@ -36,6 +36,25 @@ async function headUploadOffset(location: string, signal?: AbortSignal): Promise
   return Number(response.headers.get("Upload-Offset") ?? "0");
 }
 
+/** Successful finalize removes the tus session; HEAD should then return 404. */
+export async function assertUploadSessionFinalized(
+  location: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  try {
+    await headUploadOffset(location, signal);
+    throw new Error("upload not finalized on server");
+  } catch (err) {
+    if (err instanceof Error && err.message === "upload not finalized on server") {
+      throw err;
+    }
+    if (err instanceof Error && err.message.startsWith("upload head failed: HTTP 404")) {
+      return;
+    }
+    throw err;
+  }
+}
+
 type PatchUploadResult = {
   ok: boolean;
   status: number;
@@ -217,10 +236,13 @@ export class KernelBackend implements ExplorerBackend {
         if (patch.status === 400) {
           throw new Error(`upload patch failed: HTTP ${patch.status}`);
         }
-        offset = await headUploadOffset(location, signal);
-        if (offset >= file.size) {
-          break;
+        const headOffset = await headUploadOffset(location, signal);
+        if (headOffset >= file.size) {
+          throw new Error(
+            `upload patch failed: HTTP ${patch.status} (server spool full but finalize did not succeed)`,
+          );
         }
+        offset = headOffset;
         continue;
       }
 
@@ -232,6 +254,8 @@ export class KernelBackend implements ExplorerBackend {
         committedOffset: offset,
       });
     }
+
+    await assertUploadSessionFinalized(location, signal);
 
     callbacks?.onVerifying?.();
     const verified = await sha256Base64Matches(

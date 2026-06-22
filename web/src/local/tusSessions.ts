@@ -95,6 +95,34 @@ export function removeTusRecord(scopeId: string, uploadId: string): void {
   writeStore(store);
 }
 
+/** Drop other persisted tus sessions targeting the same destination path. */
+export function removeOtherTusRecordsForDestPath(
+  scopeId: string,
+  destPath: string,
+  keepUploadId: string,
+): TusSessionRecord[] {
+  const store = readStore();
+  const existing = store[scopeId] ?? [];
+  const removed: TusSessionRecord[] = [];
+  const next = existing.filter((entry) => {
+    if (entry.destPath === destPath && entry.uploadId !== keepUploadId) {
+      removed.push(entry);
+      return false;
+    }
+    return true;
+  });
+  if (removed.length === 0) {
+    return removed;
+  }
+  if (next.length === 0) {
+    delete store[scopeId];
+  } else {
+    store[scopeId] = next;
+  }
+  writeStore(store);
+  return removed;
+}
+
 export function clearScopedTusRecords(scopeId: string): void {
   const store = readStore();
   if (!(scopeId in store)) {

@@ -12,6 +12,7 @@ import {
 } from "./cloud/multipartSessions";
 import {
   removeTusRecord,
+  removeOtherTusRecordsForDestPath,
   tusSessionScopeId,
   tusUploadIdFromLocation,
   upsertTusRecord,
@@ -28,6 +29,7 @@ import {
   readUploadChecksumValidation,
   uploadChecksumValidationEnabled,
 } from "./settings/uploadChecksumSettings";
+import { prepareUploadFile } from "./materializeUploadFile";
 import { useCloudAuth } from "./cloud/CloudAuthContext";
 
 export type UploadItemStatus =
@@ -110,13 +112,25 @@ export function shouldCommitProgressUi(
   return now - lastCommitMs >= PROGRESS_UI_MIN_INTERVAL_MS;
 }
 
+/** Queue item ids; falls back when `crypto.randomUUID` is unavailable (HTTP / LAN). */
+export function newQueueItemId(): string {
+  try {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Safari iOS on http:// LAN shares has no secure context.
+  }
+  return `upload-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
 export function createQueueItem(
   file: File,
   destPath: string,
   sourceFileHandle?: FileSystemFileHandle,
 ): UploadQueueItem {
   return {
-    id: crypto.randomUUID(),
+    id: newQueueItemId(),
     file,
     sourceFileHandle,
     fileName: file.name,
@@ -136,7 +150,7 @@ export function createResumeQueueItem(
   initialOffset = 0,
 ): UploadQueueItem {
   return {
-    id: crypto.randomUUID(),
+    id: newQueueItemId(),
     file,
     fileName: record.fileName,
     destPath: record.destPath,
@@ -167,7 +181,7 @@ export function createTusResumeQueueItem(
   initialOffset = 0,
 ): UploadQueueItem {
   return {
-    id: crypto.randomUUID(),
+    id: newQueueItemId(),
     file,
     fileName: record.fileName,
     destPath: record.destPath,
@@ -444,7 +458,9 @@ type UseUploadQueueOptions = {
   onItemComplete?: () => void;
   onItemFailed?: (message: string, error?: unknown) => void;
   onMultipartSessionFinished?: (uploadId: string) => void;
-  onTusSessionFinished?: (uploadId: string) => void;
+  onTusSessionFinished?: (uploadId: string, destPath?: string) => void;
+  /** Refresh persisted tus session views after localStorage changes. */
+  onTusSessionsChanged?: () => void;
 };
 
 export function useUploadQueue({
@@ -454,6 +470,7 @@ export function useUploadQueue({
   onItemFailed,
   onMultipartSessionFinished,
   onTusSessionFinished,
+  onTusSessionsChanged,
 }: UseUploadQueueOptions) {
   const cloudAuth = useCloudAuth();
   const [items, setItems] = useState<UploadQueueItem[]>([]);
@@ -986,7 +1003,21 @@ export function useUploadQueue({
             itemsRef.current = next;
             setItems(next);
             if (backend.mode === "local" && active) {
-              upsertTusRecord(tusSessionScopeId(), {
+              const scopeId = tusSessionScopeId();
+              const stale = removeOtherTusRecordsForDestPath(
+                scopeId,
+                active.destPath,
+                session.backendUploadId,
+              );
+              for (const record of stale) {
+                void (backend as KernelBackend)
+                  .abortTusSession(record.uploadId)
+                  .catch(() => {});
+              }
+              if (stale.length > 0) {
+                onTusSessionsChanged?.();
+              }
+              upsertTusRecord(scopeId, {
                 uploadId: session.backendUploadId,
                 tusLocation: session.tusLocation,
                 destPath: active.destPath,
@@ -1134,6 +1165,8 @@ export function useUploadQueue({
           commitProgressItem(queueId, updated, false);
         };
 
+        const uploadFile = await prepareUploadFile(ready.file);
+
         if (ready.multipartResume && backend.mode === "s3") {
           const resumeRecord: MultipartSessionRecord = {
             uploadId: ready.multipartResume.uploadId,
@@ -1148,7 +1181,7 @@ export function useUploadQueue({
             createdAt: new Date().toISOString(),
           };
           await (backend as S3Backend).resumeUpload(
-            ready.file,
+            uploadFile,
             resumeRecord,
             onUploadProgress,
             abortController.signal,
@@ -1156,7 +1189,7 @@ export function useUploadQueue({
           );
         } else if (ready.tusResume && backend.mode === "local") {
           await backend.upload(
-            ready.file,
+            uploadFile,
             uploadDestPath,
             onUploadProgress,
             abortController.signal,
@@ -1165,7 +1198,7 @@ export function useUploadQueue({
           );
         } else {
           await backend.upload(
-            ready.file,
+            uploadFile,
             uploadDestPath,
             onUploadProgress,
             abortController.signal,
@@ -1193,7 +1226,7 @@ export function useUploadQueue({
           onMultipartSessionFinished?.(multipartUploadId);
         }
         if (tusUploadId) {
-          onTusSessionFinished?.(tusUploadId);
+          onTusSessionFinished?.(tusUploadId, uploadDestPath);
         }
         onItemComplete?.();
       } catch (err) {

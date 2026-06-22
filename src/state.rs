@@ -275,9 +275,7 @@ impl StateStore {
                     .with_context(|| format!("fsync upload spool {}", spool.display()))?;
             }
 
-            std::fs::rename(&spool, &target).with_context(|| {
-                format!("move upload {} into {}", spool.display(), target.display())
-            })?;
+            crate::mount::move_file_into_place(&spool, &target)?;
             let _ = std::fs::remove_file(&meta_path);
 
             Ok(target)

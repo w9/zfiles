@@ -1,7 +1,34 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { KernelBackend } from "./kernelBackend";
+import { assertUploadSessionFinalized, KernelBackend } from "./kernelBackend";
+
+test("assertUploadSessionFinalized accepts 404 HEAD after finalize", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (() =>
+    Promise.resolve(new Response(null, { status: 404 }))) as typeof fetch;
+  try {
+    await assertUploadSessionFinalized("/api/upload/abc");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("assertUploadSessionFinalized rejects when tus session still exists", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (() =>
+    Promise.resolve(
+      new Response(null, { status: 200, headers: { "Upload-Offset": "10" } }),
+    )) as typeof fetch;
+  try {
+    await assert.rejects(
+      () => assertUploadSessionFinalized("/api/upload/abc"),
+      /upload not finalized on server/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test("KernelBackend downloadUrl encodes path query param", () => {
   const backend = new KernelBackend();

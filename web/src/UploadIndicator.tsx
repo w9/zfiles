@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "./i18n";
 import UploadFloatingPanel from "./UploadFloatingPanel";
 import UploadPanel, { type CloudMultipartPanelProps } from "./UploadPanel";
+import { pickUploadFiles } from "./pickUploadFiles";
 import type { DroppedUploadFile } from "./useGlobalFileDrop";
 import { isUploadTraySheetLayout } from "./uploadTrayGeometry";
 import {
@@ -68,7 +69,8 @@ export default function UploadIndicator({
   const attention = uploadTrayAttention(stats);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
   const sheetLayout = useUploadTraySheetLayout();
 
   const autoOpenRef = useRef(initialTrayAutoOpenState);
@@ -81,7 +83,15 @@ export default function UploadIndicator({
     }
   }, [hasPendingWork]);
 
-  const openFilePicker = () => inputRef.current?.click();
+  const openFilePicker = () => {
+    pickUploadFiles((files) => {
+      if (files.length > 0) {
+        onSelectRef.current(
+          files.map((file) => ({ file, sourceHandle: null })),
+        );
+      }
+    });
+  };
   const closePanel = () => setOpen(false);
   const panelProps = {
     items,
@@ -129,26 +139,6 @@ export default function UploadIndicator({
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("upload.tray.label")}</TooltipContent>
       </Tooltip>
-
-      {!readOnly ? (
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden
-          onChange={(event) => {
-            const files = event.target.files;
-            if (files && files.length > 0) {
-              onSelect(
-                Array.from(files).map((file) => ({ file, sourceHandle: null })),
-              );
-            }
-            event.target.value = "";
-          }}
-        />
-      ) : null}
 
       {sheetLayout ? (
         <Sheet open={open} onOpenChange={setOpen}>

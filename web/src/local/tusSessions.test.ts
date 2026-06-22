@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   fileMatchesTusRecord,
   readScopedTusRecords,
+  removeOtherTusRecordsForDestPath,
   removeTusRecord,
   TUS_SESSIONS_STORAGE_KEY,
   tusSessionScopeId,
@@ -59,6 +60,67 @@ test("upsert and remove tus records per scope", () => {
     removeTusRecord(scopeId, sampleRecord.uploadId);
     assert.equal(readScopedTusRecords(scopeId).length, 0);
     assert.equal(storage.has(TUS_SESSIONS_STORAGE_KEY), false);
+  } finally {
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: original,
+    });
+  }
+});
+
+test("removeOtherTusRecordsForDestPath drops siblings with the same destPath", () => {
+  const storage = new Map<string, string>();
+  const original = globalThis.localStorage;
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        storage.set(key, value);
+      },
+      removeItem: (key: string) => {
+        storage.delete(key);
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: globalThis,
+  });
+
+  const stale: TusSessionRecord = {
+    ...sampleRecord,
+    uploadId: "stale-1",
+    tusLocation: "/api/upload/stale-1",
+  };
+  const keep: TusSessionRecord = {
+    ...sampleRecord,
+    uploadId: "keep-2",
+    tusLocation: "/api/upload/keep-2",
+  };
+  const otherPath: TusSessionRecord = {
+    ...sampleRecord,
+    uploadId: "other-3",
+    tusLocation: "/api/upload/other-3",
+    destPath: "photos/b.jpg",
+    fileName: "b.jpg",
+  };
+
+  try {
+    upsertTusRecord(scopeId, stale);
+    upsertTusRecord(scopeId, keep);
+    upsertTusRecord(scopeId, otherPath);
+    const removed = removeOtherTusRecordsForDestPath(
+      scopeId,
+      sampleRecord.destPath,
+      keep.uploadId,
+    );
+    assert.equal(removed.length, 1);
+    assert.equal(removed[0]?.uploadId, stale.uploadId);
+    const remaining = readScopedTusRecords(scopeId);
+    assert.equal(remaining.length, 2);
+    assert.ok(remaining.some((entry) => entry.uploadId === keep.uploadId));
+    assert.ok(remaining.some((entry) => entry.uploadId === otherPath.uploadId));
   } finally {
     Object.defineProperty(globalThis, "localStorage", {
       configurable: true,
