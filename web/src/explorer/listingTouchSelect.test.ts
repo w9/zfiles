@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   shouldClearTouchSelectionOnBrowse,
+  shouldClearTouchSelectionOutsideSelectionMode,
   shouldSkipDoubleClickActivate,
   shouldTouchTapActivate,
 } from "./listingTouchSelect";
@@ -52,4 +53,27 @@ test("shouldClearTouchSelectionOnBrowse clears stale touch selection while brows
 test("shouldSkipDoubleClickActivate blocks double-tap activate in touch UI", () => {
   assert.equal(shouldSkipDoubleClickActivate(true), true);
   assert.equal(shouldSkipDoubleClickActivate(false), false);
+});
+
+test("shouldClearTouchSelectionOutsideSelectionMode keeps context-menu target selected", () => {
+  assert.equal(
+    shouldClearTouchSelectionOutsideSelectionMode({
+      touchUi: true,
+      selectionMode: false,
+      selectedCount: 1,
+      lastPointerType: "touch",
+      contextMenuOpen: true,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldClearTouchSelectionOutsideSelectionMode({
+      touchUi: true,
+      selectionMode: false,
+      selectedCount: 1,
+      lastPointerType: "touch",
+      contextMenuOpen: false,
+    }),
+    true,
+  );
 });

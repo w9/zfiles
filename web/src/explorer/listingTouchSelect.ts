@@ -17,6 +17,24 @@ export function shouldClearTouchSelectionOnBrowse(options: {
   );
 }
 
+export function shouldClearTouchSelectionOutsideSelectionMode(options: {
+  touchUi: boolean;
+  selectionMode: boolean;
+  selectedCount: number;
+  lastPointerType: string;
+  contextMenuOpen: boolean;
+}): boolean {
+  return (
+    shouldClearTouchSelectionOnBrowse({
+      touchUi: options.touchUi,
+      selectionMode: options.selectionMode,
+      selectedCount: options.selectedCount,
+    }) &&
+    options.lastPointerType === "touch" &&
+    !options.contextMenuOpen
+  );
+}
+
 export function shouldSkipDoubleClickActivate(touchUi: boolean): boolean {
   return touchUi;
 }

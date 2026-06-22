@@ -151,6 +151,7 @@ import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
 import { useListingSwipeRangeSelect } from "./useListingSwipeRangeSelect";
 import {
   shouldClearTouchSelectionOnBrowse,
+  shouldClearTouchSelectionOutsideSelectionMode,
   shouldTouchTapActivate,
 } from "./listingTouchSelect";
 import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
@@ -743,17 +744,19 @@ export default function ExplorerApp() {
   }, [touchUi, clearSelection]);
 
   useEffect(() => {
-    if (selectionMode) {
+    if (
+      !shouldClearTouchSelectionOutsideSelectionMode({
+        touchUi,
+        selectionMode,
+        selectedCount: selectedPaths.size,
+        lastPointerType: lastListingPointerTypeRef.current,
+        contextMenuOpen: contextMenu != null,
+      })
+    ) {
       return;
     }
-    if (
-      selectedPaths.size > 0 &&
-      touchUi &&
-      lastListingPointerTypeRef.current === "touch"
-    ) {
-      clearSelection();
-    }
-  }, [selectionMode, selectedPaths.size, clearSelection, touchUi]);
+    clearSelection();
+  }, [selectionMode, selectedPaths.size, clearSelection, touchUi, contextMenu]);
 
   const clearMultiSelection = useCallback(() => {
     setSelectedPaths((current) => (current.size === 0 ? current : new Set()));
