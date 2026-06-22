@@ -7,16 +7,9 @@ import { createS3Backend, type S3Backend, validateS3Connection } from "@/backend
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useTranslation } from "@/i18n";
+import { ExplorerSettingsProviders } from "@/ExplorerSettingsProviders";
 import { CloudAuthProvider } from "./CloudAuthContext";
 import { CloudDisconnectProvider } from "./CloudDisconnectContext";
-import { ModifiedTimeFormatProvider } from "@/settings/ModifiedTimeFormatProvider";
-import { GridCardSizeProvider } from "@/settings/GridCardSizeProvider";
-import { ListingSortOrderProvider } from "@/settings/ListingSortOrderProvider";
-import { GridImagePreviewsProvider } from "@/settings/GridImagePreviewsProvider";
-import { GridThumbnailBadgeProvider } from "@/settings/GridThumbnailBadgeProvider";
-import { SlideshowSettingsProvider } from "@/settings/SlideshowSettingsProvider";
-import { ShowDotEntriesProvider } from "@/settings/ShowDotEntriesProvider";
-import { AppRouteProvider } from "@/routing/AppRouteProvider";
 import ConnectDialog from "./ConnectDialog";
 import { readBootParamsFromUrl, stripCredentialParamsFromUrl } from "./bootParams";
 import {
@@ -208,38 +201,24 @@ function CloudAppContent() {
   }
 
   return (
-    <AppRouteProvider>
-      <ModifiedTimeFormatProvider>
-        <GridCardSizeProvider>
-          <ListingSortOrderProvider>
-            <ShowDotEntriesProvider>
-              <GridImagePreviewsProvider bootMode="cloud">
-                <GridThumbnailBadgeProvider bootMode="cloud">
-                  <SlideshowSettingsProvider>
-                    <TooltipProvider>
-                      <ConnectedCloudShell
-                        backend={backend}
-                        onDisconnect={onDisconnect}
-                        authExpired={authExpired}
-                        onAuthError={handleAuthError}
-                        onReconnect={openReconnect}
-                      />
-                      {reconnectOpen ? (
-                        <ConnectDialog
-                          open
-                          bootParams={connectBootParams}
-                          onConnected={onConnected}
-                        />
-                      ) : null}
-                    </TooltipProvider>
-                  </SlideshowSettingsProvider>
-                </GridThumbnailBadgeProvider>
-              </GridImagePreviewsProvider>
-            </ShowDotEntriesProvider>
-          </ListingSortOrderProvider>
-        </GridCardSizeProvider>
-      </ModifiedTimeFormatProvider>
-    </AppRouteProvider>
+    <ExplorerSettingsProviders bootMode="cloud">
+      <TooltipProvider>
+        <ConnectedCloudShell
+          backend={backend}
+          onDisconnect={onDisconnect}
+          authExpired={authExpired}
+          onAuthError={handleAuthError}
+          onReconnect={openReconnect}
+        />
+        {reconnectOpen ? (
+          <ConnectDialog
+            open
+            bootParams={connectBootParams}
+            onConnected={onConnected}
+          />
+        ) : null}
+      </TooltipProvider>
+    </ExplorerSettingsProviders>
   );
 }
 
