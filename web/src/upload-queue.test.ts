@@ -39,7 +39,7 @@ test("uploadProgressVariant uses local styling for hashing and verifying", () =>
   assert.equal(uploadProgressVariant("cancelled"), "local");
   assert.equal(uploadProgressVariant("failed"), "local");
   assert.equal(uploadProgressVariant("active"), "upload");
-  assert.equal(uploadProgressVariant("done"), "upload");
+  assert.equal(uploadProgressVariant("done"), "success");
 });
 
 test("uploadStatusForProgress maps synthetic and upload progress ids", () => {

@@ -92,22 +92,28 @@ function isTerminalUploadStatus(status: UploadItemStatus): boolean {
 }
 
 function queueRowShowsProgress(item: UploadQueueItem): boolean {
+  if (item.total <= 0) {
+    return false;
+  }
+  if (item.status === "done") {
+    return true;
+  }
   return (
     !isTerminalUploadStatus(item.status) &&
     item.status !== "pending" &&
-    item.status !== "awaiting_conflict" &&
-    item.total > 0
+    item.status !== "awaiting_conflict"
   );
 }
 
-const rowProgressFillClasses: Record<"upload" | "local", string> = {
+const rowProgressFillClasses: Record<"upload" | "local" | "success", string> = {
   upload: "bg-primary/20",
   local: "bg-muted-foreground/25",
+  success: "bg-success/25",
 };
 
 type RowProgressBackgroundProps = {
   percent: number;
-  variant: "upload" | "local";
+  variant: "upload" | "local" | "success";
 };
 
 function RowProgressBackground({ percent, variant }: RowProgressBackgroundProps) {

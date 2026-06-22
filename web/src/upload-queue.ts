@@ -272,7 +272,10 @@ export function uploadPercent(item: UploadQueueItem): number {
 /** Map backend progress ids to queue status (upload ids are object keys / tus ids). */
 export function uploadProgressVariant(
   status: UploadItemStatus,
-): "upload" | "local" {
+): "upload" | "local" | "success" {
+  if (status === "done") {
+    return "success";
+  }
   if (
     status === "hashing" ||
     status === "verifying" ||
