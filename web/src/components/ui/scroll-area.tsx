@@ -2,6 +2,7 @@ import * as React from "react"
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useUiMode } from "@/useUiMode"
 
 function ScrollArea({
   className,
@@ -17,6 +18,22 @@ function ScrollArea({
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>
   listingViewport?: boolean
 }) {
+  const { resolved } = useUiMode()
+
+  if (resolved === "touch") {
+    return (
+      <div
+        ref={viewportRef}
+        data-slot="scroll-area"
+        onPointerDown={onViewportPointerDown}
+        {...(listingViewport ? { "data-listing-viewport": "" } : {})}
+        className={cn("overflow-auto", className, viewportClassName)}
+      >
+        {children}
+      </div>
+    )
+  }
+
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
