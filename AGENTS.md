@@ -24,6 +24,62 @@ Completed work is tracked in git history and commit messages, not a repo checkli
 
 Do not skip or reorder steps.
 
+## Remote debug logging
+
+When Cursor **debug mode** is active and the user may test from a **remote browser** (phone, another machine, port-forwarded `cargo dev`, Lima VM → Mac → LAN, etc.), browser instrumentation **must not** call the ingest server at `http://127.0.0.1:7735/...`. In those setups `127.0.0.1` is the **browser's** loopback, not the dev host where Cursor runs the ingest server — logs fail silently if `.catch(()=>{})` swallows errors.
+
+Use a **same-origin** path on the app the user already reaches (e.g. `http://192.168.x.x:<port>/`), proxied on the dev host to the ingest URL from the debug-mode system reminder.
+
+### Per-session setup (add at start; remove after verification)
+
+1. **Read debug-mode values** — Server endpoint, log path, and session ID come from the system reminder. Derive the ingest UUID from the endpoint path (`/ingest/<uuid>`).
+
+2. **Rust dev route** (required for `cargo dev` / phone → forwarded zfiles port) — behind `dev-frontend`, add `POST /__debug/ingest` on the zfiles router (before the static/Vite fallback) that forwards the request body and headers (`Content-Type`, `X-Debug-Session-Id`) to `http://127.0.0.1:7735/ingest/<uuid>`. Restart `cargo dev` after adding it.
+
+3. **Vite dev proxy** (optional; useful when hitting Vite `:5173` directly) — in `web/vite.config.ts` `server.proxy`, map `/__debug/ingest` → `http://127.0.0.1:7735/ingest/<uuid>`. If requests go through zfiles → Vite, also ensure the Vite proxy forwards `Content-Type` and `x-debug-session-id` (see `src/vite_proxy.rs` `forward_http_inner`).
+
+4. **`web/src/debugLog.ts`** — dev-only helper that `fetch`es **`/__debug/ingest`** (relative URL), includes `sessionId` and `X-Debug-Session-Id`, and logs fetch failures with `console.warn` (do not swallow errors silently during setup verification). Example:
+
+```typescript
+const DEBUG_SESSION_ID = "<session-id>";
+export function agentDebugLog(
+  location: string,
+  message: string,
+  data: Record<string, unknown>,
+  hypothesisId?: string,
+): void {
+  if (!import.meta.env.DEV) return;
+  fetch("/__debug/ingest", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": DEBUG_SESSION_ID,
+    },
+    body: JSON.stringify({
+      sessionId: DEBUG_SESSION_ID,
+      location,
+      message,
+      data,
+      timestamp: Date.now(),
+      ...(hypothesisId ? { hypothesisId } : {}),
+    }),
+  }).catch((err: unknown) => console.warn("[agent-debug-log]", location, err));
+}
+```
+
+5. **Instrumentation** — wrap calls in `// #region agent log` / `// #endregion`; include `hypothesisId` in the payload. Prefer a mount ping with `window.location.origin` to confirm remote capture.
+
+6. **Teardown** — after log-based verification or explicit user confirmation, remove the helper, proxy config, Rust route, and all `#region agent log` blocks in the same cycle or the next cleanup cycle.
+
+### Pitfalls
+
+| Symptom | Likely cause |
+|---|---|
+| Log file never created | Browser never reached ingest (wrong URL or proxy not restarted) |
+| Works on host, not on phone | Still using `127.0.0.1:7735` in `fetch`, or missing Rust route for `cargo dev` |
+| `400` from ingest via `cargo dev` | Vite proxy dropped `Content-Type` / `X-Debug-Session-Id`; use Rust route or fix header forwarding |
+| Stale bundle | User on embedded `web/dist/` — need `cargo dev` or rebuild; optional temporary status-bar version override to confirm live UI |
+
 ### Before every commit
 
 - **Commit scope** — commit only changes made in the current chat conversation. Never include edits made outside it (by the user or another session) unless the user explicitly asks.

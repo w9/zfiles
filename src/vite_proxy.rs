@@ -4,8 +4,8 @@ use anyhow::Context;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocket};
 use axum::http::header::{
-    ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, CONNECTION, COOKIE, HOST,
-    IF_NONE_MATCH, ORIGIN, PRAGMA, REFERER, SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_KEY,
+    ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CACHE_CONTROL, CONNECTION, CONTENT_TYPE, COOKIE,
+    HOST, IF_NONE_MATCH, ORIGIN, PRAGMA, REFERER, SEC_WEBSOCKET_EXTENSIONS, SEC_WEBSOCKET_KEY,
     SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, USER_AGENT,
 };
 use axum::http::{HeaderMap, HeaderName, Request, Response, Uri};
@@ -106,6 +106,12 @@ impl ViteDevProxy {
                 builder = builder.header(header_name, value);
             }
         }
+        if let Some(value) = parts.headers.get(CONTENT_TYPE) {
+            builder = builder.header(CONTENT_TYPE, value);
+        }
+        if let Some(value) = parts.headers.get("x-debug-session-id") {
+            builder = builder.header("x-debug-session-id", value);
+        }
 
         let upstream = builder.body(body_bytes).send().await?;
         let status = upstream.status();
@@ -147,7 +153,7 @@ impl ViteDevProxy {
         };
 
         for header_name in FORWARD_REQUEST_HEADERS {
-            if header_name == &HOST {
+            if header_name == HOST {
                 continue;
             }
             if let Some(value) = request_headers.get(header_name) {
@@ -225,29 +231,17 @@ impl ViteDevProxy {
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Binary(data)) => {
-                        if client_sink
-                            .send(Message::Binary(data.into()))
-                            .await
-                            .is_err()
-                        {
+                        if client_sink.send(Message::Binary(data)).await.is_err() {
                             break;
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Ping(payload)) => {
-                        if client_sink
-                            .send(Message::Ping(payload.into()))
-                            .await
-                            .is_err()
-                        {
+                        if client_sink.send(Message::Ping(payload)).await.is_err() {
                             break;
                         }
                     }
                     Ok(tokio_tungstenite::tungstenite::Message::Pong(payload)) => {
-                        if client_sink
-                            .send(Message::Pong(payload.into()))
-                            .await
-                            .is_err()
-                        {
+                        if client_sink.send(Message::Pong(payload)).await.is_err() {
                             break;
                         }
                     }

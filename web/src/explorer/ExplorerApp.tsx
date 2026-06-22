@@ -61,6 +61,7 @@ import {
 } from "../settings/folderViewSettings";
 import {
   restoreSelectionFromListing,
+  selectionSnapshotForRefresh,
   shouldRefreshListing,
 } from "../listingRefresh";
 import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
@@ -322,14 +323,14 @@ export default function ExplorerApp() {
     }
     const generation = ++listingLoadGenerationRef.current;
     const previousPath = options?.preserveSelection ? null : currentPathRef.current;
-    const previousPathForSelection = options?.preserveSelection ? selectedPathRef.current : null;
-    const previousPaths = options?.preserveSelection
-      ? selectedPathsRef.current.size > 0
-        ? new Set(selectedPathsRef.current)
-        : previousPathForSelection
-          ? new Set([previousPathForSelection])
-          : new Set<string>()
+    const refreshSelection = options?.preserveSelection
+      ? selectionSnapshotForRefresh(
+          selectedPathsRef.current,
+          selectedPathRef.current,
+        )
       : null;
+    const previousPaths = refreshSelection?.previousPaths ?? null;
+    const previousPathForSelection = refreshSelection?.focusPath ?? null;
     setListingLoading(true);
     scheduleListingLoadingOverlay(generation);
     if (!options?.preserveSelection) {
@@ -1694,6 +1695,9 @@ export default function ExplorerApp() {
   }, [clearSelection]);
 
   useEffect(() => {
+    if (selectedPathsRef.current.size === 0) {
+      return;
+    }
     const selected = activeListingEntries[selectedIndex];
     if (selected?.path) {
       setSelectedPath(selected.path);

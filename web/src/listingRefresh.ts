@@ -25,6 +25,19 @@ export function selectedRowIndexForPath(
   return entryIndex;
 }
 
+export function selectionSnapshotForRefresh(
+  selectedPaths: ReadonlySet<string>,
+  selectedPath: string | null,
+): { previousPaths: Set<string>; focusPath: string | null } {
+  if (selectedPaths.size === 0) {
+    return { previousPaths: new Set(), focusPath: null };
+  }
+  return {
+    previousPaths: new Set(selectedPaths),
+    focusPath: selectedPath,
+  };
+}
+
 export function restoreSelectionFromListing(
   entries: Array<{ path: string }>,
   previousPaths: Set<string>,

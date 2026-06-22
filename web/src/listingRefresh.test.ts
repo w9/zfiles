@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   restoreSelectionFromListing,
   selectedRowIndexForPath,
+  selectionSnapshotForRefresh,
   shouldRefreshListing,
 } from "./listingRefresh";
 
@@ -26,6 +27,18 @@ test("selectedRowIndexForPath returns the matching row index", () => {
   const entries = [{ path: "src/App.tsx" }, { path: "package.json" }];
   assert.equal(selectedRowIndexForPath(entries, "package.json"), 1);
   assert.equal(selectedRowIndexForPath(entries, "missing"), null);
+});
+
+test("selectionSnapshotForRefresh ignores focus path when nothing is selected", () => {
+  const snapshot = selectionSnapshotForRefresh(new Set(), "first.txt");
+  assert.equal(snapshot.previousPaths.size, 0);
+  assert.equal(snapshot.focusPath, null);
+});
+
+test("selectionSnapshotForRefresh keeps selected paths and focus path", () => {
+  const snapshot = selectionSnapshotForRefresh(new Set(["a", "b"]), "b");
+  assert.deepEqual(snapshot.previousPaths, new Set(["a", "b"]));
+  assert.equal(snapshot.focusPath, "b");
 });
 
 test("restoreSelectionFromListing keeps all paths that still exist", () => {
