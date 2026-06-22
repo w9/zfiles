@@ -2384,7 +2384,7 @@ dependencies = [
 
 [[package]]
 name = "zfiles"
-version = "0.2.103"
+version = "0.2.105"
 dependencies = [
  "anyhow",
  "async-trait",
