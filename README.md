@@ -81,7 +81,7 @@ Cloud uploads run S3 multipart from the browser via `@aws-sdk/lib-storage`; down
 
 ## LAN sharing and auth
 
-To expose a folder on the network, bind all interfaces and require a token: `zfiles --host 0.0.0.0 --port 8080 --token`. The startup banner prints a share URL and a scannable terminal QR code; clients authenticate with the token in the query string, `Authorization: Bearer`, or an HTTP-only cookie set on first visit. Add `--read-only` for shares that should list and download but not mutate.
+To expose a folder on the network, use the share preset: `zfiles --share -p 8080` (binds `0.0.0.0`, enables token auth and a terminal QR code). Equivalent: `zfiles -b 0.0.0.0 -p 8080 -t -q`. The startup banner prints a share URL; clients authenticate with the token in the query string, `Authorization: Bearer`, or an HTTP-only cookie set on first visit. Add `--read-only` (or `-r`) for shares that should list and download but not mutate.
 
 Non-loopback binds reject symlinks that escape the serve root by default (`follow_symlinks_outside_root` is off unless you opt in). `/api/health` reports `read_only` and symlink policy. Session tokens for auth are in-memory with expiry — no session table on disk.
 

@@ -8,7 +8,15 @@ use tempfile::tempdir;
 fn public_bind_with_token_prints_scannable_qr_code() {
     let dir = tempdir().unwrap();
     let mut child = Command::new(env!("CARGO_BIN_EXE_zfiles"))
-        .args(["--host", "0.0.0.0", "--port", "0", "--token", "--no-open"])
+        .args([
+            "--bind",
+            "0.0.0.0",
+            "--port",
+            "0",
+            "--token",
+            "--qr",
+            "--no-open",
+        ])
         .arg(dir.path())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())

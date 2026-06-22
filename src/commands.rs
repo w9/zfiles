@@ -31,14 +31,14 @@ fn run_daemon(command: crate::cli::DaemonCommand) -> anyhow::Result<()> {
     match command {
         DaemonCommand::Start {
             path,
-            host,
+            bind,
             port,
             config,
         } => {
             if let Some(config) = config {
                 start_config(config)
             } else {
-                start(DaemonStartArgs { path, host, port })
+                start(DaemonStartArgs { path, bind, port })
             }
         }
         DaemonCommand::Stop { path, config } => {

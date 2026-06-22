@@ -8,7 +8,7 @@ fn daemon_start_stop_round_trip() {
 
     start(DaemonStartArgs {
         path: dir.path().to_path_buf(),
-        host: "127.0.0.1".to_string(),
+        bind: "127.0.0.1".to_string(),
         port: 9877,
     })
     .expect("start daemon");
@@ -29,7 +29,7 @@ fn daemon_start_rejects_duplicate() {
 
     let args = DaemonStartArgs {
         path: dir.path().to_path_buf(),
-        host: "127.0.0.1".to_string(),
+        bind: "127.0.0.1".to_string(),
         port: 9878,
     };
     start(args.clone()).expect("first start");

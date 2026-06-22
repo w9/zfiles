@@ -6,7 +6,7 @@ use anyhow::{Context, Result, bail};
 #[derive(Clone)]
 pub struct DaemonStartArgs {
     pub path: PathBuf,
-    pub host: String,
+    pub bind: String,
     pub port: u16,
 }
 
@@ -33,7 +33,7 @@ pub fn start(args: DaemonStartArgs) -> Result<()> {
     let exe = std::env::current_exe().context("resolve current executable")?;
     let mut cmd = Command::new(&exe);
     cmd.arg("--no-open");
-    cmd.args(["--host", &args.host, "--port", &args.port.to_string()]);
+    cmd.args(["--bind", &args.bind, "--port", &args.port.to_string()]);
     cmd.arg(&root);
     cmd.stdin(std::process::Stdio::null());
     cmd.stdout(std::process::Stdio::null());

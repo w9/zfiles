@@ -13,7 +13,7 @@ Run `zfiles` in a directory and the UI opens with no indexing step, no startup d
 
 Files can be uploaded by dragging them into the browser. **Local mode:** uploads and downloads are resumable — tus on upload, HTTP Range on download. **Cloud mode:** S3 multipart upload and Range GET. Any HTTP client that supports range requests works against the local kernel, including `curl --continue-at`.
 
-To expose a local folder on the network, run `zfiles --host 0.0.0.0 --port 8080 --token`. The server prints a URL and a QR code for other devices.
+To expose a local folder on the network, run `zfiles --share --port 8080` (or `zfiles -b 0.0.0.0 -p 8080 -t -q`). The server prints a URL; pass `--qr` to include a scannable terminal QR code for other devices.
 
 The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scrolled listings, and a preview pane. Built-in actions (navigation, delete, copy-path, view toggles) are unified through the [action system](action_system.md).
 
@@ -287,11 +287,14 @@ zfiles --port 9000 ~/projects
 ### LAN sharing
 
 ```bash
-# Bind all interfaces with auto-generated token; prints URL and QR code
-zfiles --host 0.0.0.0 --port 8080 --token
+# LAN share preset: bind all interfaces, token auth, QR code
+zfiles --share --port 8080
+
+# Equivalent explicit flags
+zfiles -b 0.0.0.0 -p 8080 -t -q
 
 # Bind a specific address (e.g. Tailscale IP)
-zfiles --host 100.64.0.2 --port 8080 --token
+zfiles --bind 100.64.0.2 --port 8080 --token --qr
 
 # Read-only share that auto-expires after two hours
 zfiles ~/talks/keynote-prep --read-only --token --expire 2h

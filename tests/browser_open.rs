@@ -120,7 +120,7 @@ fn public_bind_with_share_host_uses_override_in_banner_url() {
     let dir = tempdir().unwrap();
     let output = collect_startup_stdout(
         &[
-            "--host",
+            "--bind",
             "0.0.0.0",
             "--port",
             "0",
@@ -148,7 +148,7 @@ fn public_bind_with_share_host_uses_override_in_banner_url() {
 fn public_bind_falls_back_to_hostname_env_in_banner_url() {
     let dir = tempdir().unwrap();
     let output = collect_startup_stdout_with_env(
-        &["--host", "0.0.0.0", "--port", "0", "--token", "--no-open"],
+        &["--bind", "0.0.0.0", "--port", "0", "--token", "--no-open"],
         dir.path(),
         &[("HOSTNAME", "mybox.local")],
     );

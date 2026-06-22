@@ -72,11 +72,11 @@ pub enum DaemonCommand {
         /// Directory to serve when `--config` is not set
         #[arg(default_value = ".")]
         path: PathBuf,
-        /// Host address to bind when `--config` is not set
-        #[arg(long, default_value = "127.0.0.1", value_name = "HOST")]
-        host: String,
+        /// Address to bind when `--config` is not set
+        #[arg(short, long, default_value = "127.0.0.1", value_name = "ADDR")]
+        bind: String,
         /// Port to listen on when `--config` is not set (`0` = ephemeral)
-        #[arg(long, default_value_t = 0, value_name = "PORT")]
+        #[arg(short, long, default_value_t = 0, value_name = "PORT")]
         port: u16,
         /// Multi-folder daemon config with `[[share]]` entries
         #[arg(long)]
@@ -124,30 +124,44 @@ pub enum ConfigCommand {
     },
 }
 
+const DEFAULT_BIND: &str = "127.0.0.1";
+
 #[derive(Debug, Parser, Clone)]
 pub struct ServeArgs {
     /// Directory to serve
     #[arg(default_value = ".")]
     pub path: PathBuf,
 
-    /// Host address to bind (e.g. `127.0.0.1` or `0.0.0.0`)
-    #[arg(long, default_value = "127.0.0.1", value_name = "HOST")]
-    pub host: String,
+    /// Address to bind (e.g. `127.0.0.1` or `0.0.0.0`)
+    #[arg(short, long, default_value = DEFAULT_BIND, value_name = "ADDR")]
+    pub bind: String,
 
     /// TCP port to listen on (`0` = ephemeral)
-    #[arg(long, default_value_t = 0, value_name = "PORT")]
+    #[arg(short, long, default_value_t = 0, value_name = "PORT")]
     pub port: u16,
 
     /// Require bearer-token authentication (default: false)
-    #[arg(long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false)]
     pub token: bool,
+
+    /// Print a scannable QR code for the share URL in the startup banner
+    #[arg(short, long, default_value_t = false, conflicts_with = "no_qr")]
+    pub qr: bool,
+
+    /// Do not print a QR code in the startup banner
+    #[arg(long, action = clap::ArgAction::SetTrue, conflicts_with = "qr")]
+    pub no_qr: bool,
+
+    /// LAN share preset: bind `0.0.0.0`, enable `--token` and `--qr` (overridable)
+    #[arg(long, default_value_t = false)]
+    pub share: bool,
 
     /// Token lifetime (e.g. 2h, 30m)
     #[arg(long, value_name = "DURATION")]
     pub expire: Option<String>,
 
     /// Disallow uploads and other mutating operations (default: false)
-    #[arg(long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false)]
     pub read_only: bool,
 
     /// Follow symlinks whose targets lie outside the serve root (read/list only).
@@ -193,6 +207,19 @@ impl Cli {
 }
 
 impl ServeArgs {
+    pub fn normalize(&mut self) {
+        if self.share {
+            if self.bind == DEFAULT_BIND {
+                self.bind = "0.0.0.0".to_string();
+            }
+            self.token = true;
+            self.qr = true;
+        }
+        if self.no_qr {
+            self.qr = false;
+        }
+    }
+
     pub fn root_path(&self) -> Result<PathBuf> {
         std::fs::canonicalize(&self.path)
             .with_context(|| format!("failed to resolve serve path {}", self.path.display()))
@@ -200,9 +227,9 @@ impl ServeArgs {
 
     pub fn listen_addr(&self) -> Result<SocketAddr> {
         let ip: IpAddr = self
-            .host
+            .bind
             .parse()
-            .with_context(|| format!("invalid host address {:?}", self.host))?;
+            .with_context(|| format!("invalid bind address {:?}", self.bind))?;
         Ok(SocketAddr::from((ip, self.port)))
     }
 
@@ -259,12 +286,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn listen_addr_from_host_and_port() {
-        let cli = Cli::parse_from(["zfiles", "--host", "127.0.0.1", "--port", "9000"]);
+    fn listen_addr_from_bind_and_port() {
+        let cli = Cli::parse_from(["zfiles", "--bind", "127.0.0.1", "--port", "9000"]);
         assert_eq!(
             cli.serve.listen_addr().unwrap(),
             "127.0.0.1:9000".parse().unwrap()
         );
+    }
+
+    #[test]
+    fn short_bind_and_port_aliases() {
+        let cli = Cli::parse_from(["zfiles", "-b", "127.0.0.1", "-p", "9000"]);
+        assert_eq!(
+            cli.serve.listen_addr().unwrap(),
+            "127.0.0.1:9000".parse().unwrap()
+        );
+    }
+
+    #[test]
+    fn reject_removed_host_flag() {
+        use clap::CommandFactory;
+        let err = Cli::command()
+            .try_get_matches_from(["zfiles", "--host", "127.0.0.1"])
+            .unwrap_err();
+        assert_eq!(err.kind(), clap::error::ErrorKind::UnknownArgument);
     }
 
     #[test]
@@ -278,30 +323,36 @@ mod tests {
 
     #[test]
     fn wildcard_bind_requires_token() {
-        let cli = Cli::parse_from(["zfiles", "--host", "0.0.0.0", "--port", "8080"]);
-        assert!(cli.serve.validate().is_err());
+        let mut serve = Cli::parse_from(["zfiles", "--bind", "0.0.0.0", "--port", "8080"]).serve;
+        serve.normalize();
+        assert!(serve.validate().is_err());
     }
 
     #[test]
     fn specific_non_loopback_bind_requires_token() {
-        let cli = Cli::parse_from(["zfiles", "--host", "192.168.1.50", "--port", "8080"]);
-        assert!(cli.serve.validate().is_err());
+        let mut serve =
+            Cli::parse_from(["zfiles", "--bind", "192.168.1.50", "--port", "8080"]).serve;
+        serve.normalize();
+        assert!(serve.validate().is_err());
 
-        let cli = Cli::parse_from([
+        let mut serve = Cli::parse_from([
             "zfiles",
-            "--host",
+            "--bind",
             "192.168.1.50",
             "--port",
             "8080",
             "--token",
-        ]);
-        assert!(cli.serve.validate().is_ok());
+        ])
+        .serve;
+        serve.normalize();
+        assert!(serve.validate().is_ok());
     }
 
     #[test]
     fn loopback_alias_bind_skips_token_requirement() {
-        let cli = Cli::parse_from(["zfiles", "--host", "127.0.0.2", "--port", "8080"]);
-        assert!(cli.serve.validate().is_ok());
+        let mut serve = Cli::parse_from(["zfiles", "--bind", "127.0.0.2", "--port", "8080"]).serve;
+        serve.normalize();
+        assert!(serve.validate().is_ok());
     }
 
     #[test]
@@ -335,7 +386,7 @@ mod tests {
     fn parse_share_host_flag() {
         let cli = Cli::parse_from([
             "zfiles",
-            "--host",
+            "--bind",
             "0.0.0.0",
             "--port",
             "8080",
@@ -344,6 +395,34 @@ mod tests {
             "mybox.local",
         ]);
         assert_eq!(cli.serve.share_host.as_deref(), Some("mybox.local"));
+    }
+
+    #[test]
+    fn share_preset_sets_bind_token_and_qr() {
+        let mut serve = Cli::parse_from(["zfiles", "--share"]).serve;
+        serve.normalize();
+        assert_eq!(serve.bind, "0.0.0.0");
+        assert!(serve.token);
+        assert!(serve.qr);
+        assert!(serve.validate().is_ok());
+    }
+
+    #[test]
+    fn share_preset_overridden_by_explicit_bind_and_no_qr() {
+        let mut serve =
+            Cli::parse_from(["zfiles", "--share", "--bind", "192.168.1.5", "--no-qr"]).serve;
+        serve.normalize();
+        assert_eq!(serve.bind, "192.168.1.5");
+        assert!(serve.token);
+        assert!(!serve.qr);
+    }
+
+    #[test]
+    fn short_aliases_for_token_qr_and_read_only() {
+        let cli = Cli::parse_from(["zfiles", "-t", "-q", "-r"]);
+        assert!(cli.serve.token);
+        assert!(cli.serve.qr);
+        assert!(cli.serve.read_only);
     }
 
     #[test]
@@ -363,8 +442,10 @@ mod tests {
         let cli = Cli::parse_from(["zfiles"]);
         assert!(cli.serve.resolve_follow_symlinks_outside_root().unwrap());
 
-        let cli = Cli::parse_from(["zfiles", "--host", "0.0.0.0", "--port", "8080", "--token"]);
-        assert!(!cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+        let mut serve =
+            Cli::parse_from(["zfiles", "--bind", "0.0.0.0", "--port", "8080", "--token"]).serve;
+        serve.normalize();
+        assert!(!serve.resolve_follow_symlinks_outside_root().unwrap());
     }
 
     #[test]
@@ -375,16 +456,18 @@ mod tests {
         let cli = Cli::parse_from(["zfiles", "--no-follow-symlinks-outside-root"]);
         assert!(!cli.serve.resolve_follow_symlinks_outside_root().unwrap());
 
-        let cli = Cli::parse_from([
+        let mut serve = Cli::parse_from([
             "zfiles",
-            "--host",
+            "--bind",
             "0.0.0.0",
             "--port",
             "8080",
             "--token",
             "--follow-symlinks-outside-root",
-        ]);
-        assert!(cli.serve.resolve_follow_symlinks_outside_root().unwrap());
+        ])
+        .serve;
+        serve.normalize();
+        assert!(serve.resolve_follow_symlinks_outside_root().unwrap());
     }
 
     #[test]

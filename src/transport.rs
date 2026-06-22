@@ -100,7 +100,8 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
+pub async fn serve(mut serve: ServeArgs) -> anyhow::Result<()> {
+    serve.normalize();
     serve.validate()?;
     let root = serve.root_path()?;
     let config = Config::load(&root)?;
@@ -177,7 +178,8 @@ pub async fn serve(serve: ServeArgs) -> anyhow::Result<()> {
         .as_ref()
         .and_then(|share| share.note.clone());
 
-    let qr = public_share
+    let qr = serve
+        .qr
         .then(|| match qr::render_url(&banner_url) {
             Ok(image) => Some(image),
             Err(error) => {
