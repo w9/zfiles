@@ -140,6 +140,11 @@ export function defaultKeybindings(): KeybindingDefinition[] {
       command: "preview.get-info",
       when: "focus.pane == 'file-list' || preview.info-open == true",
     },
+    {
+      key: "Mod+F",
+      command: "navigation.focus-quick-filter",
+      when: fileList,
+    },
   ];
 }
 

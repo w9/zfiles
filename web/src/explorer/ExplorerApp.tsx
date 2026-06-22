@@ -70,7 +70,7 @@ import {
   formatCutStatusLabel,
   formatSelectionStatusLabel,
 } from "../selectionStatusText";
-import UploadIndicator from "../UploadIndicator";
+import UploadIndicator, { type UploadIndicatorHandle } from "../UploadIndicator";
 import UploadConflictDialog from "../UploadConflictDialog";
 import { useMultipartSessions } from "../cloud/useMultipartSessions";
 import type { MultipartSessionView } from "../cloud/useMultipartSessions";
@@ -117,7 +117,10 @@ import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
 import { CloudAuthExpiredBanner, useCloudAuth } from "../cloud/CloudAuthContext";
 import { loadSessionConfig } from "../cloud/credentials";
 import ShareUrlButton from "../cloud/ShareUrlButton";
-import { connectionConfigToShareInput } from "../cloud/shareUrl";
+import { connectionConfigToShareInput, buildShareUrl } from "../cloud/shareUrl";
+import { readShareUrlIncludeCredentials } from "../cloud/shareUrlSettings";
+import { appBasePath } from "../routing/appBase";
+import { toast } from "sonner";
 import { captureListingNavigationSnapshot } from "./listingNavigationSnapshot";
 import type { ListingNavigationSnapshot } from "./listingNavigationSnapshot";
 import { useExplorerNavigation } from "./useExplorerNavigation";
@@ -216,7 +219,7 @@ export default function ExplorerApp() {
   const onCloudDisconnect = useCloudDisconnect();
   const cloudAuth = useCloudAuth();
   const cloudSessionConfig = onCloudDisconnect ? loadSessionConfig() : null;
-  const { t, locale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const { navigate } = useAppRoute();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder } = useListingSortOrder();
@@ -257,6 +260,7 @@ export default function ExplorerApp() {
   const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
   const [quickFilter, setQuickFilter] = useState("");
   const quickFilterInputRef = useRef<HTMLInputElement>(null);
+  const uploadIndicatorRef = useRef<UploadIndicatorHandle>(null);
   const listingViewportRef = useRef<HTMLDivElement | null>(null);
   const listingMarqueeLayoutRef = useRef<ListingMarqueeLayoutResolver | null>(null);
   const mainContentRef = useRef<HTMLElement | null>(null);
@@ -874,6 +878,11 @@ export default function ExplorerApp() {
       "slideshow.open": slideshowOpen,
       "preview.info-open": infoDialogOpen,
       "operation.pending": operationPending,
+      "navigation.can-go-back": canGoBack,
+      "navigation.can-go-forward": canGoForward,
+      "navigation.loading": refreshing || listingLoading,
+      "cloud.connected": onCloudDisconnect != null,
+      "ui.touch": touchUi,
     }),
     [
       selectedPaths,
@@ -891,6 +900,12 @@ export default function ExplorerApp() {
       slideshowOpen,
       infoDialogOpen,
       operationPending,
+      canGoBack,
+      canGoForward,
+      refreshing,
+      listingLoading,
+      onCloudDisconnect,
+      touchUi,
     ],
   );
 
@@ -994,31 +1009,6 @@ export default function ExplorerApp() {
   useEffect(() => {
     setQuickFilter("");
   }, [currentPath]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (slideshowOpen) {
-        return;
-      }
-      const isMac =
-        typeof navigator !== "undefined" &&
-        navigator.platform.toLowerCase().includes("mac");
-      const mod = (isMac && event.metaKey) || (!isMac && event.ctrlKey);
-      if (!mod || event.key.toLowerCase() !== "f") {
-        return;
-      }
-      const target = event.target;
-      if (isNativeTypingTarget(target)) {
-        return;
-      }
-      event.preventDefault();
-      const input = quickFilterInputRef.current;
-      input?.focus();
-      input?.select();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [slideshowOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1452,6 +1442,22 @@ export default function ExplorerApp() {
     [backend, notifyStorageError],
   );
 
+  const toggleSelectionModeHandler = useCallback(() => {
+    setSelectionMode((current) => {
+      const next = !current;
+      if (current) {
+        clearSelection();
+      }
+      return next;
+    });
+  }, [clearSelection]);
+
+  const focusQuickFilter = useCallback(() => {
+    const input = quickFilterInputRef.current;
+    input?.focus();
+    input?.select();
+  }, []);
+
   const confirmMessageRef = useRef<
     (messageKey: string, params?: Record<string, string>) => Promise<boolean>
   >(async () => false);
@@ -1501,6 +1507,7 @@ export default function ExplorerApp() {
       toggleShowDotEntries,
       toggleListingViewMode: toggleListingViewModeHandler,
       applyGlobalListingSettings: applyGlobalListingSettingsHandler,
+      toggleSelectionMode: toggleSelectionModeHandler,
     },
     () => ({
       getPreviewPaths,
@@ -1514,6 +1521,47 @@ export default function ExplorerApp() {
       openAbout: () => setAboutOpen(true),
       openKeyboardShortcuts: () => setKeyboardShortcutsOpen(true),
     }),
+    () => ({
+      getThemeMode: () => themeMode,
+      setThemeMode,
+      getUiMode: () => uiMode,
+      setUiMode,
+      getLocale: () => locale,
+      setLocale,
+    }),
+    () => ({
+      goBack: () => void goBack(),
+      goForward: () => void goForward(),
+      refreshListing,
+      cancelListingLoad,
+      focusQuickFilter,
+    }),
+    () => ({
+      openUploadPanel: () => uploadIndicatorRef.current?.togglePanel(),
+      chooseUploadFiles: () => uploadIndicatorRef.current?.chooseFiles(),
+    }),
+    onCloudDisconnect
+      ? () => ({
+          shareUrl: async () => {
+            if (!cloudSessionConfig) {
+              return;
+            }
+            const url = buildShareUrl(connectionConfigToShareInput(cloudSessionConfig), {
+              explorerPath: currentPathRef.current,
+              includeCredentials: readShareUrlIncludeCredentials(),
+              origin: window.location.origin,
+              base: appBasePath(),
+            });
+            try {
+              await navigator.clipboard.writeText(url);
+              toast.success(t("connect.shareUrl.copied"));
+            } catch {
+              toast.error(t("connect.shareUrl.copyFailed"));
+            }
+          },
+          disconnect: onCloudDisconnect,
+        })
+      : undefined,
   );
   confirmMessageRef.current = actionSystem.confirmMessage;
 
@@ -1728,7 +1776,7 @@ export default function ExplorerApp() {
       readOnly={readOnly}
       selectionStatusText={selectionStatusText}
       cutStatusText={cutStatusText}
-      onVersionClick={() => setAboutOpen(true)}
+      onVersionClick={() => void actionSystem.invoke("help.open-about")}
     />
   );
 
@@ -1747,10 +1795,10 @@ export default function ExplorerApp() {
         listingLoading={refreshing || listingLoading}
         canGoBack={canGoBack}
         canGoForward={canGoForward}
-        onBack={() => void goBack()}
-        onForward={() => void goForward()}
-        onRefresh={refreshListing}
-        onCancel={cancelListingLoad}
+        onBack={() => void actionSystem.invoke("navigation.back")}
+        onForward={() => void actionSystem.invoke("navigation.forward")}
+        onRefresh={() => void actionSystem.invoke("navigation.refresh")}
+        onCancel={() => void actionSystem.invoke("navigation.cancel-load")}
         onNavigate={(path) => void navigateTo(path)}
         hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
         quickFilterLabel={t("quickFilter.label")}
@@ -1775,10 +1823,10 @@ export default function ExplorerApp() {
       listingLoading={refreshing || listingLoading}
       canGoBack={canGoBack}
       canGoForward={canGoForward}
-      onBack={() => void goBack()}
-      onForward={() => void goForward()}
-      onRefresh={refreshListing}
-      onCancel={cancelListingLoad}
+      onBack={() => void actionSystem.invoke("navigation.back")}
+      onForward={() => void actionSystem.invoke("navigation.forward")}
+      onRefresh={() => void actionSystem.invoke("navigation.refresh")}
+      onCancel={() => void actionSystem.invoke("navigation.cancel-load")}
       ariaLabel={t("actions.toolbar.label")}
       trailingActions={
         <>
@@ -1792,6 +1840,7 @@ export default function ExplorerApp() {
             embedded
           />
           <UploadIndicator
+            ref={uploadIndicatorRef}
             items={uploadItems}
             onSelect={onUpload}
             readOnly={readOnly}
@@ -1800,6 +1849,7 @@ export default function ExplorerApp() {
             onCancel={cancelUpload}
             onPause={pauseUpload}
             onResume={resumeUpload}
+            onTrayClick={() => void actionSystem.invoke("file.upload-open-panel")}
             unfinishedSessions={
               multipartSessions.enabled || tusSessions.enabled
                 ? {
@@ -1813,7 +1863,11 @@ export default function ExplorerApp() {
           />
           <ListingViewToggle
             mode={listingViewMode}
-            onChange={handleListingViewModeChange}
+            onChange={(_mode, options) => {
+              void actionSystem.invoke("view.toggle-listing-mode", {
+                args: options?.global ? { global: true } : undefined,
+              });
+            }}
           />
           <MenuBar
             registry={actionSystem.registry}
@@ -1845,6 +1899,7 @@ export default function ExplorerApp() {
           />
           <div className="flex flex-wrap items-center gap-0.5">
             <UploadIndicator
+              ref={uploadIndicatorRef}
               items={uploadItems}
               onSelect={onUpload}
               readOnly={readOnly}
@@ -1853,7 +1908,8 @@ export default function ExplorerApp() {
               onCancel={cancelUpload}
               onPause={pauseUpload}
               onResume={resumeUpload}
-              unfinishedSessions={
+              onTrayClick={() => void actionSystem.invoke("file.upload-open-panel")}
+            unfinishedSessions={
                 multipartSessions.enabled || tusSessions.enabled
                   ? {
                       sessions: visibleUnfinishedSessions,
@@ -1864,14 +1920,36 @@ export default function ExplorerApp() {
                   : undefined
               }
             />
-            <ShowDotEntriesToggle />
+            <ShowDotEntriesToggle
+              onToggle={() => void actionSystem.invoke("view.toggle-dot-entries")}
+            />
             <ListingViewToggle
               mode={listingViewMode}
-              onChange={handleListingViewModeChange}
+              onChange={(_mode, options) => {
+                void actionSystem.invoke("view.toggle-listing-mode", {
+                  args: options?.global ? { global: true } : undefined,
+                });
+              }}
             />
-            <ThemeToggle mode={themeMode} onChange={setThemeMode} variant="ghost" />
-            <UiModeToggle mode={uiMode} onChange={setUiMode} variant="ghost" />
-            <LanguageToggle iconOnly variant="ghost" />
+            <ThemeToggle
+              mode={themeMode}
+              onChange={() => void actionSystem.invoke("appearance.cycle-theme")}
+              variant="ghost"
+            />
+            <UiModeToggle
+              mode={uiMode}
+              onChange={() => void actionSystem.invoke("appearance.cycle-ui-mode")}
+              variant="ghost"
+            />
+            <LanguageToggle
+              iconOnly
+              variant="ghost"
+              onLocaleChange={(nextLocale) =>
+                void actionSystem.invoke("appearance.set-locale", {
+                  args: { locale: nextLocale },
+                })
+              }
+            />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1880,7 +1958,7 @@ export default function ExplorerApp() {
                   size="icon"
                   className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
                   aria-label={t("settings.title")}
-                  onClick={() => navigate("settings")}
+                  onClick={() => void actionSystem.invoke("navigation.open-settings")}
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -1900,15 +1978,7 @@ export default function ExplorerApp() {
                         ? t("selection.mode.done")
                         : t("selection.mode.enter")
                     }
-                    onClick={() => {
-                      setSelectionMode((current) => {
-                        const next = !current;
-                        if (current) {
-                          clearSelection();
-                        }
-                        return next;
-                      });
-                    }}
+                    onClick={() => void actionSystem.invoke("selection.toggle-mode")}
                   >
                     {selectionMode ? (
                       <Check className="h-4 w-4" />
@@ -1939,9 +2009,12 @@ export default function ExplorerApp() {
                     input={connectionConfigToShareInput(cloudSessionConfig)}
                     explorerPath={currentPath}
                     variant="ghost"
+                    onShare={() => void actionSystem.invoke("cloud.share-url")}
                   />
                 ) : null}
-                <DisconnectButton onClick={onCloudDisconnect} />
+                <DisconnectButton
+                  onClick={() => void actionSystem.invoke("cloud.disconnect")}
+                />
               </>
             ) : null}
           </div>

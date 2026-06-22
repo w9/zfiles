@@ -3,12 +3,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
 import { createBuiltinActions } from "./builtins";
+import { createAppearanceActions, type AppearanceActionDeps } from "./appearanceActions";
+import { createCloudActions, type CloudActionDeps } from "./cloudActions";
 import { createHelpActions, type HelpActionDeps } from "./helpActions";
+import { createNavigationActions, type NavigationActionDeps } from "./navigationActions";
 import {
   createPreviewViewerActions,
   type PreviewViewerActionDeps,
 } from "./previewViewerActions";
 import { createPreviewActions, type PreviewActionDeps } from "./previewActions";
+import { createUploadActions, type UploadActionDeps } from "./uploadActions";
 import type { KeybindingDefinition } from "./types";
 import {
   defaultKeybindings,
@@ -55,6 +59,10 @@ export function useActionSystem(
   previewViewerDeps?: () => PreviewViewerActionDeps,
   previewActionDeps?: () => PreviewActionDeps,
   helpActionDeps?: () => HelpActionDeps,
+  appearanceActionDeps?: () => AppearanceActionDeps,
+  navigationActionDeps?: () => NavigationActionDeps,
+  uploadActionDeps?: () => UploadActionDeps,
+  cloudActionDeps?: () => CloudActionDeps,
 ) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [userKeybindings, setUserKeybindings] = useState<KeybindingDefinition[]>([]);
@@ -70,6 +78,14 @@ export function useActionSystem(
   previewActionDepsRef.current = previewActionDeps;
   const helpActionDepsRef = useRef(helpActionDeps);
   helpActionDepsRef.current = helpActionDeps;
+  const appearanceActionDepsRef = useRef(appearanceActionDeps);
+  appearanceActionDepsRef.current = appearanceActionDeps;
+  const navigationActionDepsRef = useRef(navigationActionDeps);
+  navigationActionDepsRef.current = navigationActionDeps;
+  const uploadActionDepsRef = useRef(uploadActionDeps);
+  uploadActionDepsRef.current = uploadActionDeps;
+  const cloudActionDepsRef = useRef(cloudActionDeps);
+  cloudActionDepsRef.current = cloudActionDeps;
 
   if (!registryRef.current) {
     const registry = new ActionRegistry();
@@ -95,6 +111,30 @@ export function useActionSystem(
     }
     if (helpActionDepsRef.current) {
       for (const action of createHelpActions(() => helpActionDepsRef.current!())) {
+        registry.register(action);
+      }
+    }
+    if (appearanceActionDepsRef.current) {
+      for (const action of createAppearanceActions(
+        () => appearanceActionDepsRef.current!(),
+      )) {
+        registry.register(action);
+      }
+    }
+    if (navigationActionDepsRef.current) {
+      for (const action of createNavigationActions(
+        () => navigationActionDepsRef.current!(),
+      )) {
+        registry.register(action);
+      }
+    }
+    if (uploadActionDepsRef.current) {
+      for (const action of createUploadActions(() => uploadActionDepsRef.current!())) {
+        registry.register(action);
+      }
+    }
+    if (cloudActionDepsRef.current) {
+      for (const action of createCloudActions(() => cloudActionDepsRef.current!())) {
         registry.register(action);
       }
     }

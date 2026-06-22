@@ -39,11 +39,13 @@ function localeLabel(locale: Locale, t: (key: MessageKey) => string) {
 type LanguageToggleProps = {
   iconOnly?: boolean;
   variant?: ButtonProps["variant"];
+  onLocaleChange?: (locale: Locale) => void;
 };
 
 export default function LanguageToggle({
   iconOnly = false,
   variant = "outline",
+  onLocaleChange,
 }: LanguageToggleProps) {
   const { locale, setLocale, t } = useTranslation();
   const currentLabel = localeLabel(locale, t);
@@ -76,7 +78,7 @@ export default function LanguageToggle({
       <DropdownMenuContent align="end" className="max-h-[60vh] overflow-y-auto">
         <DropdownMenuRadioGroup
           value={locale}
-          onValueChange={(value) => setLocale(value as Locale)}
+          onValueChange={(value) => (onLocaleChange ?? setLocale)(value as Locale)}
         >
           {SUPPORTED_LOCALES.map((option) => (
             <DropdownMenuRadioItem key={option} value={option}>

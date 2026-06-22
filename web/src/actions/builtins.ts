@@ -63,8 +63,8 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       descriptionKey: "actions.view.toggleListingMode.description",
       categoryKey: "actions.view.category",
       icon: "view.toggle-listing-mode",
-      handler: async () => {
-        getDeps().toggleListingViewMode();
+      handler: async (_context, args) => {
+        getDeps().toggleListingViewMode({ global: args?.global === true });
       },
     },
     {
@@ -317,6 +317,17 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
         if (paths.length > 0) {
           await deps.runBulkAction("copy-path", paths);
         }
+      },
+    },
+    {
+      id: "selection.toggle-mode",
+      nameKey: "actions.selection.toggleMode.name",
+      categoryKey: "actions.selection.category",
+      when: "ui.touch == true",
+      whenFailureMessageKey: "actions.whenFailure.touchUiRequired",
+      icon: "selection.toggle-mode",
+      handler: async () => {
+        getDeps().toggleSelectionMode();
       },
     },
     {

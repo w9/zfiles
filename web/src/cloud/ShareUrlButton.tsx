@@ -20,6 +20,7 @@ type ShareUrlButtonProps = {
   explorerPath?: string;
   includeCredentials?: boolean;
   variant?: ButtonProps["variant"];
+  onShare?: () => void;
 };
 
 export default function ShareUrlButton({
@@ -27,6 +28,7 @@ export default function ShareUrlButton({
   explorerPath = "",
   includeCredentials,
   variant = "outline",
+  onShare,
 }: ShareUrlButtonProps) {
   const { t } = useTranslation();
   const label = t("connect.shareUrl.label");
@@ -56,7 +58,13 @@ export default function ShareUrlButton({
             size="icon"
             className="h-8 w-8"
             aria-label={label}
-            onClick={() => void onClick()}
+            onClick={() => {
+              if (onShare) {
+                onShare();
+                return;
+              }
+              void onClick();
+            }}
           >
             <Link2 className="h-4 w-4" />
           </Button>

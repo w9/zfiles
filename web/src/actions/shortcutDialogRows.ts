@@ -38,11 +38,13 @@ export function shortcutDialogRows(
 
 export const SHORTCUT_DIALOG_CATEGORY_ORDER = [
   "actions.view.category",
+  "actions.appearance.category",
   "actions.navigation.category",
   "actions.selection.category",
   "actions.file.category",
   "viewer.category",
   "preview.category",
+  "actions.cloud.category",
   "actions.help.category",
 ] as const;
 

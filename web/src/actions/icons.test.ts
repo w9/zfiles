@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createBuiltinActions } from "./builtins";
+import { createAppearanceActions } from "./appearanceActions";
+import { createCloudActions } from "./cloudActions";
 import { createHelpActions } from "./helpActions";
+import { createNavigationActions } from "./navigationActions";
 import { createPreviewViewerActions } from "./previewViewerActions";
 import { createPreviewActions } from "./previewActions";
+import { createUploadActions } from "./uploadActions";
 import { actionIcon } from "./icons";
 
 const noop = async () => {};
@@ -43,6 +47,30 @@ function allRegisteredActionIds(): string[] {
       toggleShowDotEntries: () => {},
       toggleListingViewMode: () => {},
       applyGlobalListingSettings: () => {},
+      toggleSelectionMode: () => {},
+    })),
+    ...createAppearanceActions(() => ({
+      getThemeMode: () => "auto",
+      setThemeMode: () => {},
+      getUiMode: () => "auto",
+      setUiMode: () => {},
+      getLocale: () => "en",
+      setLocale: () => {},
+    })),
+    ...createNavigationActions(() => ({
+      goBack: () => {},
+      goForward: () => {},
+      refreshListing: () => {},
+      cancelListingLoad: () => {},
+      focusQuickFilter: () => {},
+    })),
+    ...createUploadActions(() => ({
+      openUploadPanel: () => {},
+      chooseUploadFiles: () => {},
+    })),
+    ...createCloudActions(() => ({
+      shareUrl: () => {},
+      disconnect: () => {},
     })),
     ...createHelpActions(() => ({
       openAbout: () => {},

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from "react";
 import { Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,14 @@ type UploadIndicatorProps = {
   unfinishedSessions?: CloudMultipartPanelProps;
   /** @deprecated Use unfinishedSessions */
   cloudMultipart?: CloudMultipartPanelProps;
+  onTrayClick?: () => void;
+};
+
+export type UploadIndicatorHandle = {
+  openPanel: () => void;
+  closePanel: () => void;
+  togglePanel: () => void;
+  chooseFiles: () => void;
 };
 
 function useUploadTraySheetLayout(): boolean {
@@ -51,18 +59,23 @@ function useUploadTraySheetLayout(): boolean {
   return sheetLayout;
 }
 
-export default function UploadIndicator({
-  items,
-  onSelect,
-  onClearFinished,
-  onClearDone,
-  onCancel,
-  onPause,
-  onResume,
-  readOnly = false,
-  unfinishedSessions,
-  cloudMultipart,
-}: UploadIndicatorProps) {
+export default forwardRef<UploadIndicatorHandle, UploadIndicatorProps>(
+  function UploadIndicator(
+    {
+      items,
+      onSelect,
+      onClearFinished,
+      onClearDone,
+      onCancel,
+      onPause,
+      onResume,
+      readOnly = false,
+      unfinishedSessions,
+      cloudMultipart,
+      onTrayClick,
+    },
+    ref,
+  ) {
   const sessionPanel = unfinishedSessions ?? cloudMultipart;
   const { t } = useTranslation();
   const stats = useMemo(() => aggregateUploadStats(items), [items]);
@@ -93,6 +106,16 @@ export default function UploadIndicator({
     });
   };
   const closePanel = () => setOpen(false);
+  useImperativeHandle(
+    ref,
+    () => ({
+      openPanel: () => setOpen(true),
+      closePanel,
+      togglePanel: () => setOpen((value) => !value),
+      chooseFiles: openFilePicker,
+    }),
+    [],
+  );
   const panelProps = {
     items,
     onClearFinished,
@@ -123,7 +146,13 @@ export default function UploadIndicator({
             aria-label={t("upload.tray.label")}
             aria-expanded={open}
             aria-pressed={open}
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => {
+              if (onTrayClick) {
+                onTrayClick();
+                return;
+              }
+              setOpen((value) => !value);
+            }}
           >
             <Upload className="h-4 w-4" />
             {attention ? (
@@ -168,4 +197,5 @@ export default function UploadIndicator({
       )}
     </>
   );
-}
+  },
+);

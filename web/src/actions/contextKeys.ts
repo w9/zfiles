@@ -17,6 +17,11 @@ export type ContextKeys = {
   "slideshow.open": boolean;
   "preview.info-open": boolean;
   "operation.pending": boolean;
+  "navigation.can-go-back": boolean;
+  "navigation.can-go-forward": boolean;
+  "navigation.loading": boolean;
+  "cloud.connected": boolean;
+  "ui.touch": boolean;
 };
 
 export function defaultContextKeys(): ContextKeys {
@@ -39,6 +44,11 @@ export function defaultContextKeys(): ContextKeys {
     "slideshow.open": false,
     "preview.info-open": false,
     "operation.pending": false,
+    "navigation.can-go-back": false,
+    "navigation.can-go-forward": false,
+    "navigation.loading": false,
+    "cloud.connected": false,
+    "ui.touch": false,
   };
 }
 

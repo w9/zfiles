@@ -9,7 +9,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
 
-export default function ShowDotEntriesToggle() {
+type ShowDotEntriesToggleProps = {
+  onToggle?: () => void;
+};
+
+export default function ShowDotEntriesToggle({ onToggle }: ShowDotEntriesToggleProps) {
   const { t } = useTranslation();
   const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
   const label = showDotEntries
@@ -27,7 +31,7 @@ export default function ShowDotEntriesToggle() {
           className="h-8 w-8"
           aria-label={label}
           aria-pressed={showDotEntries}
-          onClick={toggleShowDotEntries}
+          onClick={onToggle ?? toggleShowDotEntries}
         >
           <Icon className="h-4 w-4" />
         </Button>
