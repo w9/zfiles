@@ -9,6 +9,11 @@ export type DroppedUploadFile = {
   sourceHandle: FileSystemFileHandle | null;
 };
 
+/** File System Access handles from drag-drop only work in secure contexts (HTTPS / localhost). */
+export function canCaptureDropFileHandles(): boolean {
+  return typeof window !== "undefined" && window.isSecureContext;
+}
+
 /** Extract files (and handles when the browser provides them) from a drop event. */
 export async function extractDroppedUploadFiles(
   dataTransfer: DataTransfer,
@@ -29,22 +34,25 @@ export async function extractDroppedUploadFiles(
       syncEntries.push({ item, file });
     }
     if (syncEntries.length > 0) {
-      const dropped: DroppedUploadFile[] = [];
-      for (const { item, file } of syncEntries) {
-        let sourceHandle: FileSystemFileHandle | null = null;
-        if ("getAsFileSystemHandle" in item) {
-          try {
-            const handle = await item.getAsFileSystemHandle();
-            if (handle.kind === "file") {
-              sourceHandle = handle as FileSystemFileHandle;
-            }
-          } catch {
-            // Fall back to File-only resume (picker on first resume).
-          }
-        }
-        dropped.push({ file, sourceHandle });
+      if (!canCaptureDropFileHandles()) {
+        return syncEntries.map(({ file }) => ({ file, sourceHandle: null }));
       }
-      return dropped;
+
+      // Start every handle promise synchronously (MDN), then await together.
+      const handlePromises = syncEntries.map(({ item }) =>
+        "getAsFileSystemHandle" in item
+          ? item.getAsFileSystemHandle().catch(() => null)
+          : Promise.resolve(null),
+      );
+      const handles = await Promise.all(handlePromises);
+      return syncEntries.map(({ file }, index) => {
+        const handle = handles[index];
+        return {
+          file,
+          sourceHandle:
+            handle?.kind === "file" ? (handle as FileSystemFileHandle) : null,
+        };
+      });
     }
   }
 

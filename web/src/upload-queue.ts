@@ -1289,8 +1289,7 @@ export function useUploadQueue({
         item.status === "hashing" ||
         item.status === "verifying",
     );
-    const hasAwaitingConflict = items.some((item) => item.status === "awaiting_conflict");
-    if (hasPending && !hasActive && !hasAwaitingConflict) {
+    if (hasPending && !hasActive) {
       void run();
     }
   }, [items, backend, clearProgressFlush, cloudAuth, commitProgressItem, handleUploadConflict, ingestProgress, onItemComplete, onItemFailed, onMultipartSessionFinished, onTusSessionFinished]);
