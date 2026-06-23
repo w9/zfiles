@@ -73,7 +73,8 @@ const LISTING_COLUMN_IDS = ["name", "size", "modified"] as const;
 
 const LISTING_TEXT_CLASS = "text-[14px] leading-5";
 
-const LISTING_HEADER_TEXT_CLASS = "text-[12px] leading-4";
+const LISTING_HEADER_TEXT_CLASS =
+  "text-[12px] leading-4 touch-ui:text-[14px] touch-ui:leading-5";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
