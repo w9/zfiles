@@ -28,32 +28,25 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
       className={cn(
-        "flex w-full min-w-0 items-center overflow-hidden",
+        "h-8 w-full min-w-0 max-w-full justify-start gap-1 overflow-hidden px-0 touch-ui:px-0 data-[state=open]:bg-accent",
         LISTING_HEADER_TEXT_CLASS,
         className,
       )}
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     >
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className={cn(
-          "h-8 w-auto max-w-full shrink-0 justify-start gap-1 overflow-hidden px-2 data-[state=open]:bg-accent",
-          LISTING_HEADER_TEXT_CLASS,
-        )}
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        <span className="truncate">{title}</span>
-        {column.getIsSorted() === "desc" ? (
-          <ChevronDown className="size-4 shrink-0" />
-        ) : column.getIsSorted() === "asc" ? (
-          <ChevronUp className="size-4 shrink-0" />
-        ) : (
-          <ChevronsUpDown className="size-4 shrink-0" />
-        )}
-      </Button>
-    </div>
+      <span className="truncate">{title}</span>
+      {column.getIsSorted() === "desc" ? (
+        <ChevronDown className="size-4 shrink-0" />
+      ) : column.getIsSorted() === "asc" ? (
+        <ChevronUp className="size-4 shrink-0" />
+      ) : (
+        <ChevronsUpDown className="size-4 shrink-0" />
+      )}
+    </Button>
   );
 }
