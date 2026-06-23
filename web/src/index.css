@@ -118,6 +118,22 @@
   pointer-events: none;
 }
 
+/* Sonner: action + cancel on one row squeezes message (flex-shrink); wrap buttons instead. */
+[data-sonner-toast][data-styled="true"]:has([data-cancel]) {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+[data-sonner-toast][data-styled="true"]:has([data-cancel]) [data-content] {
+  flex: 1 1 calc(100% - 2rem);
+  flex-shrink: 0;
+  min-width: calc(100% - 2rem);
+}
+
+[data-sonner-toast][data-styled="true"]:has([data-cancel]) [data-button] {
+  margin-left: 0;
+}
+
 @media (hover: hover) and (pointer: fine) {
   [data-sonner-toast][data-styled="true"]:hover [data-close-button],
   [data-sonner-toast][data-styled="true"]:focus-within [data-close-button] {
