@@ -20,6 +20,7 @@ import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
 import { shouldDimDotEntry } from "@/listingFilter";
+import { LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
 import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
@@ -251,7 +252,7 @@ export default function GridListing({
                       row.section === "files" ? GRID_SECTION_HEADER_TOP_GAP_PX : 0,
                   }}
                 >
-                  <p className="text-xs font-bold text-muted-foreground/60">
+                  <p className={LISTING_HEADER_TEXT_CLASS}>
                     {row.section === "folders"
                       ? t("listing.grid.sectionFolders")
                       : t("listing.grid.sectionFiles")}

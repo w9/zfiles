@@ -3,15 +3,31 @@ import * as React from "react";
 import type { Column } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
 import { cn } from "@/lib/utils";
 
-const LISTING_HEADER_TEXT_CLASS =
-  "text-[12px] leading-4 touch-ui:text-[14px] touch-ui:leading-5";
+const LISTING_COLUMN_HEADER_SHELL_CLASS =
+  "flex h-full w-full min-h-0 min-w-0 items-center overflow-hidden px-2";
 
-type DataTableColumnHeaderProps<TData, TValue> = React.HTMLAttributes<HTMLDivElement> & {
+const LISTING_SORTABLE_COLUMN_HEADER_CLASS = cn(
+  LISTING_COLUMN_HEADER_SHELL_CLASS,
+  "gap-1 rounded-none border-0 bg-transparent transition-colors",
+  "hover:bg-accent hover:text-accent-foreground",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+);
+
+export function columnHeaderAriaSort(
+  isSorted: false | "asc" | "desc",
+): "none" | "ascending" | "descending" {
+  if (isSorted === "asc") return "ascending";
+  if (isSorted === "desc") return "descending";
+  return "none";
+}
+
+type DataTableColumnHeaderProps<TData, TValue> = {
   column: Column<TData, TValue>;
   title: string;
+  className?: string;
 };
 
 export function DataTableColumnHeader<TData, TValue>({
@@ -21,32 +37,37 @@ export function DataTableColumnHeader<TData, TValue>({
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
     return (
-      <div className={cn("w-full min-w-0 truncate", LISTING_HEADER_TEXT_CLASS, className)}>
-        {title}
+      <div
+        role="columnheader"
+        className={cn(LISTING_COLUMN_HEADER_SHELL_CLASS, LISTING_HEADER_TEXT_CLASS, className)}
+      >
+        <span className="truncate">{title}</span>
       </div>
     );
   }
 
+  const isSorted = column.getIsSorted();
+
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size="sm"
+      role="columnheader"
+      aria-sort={columnHeaderAriaSort(isSorted)}
       className={cn(
-        "h-8 w-full min-w-0 max-w-full justify-start gap-1 overflow-hidden px-0 touch-ui:px-0 data-[state=open]:bg-accent",
+        LISTING_SORTABLE_COLUMN_HEADER_CLASS,
         LISTING_HEADER_TEXT_CLASS,
         className,
       )}
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      onClick={() => column.toggleSorting(isSorted === "asc")}
     >
       <span className="truncate">{title}</span>
-      {column.getIsSorted() === "desc" ? (
+      {isSorted === "desc" ? (
         <ChevronDown className="size-4 shrink-0" />
-      ) : column.getIsSorted() === "asc" ? (
+      ) : isSorted === "asc" ? (
         <ChevronUp className="size-4 shrink-0" />
       ) : (
         <ChevronsUpDown className="size-4 shrink-0" />
       )}
-    </Button>
+    </button>
   );
 }

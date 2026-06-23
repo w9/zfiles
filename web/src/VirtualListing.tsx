@@ -73,9 +73,6 @@ const LISTING_COLUMN_IDS = ["name", "size", "modified"] as const;
 
 const LISTING_TEXT_CLASS = "text-[14px] leading-5";
 
-const LISTING_HEADER_TEXT_CLASS =
-  "text-[12px] leading-4 touch-ui:text-[14px] touch-ui:leading-5";
-
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
 
@@ -478,8 +475,6 @@ type ListingHeaderColumnProps = {
 };
 
 function ListingHeaderColumn({ header, index, isLast }: ListingHeaderColumnProps) {
-  const alignEnd = index === 1;
-
   return (
     <>
       <ResizablePanel
@@ -488,18 +483,9 @@ function ListingHeaderColumn({ header, index, isLast }: ListingHeaderColumnProps
         minSize={index === 0 ? 20 : 10}
         className={LISTING_PANEL_CLASS}
       >
-        <div
-          role="columnheader"
-          className={cn(
-            "flex h-full w-full min-h-0 min-w-0 items-center overflow-hidden px-2 font-medium",
-            LISTING_HEADER_TEXT_CLASS,
-            alignEnd && "justify-end",
-          )}
-        >
-          {header.isPlaceholder
-            ? null
-            : flexRender(header.column.columnDef.header, header.getContext())}
-        </div>
+        {header.isPlaceholder
+          ? null
+          : flexRender(header.column.columnDef.header, header.getContext())}
       </ResizablePanel>
       {!isLast ? <ResizableHandle withHandle className={COLUMN_RESIZE_HANDLE_CLASS} /> : null}
     </>
