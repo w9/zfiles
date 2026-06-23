@@ -232,9 +232,10 @@ export const de: Record<MessageKey, string> = {
     "Lege fest, wie Informationen in der Dateiliste angezeigt werden.",
   "settings.modifiedTime.label": "Spalte „Geändert“",
   "settings.modifiedTime.description":
-    "Relative Zeiten (zum Beispiel „vor 2 Tagen“) oder absolute Datums- und Uhrzeitangaben anzeigen.",
+    "Relative Zeiten, absolute Datums- und Uhrzeitangaben oder beides zusammen in der Spalte „Geändert“ anzeigen.",
   "settings.modifiedTime.relative": "Relativ",
   "settings.modifiedTime.absolute": "Absolut",
+  "settings.modifiedTime.combined": "Beides",
   "settings.listingSort.label": "Sortierreihenfolge der Ordner",
   "settings.listingSort.description":
     "Lege fest, ob Ordner vor Dateien erscheinen oder zusammen nach Namen sortiert werden.",

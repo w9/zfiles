@@ -230,9 +230,10 @@ export const es: Record<MessageKey, string> = {
   "settings.display.description": "Elige cómo aparece la información en la lista de archivos.",
   "settings.modifiedTime.label": "Columna de modificación",
   "settings.modifiedTime.description":
-    "Muestra tiempos relativos (por ejemplo, «hace 2 días») o fechas y horas absolutas.",
+    "Muestra tiempos relativos, fechas y horas absolutas, o ambos en la columna de modificación.",
   "settings.modifiedTime.relative": "Relativo",
   "settings.modifiedTime.absolute": "Absoluto",
+  "settings.modifiedTime.combined": "Ambos",
   "settings.listingSort.label": "Orden de carpetas",
   "settings.listingSort.description":
     "Elige si las carpetas aparecen antes que los archivos o se ordenan juntas por nombre.",

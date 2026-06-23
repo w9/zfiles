@@ -229,9 +229,10 @@ export const en = {
   "settings.display.description": "Choose how information appears in the file list.",
   "settings.modifiedTime.label": "Modified column",
   "settings.modifiedTime.description":
-    "Show relative times (for example, “2 days ago”) or absolute dates and times.",
+    "Show relative times, absolute dates and times, or both together in the Modified column.",
   "settings.modifiedTime.relative": "Relative",
   "settings.modifiedTime.absolute": "Absolute",
+  "settings.modifiedTime.combined": "Both",
   "settings.listingSort.label": "Folder sort order",
   "settings.listingSort.description":
     "Choose whether folders appear before files or are sorted together by name.",

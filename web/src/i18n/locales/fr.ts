@@ -232,9 +232,10 @@ export const fr: Record<MessageKey, string> = {
     "Choisissez comment les informations apparaissent dans la liste des fichiers.",
   "settings.modifiedTime.label": "Colonne Modifié",
   "settings.modifiedTime.description":
-    "Afficher des durées relatives (par exemple « il y a 2 jours ») ou des dates et heures absolues.",
+    "Afficher des durées relatives, des dates et heures absolues, ou les deux dans la colonne Modifié.",
   "settings.modifiedTime.relative": "Relatif",
   "settings.modifiedTime.absolute": "Absolu",
+  "settings.modifiedTime.combined": "Les deux",
   "settings.listingSort.label": "Ordre de tri des dossiers",
   "settings.listingSort.description":
     "Choisissez si les dossiers apparaissent avant les fichiers ou sont triés ensemble par nom.",

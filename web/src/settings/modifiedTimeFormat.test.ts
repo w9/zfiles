@@ -11,6 +11,7 @@ test("parseModifiedTimeFormat defaults to relative", () => {
   assert.equal(parseModifiedTimeFormat("invalid"), DEFAULT_MODIFIED_TIME_FORMAT);
 });
 
-test("parseModifiedTimeFormat accepts absolute", () => {
+test("parseModifiedTimeFormat accepts absolute and combined", () => {
   assert.equal(parseModifiedTimeFormat("absolute"), "absolute");
+  assert.equal(parseModifiedTimeFormat("combined"), "combined");
 });

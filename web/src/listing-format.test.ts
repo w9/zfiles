@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  formatListingModifiedDisplay,
   formatModifiedAbsolute,
   formatModifiedCombined,
   formatModifiedDisplay,
@@ -79,7 +80,7 @@ test("formatModifiedCombined shows absolute with relative in parentheses", () =>
   }
 });
 
-test("formatModifiedDisplay switches between relative and absolute formats", () => {
+test("formatModifiedDisplay keeps combined preview output for relative setting", () => {
   const now = Date.parse("2025-05-29T12:00:00Z");
   const originalNow = Date.now;
   Date.now = () => now;
@@ -88,8 +89,25 @@ test("formatModifiedDisplay switches between relative and absolute formats", () 
     const relative = formatModifiedDisplay(oneHourAgo, "en", "relative");
     assert.match(relative, /May/);
     assert.match(relative, /\(1 hour ago\)/);
+    assert.match(formatModifiedDisplay(oneHourAgo, "en", "combined"), /\(1 hour ago\)/);
     assert.match(formatModifiedDisplay(oneHourAgo, "en", "absolute"), /May/);
     assert.doesNotMatch(formatModifiedDisplay(oneHourAgo, "en", "absolute"), /hour ago/);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test("formatListingModifiedDisplay switches between listing formats", () => {
+  const now = Date.parse("2025-05-29T12:00:00Z");
+  const originalNow = Date.now;
+  Date.now = () => now;
+  try {
+    const oneHourAgo = now - 3_600_000;
+    assert.equal(formatListingModifiedDisplay(oneHourAgo, "en", "relative"), "1 hour ago");
+    assert.match(formatListingModifiedDisplay(oneHourAgo, "en", "combined"), /May/);
+    assert.match(formatListingModifiedDisplay(oneHourAgo, "en", "combined"), /\(1 hour ago\)/);
+    assert.match(formatListingModifiedDisplay(oneHourAgo, "en", "absolute"), /May/);
+    assert.doesNotMatch(formatListingModifiedDisplay(oneHourAgo, "en", "absolute"), /hour ago/);
   } finally {
     Date.now = originalNow;
   }

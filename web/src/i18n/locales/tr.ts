@@ -231,9 +231,10 @@ export const tr: Record<MessageKey, string> = {
   "settings.display.description": "Bilgilerin dosya listesinde nasıl görüneceğini seçin.",
   "settings.modifiedTime.label": "Değiştirilme sütunu",
   "settings.modifiedTime.description":
-    "Göreli zamanları (örneğin “2 gün önce”) veya mutlak tarih ve saatleri gösterin.",
+    "Değiştirilme sütununda göreli zamanları, mutlak tarih ve saatleri veya ikisini birlikte gösterin.",
   "settings.modifiedTime.relative": "Göreli",
   "settings.modifiedTime.absolute": "Mutlak",
+  "settings.modifiedTime.combined": "İkisi birden",
   "settings.listingSort.label": "Klasör sıralama düzeni",
   "settings.listingSort.description":
     "Klasörlerin dosyalardan önce mi görüneceğini yoksa ada göre birlikte mi sıralanacağını seçin.",

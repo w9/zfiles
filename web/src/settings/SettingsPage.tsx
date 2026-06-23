@@ -255,6 +255,7 @@ export default function SettingsPage() {
               options={[
                 { value: "relative", label: t("settings.modifiedTime.relative") },
                 { value: "absolute", label: t("settings.modifiedTime.absolute") },
+                { value: "combined", label: t("settings.modifiedTime.combined") },
               ]}
             />
             <SettingsToggleField

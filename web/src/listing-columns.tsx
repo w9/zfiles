@@ -1,7 +1,7 @@
 import type { ColumnDef, Row, SortingFn } from "@tanstack/react-table";
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { formatModifiedDisplay, formatSize, parseModifiedMs } from "@/listing-format";
+import { formatListingModifiedDisplay, formatSize, parseModifiedMs } from "@/listing-format";
 import { compareListingEntries, compareNames } from "@/listingSort";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 
@@ -46,7 +46,11 @@ export function createListingColumns(labels: ListingColumnLabels): ColumnDef<Lis
         <DataTableColumnHeader column={column} title={labels.modified} />
       ),
       cell: ({ row }) =>
-        formatModifiedDisplay(row.original.modified, labels.locale, labels.modifiedTimeFormat),
+        formatListingModifiedDisplay(
+          row.original.modified,
+          labels.locale,
+          labels.modifiedTimeFormat,
+        ),
       sortingFn: withListingSortOrder(labels.listingSortOrder, (left, right) => {
         const leftMs = parseModifiedMs(left.modified) ?? -1;
         const rightMs = parseModifiedMs(right.modified) ?? -1;

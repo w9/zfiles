@@ -231,9 +231,10 @@ export const ja: Record<MessageKey, string> = {
   "settings.display.description": "ファイル一覧での情報の表示方法を選択します。",
   "settings.modifiedTime.label": "更新日時の列",
   "settings.modifiedTime.description":
-    "相対時間（例：「2 日前」）または絶対的な日付と時刻を表示します。",
+    "相対時間、絶対的な日付と時刻、または両方を更新日時の列に表示します。",
   "settings.modifiedTime.relative": "相対",
   "settings.modifiedTime.absolute": "絶対",
+  "settings.modifiedTime.combined": "両方",
   "settings.listingSort.label": "フォルダーの並べ替え順",
   "settings.listingSort.description":
     "フォルダーをファイルより前に表示するか、名前でまとめて並べ替えるかを選択します。",

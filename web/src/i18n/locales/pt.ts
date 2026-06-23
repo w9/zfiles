@@ -232,9 +232,10 @@ export const pt: Record<MessageKey, string> = {
     "Escolha como as informações aparecem na lista de arquivos.",
   "settings.modifiedTime.label": "Coluna Modificado",
   "settings.modifiedTime.description":
-    "Mostrar horários relativos (por exemplo, «há 2 dias») ou datas e horas absolutas.",
+    "Mostrar horários relativos, datas e horas absolutas, ou ambos na coluna Modificado.",
   "settings.modifiedTime.relative": "Relativo",
   "settings.modifiedTime.absolute": "Absoluto",
+  "settings.modifiedTime.combined": "Ambos",
   "settings.listingSort.label": "Ordem das pastas",
   "settings.listingSort.description":
     "Escolha se as pastas aparecem antes dos arquivos ou são ordenadas juntas por nome.",

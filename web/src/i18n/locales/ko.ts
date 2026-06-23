@@ -231,9 +231,10 @@ export const ko: Record<MessageKey, string> = {
   "settings.display.description": "파일 목록에 정보가 표시되는 방식을 선택하세요.",
   "settings.modifiedTime.label": "수정한 날짜 열",
   "settings.modifiedTime.description":
-    "상대 시간(예: “2일 전”) 또는 절대 날짜 및 시간을 표시합니다.",
+    "상대 시간, 절대 날짜 및 시간, 또는 둘 다를 수정한 날짜 열에 표시합니다.",
   "settings.modifiedTime.relative": "상대",
   "settings.modifiedTime.absolute": "절대",
+  "settings.modifiedTime.combined": "둘 다",
   "settings.listingSort.label": "폴더 정렬 순서",
   "settings.listingSort.description":
     "폴더를 파일보다 먼저 표시할지, 이름으로 함께 정렬할지 선택하세요.",

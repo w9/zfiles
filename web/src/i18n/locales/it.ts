@@ -232,9 +232,10 @@ export const it: Record<MessageKey, string> = {
     "Scegli come vengono mostrate le informazioni nell'elenco dei file.",
   "settings.modifiedTime.label": "Colonna Modificato",
   "settings.modifiedTime.description":
-    "Mostra orari relativi (ad esempio «2 giorni fa») o date e orari assoluti.",
+    "Mostra orari relativi, date e orari assoluti, o entrambi nella colonna Modificato.",
   "settings.modifiedTime.relative": "Relativo",
   "settings.modifiedTime.absolute": "Assoluto",
+  "settings.modifiedTime.combined": "Entrambi",
   "settings.listingSort.label": "Ordine delle cartelle",
   "settings.listingSort.description":
     "Scegli se le cartelle appaiono prima dei file o sono ordinate insieme per nome.",

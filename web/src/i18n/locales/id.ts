@@ -231,9 +231,10 @@ export const id: Record<MessageKey, string> = {
   "settings.display.description": "Pilih bagaimana informasi tampil dalam daftar berkas.",
   "settings.modifiedTime.label": "Kolom Diubah",
   "settings.modifiedTime.description":
-    "Tampilkan waktu relatif (misalnya, “2 hari yang lalu”) atau tanggal dan waktu absolut.",
+    "Tampilkan waktu relatif, tanggal dan waktu absolut, atau keduanya di kolom Diubah.",
   "settings.modifiedTime.relative": "Relatif",
   "settings.modifiedTime.absolute": "Absolut",
+  "settings.modifiedTime.combined": "Keduanya",
   "settings.listingSort.label": "Urutan pengurutan folder",
   "settings.listingSort.description":
     "Pilih apakah folder tampil sebelum berkas atau diurutkan bersama berdasarkan nama.",

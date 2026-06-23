@@ -78,6 +78,20 @@ export function formatModifiedCombined(value: unknown, locale: string): string {
   return `${absolute} (${relative})`;
 }
 
+export function formatListingModifiedDisplay(
+  value: unknown,
+  locale: string,
+  format: ModifiedTimeFormat,
+): string {
+  if (format === "absolute") {
+    return formatModifiedAbsolute(value, locale) ?? "—";
+  }
+  if (format === "combined") {
+    return formatModifiedCombined(value, locale);
+  }
+  return formatRelativeModified(value, locale);
+}
+
 export function formatModifiedDisplay(
   value: unknown,
   locale: string,

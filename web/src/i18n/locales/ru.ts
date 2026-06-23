@@ -231,9 +231,10 @@ export const ru: Record<MessageKey, string> = {
   "settings.display.description": "Выберите, как информация отображается в списке файлов.",
   "settings.modifiedTime.label": "Столбец «Изменён»",
   "settings.modifiedTime.description":
-    "Показывать относительное время (например, «2 дня назад») или абсолютные дату и время.",
+    "Показывать относительное время, абсолютные дату и время или оба варианта в столбце «Изменён».",
   "settings.modifiedTime.relative": "Относительное",
   "settings.modifiedTime.absolute": "Абсолютное",
+  "settings.modifiedTime.combined": "Оба",
   "settings.listingSort.label": "Порядок сортировки папок",
   "settings.listingSort.description":
     "Выберите, отображаются ли папки перед файлами или сортируются вместе по имени.",

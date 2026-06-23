@@ -231,9 +231,10 @@ export const vi: Record<MessageKey, string> = {
   "settings.display.description": "Chọn cách thông tin hiển thị trong danh sách tệp.",
   "settings.modifiedTime.label": "Cột Đã sửa đổi",
   "settings.modifiedTime.description":
-    "Hiển thị thời gian tương đối (ví dụ: “2 ngày trước”) hoặc ngày giờ tuyệt đối.",
+    "Hiển thị thời gian tương đối, ngày giờ tuyệt đối hoặc cả hai trong cột Đã sửa đổi.",
   "settings.modifiedTime.relative": "Tương đối",
   "settings.modifiedTime.absolute": "Tuyệt đối",
+  "settings.modifiedTime.combined": "Cả hai",
   "settings.listingSort.label": "Thứ tự sắp xếp thư mục",
   "settings.listingSort.description":
     "Chọn thư mục hiển thị trước tệp hay được sắp xếp cùng nhau theo tên.",
