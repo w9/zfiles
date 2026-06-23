@@ -29,6 +29,13 @@ import {
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
+import { LISTING_ICON_COLUMN_WIDTH_PX } from "@/listing-styles";
+import {
+  layoutToListingRowGridTemplate,
+  listingColumnGutterGridColumn,
+  listingDataCellGridColumn,
+  prependIconColumnToMeasuredGridTemplate,
+} from "@/listing-table-layout";
 import type { FileIconTheme } from "@/fileIcons";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 import { cn } from "@/lib/utils";
@@ -69,8 +76,6 @@ const DEFAULT_COLUMN_LAYOUT: Layout = {
   modified: 27,
 };
 
-const LISTING_COLUMN_IDS = ["name", "size", "modified"] as const;
-
 const LISTING_TEXT_CLASS = "text-[14px] leading-5";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
@@ -106,23 +111,6 @@ const COLUMN_RESIZE_HANDLE_CLASS = cn(
   "[&>div]:border-transparent [&>div]:bg-transparent [&>div]:opacity-0",
   "group-hover/listing-header:[&>div]:border-border group-hover/listing-header:[&>div]:bg-border group-hover/listing-header:[&>div]:opacity-100",
 );
-
-function layoutToGridTemplateColumns(layout: Layout, containerWidth: number): string {
-  const separatorCount = LISTING_COLUMN_IDS.length - 1;
-  const available = containerWidth - separatorCount;
-  if (available <= 0) {
-    return "minmax(0, 2fr) 1px 6rem 1px 9rem";
-  }
-
-  const tracks: string[] = [];
-  LISTING_COLUMN_IDS.forEach((id, index) => {
-    tracks.push(`${((layout[id] ?? 0) / 100) * available}px`);
-    if (index < separatorCount) {
-      tracks.push("1px");
-    }
-  });
-  return tracks.join(" ");
-}
 
 function measureHeaderGridTemplate(header: HTMLElement): string | null {
   const panels = Array.from(header.querySelectorAll<HTMLElement>("[data-panel]"));
@@ -175,7 +163,7 @@ export default function VirtualListing({
   const [columnLayout, setColumnLayout] = useState<Layout>(DEFAULT_COLUMN_LAYOUT);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [columnGridTemplate, setColumnGridTemplate] = useState(() =>
-    layoutToGridTemplateColumns(DEFAULT_COLUMN_LAYOUT, 0),
+    layoutToListingRowGridTemplate(DEFAULT_COLUMN_LAYOUT, 0),
   );
 
   const columns = useMemo(() => createListingColumns(columnLabels), [columnLabels]);
@@ -218,13 +206,13 @@ export default function VirtualListing({
 
     const measured = measureHeaderGridTemplate(header);
     if (measured) {
-      setColumnGridTemplate(measured);
+      setColumnGridTemplate(prependIconColumnToMeasuredGridTemplate(measured));
       return;
     }
 
     const width = header.clientWidth;
     if (width > 0) {
-      setColumnGridTemplate(layoutToGridTemplateColumns(columnLayout, width));
+      setColumnGridTemplate(layoutToListingRowGridTemplate(columnLayout, width));
     }
   }, [columnLayout]);
 
@@ -306,21 +294,28 @@ export default function VirtualListing({
         role="row"
       >
         {headerGroup ? (
-          <ResizablePanelGroup
-            orientation="horizontal"
-            className={LISTING_PANEL_GROUP_CLASS}
-            defaultLayout={DEFAULT_COLUMN_LAYOUT}
-            onLayoutChange={handleColumnLayoutChange}
-          >
-            {headerGroup.headers.map((header, index) => (
-              <ListingHeaderColumn
-                key={header.id}
-                header={header}
-                index={index}
-                isLast={index === headerGroup.headers.length - 1}
-              />
-            ))}
-          </ResizablePanelGroup>
+          <div className="flex h-full w-full min-h-0 min-w-0">
+            <div
+              aria-hidden
+              className="shrink-0"
+              style={{ width: LISTING_ICON_COLUMN_WIDTH_PX }}
+            />
+            <ResizablePanelGroup
+              orientation="horizontal"
+              className={cn(LISTING_PANEL_GROUP_CLASS, "min-w-0 flex-1")}
+              defaultLayout={DEFAULT_COLUMN_LAYOUT}
+              onLayoutChange={handleColumnLayoutChange}
+            >
+              {headerGroup.headers.map((header, index) => (
+                <ListingHeaderColumn
+                  key={header.id}
+                  header={header}
+                  index={index}
+                  isLast={index === headerGroup.headers.length - 1}
+                />
+              ))}
+            </ResizablePanelGroup>
+          </div>
         ) : null}
       </div>
 
@@ -385,8 +380,21 @@ export default function VirtualListing({
                 }}
                 onContextMenu={entry.onContextMenu}
               >
+                <div
+                  role="gridcell"
+                  className={cn("flex h-11 items-center justify-end", CELL_CLIP)}
+                  style={{ gridColumn: 1 }}
+                >
+                  <FileIcon
+                    name={entry.name}
+                    isDir={entry.isDir}
+                    isSymlink={entry.isSymlink}
+                    theme={iconTheme}
+                    size="xs"
+                  />
+                </div>
                 {row.getVisibleCells().map((cell, columnIndex) => {
-                  const gridColumn = columnIndex * 2 + 1;
+                  const gridColumn = listingDataCellGridColumn(columnIndex);
                   const modifiedTitle =
                     cell.column.id === "modified" &&
                     columnLabels.modifiedTimeFormat === "relative"
@@ -395,29 +403,20 @@ export default function VirtualListing({
                       : undefined;
                   const isName = columnIndex === 0;
                   const content = isName ? (
-                    <>
-                      <FileIcon
-                        name={entry.name}
-                        isDir={entry.isDir}
-                        isSymlink={entry.isSymlink}
-                        theme={iconTheme}
-                        size="xs"
+                    isEditing && onInlineCommit && onInlineCancel ? (
+                      <InlineNameInput
+                        initialName={entry.name}
+                        busy={renameCommittingPath === entry.path}
+                        showBusyVisual={showRenameBusyVisual}
+                        onCommit={(name) => onInlineCommit(entry.path, name)}
+                        onCancel={() => onInlineCancel(entry.path, entry.name)}
                       />
-                      {isEditing && onInlineCommit && onInlineCancel ? (
-                        <InlineNameInput
-                          initialName={entry.name}
-                          busy={renameCommittingPath === entry.path}
-                          showBusyVisual={showRenameBusyVisual}
-                          onCommit={(name) => onInlineCommit(entry.path, name)}
-                          onCancel={() => onInlineCancel(entry.path, entry.name)}
-                        />
-                      ) : (
-                        <TruncatedTextTooltip
-                          text={entry.name}
-                          className="min-w-0 truncate"
-                        />
-                      )}
-                    </>
+                    ) : (
+                      <TruncatedTextTooltip
+                        text={entry.name}
+                        className="min-w-0 truncate"
+                      />
+                    )
                   ) : (
                     flexRender(cell.column.columnDef.cell, cell.getContext())
                   );
@@ -429,7 +428,7 @@ export default function VirtualListing({
                           data-listing-gutter
                           aria-hidden
                           className={BODY_COLUMN_GUTTER_CLASS}
-                          style={{ gridColumn: columnIndex * 2 }}
+                          style={{ gridColumn: listingColumnGutterGridColumn(columnIndex) }}
                         />
                       ) : null}
                       <div
@@ -441,7 +440,7 @@ export default function VirtualListing({
                           className={cn(
                             "flex h-11 min-w-0 items-center overflow-hidden px-2",
                             LISTING_TEXT_CLASS,
-                            isName && "w-full gap-2",
+                            isName && "w-full",
                             columnIndex === 1 && "justify-end text-right",
                           )}
                         >
