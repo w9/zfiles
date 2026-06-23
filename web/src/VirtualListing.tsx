@@ -300,7 +300,7 @@ export default function VirtualListing({
       <div
         ref={headerRef}
         className={cn(
-          "group/listing-header peer/listing-header shrink-0 border-b",
+          "group/listing-header peer/listing-header shrink-0 border-b-[0.5px]",
           LISTING_HEADER_ROW_CLASS,
         )}
         role="row"
