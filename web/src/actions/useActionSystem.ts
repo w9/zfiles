@@ -193,7 +193,11 @@ export function useActionSystem(
         partial: Record<string, unknown>,
       ) =>
         new Promise<string | null>((resolve) => {
-          setArgPromptValue("");
+          const initialValue =
+            action.id === "appearance.set-locale" && appearanceActionDepsRef.current
+              ? appearanceActionDepsRef.current().getLocale()
+              : "";
+          setArgPromptValue(initialValue);
           setArgPromptState({ action, schema, partial, resolve });
         }),
     }),

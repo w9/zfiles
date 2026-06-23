@@ -14,23 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { type Locale, type MessageKey, SUPPORTED_LOCALES, useTranslation } from "@/i18n";
-
-const LOCALE_LABEL_KEYS: Record<Locale, MessageKey> = {
-  en: "language.en",
-  "zh-CN": "language.zhCN",
-  "zh-TW": "language.zhTW",
-  es: "language.es",
-  fr: "language.fr",
-  it: "language.it",
-  pt: "language.pt",
-  ru: "language.ru",
-  de: "language.de",
-  ja: "language.ja",
-  ko: "language.ko",
-  tr: "language.tr",
-  id: "language.id",
-  vi: "language.vi",
-};
+import { LOCALE_LABEL_KEYS } from "@/i18n/localeLabels";
 
 function localeLabel(locale: Locale, t: (key: MessageKey) => string) {
   return t(LOCALE_LABEL_KEYS[locale]);

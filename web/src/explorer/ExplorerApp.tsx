@@ -2217,6 +2217,9 @@ export default function ExplorerApp() {
         emptyLabel={t("actions.palette.empty")}
         argPromptTitle={t("actions.palette.argPromptTitle")}
         argPromptPlaceholder={t("actions.palette.argPromptPlaceholder")}
+        cancelLabel={t("actions.confirm.cancel")}
+        continueLabel={t("actions.palette.continue")}
+        currentLocale={locale}
         labelForKey={actionLabel}
       />
 
@@ -2317,6 +2320,8 @@ export default function ExplorerApp() {
         placeholder={t("actions.palette.argPromptPlaceholder")}
         cancelLabel={t("actions.confirm.cancel")}
         continueLabel={t("actions.palette.continue")}
+        labelForKey={actionLabel}
+        currentLocale={locale}
         value={actionSystem.argPromptValue}
         onValueChange={actionSystem.setArgPromptValue}
         onCancel={() => actionSystem.dismissArgPrompt(null)}

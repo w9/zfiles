@@ -7,6 +7,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import LocaleSelect from "@/LocaleSelect";
+import { isLocaleArgAction } from "@/i18n/localeLabels";
+import { resolveLocale, type Locale } from "@/i18n";
 import type { ActionDefinition } from "./types";
 import type { ArgSchema } from "./types";
 
@@ -81,6 +84,8 @@ type ArgPromptDialogProps = {
   placeholder: string;
   cancelLabel: string;
   continueLabel: string;
+  labelForKey: (key: string) => string;
+  currentLocale: Locale;
   value: string;
   onValueChange: (value: string) => void;
   onCancel: () => void;
@@ -94,29 +99,43 @@ export function ActionArgPromptDialog({
   placeholder,
   cancelLabel,
   continueLabel,
+  labelForKey,
+  currentLocale,
   value,
   onValueChange,
   onCancel,
   onSubmit,
 }: ArgPromptDialogProps) {
+  const localePrompt = action != null && isLocaleArgAction(action.id);
+  const dialogTitle = localePrompt ? labelForKey(action.nameKey) : title;
+  const selectedLocale = resolveLocale(value || currentLocale);
+
   return (
     <Dialog open={action != null && schema != null} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
-        <Input
-          autoFocus
-          value={value}
-          placeholder={placeholder}
-          onChange={(event) => onValueChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              onSubmit();
-            }
-          }}
-        />
+        {localePrompt ? (
+          <LocaleSelect
+            value={selectedLocale}
+            onValueChange={(locale) => onValueChange(locale)}
+            labelForKey={labelForKey}
+          />
+        ) : (
+          <Input
+            autoFocus
+            value={value}
+            placeholder={placeholder}
+            onChange={(event) => onValueChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onSubmit();
+              }
+            }}
+          />
+        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             {cancelLabel}

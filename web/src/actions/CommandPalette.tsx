@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -11,6 +12,9 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+import LocaleSelect from "@/LocaleSelect";
+import { isLocaleArgAction, LOCALE_ARG_ACTION_ID } from "@/i18n/localeLabels";
+import { resolveLocale, type Locale } from "@/i18n";
 import ChordKbd from "./ChordKbd";
 import { actionIconWithFallback } from "./icons";
 import { searchActions } from "./search";
@@ -32,6 +36,9 @@ type CommandPaletteProps = {
   emptyLabel: string;
   argPromptTitle: string;
   argPromptPlaceholder: string;
+  cancelLabel: string;
+  continueLabel: string;
+  currentLocale: Locale;
   labelForKey: (key: string) => string;
 };
 
@@ -67,6 +74,9 @@ export default function CommandPalette({
   dispatch,
   argPromptTitle,
   argPromptPlaceholder,
+  cancelLabel,
+  continueLabel,
+  currentLocale,
   title,
   placeholder,
   emptyLabel,
@@ -118,6 +128,43 @@ export default function CommandPalette({
   );
 
   if (pendingAction && pendingSchema) {
+    if (isLocaleArgAction(pendingAction.id)) {
+      const selectedLocale = resolveLocale(argValue || currentLocale);
+      const submitLocale = () => {
+        void dispatch(pendingAction.id, { args: { [pendingSchema.name]: selectedLocale } });
+        onOpenChange(false);
+        setQuery("");
+        setPendingActionId(null);
+        setArgValue("");
+      };
+
+      return (
+        <CommandDialog
+          open={open}
+          title={labelForKey(pendingAction.nameKey)}
+          description={argPromptTitle}
+          showCloseButton={false}
+          onOpenChange={handleOpenChange}
+        >
+          <div className="flex flex-col gap-4 p-4">
+            <LocaleSelect
+              value={selectedLocale}
+              onValueChange={(locale) => setArgValue(locale)}
+              labelForKey={labelForKey}
+            />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                {cancelLabel}
+              </Button>
+              <Button type="button" onClick={submitLocale}>
+                {continueLabel}
+              </Button>
+            </div>
+          </div>
+        </CommandDialog>
+      );
+    }
+
     const chord = actionKeybindingChord(pendingAction, keybindings);
     const Icon = actionIconWithFallback(pendingAction.id);
     return (
@@ -199,7 +246,9 @@ export default function CommandPalette({
                       onSelect={() => {
                         if (action.args?.some((arg) => !arg.default)) {
                           setPendingActionId(action.id);
-                          setArgValue("");
+                          setArgValue(
+                            action.id === LOCALE_ARG_ACTION_ID ? currentLocale : "",
+                          );
                           return;
                         }
                         void dispatch(action.id);
