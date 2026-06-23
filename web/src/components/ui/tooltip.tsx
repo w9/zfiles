@@ -2,6 +2,7 @@ import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
+import { useUiMode } from "@/useUiMode"
 
 function TooltipProvider({
   delayDuration = 0,
@@ -19,9 +20,28 @@ function TooltipProvider({
 }
 
 function Tooltip({
+  open,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  const { resolved } = useUiMode()
+  const touchUi = resolved === "touch"
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (touchUi && nextOpen) {
+      return
+    }
+    onOpenChange?.(nextOpen)
+  }
+
+  return (
+    <TooltipPrimitive.Root
+      data-slot="tooltip"
+      open={touchUi ? false : open}
+      onOpenChange={handleOpenChange}
+      {...props}
+    />
+  )
 }
 
 function TooltipTrigger({
