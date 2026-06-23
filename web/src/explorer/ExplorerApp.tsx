@@ -1875,8 +1875,10 @@ export default function ExplorerApp() {
             contextKeys={contextKeys}
             keybindings={actionSystem.keybindings}
             labelForKey={actionLabel}
-            invoke={(id) => void actionSystem.invoke(id)}
+            invoke={(id, options) => void actionSystem.invoke(id, options)}
             ariaLabel={t("actions.menuBar.label")}
+            themeMode={themeMode}
+            uiMode={uiMode}
             mobileMenuOnly
           />
         </>
@@ -1895,8 +1897,10 @@ export default function ExplorerApp() {
             contextKeys={contextKeys}
             keybindings={actionSystem.keybindings}
             labelForKey={actionLabel}
-            invoke={(id) => void actionSystem.invoke(id)}
+            invoke={(id, options) => void actionSystem.invoke(id, options)}
             ariaLabel={t("actions.menuBar.label")}
+            themeMode={themeMode}
+            uiMode={uiMode}
           />
           <div className="flex flex-wrap items-center gap-0.5">
             <UploadIndicator
