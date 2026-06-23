@@ -5,6 +5,13 @@ import { formatListingModifiedDisplay, formatSize, parseModifiedMs } from "@/lis
 import { compareListingEntries, compareNames } from "@/listingSort";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData, TValue> {
+    headerAlign?: "start" | "end";
+  }
+}
+
 function withListingSortOrder(
   order: ListingColumnLabels["listingSortOrder"],
   tieBreaker: (left: ListingEntry, right: ListingEntry) => number,
@@ -29,8 +36,9 @@ export function createListingColumns(labels: ListingColumnLabels): ColumnDef<Lis
     {
       id: "size",
       accessorFn: (row) => (row.isDir ? -1 : (row.size ?? -1)),
+      meta: { headerAlign: "end" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={labels.size} className="justify-end" />
+        <DataTableColumnHeader column={column} title={labels.size} />
       ),
       cell: ({ row }) => formatSize(row.original.size, row.original.isDir),
       sortingFn: withListingSortOrder(labels.listingSortOrder, (left, right) => {

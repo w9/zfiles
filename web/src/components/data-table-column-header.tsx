@@ -4,6 +4,7 @@ import type { Column } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 
 import { LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
+import type { ListingColumnHeaderAlign } from "@/listing-types";
 import { cn } from "@/lib/utils";
 
 const LISTING_COLUMN_HEADER_SHELL_CLASS =
@@ -24,22 +25,59 @@ export function columnHeaderAriaSort(
   return "none";
 }
 
+export function listingColumnHeaderAlignClass(
+  headerAlign: ListingColumnHeaderAlign = "start",
+): string | undefined {
+  return headerAlign === "end" ? "justify-end" : undefined;
+}
+
+export function listingColumnHeaderSortIconFirst(
+  headerAlign: ListingColumnHeaderAlign = "start",
+): boolean {
+  return headerAlign === "end";
+}
+
+export function readListingColumnHeaderAlign<TData, TValue>(
+  column: Column<TData, TValue>,
+): ListingColumnHeaderAlign {
+  return column.columnDef.meta?.headerAlign === "end" ? "end" : "start";
+}
+
 type DataTableColumnHeaderProps<TData, TValue> = {
   column: Column<TData, TValue>;
   title: string;
   className?: string;
 };
 
+function SortIcon({ isSorted }: { isSorted: false | "asc" | "desc" }) {
+  if (isSorted === "desc") {
+    return <ChevronDown className="size-4 shrink-0" />;
+  }
+  if (isSorted === "asc") {
+    return <ChevronUp className="size-4 shrink-0" />;
+  }
+  return <ChevronsUpDown className="size-4 shrink-0" />;
+}
+
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const headerAlign = readListingColumnHeaderAlign(column);
+  const alignClass = listingColumnHeaderAlignClass(headerAlign);
+  const sortIconFirst = listingColumnHeaderSortIconFirst(headerAlign);
+
   if (!column.getCanSort()) {
     return (
       <div
         role="columnheader"
-        className={cn(LISTING_COLUMN_HEADER_SHELL_CLASS, LISTING_HEADER_TEXT_CLASS, className)}
+        className={cn(
+          LISTING_COLUMN_HEADER_SHELL_CLASS,
+          LISTING_HEADER_TEXT_CLASS,
+          alignClass,
+          className,
+        )}
       >
         <span className="truncate">{title}</span>
       </div>
@@ -47,6 +85,7 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   const isSorted = column.getIsSorted();
+  const sortIcon = <SortIcon isSorted={isSorted} />;
 
   return (
     <button
@@ -56,18 +95,14 @@ export function DataTableColumnHeader<TData, TValue>({
       className={cn(
         LISTING_SORTABLE_COLUMN_HEADER_CLASS,
         LISTING_HEADER_TEXT_CLASS,
+        alignClass,
         className,
       )}
       onClick={() => column.toggleSorting(isSorted === "asc")}
     >
+      {sortIconFirst ? sortIcon : null}
       <span className="truncate">{title}</span>
-      {isSorted === "desc" ? (
-        <ChevronDown className="size-4 shrink-0" />
-      ) : isSorted === "asc" ? (
-        <ChevronUp className="size-4 shrink-0" />
-      ) : (
-        <ChevronsUpDown className="size-4 shrink-0" />
-      )}
+      {sortIconFirst ? null : sortIcon}
     </button>
   );
 }

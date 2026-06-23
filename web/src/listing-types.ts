@@ -23,3 +23,5 @@ export type ListingColumnLabels = {
   modifiedTimeFormat: ModifiedTimeFormat;
   listingSortOrder: ListingSortOrder;
 };
+
+export type ListingColumnHeaderAlign = "start" | "end";
