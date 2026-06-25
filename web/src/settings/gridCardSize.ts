@@ -6,8 +6,8 @@ export type GridCardSize = {
 export const GRID_GAP_PX = 12;
 
 export const BUILTIN_DEFAULT_GRID_CARD_SIZE: GridCardSize = {
-  width: 120,
-  height: 120,
+  width: 108,
+  height: 108,
 };
 
 export const BUILTIN_MIN_GRID_CARD_SIZE: GridCardSize = {

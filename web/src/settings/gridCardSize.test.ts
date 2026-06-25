@@ -44,12 +44,12 @@ test("clampGridCardSize treats zero max dimensions as unlimited", () => {
 
 test("parseGridCardSizeJson falls back on invalid input", () => {
   assert.deepEqual(parseGridCardSizeJson(null, BUILTIN_DEFAULT_GRID_CARD_SIZE), {
-    width: 120,
-    height: 120,
+    width: 108,
+    height: 108,
   });
   assert.deepEqual(parseGridCardSizeJson("{bad", BUILTIN_DEFAULT_GRID_CARD_SIZE), {
-    width: 120,
-    height: 120,
+    width: 108,
+    height: 108,
   });
   assert.deepEqual(parseGridCardSizeJson('{"width":80,"height":100}', BUILTIN_DEFAULT_GRID_CARD_SIZE), {
     width: 80,
@@ -69,6 +69,6 @@ test("parseGridCardMaxSizeJson accepts unlimited dimensions", () => {
 
 test("gridIconPixelSize scales with card dimensions", () => {
   assert.equal(gridIconPixelSize(48, 64), 16);
-  assert.equal(gridIconPixelSize(120, 120), 58);
+  assert.equal(gridIconPixelSize(108, 108), 48);
   assert.ok(gridIconPixelSize(200, 240) > gridIconPixelSize(80, 100));
 });
