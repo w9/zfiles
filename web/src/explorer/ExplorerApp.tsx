@@ -162,6 +162,7 @@ import {
 import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
 import { useListingLongPressContextMenu } from "./useListingLongPressContextMenu";
 import { basename } from "@/fileOperations/paths";
+import { copyTextToClipboard } from "@/copyTextToClipboard";
 
 type ContextMenuState = {
   x: number;
@@ -695,7 +696,7 @@ export default function ExplorerApp() {
     async (actionId: string, paths: string[]) => {
       if (actionId === "copy-path") {
         try {
-          await navigator.clipboard.writeText(paths.join("\n"));
+          await copyTextToClipboard(paths.join("\n"));
         } catch {
           notifyError(t("error.actionFailed", { status: "failed" }));
         }
