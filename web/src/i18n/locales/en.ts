@@ -310,6 +310,9 @@ export const en = {
   "actions.view.applyGlobalListingSettings.name": "Apply View Settings Globally",
   "actions.view.applyGlobalListingSettings.description":
     "Save the current view, column sort, and grid card size as defaults and clear per-folder overrides",
+  "actions.view.resetGridCardSize.name": "Reset Grid Card Size",
+  "actions.view.resetGridCardSize.description":
+    "Restore grid cards to the default size from Settings and clear this folder's saved card size",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Open",
   "actions.navigation.up.name": "Go Up",

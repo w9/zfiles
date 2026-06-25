@@ -298,6 +298,9 @@ export const zhTW: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "全域套用檢視設定",
   "actions.view.applyGlobalListingSettings.description":
     "將目前的檢視、欄位排序與格狀卡片大小儲存為預設值，並清除各資料夾的覆寫",
+  "actions.view.resetGridCardSize.name": "重設格狀卡片大小",
+  "actions.view.resetGridCardSize.description":
+    "將格狀卡片還原為設定中的預設大小，並清除此資料夾儲存的卡片大小",
   "actions.navigation.category": "導覽",
   "actions.navigation.open.name": "開啟",
   "actions.navigation.up.name": "返回上層",

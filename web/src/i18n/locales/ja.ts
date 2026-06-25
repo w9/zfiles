@@ -310,6 +310,9 @@ export const ja: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "表示設定を全体に適用",
   "actions.view.applyGlobalListingSettings.description":
     "現在の表示、列の並べ替え、グリッドカードサイズを既定として保存し、フォルダーごとの上書きを解除します",
+  "actions.view.resetGridCardSize.name": "グリッドカードサイズをリセット",
+  "actions.view.resetGridCardSize.description":
+    "設定の既定サイズにグリッドカードを戻し、このフォルダーに保存されたカードサイズを解除します",
   "actions.navigation.category": "ナビゲーション",
   "actions.navigation.open.name": "開く",
   "actions.navigation.up.name": "上へ",

@@ -311,6 +311,9 @@ export const tr: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Görünüm Ayarlarını Genel Olarak Uygula",
   "actions.view.applyGlobalListingSettings.description":
     "Geçerli görünümü, sütun sıralamasını ve ızgara kart boyutunu varsayılan olarak kaydet ve klasör bazlı geçersiz kılmaları temizle",
+  "actions.view.resetGridCardSize.name": "Izgara Kart Boyutunu Sıfırla",
+  "actions.view.resetGridCardSize.description":
+    "Izgara kartlarını Ayarlar'daki varsayılan boyuta döndür ve bu klasörün kayıtlı kart boyutunu temizle",
   "actions.navigation.category": "Gezinme",
   "actions.navigation.open.name": "Aç",
   "actions.navigation.up.name": "Yukarı çık",

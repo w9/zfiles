@@ -146,6 +146,22 @@ export function writeFolderViewOverride(path: string, partial: FolderViewSetting
   writeFolderOverridesMap(map);
 }
 
+export function clearFolderGridCardSizeOverride(path: string): void {
+  const map = readFolderOverridesMap();
+  const current = map[path];
+  if (current?.gridCardSize == null) {
+    return;
+  }
+  const next: FolderViewSettings = { ...current };
+  delete next.gridCardSize;
+  if (next.viewMode == null && next.columnSort == null) {
+    delete map[path];
+  } else {
+    map[path] = next;
+  }
+  writeFolderOverridesMap(map);
+}
+
 export function clearAllFolderViewOverrides(): void {
   storage()?.removeItem(FOLDER_OVERRIDES_STORAGE_KEY);
 }

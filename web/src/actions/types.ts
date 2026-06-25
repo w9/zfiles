@@ -82,5 +82,6 @@ export type BuiltinActionDeps = {
   selectAllVisible: () => void;
   toggleListingViewMode: (options?: { global?: boolean }) => void;
   applyGlobalListingSettings: () => void;
+  resetGridCardSize: () => void;
   toggleSelectionMode: () => void;
 };

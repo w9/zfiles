@@ -312,6 +312,9 @@ export const de: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Ansichtseinstellungen global anwenden",
   "actions.view.applyGlobalListingSettings.description":
     "Aktuelle Ansicht, Spaltensortierung und Rasterkartengröße als Standard speichern und ordnerspezifische Überschreibungen löschen",
+  "actions.view.resetGridCardSize.name": "Rasterkartengröße zurücksetzen",
+  "actions.view.resetGridCardSize.description":
+    "Rasterkarten auf die Standardgröße aus den Einstellungen zurücksetzen und die gespeicherte Kartengröße dieses Ordners löschen",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Öffnen",
   "actions.navigation.up.name": "Nach oben",

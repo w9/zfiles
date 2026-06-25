@@ -313,6 +313,9 @@ export const it: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Applica impostazioni vista globalmente",
   "actions.view.applyGlobalListingSettings.description":
     "Salva vista, ordinamento colonne e dimensione schede griglia correnti come predefiniti e cancella le override per cartella",
+  "actions.view.resetGridCardSize.name": "Reimposta dimensione scheda griglia",
+  "actions.view.resetGridCardSize.description":
+    "Ripristina le schede griglia alla dimensione predefinita dalle Impostazioni e cancella la dimensione salvata per questa cartella",
   "actions.navigation.category": "Navigazione",
   "actions.navigation.open.name": "Apri",
   "actions.navigation.up.name": "Su",

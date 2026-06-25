@@ -311,6 +311,9 @@ export const id: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Terapkan Pengaturan Tampilan Secara Global",
   "actions.view.applyGlobalListingSettings.description":
     "Simpan tampilan, urutan kolom, dan ukuran kartu kisi saat ini sebagai default dan hapus penggantian per folder",
+  "actions.view.resetGridCardSize.name": "Atur Ulang Ukuran Kartu Grid",
+  "actions.view.resetGridCardSize.description":
+    "Kembalikan kartu grid ke ukuran default dari Pengaturan dan hapus ukuran kartu tersimpan folder ini",
   "actions.navigation.category": "Navigasi",
   "actions.navigation.open.name": "Buka",
   "actions.navigation.up.name": "Naik",

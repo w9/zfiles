@@ -313,6 +313,9 @@ export const pt: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Aplicar configurações de visualização globalmente",
   "actions.view.applyGlobalListingSettings.description":
     "Salvar a visualização, ordenação de colunas e tamanho dos cartões da grade atuais como padrão e limpar substituições por pasta",
+  "actions.view.resetGridCardSize.name": "Redefinir tamanho do cartão da grade",
+  "actions.view.resetGridCardSize.description":
+    "Restaurar os cartões da grade ao tamanho padrão das Configurações e limpar o tamanho salvo desta pasta",
   "actions.navigation.category": "Navegação",
   "actions.navigation.open.name": "Abrir",
   "actions.navigation.up.name": "Subir",

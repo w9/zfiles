@@ -60,6 +60,7 @@ type GridListingProps = {
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
+  onResetCardSize?: () => void;
 };
 
 const GRID_ITEM_SELECTED_CLASS =
@@ -96,10 +97,12 @@ export default function GridListing({
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
   onCardSizeChange,
+  onResetCardSize,
 }: GridListingProps) {
   const { t } = useTranslation();
   const { cardSize, setCardSize: setCardSizeFromProvider, resetToDefault } = useGridCardSize();
   const setCardSize = onCardSizeChange ?? setCardSizeFromProvider;
+  const resetCardSize = onResetCardSize ?? resetToDefault;
   const { enabled: gridImagePreviewsEnabled } = useGridImagePreviews();
   const cutPathSet = new Set(cutPaths);
   const parentRef = useRef<HTMLDivElement | null>(null);
@@ -141,7 +144,7 @@ export default function GridListing({
   const { onHandlePointerDown, onHandleDoubleClick, resizingPath } = useGridCardResize({
     cardSize,
     onSizeChange: setCardSize,
-    onReset: resetToDefault,
+    onReset: resetCardSize,
     onActiveChange: onResizeActiveChange,
   });
 

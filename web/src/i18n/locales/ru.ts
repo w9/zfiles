@@ -311,6 +311,9 @@ export const ru: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Применить настройки вида глобально",
   "actions.view.applyGlobalListingSettings.description":
     "Сохранить текущий вид, сортировку столбцов и размер карточек сетки как значения по умолчанию и сбросить переопределения для папок",
+  "actions.view.resetGridCardSize.name": "Сбросить размер карточек сетки",
+  "actions.view.resetGridCardSize.description":
+    "Вернуть карточки сетки к размеру по умолчанию из настроек и сбросить сохранённый размер для этой папки",
   "actions.navigation.category": "Навигация",
   "actions.navigation.open.name": "Открыть",
   "actions.navigation.up.name": "Вверх",

@@ -313,6 +313,9 @@ export const fr: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Appliquer les paramètres d'affichage globalement",
   "actions.view.applyGlobalListingSettings.description":
     "Enregistrer la vue, le tri des colonnes et la taille des cartes grille actuels comme valeurs par défaut et effacer les remplacements par dossier",
+  "actions.view.resetGridCardSize.name": "Réinitialiser la taille des cartes grille",
+  "actions.view.resetGridCardSize.description":
+    "Restaurer les cartes grille à la taille par défaut des paramètres et effacer la taille enregistrée pour ce dossier",
   "actions.navigation.category": "Navigation",
   "actions.navigation.open.name": "Ouvrir",
   "actions.navigation.up.name": "Remonter",

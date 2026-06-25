@@ -311,6 +311,9 @@ export const vi: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Áp dụng cài đặt xem toàn cục",
   "actions.view.applyGlobalListingSettings.description":
     "Lưu chế độ xem, thứ tự cột và kích thước thẻ lưới hiện tại làm mặc định và xóa ghi đè theo thư mục",
+  "actions.view.resetGridCardSize.name": "Đặt lại kích thước thẻ lưới",
+  "actions.view.resetGridCardSize.description":
+    "Khôi phục thẻ lưới về kích thước mặc định trong Cài đặt và xóa kích thước thẻ đã lưu của thư mục này",
   "actions.navigation.category": "Điều hướng",
   "actions.navigation.open.name": "Mở",
   "actions.navigation.up.name": "Lên trên",

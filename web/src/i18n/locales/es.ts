@@ -311,6 +311,9 @@ export const es: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "Aplicar ajustes de vista globalmente",
   "actions.view.applyGlobalListingSettings.description":
     "Guardar la vista, orden de columnas y tamaño de tarjetas de cuadrícula actuales como predeterminados y borrar anulaciones por carpeta",
+  "actions.view.resetGridCardSize.name": "Restablecer tamaño de tarjeta en cuadrícula",
+  "actions.view.resetGridCardSize.description":
+    "Restaurar las tarjetas de cuadrícula al tamaño predeterminado de Ajustes y borrar el tamaño guardado de esta carpeta",
   "actions.navigation.category": "Navegación",
   "actions.navigation.open.name": "Abrir",
   "actions.navigation.up.name": "Subir",

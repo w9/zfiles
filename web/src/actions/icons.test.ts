@@ -47,6 +47,7 @@ function allRegisteredActionIds(): string[] {
       toggleShowDotEntries: () => {},
       toggleListingViewMode: () => {},
       applyGlobalListingSettings: () => {},
+      resetGridCardSize: () => {},
       toggleSelectionMode: () => {},
     })),
     ...createAppearanceActions(() => ({

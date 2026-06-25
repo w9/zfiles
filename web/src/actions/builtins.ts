@@ -78,6 +78,17 @@ export function createBuiltinActions(getDeps: () => BuiltinActionDeps): ActionDe
       },
     },
     {
+      id: "view.reset-grid-card-size",
+      nameKey: "actions.view.resetGridCardSize.name",
+      descriptionKey: "actions.view.resetGridCardSize.description",
+      categoryKey: "actions.view.category",
+      icon: "view.reset-grid-card-size",
+      when: "focus.pane == 'file-list' && listing.view == 'grid'",
+      handler: async () => {
+        getDeps().resetGridCardSize();
+      },
+    },
+    {
       id: "selection.move-down",
       nameKey: "actions.selection.moveDown.name",
       categoryKey: "actions.selection.category",

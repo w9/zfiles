@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   applyGlobalListingSettings,
   clearAllFolderViewOverrides,
+  clearFolderGridCardSizeOverride,
   DEFAULT_COLUMN_SORT,
   readEffectiveFolderViewSettings,
   readFolderViewOverride,
@@ -96,5 +97,30 @@ test("clearAllFolderViewOverrides removes the map", () => {
   writeFolderViewOverride("/x", { viewMode: "grid" });
   clearAllFolderViewOverrides();
   assert.equal(readFolderViewOverride("/x"), null);
+  restore();
+});
+
+test("clearFolderGridCardSizeOverride removes only grid card size", () => {
+  const restore = installMockLocalStorage();
+  storage.clear();
+  storage.set("zfiles-grid-card-size", JSON.stringify({ width: 120, height: 130 }));
+  writeFolderViewOverride("/docs", {
+    viewMode: "grid",
+    gridCardSize: { width: 200, height: 210 },
+  });
+  writeFolderViewOverride("/photos", {
+    gridCardSize: { width: 180, height: 190 },
+  });
+
+  clearFolderGridCardSizeOverride("/docs");
+  assert.deepEqual(readFolderViewOverride("/docs"), { viewMode: "grid" });
+  assert.deepEqual(readEffectiveFolderViewSettings("/docs").gridCardSize, {
+    width: 120,
+    height: 130,
+  });
+
+  clearFolderGridCardSizeOverride("/photos");
+  assert.equal(readFolderViewOverride("/photos"), null);
+
   restore();
 });

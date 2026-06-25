@@ -56,6 +56,7 @@ import {
 } from "../listingView";
 import {
   applyGlobalListingSettings,
+  clearFolderGridCardSizeOverride,
   readEffectiveFolderViewSettings,
   writeFolderViewOverride,
 } from "../settings/folderViewSettings";
@@ -226,7 +227,7 @@ export default function ExplorerApp() {
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
   const { order: listingSortOrder } = useListingSortOrder();
   const { showDotEntries, toggleShowDotEntries } = useShowDotEntries();
-  const { cardSize, setCardSize } = useGridCardSize();
+  const { cardSize, setCardSize, resetToDefault } = useGridCardSize();
   const initialPath = useMemo(
     () => explorerPathFromPathname(window.location.pathname),
     [],
@@ -991,6 +992,11 @@ export default function ExplorerApp() {
     [setCardSize],
   );
 
+  const handleResetGridCardSize = useCallback(() => {
+    resetToDefault();
+    clearFolderGridCardSizeOverride(currentPathRef.current);
+  }, [resetToDefault]);
+
   useEffect(() => {
     if (listingViewMode !== "grid") {
       return;
@@ -1518,6 +1524,7 @@ export default function ExplorerApp() {
       toggleShowDotEntries,
       toggleListingViewMode: toggleListingViewModeHandler,
       applyGlobalListingSettings: applyGlobalListingSettingsHandler,
+      resetGridCardSize: handleResetGridCardSize,
       toggleSelectionMode: toggleSelectionModeHandler,
     },
     () => ({
@@ -2126,6 +2133,7 @@ export default function ExplorerApp() {
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
+                onResetCardSize={handleResetGridCardSize}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {
                     if (ok) {

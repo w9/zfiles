@@ -298,6 +298,9 @@ export const zhCN: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "全局应用视图设置",
   "actions.view.applyGlobalListingSettings.description":
     "将当前视图、列排序和网格卡片大小保存为默认值，并清除各文件夹的覆盖",
+  "actions.view.resetGridCardSize.name": "重置网格卡片大小",
+  "actions.view.resetGridCardSize.description":
+    "将网格卡片恢复为设置中的默认大小，并清除此文件夹保存的卡片大小",
   "actions.navigation.category": "导航",
   "actions.navigation.open.name": "打开",
   "actions.navigation.up.name": "返回上级",

@@ -310,6 +310,9 @@ export const ko: Record<MessageKey, string> = {
   "actions.view.applyGlobalListingSettings.name": "보기 설정을 전역으로 적용",
   "actions.view.applyGlobalListingSettings.description":
     "현재 보기, 열 정렬, 그리드 카드 크기를 기본값으로 저장하고 폴더별 재정의를 지웁니다",
+  "actions.view.resetGridCardSize.name": "그리드 카드 크기 재설정",
+  "actions.view.resetGridCardSize.description":
+    "설정의 기본 크기로 그리드 카드를 복원하고 이 폴더에 저장된 카드 크기를 지웁니다",
   "actions.navigation.category": "탐색",
   "actions.navigation.open.name": "열기",
   "actions.navigation.up.name": "위로",
