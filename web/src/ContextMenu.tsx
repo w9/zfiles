@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +34,21 @@ export default function ExplorerContextMenu({
   onSelect,
   onClose,
 }: ContextMenuProps) {
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (target.closest("[data-slot=dropdown-menu-content]") != null) {
+        return;
+      }
+      onClose();
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [onClose]);
+
   return (
     <DropdownMenu open onOpenChange={(open) => !open && onClose()}>
       <DropdownMenuTrigger asChild>
