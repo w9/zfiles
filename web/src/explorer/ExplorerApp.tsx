@@ -697,8 +697,15 @@ export default function ExplorerApp() {
       if (actionId === "copy-path") {
         try {
           await copyTextToClipboard(paths.join("\n"));
+          toast.success(
+            t(
+              paths.length === 1
+                ? "selection.copyPath.copied"
+                : "selection.copyPaths.copied",
+            ),
+          );
         } catch {
-          notifyError(t("error.actionFailed", { status: "failed" }));
+          toast.error(t("selection.copyPath.copyFailed"));
         }
         return;
       }
