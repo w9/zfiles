@@ -127,8 +127,8 @@ export function gridIconPixelSize(cardWidth: number, cardHeight: number): number
   const nameBandPx = 36;
   const verticalPaddingPx = 16;
   const iconAreaHeight = Math.max(0, cardHeight - nameBandPx - verticalPaddingPx);
-  const fromWidth = cardWidth * 0.45;
-  const fromHeight = iconAreaHeight * 0.72;
+  const fromWidth = cardWidth * 0.54;
+  const fromHeight = iconAreaHeight * 0.85;
   return Math.round(Math.max(16, Math.min(fromWidth, fromHeight, 160)));
 }
 
