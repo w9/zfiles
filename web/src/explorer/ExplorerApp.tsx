@@ -762,7 +762,9 @@ export default function ExplorerApp() {
       return;
     }
     clearSelection();
-  }, [selectionMode, selectedPaths.size, clearSelection, touchUi, contextMenu]);
+    // contextMenu is read for the open guard but intentionally omitted from deps:
+    // re-running when the menu closes would clear the long-press target selection.
+  }, [selectionMode, selectedPaths.size, clearSelection, touchUi]);
 
   const clearMultiSelection = useCallback(() => {
     setSelectedPaths((current) => (current.size === 0 ? current : new Set()));

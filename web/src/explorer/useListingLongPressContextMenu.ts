@@ -31,10 +31,16 @@ function suppressNextClick(
   }
 
   const suppressClick = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
     window.removeEventListener("click", suppressClick, true);
     pendingListenerRef.current = null;
+    if (
+      event.target instanceof Element &&
+      event.target.closest("[data-slot=dropdown-menu-content]") != null
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   pendingListenerRef.current = suppressClick;
