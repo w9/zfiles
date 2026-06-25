@@ -258,6 +258,7 @@ export default function ExplorerApp() {
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [slideshowPaths, setSlideshowPaths] = useState<string[]>([]);
   const [slideshowStartPath, setSlideshowStartPath] = useState<string | null>(null);
+  const [slideshowHonorStartPath, setSlideshowHonorStartPath] = useState(false);
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
@@ -793,7 +794,12 @@ export default function ExplorerApp() {
     [],
   );
 
-  const openPreview = useCallback((paths: string[], startPath: string | null) => {
+  const openPreview = useCallback((
+    paths: string[],
+    startPath: string | null,
+    options?: { honorStartPath?: boolean },
+  ) => {
+    setSlideshowHonorStartPath(options?.honorStartPath ?? false);
     setSlideshowPaths(paths);
     setSlideshowStartPath(startPath);
     setSlideshowOpen(true);
@@ -1069,7 +1075,11 @@ export default function ExplorerApp() {
           selected.length > 0 ? selected : [],
           listingEntriesRef.current,
         );
-        openPreview(paths.length > 0 ? paths : [entry.path], entry.path);
+        openPreview(
+          paths.length > 0 ? paths : [entry.path],
+          entry.path,
+          { honorStartPath: true },
+        );
       };
 
       const listingEntry: ListingEntry = {
@@ -1086,24 +1096,22 @@ export default function ExplorerApp() {
         onSelect: (event, displayIndex) => {
           const rows = listingEntriesRef.current;
           let nextSelectedPath: string | null = entry.path;
+          const clearingSelection = shouldClearTouchSelectionOnBrowse({
+            touchUi: touchUiRef.current,
+            selectionMode: selectionModeRef.current,
+            selectedCount: selectedPathsRef.current.size,
+          });
+          const touchTapActivate = shouldTouchTapActivate({
+            touchUi: touchUiRef.current,
+            selectionMode: selectionModeRef.current,
+          });
 
-          if (
-            shouldClearTouchSelectionOnBrowse({
-              touchUi: touchUiRef.current,
-              selectionMode: selectionModeRef.current,
-              selectedCount: selectedPathsRef.current.size,
-            })
-          ) {
+          if (clearingSelection) {
             setSelectedPaths(new Set());
             setSelectedPath(null);
           }
 
-          if (
-            shouldTouchTapActivate({
-              touchUi: touchUiRef.current,
-              selectionMode: selectionModeRef.current,
-            })
-          ) {
+          if (touchTapActivate) {
             activateEntry();
             return;
           }
@@ -2350,6 +2358,7 @@ export default function ExplorerApp() {
         open={slideshowOpen}
         paths={slideshowPaths}
         startPath={slideshowStartPath}
+        honorStartPath={slideshowHonorStartPath}
         onOpenChange={setSlideshowOpen}
         onCurrentPathChange={handleSlideshowCurrentPathChange}
       />

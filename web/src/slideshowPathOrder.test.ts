@@ -80,8 +80,8 @@ test("resolveSlideshowStartIndex defaults to first slide", () => {
   assert.equal(resolveSlideshowStartIndex(paths, null, true), 0);
 });
 
-test("resolveSlideshowStartIndex uses active item when enabled", () => {
+test("resolveSlideshowStartIndex honors explicit start path when requested", () => {
   const paths = ["/a.png", "/b.png", "/c.png"];
-  assert.equal(resolveSlideshowStartIndex(paths, "/b.png", true), 1);
-  assert.equal(resolveSlideshowStartIndex(paths, "/missing.png", true), 0);
+  assert.equal(resolveSlideshowStartIndex(paths, "/b.png", false, true), 1);
+  assert.equal(resolveSlideshowStartIndex(paths, "/missing.png", false, true), 0);
 });

@@ -127,6 +127,7 @@ type SlideshowOverlayProps = {
   open: boolean;
   paths: string[];
   startPath: string | null;
+  honorStartPath?: boolean;
   onOpenChange: (open: boolean) => void;
   onCurrentPathChange?: (path: string) => void;
 };
@@ -188,6 +189,7 @@ export default function SlideshowOverlay({
   open,
   paths,
   startPath,
+  honorStartPath = false,
   onOpenChange,
   onCurrentPathChange,
 }: SlideshowOverlayProps) {
@@ -302,11 +304,16 @@ export default function SlideshowOverlay({
     if (!open || paths.length === 0) {
       return;
     }
-    const startIndex = resolveSlideshowStartIndex(paths, startPath, startAtActiveItem);
+    const startIndex = resolveSlideshowStartIndex(
+      paths,
+      startPath,
+      startAtActiveItem,
+      honorStartPath,
+    );
     setIndex(startIndex);
     setPlaying(autoplayOnOpen);
     resetSlideView();
-  }, [open, paths, startPath, startAtActiveItem, autoplayOnOpen, resetSlideView]);
+  }, [open, paths, startPath, startAtActiveItem, honorStartPath, autoplayOnOpen, resetSlideView]);
 
   useEffect(() => {
     if (!open || !currentPath) {

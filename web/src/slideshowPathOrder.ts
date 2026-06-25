@@ -45,8 +45,16 @@ export function resolveSlideshowStartIndex(
   paths: string[],
   startPath: string | null,
   startAtActiveItem: boolean,
+  honorStartPath = false,
 ): number {
-  if (!startAtActiveItem || !startPath || paths.length === 0) {
+  if (paths.length === 0) {
+    return 0;
+  }
+  if (honorStartPath && startPath) {
+    const index = paths.indexOf(startPath);
+    return index >= 0 ? index : 0;
+  }
+  if (!startAtActiveItem || !startPath) {
     return 0;
   }
   const index = paths.indexOf(startPath);
