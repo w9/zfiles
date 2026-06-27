@@ -15,6 +15,23 @@ export function panOffsetFromDrag(
   };
 }
 
+export function panOffsetForZoomAtPoint(
+  pan: PanOffset,
+  cursorOffsetFromImageCenter: PanOffset,
+  oldScale: number,
+  newScale: number,
+): PanOffset {
+  if (oldScale <= 0 || newScale === oldScale) {
+    return pan;
+  }
+  const ratio = newScale / oldScale;
+  const scaleDelta = ratio - 1;
+  return {
+    x: pan.x - cursorOffsetFromImageCenter.x * scaleDelta,
+    y: pan.y - cursorOffsetFromImageCenter.y * scaleDelta,
+  };
+}
+
 export function pointerDragDistance(
   start: { x: number; y: number },
   current: { x: number; y: number },

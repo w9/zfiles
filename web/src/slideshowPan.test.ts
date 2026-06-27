@@ -5,6 +5,7 @@ import {
   DRAG_CLICK_THRESHOLD_PX,
   dragExceededClickThreshold,
   imageOverflowsViewport,
+  panOffsetForZoomAtPoint,
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
@@ -16,6 +17,25 @@ test("panOffsetFromDrag follows pointer delta", () => {
   assert.deepEqual(
     panOffsetFromDrag({ x: 10, y: -5 }, { x: 100, y: 200 }, { x: 130, y: 170 }),
     { x: 40, y: -35 },
+  );
+});
+
+test("panOffsetForZoomAtPoint keeps cursor anchor when zooming", () => {
+  assert.deepEqual(
+    panOffsetForZoomAtPoint({ x: 0, y: 0 }, { x: 0, y: 0 }, 1, 2),
+    { x: 0, y: 0 },
+  );
+  assert.deepEqual(
+    panOffsetForZoomAtPoint({ x: 0, y: 0 }, { x: 100, y: -50 }, 1, 2),
+    { x: -100, y: 50 },
+  );
+  assert.deepEqual(
+    panOffsetForZoomAtPoint({ x: 20, y: 10 }, { x: 80, y: 40 }, 2, 1),
+    { x: 60, y: 30 },
+  );
+  assert.deepEqual(
+    panOffsetForZoomAtPoint({ x: 5, y: 5 }, { x: 10, y: 10 }, 1, 1),
+    { x: 5, y: 5 },
   );
 });
 

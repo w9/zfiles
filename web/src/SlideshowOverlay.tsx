@@ -48,6 +48,7 @@ import { useExplorerBackend, type FileStat } from "./backend";
 import { useDownloadUrl } from "./useDownloadUrl";
 import {
   dragExceededClickThreshold,
+  panOffsetForZoomAtPoint,
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
@@ -207,6 +208,7 @@ export default function SlideshowOverlay({
   );
   const [viewAsText, setViewAsText] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
   const pinchSessionRef = useRef<PinchSession | null>(null);
@@ -486,7 +488,27 @@ export default function SlideshowOverlay({
   const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
     event.preventDefault();
     bumpActivity();
-    beginManualZoom(wheelZoomScale(effectiveScale(zoomMode, manualScale), event.deltaY));
+    const oldScale = effectiveScale(zoomMode, manualScale);
+    const newScale = wheelZoomScale(oldScale, event.deltaY);
+    if (newScale === oldScale) {
+      return;
+    }
+    const stage = stageRef.current;
+    let nextPan = panOffset;
+    if (stage) {
+      const rect = stage.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      nextPan = panOffsetForZoomAtPoint(
+        panOffset,
+        { x: event.clientX - centerX, y: event.clientY - centerY },
+        oldScale,
+        newScale,
+      );
+    }
+    setZoomMode("manual");
+    setManualScale(newScale);
+    setPanOffset(nextPan);
   };
 
   const handleZoomIn = () => {
@@ -697,6 +719,7 @@ export default function SlideshowOverlay({
             <p className="text-sm text-white/80">{t("preview.loading")}</p>
           ) : isImageKind ? (
             <div
+              ref={stageRef}
               className={cn("touch-none select-none", stageCursorClass)}
               data-preview-content
               style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}
