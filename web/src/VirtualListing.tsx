@@ -24,6 +24,7 @@ import {
   collectTableEntryRects,
   findTablePathAtClientPoint,
   hitTestTablePathsWithContentMarquee,
+  LISTING_TABLE_ROW_HEIGHT_PX,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
 import { createListingColumns } from "@/listing-columns";
@@ -194,7 +195,7 @@ export default function VirtualListing({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 44,
+    estimateSize: () => LISTING_TABLE_ROW_HEIGHT_PX,
     overscan: LISTING_VIRTUAL_OVERSCAN_ROWS,
   });
 
@@ -382,7 +383,7 @@ export default function VirtualListing({
               >
                 <div
                   role="gridcell"
-                  className={cn("flex h-11 items-center justify-end", CELL_CLIP)}
+                  className={cn("flex h-9 items-center justify-end", CELL_CLIP)}
                   style={{ gridColumn: 1 }}
                 >
                   <FileIcon
@@ -438,7 +439,7 @@ export default function VirtualListing({
                       >
                         <div
                           className={cn(
-                            "flex h-11 min-w-0 items-center overflow-hidden px-2",
+                            "flex h-9 min-w-0 items-center overflow-hidden px-2",
                             LISTING_TEXT_CLASS,
                             isName && "w-full",
                             columnIndex === 1 && "justify-end text-right",

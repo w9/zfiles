@@ -8,6 +8,7 @@ import {
   hitTestEntryPaths,
   hitTestGridPathsWithContentMarquee,
   hitTestTablePathsWithContentMarquee,
+  LISTING_TABLE_ROW_HEIGHT_PX,
   normalizeMarqueeRect,
   pointerDistance,
   rectsIntersect,
@@ -105,8 +106,9 @@ test("pointerDistance measures drag length", () => {
 });
 
 test("collectTableEntryRects maps virtual row indices to viewport coordinates", () => {
+  const rowHeight = LISTING_TABLE_ROW_HEIGHT_PX;
   const scrollElement = {
-    scrollTop: 44,
+    scrollTop: rowHeight,
     getBoundingClientRect: () => ({
       left: 10,
       top: 100,
@@ -123,7 +125,7 @@ test("collectTableEntryRects maps virtual row indices to viewport coordinates", 
   const rects = collectTableEntryRects(scrollElement, ["/a", "/b", "/c"]);
   assert.deepEqual(rects[0].rect, {
     left: 10,
-    top: 56,
+    top: 100 - rowHeight,
     right: 210,
     bottom: 100,
   });
@@ -131,19 +133,19 @@ test("collectTableEntryRects maps virtual row indices to viewport coordinates", 
     left: 10,
     top: 100,
     right: 210,
-    bottom: 144,
+    bottom: 100 + rowHeight,
   });
   assert.deepEqual(rects[2].rect, {
     left: 10,
-    top: 144,
+    top: 100 + rowHeight,
     right: 210,
-    bottom: 188,
+    bottom: 100 + rowHeight * 2,
   });
 });
 
 test("collectTableEntryRects hit-tests scrolled-out rows against marquee", () => {
   const scrollElement = {
-    scrollTop: 440,
+    scrollTop: 10 * LISTING_TABLE_ROW_HEIGHT_PX,
     getBoundingClientRect: () => ({
       left: 0,
       top: 0,
@@ -159,7 +161,12 @@ test("collectTableEntryRects hit-tests scrolled-out rows against marquee", () =>
 
   const paths = Array.from({ length: 20 }, (_, index) => `/item-${index}`);
   const rects = collectTableEntryRects(scrollElement, paths);
-  const marquee = normalizeMarqueeRect(0, 0, 100, 40);
+  const marquee = normalizeMarqueeRect(
+    0,
+    0,
+    100,
+    LISTING_TABLE_ROW_HEIGHT_PX - 4,
+  );
   const hit = hitTestEntryPaths(marquee, rects);
   assert.deepEqual(hit, ["/item-10"]);
 });
@@ -209,17 +216,18 @@ test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
 });
 
 test("hitTestTablePathsWithContentMarquee retract shrinks selection", () => {
+  const rowHeight = LISTING_TABLE_ROW_HEIGHT_PX;
   const scrollElement = mockScrollElement(0);
   const paths = Array.from({ length: 30 }, (_, index) => `/item-${index}`);
   const wide = {
     contentTop: 0,
-    contentBottom: 22 * 44,
+    contentBottom: 22 * rowHeight,
     clientLeft: 0,
     clientRight: 200,
   };
   const narrow = {
     contentTop: 0,
-    contentBottom: 15 * 44,
+    contentBottom: 15 * rowHeight,
     clientLeft: 0,
     clientRight: 200,
   };
@@ -235,6 +243,7 @@ test("hitTestTablePathsWithContentMarquee retract shrinks selection", () => {
 });
 
 test("hitTestTablePathsWithContentMarquee auto-scroll extends swept range", () => {
+  const rowHeight = LISTING_TABLE_ROW_HEIGHT_PX;
   const paths = Array.from({ length: 40 }, (_, index) => `/item-${index}`);
   const bounds = {
     contentTop: 0,
@@ -254,8 +263,8 @@ test("hitTestTablePathsWithContentMarquee auto-scroll extends swept range", () =
     { ...bounds, contentBottom: 1400 },
   ).length;
 
-  assert.equal(atScrollZero, 21);
-  assert.equal(afterScroll, 32);
+  assert.equal(atScrollZero, Math.ceil(900 / rowHeight));
+  assert.equal(afterScroll, Math.ceil(1400 / rowHeight));
   assert.ok(afterScroll > atScrollZero);
 });
 
@@ -315,11 +324,12 @@ test("hitTestGridPathsWithContentMarquee ignores blank area right of last column
 });
 
 test("hitTestTablePathsWithContentMarquee range scan matches full-list bounds", () => {
+  const rowHeight = LISTING_TABLE_ROW_HEIGHT_PX;
   const scrollElement = mockScrollElement(0);
   const paths = Array.from({ length: 10_000 }, (_, index) => `/item-${index}`);
   const bounds = {
-    contentTop: 440,
-    contentBottom: 880,
+    contentTop: 10 * rowHeight,
+    contentBottom: 20 * rowHeight,
     clientLeft: 0,
     clientRight: 200,
   };

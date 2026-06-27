@@ -24,7 +24,7 @@ export const MARQUEE_AUTO_SCROLL_MARGIN_PX = 40;
 
 export const MARQUEE_AUTO_SCROLL_STEP_PX = 12;
 
-export const LISTING_TABLE_ROW_HEIGHT_PX = 44;
+export const LISTING_TABLE_ROW_HEIGHT_PX = 36;
 
 export type ListingMarqueeEntryRect = { path: string; rect: ClientRect };
 
