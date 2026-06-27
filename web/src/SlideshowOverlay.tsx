@@ -48,12 +48,10 @@ import { useExplorerBackend, type FileStat } from "./backend";
 import { useDownloadUrl } from "./useDownloadUrl";
 import {
   dragExceededClickThreshold,
-  imageOverflowsViewport,
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
   scaledImageSize,
-  showGrabCursor,
   touchPairDistance,
   type PanOffset,
 } from "./slideshowPan";
@@ -470,14 +468,7 @@ export default function SlideshowOverlay({
   }, [open, previewUrl, currentPath, isImageKind, syncNaturalSizeFromImage]);
 
   const zoomPercent = formatZoomPercentage(imageScale);
-  const imageOverflows = imageOverflowsViewport(
-    naturalSize.width,
-    naturalSize.height,
-    imageScale,
-    viewportSize.width,
-    viewportSize.height,
-  );
-  const grabCursor = showGrabCursor(imageOverflows, panOffset);
+  const grabCursor = imageSized;
   const stageCursorClass = isDragging
     ? "cursor-grabbing"
     : grabCursor
