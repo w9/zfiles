@@ -52,6 +52,7 @@ import {
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
+  scaledImageSize,
   showGrabCursor,
   touchPairDistance,
   type PanOffset,
@@ -69,6 +70,7 @@ import {
   type ZoomMode,
 } from "./slideshowZoom";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
+import { shouldClosePreviewOnBackdropClick } from "./slideshowBackdrop";
 import { previewKind } from "./imagePaths";
 import { fetchPreviewText, exceedsTextPreviewHardLimit, canOfferTextPreview } from "./previewTextContent";
 import { renderMarkdownToSafeHtml } from "./renderMarkdown";
@@ -106,19 +108,10 @@ type PinchSession = {
   initialScale: number;
 };
 
-function CenteredPreviewMessage({
-  children,
-  onClickStop,
-}: {
-  children: ReactNode;
-  onClickStop?: boolean;
-}) {
+function CenteredPreviewMessage({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="flex h-full w-full items-center justify-center text-center"
-      onClick={onClickStop ? (event) => event.stopPropagation() : undefined}
-    >
-      <p className="max-w-md text-sm text-white/80">{children}</p>
+    <div className="max-w-md text-center" data-preview-content>
+      <p className="text-sm text-white/80">{children}</p>
     </div>
   );
 }
@@ -461,6 +454,9 @@ export default function SlideshowOverlay({
 
   const imageScale = effectiveScale(zoomMode, manualScale);
   const imageSized = naturalSize.width > 0 && naturalSize.height > 0;
+  const imageDisplaySize = imageSized
+    ? scaledImageSize(naturalSize.width, naturalSize.height, imageScale)
+    : null;
 
   useLayoutEffect(() => {
     if (!open || !previewUrl || !isImageKind) {
@@ -566,8 +562,8 @@ export default function SlideshowOverlay({
     }
   };
 
-  const handleLetterboxClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) {
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!shouldClosePreviewOnBackdropClick(event.target)) {
       return;
     }
     onOpenChange(false);
@@ -698,21 +694,20 @@ export default function SlideshowOverlay({
       <div
         ref={viewportRef}
         className={cn("absolute inset-0 overflow-hidden", isImageKind && "touch-none")}
+        onClick={handleBackdropClick}
         onWheel={isImageKind ? handleWheel : undefined}
         onTouchStart={isImageKind ? handleTouchStart : undefined}
         onTouchMove={isImageKind ? handleTouchMove : undefined}
         onTouchEnd={isImageKind ? handleTouchEnd : undefined}
         onTouchCancel={isImageKind ? handleTouchEnd : undefined}
       >
-        <div
-          className="flex h-full w-full items-center justify-center p-6"
-          onClick={handleLetterboxClick}
-        >
+        <div className="flex h-full w-full items-center justify-center p-6">
           {!previewUrl ? (
             <p className="text-sm text-white/80">{t("preview.loading")}</p>
           ) : isImageKind ? (
             <div
               className={cn("touch-none select-none", stageCursorClass)}
+              data-preview-content
               style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}
               onPointerDown={handleStagePointerDown}
               onPointerMove={handleStagePointerMove}
@@ -728,10 +723,8 @@ export default function SlideshowOverlay({
                 draggable={false}
                 className="max-w-none select-none"
                 style={{
-                  width: imageSized ? naturalSize.width : undefined,
-                  height: imageSized ? naturalSize.height : undefined,
-                  transform: `scale(${imageScale})`,
-                  transformOrigin: "center center",
+                  width: imageDisplaySize?.width,
+                  height: imageDisplaySize?.height,
                   opacity: imageSized ? 1 : 0,
                 }}
                 onLoad={(event) => {
@@ -747,12 +740,13 @@ export default function SlideshowOverlay({
               autoPlay={false}
               className="max-h-full max-w-full"
               aria-label={fileName}
+              data-preview-content
               onLoadedMetadata={(event) => {
                 syncNaturalSizeFromVideo(event.currentTarget);
               }}
             />
           ) : nativeKind === "audio" ? (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4" data-preview-content>
               <Music className="h-16 w-16 text-white/70" aria-hidden />
               <audio
                 key={currentPath}
@@ -763,10 +757,7 @@ export default function SlideshowOverlay({
               />
             </div>
           ) : nativeKind === "pdf" ? (
-            <div
-              className="flex h-full w-full max-w-6xl flex-col"
-              onClick={(event) => event.stopPropagation()}
-            >
+            <div className="flex h-full w-full max-w-6xl flex-col" data-preview-content>
               <iframe
                 key={currentPath}
                 src={previewUrl}
@@ -776,17 +767,13 @@ export default function SlideshowOverlay({
             </div>
           ) : showUnsupported ? (
             statLoading ? (
-              <CenteredPreviewMessage onClickStop>
-                {t("preview.loading")}
-              </CenteredPreviewMessage>
+              <CenteredPreviewMessage>{t("preview.loading")}</CenteredPreviewMessage>
             ) : textPreviewTooLarge ? (
-              <CenteredPreviewMessage onClickStop>
-                {t("preview.textTooLarge")}
-              </CenteredPreviewMessage>
+              <CenteredPreviewMessage>{t("preview.textTooLarge")}</CenteredPreviewMessage>
             ) : canViewAsText ? (
               <div
                 className="flex max-w-md flex-col items-center gap-4 text-center"
-                onClick={(event) => event.stopPropagation()}
+                data-preview-content
               >
                 <p className="text-sm text-white/80">{t("preview.noPreview")}</p>
                 <Button
@@ -804,10 +791,7 @@ export default function SlideshowOverlay({
               </div>
             ) : null
           ) : isTextKind ? (
-            <div
-              className="flex h-full w-full max-w-5xl flex-col"
-              onClick={(event) => event.stopPropagation()}
-            >
+            <div className="flex h-full w-full max-w-5xl flex-col" data-preview-content>
               {textPreviewTooLarge || textError === "too_large" ? (
                 <CenteredPreviewMessage>{t("preview.textTooLarge")}</CenteredPreviewMessage>
               ) : textLoading ? (
