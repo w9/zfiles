@@ -17,6 +17,7 @@ type BackendStatusProps = {
   kernelVersion?: string | null;
   backendMode: "local" | "s3";
   cloudProvider?: S3Provider | null;
+  iconOnly?: boolean;
 };
 
 const statusIconClass: Record<BackendStatus, string> = {
@@ -49,6 +50,7 @@ export default function BackendStatus({
   kernelVersion,
   backendMode,
   cloudProvider = null,
+  iconOnly = false,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
   const label =
@@ -95,12 +97,13 @@ export default function BackendStatus({
           className={cn(
             "gap-1 truncate text-sm font-normal",
             statusBadgeClass[status],
+            iconOnly && status !== "offline" && "px-0",
           )}
           role="status"
           aria-label={t("backend.status", { status: label })}
         >
           <StatusIcon status={status} />
-          {label}
+          {iconOnly ? null : label}
         </Badge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs text-wrap">

@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { shouldCollapseStatusBarBadges } from "./statusBarLayout";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
 import type { S3Provider } from "./cloud/types";
 
@@ -19,6 +20,7 @@ type StatusBarProps = {
   cloudProvider?: S3Provider | null;
   kernelVersion?: string | null;
   readOnly?: boolean;
+  compactTouchChrome?: boolean;
   selectionStatusText?: string | null;
   cutStatusText?: string | null;
   className?: string;
@@ -39,11 +41,17 @@ export default function StatusBar({
   cloudProvider = null,
   kernelVersion,
   readOnly = false,
+  compactTouchChrome = false,
   selectionStatusText = null,
   cutStatusText = null,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
+  const iconOnlyBadges = shouldCollapseStatusBarBadges(
+    compactTouchChrome,
+    selectionStatusText,
+    cutStatusText,
+  );
 
   const segments: ReactNode[] = [
     <BackendStatus
@@ -52,6 +60,7 @@ export default function StatusBar({
       backendMode={backendMode}
       cloudProvider={cloudProvider}
       kernelVersion={kernelVersion}
+      iconOnly={iconOnlyBadges}
     />,
   ];
 
@@ -64,7 +73,7 @@ export default function StatusBar({
             className="gap-1 px-0 text-sm font-normal text-muted-foreground"
           >
             <Lock className="size-3" aria-hidden />
-            {t("statusBar.readOnly")}
+            {iconOnlyBadges ? null : t("statusBar.readOnly")}
           </Badge>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-wrap">

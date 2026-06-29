@@ -1800,6 +1800,7 @@ export default function ExplorerApp() {
       cloudProvider={cloudSessionConfig?.provider ?? null}
       kernelVersion={kernelVersion}
       readOnly={readOnly}
+      compactTouchChrome={compactTouchChrome}
       selectionStatusText={selectionStatusText}
       cutStatusText={cutStatusText}
     />
