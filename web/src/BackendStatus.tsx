@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { STATUS_BAR_BADGE_CLASS } from "./statusBarLayout";
 import type { S3Provider } from "./cloud/types";
 import { type BackendStatus } from "./useBackendStatus";
 
@@ -30,7 +31,7 @@ const statusBadgeClass: Record<BackendStatus, string> = {
   connected: "max-w-[min(100%,24rem)] px-0 text-muted-foreground",
   connecting: "px-0 text-muted-foreground",
   offline:
-    "max-w-[min(100%,24rem)] bg-destructive px-2 py-0.5 text-destructive-foreground dark:bg-[#7f1818] dark:text-[#fce8e6]",
+    "max-w-[min(100%,24rem)] bg-destructive text-destructive-foreground dark:bg-[#7f1818] dark:text-[#fce8e6]",
 };
 
 function StatusIcon({ status }: { status: BackendStatus }) {
@@ -95,7 +96,8 @@ export default function BackendStatus({
         <Badge
           variant="ghost"
           className={cn(
-            "gap-1 truncate text-sm font-normal",
+            STATUS_BAR_BADGE_CLASS,
+            "truncate",
             statusBadgeClass[status],
             iconOnly && status !== "offline" && "px-0",
           )}

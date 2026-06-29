@@ -10,7 +10,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { shouldCollapseStatusBarBadges } from "./statusBarLayout";
+import {
+  STATUS_BAR_BADGE_CLASS,
+  STATUS_BAR_ROW_HEIGHT_CLASS,
+  STATUS_BAR_SEGMENT_CLASS,
+  shouldCollapseStatusBarBadges,
+} from "./statusBarLayout";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
 import type { S3Provider } from "./cloud/types";
 
@@ -70,7 +75,10 @@ export default function StatusBar({
         <TooltipTrigger asChild>
           <Badge
             variant="ghost"
-            className="gap-1 px-0 text-sm font-normal text-muted-foreground"
+            className={cn(
+              STATUS_BAR_BADGE_CLASS,
+              "px-0 text-muted-foreground",
+            )}
           >
             <Lock className="size-3" aria-hidden />
             {iconOnlyBadges ? null : t("statusBar.readOnly")}
@@ -85,7 +93,13 @@ export default function StatusBar({
 
   if (cutStatusText) {
     segments.push(
-      <p key="cut" className="truncate text-sm text-muted-foreground">
+      <p
+        key="cut"
+        className={cn(
+          STATUS_BAR_SEGMENT_CLASS,
+          "text-sm text-muted-foreground",
+        )}
+      >
         {cutStatusText}
       </p>,
     );
@@ -93,7 +107,13 @@ export default function StatusBar({
 
   if (selectionStatusText) {
     segments.push(
-      <p key="selection" className="shrink-0 text-sm text-muted-foreground">
+      <p
+        key="selection"
+        className={cn(
+          STATUS_BAR_SEGMENT_CLASS,
+          "text-sm text-muted-foreground",
+        )}
+      >
         {selectionStatusText}
       </p>,
     );
@@ -103,12 +123,13 @@ export default function StatusBar({
     <div
       className={cn(
         "flex w-full min-w-0 shrink-0 items-center overflow-hidden",
+        STATUS_BAR_ROW_HEIGHT_CLASS,
         className,
       )}
       role="contentinfo"
       aria-label={t("statusBar.label")}
     >
-      <div className="flex min-w-0 flex-1 items-center">
+      <div className="flex h-full min-w-0 flex-1 items-center">
         {segments.map((segment, index) => (
           <Fragment key={index}>
             {index > 0 ? <StatusBarDivider /> : null}
