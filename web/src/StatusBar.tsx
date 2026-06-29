@@ -26,6 +26,7 @@ type StatusBarProps = {
   kernelVersion?: string | null;
   readOnly?: boolean;
   compactTouchChrome?: boolean;
+  selectionModeActive?: boolean;
   selectionStatusText?: string | null;
   cutStatusText?: string | null;
   className?: string;
@@ -47,6 +48,7 @@ export default function StatusBar({
   kernelVersion,
   readOnly = false,
   compactTouchChrome = false,
+  selectionModeActive = false,
   selectionStatusText = null,
   cutStatusText = null,
   className,
@@ -88,6 +90,18 @@ export default function StatusBar({
           {t("statusBar.readOnlyTooltip")}
         </TooltipContent>
       </Tooltip>,
+    );
+  }
+
+  if (selectionModeActive) {
+    segments.push(
+      <Badge
+        key="selection-mode"
+        variant="secondary"
+        className={STATUS_BAR_BADGE_CLASS}
+      >
+        {t("selection.mode.active")}
+      </Badge>,
     );
   }
 

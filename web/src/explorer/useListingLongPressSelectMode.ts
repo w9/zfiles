@@ -7,7 +7,6 @@ import {
   LISTING_LONG_PRESS_MOVE_THRESHOLD_PX,
   shouldCancelLongPressOnMove,
   shouldHandleListingLongPress,
-  type ContextMenuPointerEvent,
 } from "@/explorer/listingLongPressContextMenu";
 
 type LongPressSession = {
@@ -17,10 +16,10 @@ type LongPressSession = {
   path: string | null;
 };
 
-export type UseListingLongPressContextMenuOptions = {
+export type UseListingLongPressSelectModeOptions = {
   enabled?: boolean;
   touchUi: boolean;
-  onOpen: (event: ContextMenuPointerEvent, path: string | null) => void;
+  onEnter: (path: string | null) => void;
 };
 
 function suppressNextClick(
@@ -33,12 +32,6 @@ function suppressNextClick(
   const suppressClick = (event: MouseEvent) => {
     window.removeEventListener("click", suppressClick, true);
     pendingListenerRef.current = null;
-    if (
-      event.target instanceof Element &&
-      event.target.closest("[data-slot=dropdown-menu-content]") != null
-    ) {
-      return;
-    }
     event.preventDefault();
     event.stopPropagation();
   };
@@ -47,19 +40,19 @@ function suppressNextClick(
   window.addEventListener("click", suppressClick, true);
 }
 
-export function useListingLongPressContextMenu({
+export function useListingLongPressSelectMode({
   enabled = true,
   touchUi,
-  onOpen,
-}: UseListingLongPressContextMenuOptions) {
+  onEnter,
+}: UseListingLongPressSelectModeOptions) {
   const sessionRef = useRef<LongPressSession | null>(null);
   const timerRef = useRef<number | null>(null);
   const pendingClickSuppressRef = useRef<((event: MouseEvent) => void) | null>(null);
-  const onOpenRef = useRef(onOpen);
+  const onEnterRef = useRef(onEnter);
   const touchUiRef = useRef(touchUi);
   const enabledRef = useRef(enabled);
 
-  onOpenRef.current = onOpen;
+  onEnterRef.current = onEnter;
   touchUiRef.current = touchUi;
   enabledRef.current = enabled;
 
@@ -75,20 +68,10 @@ export function useListingLongPressContextMenu({
     sessionRef.current = null;
   }, [clearTimer]);
 
-  const openAt = useCallback(
-    (clientX: number, clientY: number, path: string | null) => {
-      suppressNextClick(pendingClickSuppressRef);
-      onOpenRef.current(
-        {
-          clientX,
-          clientY,
-          preventDefault: () => {},
-        },
-        path,
-      );
-    },
-    [],
-  );
+  const enterAt = useCallback((path: string | null) => {
+    suppressNextClick(pendingClickSuppressRef);
+    onEnterRef.current(path);
+  }, []);
 
   const scheduleLongPress = useCallback(
     (session: LongPressSession) => {
@@ -100,10 +83,10 @@ export function useListingLongPressContextMenu({
           return;
         }
         sessionRef.current = null;
-        openAt(session.startX, session.startY, session.path);
+        enterAt(session.path);
       }, LISTING_LONG_PRESS_MS);
     },
-    [clearTimer, openAt],
+    [clearTimer, enterAt],
   );
 
   const beginSession = useCallback(

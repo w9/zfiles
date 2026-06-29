@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { OnChangeFn, SortingState } from "@tanstack/react-table";
 
-import { Settings, Loader2, ListChecks, Check } from "lucide-react";
+import { Settings, Loader2, ListChecks } from "lucide-react";
 
 import ExplorerBreadcrumb from "../ExplorerBreadcrumb";
 import ExplorerCompactToolbar from "../ExplorerCompactToolbar";
@@ -30,6 +30,7 @@ import { useTheme } from "../useTheme";
 import { useUiMode } from "../useUiMode";
 import { useCompactTouchChrome } from "../useCompactTouchChrome";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import {
   Tooltip,
@@ -42,11 +43,13 @@ import AboutDialog from "../AboutDialog";
 import KeyboardShortcutsDialog from "../KeyboardShortcutsDialog";
 import MenuBar from "../actions/MenuBar";
 import ActionToolbar from "../actions/ActionToolbar";
-import { actionsForContext } from "../actions/dispatch";
+import SelectModeActionToolbar from "../actions/SelectModeActionToolbar";
+import {
+  buildContextMenuContextKeys,
+  resolveContextMenuActions,
+} from "../actions/contextMenuActions";
 import { type ContextKeys } from "../actions/contextKeys";
-import { keybindingChordForContext } from "../actions/keybindings";
 import { useActionSystem } from "../actions/useActionSystem";
-import type { ActionDefinition } from "../actions/types";
 import { downloadFiles, filterDownloadablePaths } from "../downloadPaths";
 import { isImagePath } from "../imagePaths";
 import { resolveViewerPreviewPaths } from "../slideshowPathOrder";
@@ -161,7 +164,7 @@ import {
   shouldTouchTapActivate,
 } from "./listingTouchSelect";
 import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
-import { useListingLongPressContextMenu } from "./useListingLongPressContextMenu";
+import { useListingLongPressSelectMode } from "./useListingLongPressSelectMode";
 import { basename } from "@/fileOperations/paths";
 import { copyTextToClipboard } from "@/copyTextToClipboard";
 
@@ -171,41 +174,6 @@ type ContextMenuState = {
   path: string | null;
   actions: ContextMenuAction[];
 };
-
-/** Shown on listing background only — hidden when no row is targeted. */
-const CONTEXT_MENU_REQUIRES_ROW = new Set([
-  "file.rename",
-  "file.copy",
-  "file.cut",
-  "file.delete",
-  "selection.copy-paths",
-  "selection.download",
-]);
-
-function contextMenuActionLabel(
-  action: ActionDefinition,
-  menuContextKeys: ContextKeys,
-  downloadablePaths: string[],
-  t: (key: MessageKey, params?: Record<string, string>) => string,
-  defaultLabel: string,
-): string {
-  if (action.id === "selection.copy-paths") {
-    return t(
-      menuContextKeys["selection.count"] === 1
-        ? "actions.selection.copyPath.name"
-        : "actions.selection.copyPaths.name",
-    );
-  }
-  if (action.id === "selection.download") {
-    if (downloadablePaths.length === 1) {
-      return t("actions.selection.download.name");
-    }
-    return t("actions.selection.download.nameWithCount", {
-      count: String(downloadablePaths.length),
-    });
-  }
-  return defaultLabel;
-}
 
 function isNativeTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
@@ -285,6 +253,7 @@ export default function ExplorerApp() {
   const openContextMenuRef = useRef<
     (event: ContextMenuPointerEvent, path: string | null) => void
   >(() => {});
+  const enterSelectModeFromLongPressRef = useRef<(path: string | null) => void>(() => {});
   currentPathRef.current = currentPath;
   entriesRef.current = entries;
   listCursorRef.current = listCursor;
@@ -1271,7 +1240,7 @@ export default function ExplorerApp() {
     onSelectionChange: applyMarqueeSelection,
   });
 
-  const longPressContextMenu = useListingLongPressContextMenu({
+  const longPressSelectMode = useListingLongPressSelectMode({
     enabled:
       listingLoaded &&
       !listingLoading &&
@@ -1279,18 +1248,18 @@ export default function ExplorerApp() {
       activeListingEntries.length > 0 &&
       !gridResizeActive,
     touchUi,
-    onOpen: (event, path) => void openContextMenuRef.current(event, path),
+    onEnter: (path) => enterSelectModeFromLongPressRef.current(path),
   });
 
   const onListingViewportPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       lastListingPointerTypeRef.current = event.pointerType;
-      longPressContextMenu.onViewportPointerDown(event);
+      longPressSelectMode.onViewportPointerDown(event);
       swipeRangeSelect.onViewportPointerDown(event);
       marqueeSelect.onViewportPointerDown(event);
     },
     [
-      longPressContextMenu.onViewportPointerDown,
+      longPressSelectMode.onViewportPointerDown,
       marqueeSelect.onViewportPointerDown,
       swipeRangeSelect.onViewportPointerDown,
     ],
@@ -1477,6 +1446,24 @@ export default function ExplorerApp() {
     });
   }, [clearSelection]);
 
+  const enterSelectModeFromLongPress = useCallback((path: string | null) => {
+    setSelectionMode(true);
+    if (path == null) {
+      setSelectedPaths(new Set());
+      setSelectedPath(null);
+      return;
+    }
+    const rows = listingEntriesRef.current;
+    const displayIndex = rows.findIndex((row) => row.path === path);
+    setSelectedPaths(new Set([path]));
+    setSelectedPath(path);
+    if (displayIndex >= 0) {
+      setSelectedIndex(displayIndex);
+      selectionAnchorRef.current = displayIndex;
+    }
+  }, []);
+  enterSelectModeFromLongPressRef.current = enterSelectModeFromLongPress;
+
   const focusQuickFilter = useCallback(() => {
     const input = quickFilterInputRef.current;
     input?.focus();
@@ -1593,23 +1580,14 @@ export default function ExplorerApp() {
 
   const openContextMenu = useCallback(
     async (event: ContextMenuPointerEvent, path: string | null) => {
+      if (touchUiRef.current) {
+        return;
+      }
       event.preventDefault();
 
-      let menuContextKeys = contextKeys;
-      const listingRows = listingEntriesRef.current;
-      const previewCountForSelection = (paths: string[]) =>
-        resolveViewerPreviewPaths(paths, listingRows).length;
       if (path == null) {
         setSelectedPaths(new Set());
         setSelectedPath(null);
-        menuContextKeys = {
-          ...contextKeys,
-          "selection.count": 0,
-          "selection.paths": [],
-          "preview.path": "",
-          "preview.is-image": false,
-          "viewer.preview-count": 0,
-        };
       } else if (!selectedPathsRef.current.has(path)) {
         const rows = listingEntriesRef.current;
         const displayIndex = rows.findIndex((row) => row.path === path);
@@ -1619,64 +1597,31 @@ export default function ExplorerApp() {
           setSelectedIndex(displayIndex);
           selectionAnchorRef.current = displayIndex;
         }
-        menuContextKeys = {
-          ...contextKeys,
-          "selection.count": 1,
-          "selection.paths": [path],
-          "preview.path": path,
-          "preview.is-image": isImagePath(path),
-          "viewer.preview-count": previewCountForSelection([path]),
-        };
-      } else {
-        menuContextKeys = {
-          ...contextKeys,
-          "preview.path": path,
-          "preview.is-image": isImagePath(path),
-          "viewer.preview-count": previewCountForSelection(
-            Array.from(selectedPathsRef.current),
-          ),
-        };
       }
 
-      const downloadablePaths = filterDownloadablePaths(
-        menuContextKeys["selection.paths"],
+      const menuSelectedPaths =
+        path == null
+          ? new Set<string>()
+          : !selectedPathsRef.current.has(path)
+            ? new Set([path])
+            : selectedPathsRef.current;
+
+      const menuContextKeys = buildContextMenuContextKeys({
+        baseContextKeys: contextKeys,
+        targetPath: path,
+        selectedPaths: menuSelectedPaths,
+        listingRows: listingEntriesRef.current,
+      });
+
+      const menuActions = resolveContextMenuActions({
+        registry: actionSystem.registry,
+        contextKeys: menuContextKeys,
         entries,
-      );
-      menuContextKeys = {
-        ...menuContextKeys,
-        "selection.file-count": downloadablePaths.length,
-      };
-
-      let actions = actionsForContext(
-        actionSystem.registry.list(),
-        "context-menu",
-        menuContextKeys,
-      );
-      if (path == null) {
-        actions = actions.filter((action) => !CONTEXT_MENU_REQUIRES_ROW.has(action.id));
-      }
-      const menuActions: ContextMenuAction[] = actions.map((action) => {
-        const chord = keybindingChordForContext(
-          action.id,
-          actionSystem.keybindings,
-          menuContextKeys,
-          {
-            defaultKeybinding: action.defaultKeybinding,
-            userBindings: actionSystem.userKeybindings,
-          },
-        );
-        return {
-          id: action.id,
-          label: contextMenuActionLabel(
-            action,
-            menuContextKeys,
-            downloadablePaths,
-            (key, params) => t(key, params),
-            actionLabel(action.nameKey),
-          ),
-          chord,
-          variant: action.destructive ? "destructive" : "default",
-        };
+        keybindings: actionSystem.keybindings,
+        userKeybindings: actionSystem.userKeybindings,
+        labelForAction: actionLabel,
+        t: (key, params) => t(key, params),
+        targetPath: path,
       });
       if (menuActions.length === 0) {
         return;
@@ -1695,9 +1640,45 @@ export default function ExplorerApp() {
       actionLabel,
       contextKeys,
       entries,
+      t,
     ],
   );
   openContextMenuRef.current = openContextMenu;
+
+  const selectModeMenuTargetPath = useMemo(() => {
+    if (selectedPaths.size === 0) {
+      return null;
+    }
+    return selectedPath ?? Array.from(selectedPaths)[0] ?? null;
+  }, [selectedPaths, selectedPath]);
+
+  const selectModeActions = useMemo(
+    () =>
+      selectionMode && touchUi
+        ? resolveContextMenuActions({
+            registry: actionSystem.registry,
+            contextKeys,
+            entries,
+            keybindings: actionSystem.keybindings,
+            userKeybindings: actionSystem.userKeybindings,
+            labelForAction: actionLabel,
+            t: (key, params) => t(key, params),
+            targetPath: selectModeMenuTargetPath,
+          })
+        : [],
+    [
+      selectionMode,
+      touchUi,
+      actionSystem.registry,
+      actionSystem.keybindings,
+      actionSystem.userKeybindings,
+      contextKeys,
+      entries,
+      actionLabel,
+      t,
+      selectModeMenuTargetPath,
+    ],
+  );
 
   const blockSelectionClearRef = useRef(false);
   blockSelectionClearRef.current =
@@ -1801,8 +1782,38 @@ export default function ExplorerApp() {
       kernelVersion={kernelVersion}
       readOnly={readOnly}
       compactTouchChrome={compactTouchChrome}
+      selectionModeActive={touchUi && selectionMode}
       selectionStatusText={selectionStatusText}
       cutStatusText={cutStatusText}
+    />
+  );
+
+  const touchSelectModeToggle = touchUi && !selectionMode ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
+          aria-label={t("selection.mode.enter")}
+          onClick={() => void actionSystem.invoke("selection.toggle-mode")}
+        >
+          <ListChecks className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("selection.mode.enter")}</TooltipContent>
+    </Tooltip>
+  ) : null;
+
+  const selectModeToolbarElement = (
+    <SelectModeActionToolbar
+      actions={selectModeActions}
+      doneLabel={t("selection.mode.done")}
+      overflowLabel={t("actions.selectModeToolbar.overflow")}
+      ariaLabel={t("actions.selectModeToolbar.label")}
+      onDone={() => void actionSystem.invoke("selection.toggle-mode")}
+      invoke={(id) => void actionSystem.invoke(id)}
     />
   );
 
@@ -1855,7 +1866,19 @@ export default function ExplorerApp() {
       onCancel={() => void actionSystem.invoke("navigation.cancel-load")}
       ariaLabel={t("actions.toolbar.label")}
       trailingActions={
+        selectionMode && touchUi ? (
+          <SelectModeActionToolbar
+            actions={selectModeActions}
+            doneLabel={t("selection.mode.done")}
+            overflowLabel={t("actions.selectModeToolbar.overflow")}
+            ariaLabel={t("actions.selectModeToolbar.label")}
+            onDone={() => void actionSystem.invoke("selection.toggle-mode")}
+            invoke={(id) => void actionSystem.invoke(id)}
+            embedded
+          />
+        ) : (
         <>
+          {touchSelectModeToggle}
           <ActionToolbar
             registry={actionSystem.registry}
             contextKeys={contextKeys}
@@ -1907,6 +1930,7 @@ export default function ExplorerApp() {
             mobileMenuOnly
           />
         </>
+        )
       }
     />
   );
@@ -1916,6 +1940,9 @@ export default function ExplorerApp() {
     <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden p-2">
       {!compactTouchChrome ? (
       <header className="shrink-0 space-y-4">
+        {selectionMode && touchUi ? (
+          selectModeToolbarElement
+        ) : (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MenuBar
             registry={actionSystem.registry}
@@ -1995,35 +2022,7 @@ export default function ExplorerApp() {
               </TooltipTrigger>
               <TooltipContent side="bottom">{t("settings.title")}</TooltipContent>
             </Tooltip>
-            {touchUi ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant={selectionMode ? "default" : "ghost"}
-                    size="icon"
-                    className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
-                    aria-label={
-                      selectionMode
-                        ? t("selection.mode.done")
-                        : t("selection.mode.enter")
-                    }
-                    onClick={() => void actionSystem.invoke("selection.toggle-mode")}
-                  >
-                    {selectionMode ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <ListChecks className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {selectionMode
-                    ? t("selection.mode.done")
-                    : t("selection.mode.enter")}
-                </TooltipContent>
-              </Tooltip>
-            ) : null}
+            {touchSelectModeToggle}
             <ActionToolbar
               registry={actionSystem.registry}
               contextKeys={contextKeys}
@@ -2049,6 +2048,7 @@ export default function ExplorerApp() {
             ) : null}
           </div>
         </div>
+        )}
       </header>
       ) : null}
 
@@ -2083,7 +2083,10 @@ export default function ExplorerApp() {
 
       <section
         ref={mainContentRef}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card",
+          touchUi && selectionMode && "bg-primary/5 ring-1 ring-inset ring-primary/15",
+        )}
       >
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
@@ -2136,7 +2139,7 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
-                onEntryPointerDown={longPressContextMenu.onEntryPointerDown}
+                onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
@@ -2169,7 +2172,7 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
-                onEntryPointerDown={longPressContextMenu.onEntryPointerDown}
+                onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {
