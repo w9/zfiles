@@ -1,5 +1,6 @@
 import { Globe, GlobeOff, Loader2 } from "lucide-react";
 
+import { APP_VERSION } from "@/appVersion";
 import { backendStatusMessage, useTranslation } from "@/i18n";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,13 +22,14 @@ type BackendStatusProps = {
 const statusIconClass: Record<BackendStatus, string> = {
   connected: "text-success",
   connecting: "text-warning",
-  offline: "text-destructive",
+  offline: "text-current",
 };
 
 const statusBadgeClass: Record<BackendStatus, string> = {
-  connected: "border-muted-foreground/30 text-muted-foreground",
-  connecting: "border-muted-foreground/30 text-muted-foreground",
-  offline: "border-destructive/40 text-destructive",
+  connected: "max-w-[min(100%,24rem)] px-0 text-muted-foreground",
+  connecting: "px-0 text-muted-foreground",
+  offline:
+    "max-w-[min(100%,24rem)] bg-destructive px-2 py-0.5 text-destructive-foreground dark:bg-[#7f1818] dark:text-[#fce8e6]",
 };
 
 function StatusIcon({ status }: { status: BackendStatus }) {
@@ -49,7 +51,24 @@ export default function BackendStatus({
   cloudProvider = null,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
-  const label = backendStatusMessage(locale, status);
+  const label =
+    status === "connected"
+      ? backendMode === "local"
+        ? kernelVersion
+          ? t("backend.connectedTooltip", {
+              backend: t("backend.connectedBackend.zfilesServer"),
+              version: kernelVersion,
+            })
+          : t("backend.connectedTooltipBackendOnly", {
+              backend: t("backend.connectedBackend.zfilesServer"),
+            })
+        : backendMode === "s3" && cloudProvider
+          ? t("backend.connectedTooltip", {
+              backend: t(`connect.provider.${cloudProvider}`),
+              version: APP_VERSION,
+            })
+          : t("backend.connectedBrief")
+      : backendStatusMessage(locale, status);
   const tooltipText =
     status === "connected" && backendMode === "local" && kernelVersion
       ? t("backend.connectedTooltip", {
@@ -72,8 +91,11 @@ export default function BackendStatus({
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <Badge
-          variant="outline"
-          className={cn("gap-1 text-sm", statusBadgeClass[status])}
+          variant="ghost"
+          className={cn(
+            "gap-1 truncate text-sm font-normal",
+            statusBadgeClass[status],
+          )}
           role="status"
           aria-label={t("backend.status", { status: label })}
         >

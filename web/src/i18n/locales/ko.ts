@@ -285,8 +285,6 @@ export const ko: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "폴더",
   "listing.grid.sectionFiles": "파일",
   "statusBar.label": "상태 표시줄",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "zfiles 정보(v{{version}})",
   "statusBar.readOnly": "읽기 전용",
   "statusBar.readOnlyTooltip": "업로드 및 파일 변경이 비활성화되어 있습니다.",
   "about.title": "zfiles 정보",

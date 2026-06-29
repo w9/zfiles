@@ -284,8 +284,6 @@ export const en = {
   "listing.grid.sectionFolders": "Folders",
   "listing.grid.sectionFiles": "Files",
   "statusBar.label": "Status bar",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "About zfiles (v{{version}})",
   "statusBar.readOnly": "Read-only",
   "statusBar.readOnlyTooltip": "Uploads and file changes are disabled.",
   "about.title": "About zfiles",

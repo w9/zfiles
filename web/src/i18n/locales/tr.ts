@@ -285,8 +285,6 @@ export const tr: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Klasörler",
   "listing.grid.sectionFiles": "Dosyalar",
   "statusBar.label": "Durum çubuğu",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "zfiles hakkında (v{{version}})",
   "statusBar.readOnly": "Salt okunur",
   "statusBar.readOnlyTooltip": "Yüklemeler ve dosya değişiklikleri devre dışı.",
   "about.title": "zfiles hakkında",

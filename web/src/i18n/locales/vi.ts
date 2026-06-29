@@ -285,8 +285,6 @@ export const vi: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Thư mục",
   "listing.grid.sectionFiles": "Tệp",
   "statusBar.label": "Thanh trạng thái",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Giới thiệu zfiles (v{{version}})",
   "statusBar.readOnly": "Chỉ đọc",
   "statusBar.readOnlyTooltip": "Tải lên và thay đổi tệp đã bị tắt.",
   "about.title": "Giới thiệu zfiles",

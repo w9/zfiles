@@ -275,8 +275,6 @@ export const zhCN: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "文件夹",
   "listing.grid.sectionFiles": "文件",
   "statusBar.label": "状态栏",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "关于 zfiles（v{{version}}）",
   "statusBar.readOnly": "只读",
   "statusBar.readOnlyTooltip": "无法上传或修改文件。",
   "about.title": "关于 zfiles",

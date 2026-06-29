@@ -285,8 +285,6 @@ export const id: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Folder",
   "listing.grid.sectionFiles": "File",
   "statusBar.label": "Bilah status",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Tentang zfiles (v{{version}})",
   "statusBar.readOnly": "Hanya-baca",
   "statusBar.readOnlyTooltip": "Unggahan dan perubahan file dinonaktifkan.",
   "about.title": "Tentang zfiles",

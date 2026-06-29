@@ -1802,7 +1802,6 @@ export default function ExplorerApp() {
       readOnly={readOnly}
       selectionStatusText={selectionStatusText}
       cutStatusText={cutStatusText}
-      onVersionClick={() => void actionSystem.invoke("help.open-about")}
     />
   );
 

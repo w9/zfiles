@@ -285,8 +285,6 @@ export const ru: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Папки",
   "listing.grid.sectionFiles": "Файлы",
   "statusBar.label": "Строка состояния",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "О zfiles (v{{version}})",
   "statusBar.readOnly": "Только чтение",
   "statusBar.readOnlyTooltip": "Загрузка и изменение файлов отключены.",
   "about.title": "О zfiles",

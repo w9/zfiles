@@ -275,8 +275,6 @@ export const zhTW: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "資料夾",
   "listing.grid.sectionFiles": "檔案",
   "statusBar.label": "狀態列",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "關於 zfiles（v{{version}}）",
   "statusBar.readOnly": "唯讀",
   "statusBar.readOnlyTooltip": "無法上傳或修改檔案。",
   "about.title": "關於 zfiles",

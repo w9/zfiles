@@ -284,8 +284,6 @@ export const es: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Carpetas",
   "listing.grid.sectionFiles": "Archivos",
   "statusBar.label": "Barra de estado",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Acerca de zfiles (v{{version}})",
   "statusBar.readOnly": "Solo lectura",
   "statusBar.readOnlyTooltip":
     "Las subidas y los cambios de archivos están deshabilitados.",

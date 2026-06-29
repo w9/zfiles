@@ -286,8 +286,6 @@ export const it: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Cartelle",
   "listing.grid.sectionFiles": "File",
   "statusBar.label": "Barra di stato",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Informazioni su zfiles (v{{version}})",
   "statusBar.readOnly": "Sola lettura",
   "statusBar.readOnlyTooltip":
     "Caricamenti e modifiche ai file sono disabilitati.",

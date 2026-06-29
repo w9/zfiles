@@ -286,8 +286,6 @@ export const de: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Ordner",
   "listing.grid.sectionFiles": "Dateien",
   "statusBar.label": "Statusleiste",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Über zfiles (v{{version}})",
   "statusBar.readOnly": "Schreibgeschützt",
   "statusBar.readOnlyTooltip": "Uploads und Dateiänderungen sind deaktiviert.",
   "about.title": "Über zfiles",

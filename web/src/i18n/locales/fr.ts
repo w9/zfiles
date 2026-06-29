@@ -286,8 +286,6 @@ export const fr: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Dossiers",
   "listing.grid.sectionFiles": "Fichiers",
   "statusBar.label": "Barre d'état",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "À propos de zfiles (v{{version}})",
   "statusBar.readOnly": "Lecture seule",
   "statusBar.readOnlyTooltip":
     "Les téléversements et les modifications de fichiers sont désactivés.",

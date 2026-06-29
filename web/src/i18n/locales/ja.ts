@@ -285,8 +285,6 @@ export const ja: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "フォルダー",
   "listing.grid.sectionFiles": "ファイル",
   "statusBar.label": "ステータスバー",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "zfiles について（v{{version}}）",
   "statusBar.readOnly": "読み取り専用",
   "statusBar.readOnlyTooltip": "アップロードとファイルの変更は無効です。",
   "about.title": "zfiles について",

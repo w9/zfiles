@@ -286,8 +286,6 @@ export const pt: Record<MessageKey, string> = {
   "listing.grid.sectionFolders": "Pastas",
   "listing.grid.sectionFiles": "Arquivos",
   "statusBar.label": "Barra de status",
-  "statusBar.serverVersion": "v{{version}}",
-  "statusBar.openAbout": "Sobre o zfiles (v{{version}})",
   "statusBar.readOnly": "Somente leitura",
   "statusBar.readOnlyTooltip":
     "Envios e alterações de arquivos estão desativados.",
