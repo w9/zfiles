@@ -121,7 +121,7 @@ export default function GridCardPreview({
           {durationLabel ? (
             <div
               aria-hidden
-              className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-black/50 px-1 py-0.5 text-[10px] leading-none text-white/70 tabular-nums"
+              className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-black/50 px-1 py-0.5 text-xs leading-none text-white/70 tabular-nums"
             >
               {durationLabel}
             </div>

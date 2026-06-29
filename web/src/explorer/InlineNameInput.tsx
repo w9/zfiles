@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { LISTING_ENTRY_TEXT_CLASS } from "@/listing-styles";
 
 type InlineNameInputProps = {
   initialName: string;
@@ -39,7 +40,8 @@ export default function InlineNameInput({
       <input
         ref={inputRef}
         className={cn(
-          "h-6 min-w-0 flex-1 rounded border border-input bg-background px-1 text-[14px] leading-5 outline-none ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60",
+          "h-6 min-w-0 flex-1 rounded border border-input bg-background px-1 outline-none ring-ring focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60",
+          LISTING_ENTRY_TEXT_CLASS,
           className,
         )}
         value={value}

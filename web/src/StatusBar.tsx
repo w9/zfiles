@@ -60,7 +60,7 @@ export default function StatusBar({
             <TooltipTrigger asChild>
               <Badge
                 variant="outline"
-                className="gap-1 border-muted-foreground/30 text-muted-foreground"
+                className="gap-1 border-muted-foreground/30 text-sm text-muted-foreground"
               >
                 <Lock className="size-3" aria-hidden />
                 {t("statusBar.readOnly")}
@@ -72,17 +72,17 @@ export default function StatusBar({
           </Tooltip>
         ) : null}
         {cutStatusText ? (
-          <p className="truncate text-xs text-muted-foreground">{cutStatusText}</p>
+          <p className="truncate text-sm text-muted-foreground">{cutStatusText}</p>
         ) : null}
         {selectionStatusText ? (
-          <p className="shrink-0 text-xs text-muted-foreground">{selectionStatusText}</p>
+          <p className="shrink-0 text-sm text-muted-foreground">{selectionStatusText}</p>
         ) : null}
       </div>
       {displayVersion ? (
         <div className="flex shrink-0 items-center">
           <button
             type="button"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             onClick={onVersionClick}
             aria-label={t("statusBar.openAbout", { version: displayVersion })}
           >

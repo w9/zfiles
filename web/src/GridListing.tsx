@@ -20,7 +20,7 @@ import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
 import { shouldDimDotEntry } from "@/listingFilter";
-import { LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
+import { LISTING_ENTRY_TEXT_CLASS, LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
 import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
@@ -337,7 +337,12 @@ export default function GridListing({
                           iconTheme={iconTheme}
                           pixelSize={iconPixelSize}
                         />
-                        <div className="shrink-0 px-2 py-1.5 text-center text-sm">
+                        <div
+                          className={cn(
+                            "shrink-0 px-2 py-1.5 text-center",
+                            LISTING_ENTRY_TEXT_CLASS,
+                          )}
+                        >
                           {isEditing && onInlineCommit && onInlineCancel ? (
                             <InlineNameInput
                               initialName={entry.name}

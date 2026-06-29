@@ -30,7 +30,10 @@ import {
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
-import { LISTING_ICON_COLUMN_WIDTH_PX } from "@/listing-styles";
+import {
+  LISTING_ENTRY_TEXT_CLASS,
+  LISTING_ICON_COLUMN_WIDTH_PX,
+} from "@/listing-styles";
 import {
   layoutToListingRowGridTemplate,
   listingColumnGutterGridColumn,
@@ -77,10 +80,8 @@ const DEFAULT_COLUMN_LAYOUT: Layout = {
   modified: 27,
 };
 
-const LISTING_TEXT_CLASS = "text-[14px] leading-5";
-
 const CELL_CLIP = "min-w-0 overflow-hidden";
-const CELL_TEXT = cn("block min-w-0 truncate", LISTING_TEXT_CLASS);
+const CELL_TEXT = cn("block min-w-0 truncate", LISTING_ENTRY_TEXT_CLASS);
 
 const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent";
 
@@ -280,7 +281,7 @@ export default function VirtualListing({
     <div
       className={cn(
         "flex min-h-[440px] flex-col overflow-hidden rounded-xl border bg-card",
-        LISTING_TEXT_CLASS,
+        LISTING_ENTRY_TEXT_CLASS,
         className,
       )}
       role="grid"
@@ -440,7 +441,7 @@ export default function VirtualListing({
                         <div
                           className={cn(
                             "flex h-9 min-w-0 items-center overflow-hidden px-2",
-                            LISTING_TEXT_CLASS,
+                            LISTING_ENTRY_TEXT_CLASS,
                             isName && "w-full",
                             columnIndex === 1 && "justify-end text-right",
                           )}

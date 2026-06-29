@@ -59,11 +59,6 @@
   --warning: #b06000;
 }
 
-[data-ui-mode="touch"] {
-  --text-xs: 1rem;
-  --text-sm: 1rem;
-}
-
 [data-ui-mode="touch"] [data-listing-entry] {
   -webkit-touch-callout: none;
 }

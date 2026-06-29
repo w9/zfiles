@@ -423,7 +423,7 @@ export default function ExplorerBreadcrumb({
                 side="top"
                 sideOffset={6}
                 align="end"
-                className="max-w-[22rem] whitespace-pre-line text-[11px] leading-tight"
+                className="max-w-[22rem] whitespace-pre-line text-xs leading-tight"
               >
                 {quickFilterHelpText}
               </TooltipContent>

@@ -73,7 +73,7 @@ export default function BackendStatus({
       <TooltipTrigger asChild>
         <Badge
           variant="outline"
-          className={cn("gap-1", statusBadgeClass[status])}
+          className={cn("gap-1 text-sm", statusBadgeClass[status])}
           role="status"
           aria-label={t("backend.status", { status: label })}
         >
