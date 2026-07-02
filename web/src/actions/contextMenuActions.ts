@@ -72,20 +72,14 @@ export function buildContextMenuContextKeys(options: {
     };
   }
 
-  if (!selectedPaths.has(targetPath)) {
-    return {
-      ...baseContextKeys,
-      "selection.count": 1,
-      "selection.paths": [targetPath],
-      "preview.path": targetPath,
-      "preview.is-image": isImagePath(targetPath),
-      "viewer.preview-count": previewCountForSelection([targetPath]),
-    };
-  }
+  const paths = selectedPaths.has(targetPath)
+    ? Array.from(selectedPaths)
+    : [targetPath];
 
-  const paths = Array.from(selectedPaths);
   return {
     ...baseContextKeys,
+    "selection.count": paths.length,
+    "selection.paths": paths,
     "preview.path": targetPath,
     "preview.is-image": isImagePath(targetPath),
     "viewer.preview-count": previewCountForSelection(paths),
