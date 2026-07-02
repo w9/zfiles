@@ -55,7 +55,7 @@ export function buildContextMenuContextKeys(options: {
   baseContextKeys: ContextKeys;
   targetPath: string | null;
   selectedPaths: Set<string>;
-  listingRows: Array<{ path: string }>;
+  listingRows: Array<{ path: string; isDir: boolean }>;
 }): ContextKeys {
   const { baseContextKeys, targetPath, selectedPaths, listingRows } = options;
   const previewCountForSelection = (paths: string[]) =>
