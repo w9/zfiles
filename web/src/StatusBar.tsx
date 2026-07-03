@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { Lock } from "lucide-react";
+import { ListChecks, Lock } from "lucide-react";
 
 import BackendStatus from "./BackendStatus";
 import { useTranslation } from "@/i18n";
@@ -95,13 +95,25 @@ export default function StatusBar({
 
   if (selectionModeActive) {
     segments.push(
-      <Badge
-        key="selection-mode"
-        variant="secondary"
-        className={STATUS_BAR_BADGE_CLASS}
-      >
-        {t("selection.mode.active")}
-      </Badge>,
+      <Tooltip key="selection-mode" delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="ghost"
+            className={cn(
+              STATUS_BAR_BADGE_CLASS,
+              "px-0 text-muted-foreground",
+            )}
+            role="status"
+            aria-label={t("selection.mode.active")}
+          >
+            <ListChecks className="size-3 shrink-0" aria-hidden />
+            {iconOnlyBadges ? null : t("selection.mode.active")}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-wrap">
+          {t("selection.mode.active")}
+        </TooltipContent>
+      </Tooltip>,
     );
   }
 
