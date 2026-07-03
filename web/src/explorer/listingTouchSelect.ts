@@ -38,3 +38,10 @@ export function shouldClearTouchSelectionOutsideSelectionMode(options: {
 export function shouldSkipDoubleClickActivate(touchUi: boolean): boolean {
   return touchUi;
 }
+
+export function resolveListingFocusedPath(options: {
+  touchUi: boolean;
+  selectedPath: string | null;
+}): string | null {
+  return options.touchUi ? null : options.selectedPath;
+}

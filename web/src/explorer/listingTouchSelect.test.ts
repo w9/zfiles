@@ -6,6 +6,7 @@ import {
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldSkipDoubleClickActivate,
   shouldTouchTapActivate,
+  resolveListingFocusedPath,
 } from "./listingTouchSelect";
 
 test("shouldTouchTapActivate requires touch UI outside selection mode", () => {
@@ -53,6 +54,21 @@ test("shouldClearTouchSelectionOnBrowse clears stale touch selection while brows
 test("shouldSkipDoubleClickActivate blocks double-tap activate in touch UI", () => {
   assert.equal(shouldSkipDoubleClickActivate(true), true);
   assert.equal(shouldSkipDoubleClickActivate(false), false);
+});
+
+test("resolveListingFocusedPath hides focus highlight in touch UI", () => {
+  assert.equal(
+    resolveListingFocusedPath({ touchUi: true, selectedPath: "/a" }),
+    null,
+  );
+  assert.equal(
+    resolveListingFocusedPath({ touchUi: false, selectedPath: "/a" }),
+    "/a",
+  );
+  assert.equal(
+    resolveListingFocusedPath({ touchUi: false, selectedPath: null }),
+    null,
+  );
 });
 
 test("shouldClearTouchSelectionOutsideSelectionMode keeps context-menu target selected", () => {

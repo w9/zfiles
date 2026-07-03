@@ -162,6 +162,7 @@ import {
   shouldClearTouchSelectionOnBrowse,
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldTouchTapActivate,
+  resolveListingFocusedPath,
 } from "./listingTouchSelect";
 import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
 import { useListingLongPressSelectMode } from "./useListingLongPressSelectMode";
@@ -1774,6 +1775,11 @@ export default function ExplorerApp() {
     onDrop: onUpload,
   });
 
+  const listingFocusedPath = resolveListingFocusedPath({
+    touchUi,
+    selectedPath,
+  });
+
   const statusBarElement = (
     <StatusBar
       backendStatus={backendStatus}
@@ -2129,7 +2135,7 @@ export default function ExplorerApp() {
               <GridListing
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
-                focusedPath={selectedPath}
+                focusedPath={listingFocusedPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2163,7 +2169,7 @@ export default function ExplorerApp() {
               <VirtualListing
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
-                focusedPath={selectedPath}
+                focusedPath={listingFocusedPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
