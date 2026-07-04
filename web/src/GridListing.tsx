@@ -57,6 +57,8 @@ type GridListingProps = {
     path: string,
   ) => void;
   marqueeActive?: boolean;
+  /** Touch select mode: entries own the drag gesture (swipe range select). */
+  swipeSelectActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
@@ -94,6 +96,7 @@ export default function GridListing({
   onViewportPointerDown,
   onEntryPointerDown,
   marqueeActive = false,
+  swipeSelectActive = false,
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
   onCardSizeChange,
@@ -234,7 +237,10 @@ export default function GridListing({
       <div
         ref={setViewportRef}
         data-listing-viewport=""
-        className={cn("min-h-0 flex-1 overflow-auto p-3", marqueeActive && "select-none")}
+        className={cn(
+          "min-h-0 flex-1 overflow-auto overscroll-contain p-3",
+          marqueeActive && "select-none",
+        )}
         onPointerDown={onViewportPointerDown}
       >
         <div
@@ -301,6 +307,7 @@ export default function GridListing({
                         data-listing-path={entry.path}
                         className={cn(
                           "absolute inset-0 flex select-none flex-col overflow-hidden hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
+                          swipeSelectActive && "touch-none",
                           dimmed && "opacity-70",
                           isCut && GRID_ITEM_CUT_CLASS,
                           entry.quickFilterMatched === false && "opacity-40",

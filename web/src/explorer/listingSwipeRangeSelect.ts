@@ -45,3 +45,21 @@ export function swipeRangeFromAnchor(
   }
   return pathsInIndexRange(entries, anchorIndex, targetIndex);
 }
+
+/** Minimum finger travel before swipe range replaces selection (tap drift stays below this). */
+export const SWIPE_RANGE_APPLY_THRESHOLD_PX = 12;
+
+/** Skip swipe apply for tap jitter — let click toggle handle same-row taps. */
+export function shouldApplySwipeRangeSelection(options: {
+  nextSelection: ReadonlySet<string>;
+  pointerDistancePx: number;
+  thresholdPx?: number;
+}): boolean {
+  if (
+    options.pointerDistancePx <
+    (options.thresholdPx ?? SWIPE_RANGE_APPLY_THRESHOLD_PX)
+  ) {
+    return false;
+  }
+  return options.nextSelection.size > 1;
+}

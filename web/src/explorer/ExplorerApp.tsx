@@ -2147,6 +2147,7 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
+                swipeSelectActive={touchUi && selectionMode}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
@@ -2180,6 +2181,7 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
+                swipeSelectActive={touchUi && selectionMode}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {

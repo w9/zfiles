@@ -12,6 +12,7 @@ import {
 } from "@/explorer/listingMarqueeSelect";
 import {
   entryIndexForPath,
+  shouldApplySwipeRangeSelection,
   shouldHandleSwipeRangeSelect,
   swipeRangeFromAnchor,
 } from "@/explorer/listingSwipeRangeSelect";
@@ -35,6 +36,7 @@ type SwipeSession = {
   clientX: number;
   clientY: number;
   started: boolean;
+  appliedRange: boolean;
 };
 
 function collectEntryRectsFromViewport(
@@ -112,10 +114,10 @@ export function useListingSwipeRangeSelect({
   }, []);
 
   const applySwipeAt = useCallback(
-    (clientX: number, clientY: number, session: SwipeSession) => {
+    (clientX: number, clientY: number, session: SwipeSession): boolean => {
       const scrollElement = scrollElementRef.current;
       if (!scrollElement) {
-        return;
+        return false;
       }
 
       const targetPath = resolvePathAtPoint(
@@ -129,11 +131,25 @@ export function useListingSwipeRangeSelect({
         session.anchorIndex,
         targetPath,
       );
+      const shouldApply = shouldApplySwipeRangeSelection({
+        nextSelection,
+        pointerDistancePx: pointerDistance(
+          session.startX,
+          session.startY,
+          clientX,
+          clientY,
+        ),
+      });
+      if (!shouldApply) {
+        return false;
+      }
       const primaryPath =
         targetPath && nextSelection.has(targetPath)
           ? targetPath
           : session.anchorPath;
+      session.appliedRange = true;
       onSelectionChangeRef.current(nextSelection, primaryPath);
+      return true;
     },
     [layoutRef, scrollElementRef],
   );
@@ -238,6 +254,7 @@ export function useListingSwipeRangeSelect({
         clientX: event.clientX,
         clientY: event.clientY,
         started: false,
+        appliedRange: false,
       };
       sessionRef.current = session;
 
@@ -283,7 +300,7 @@ export function useListingSwipeRangeSelect({
           }
         }
 
-        endSession(active, active.started);
+        endSession(active, active.appliedRange);
         window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("pointerup", onPointerEnd);
         window.removeEventListener("pointercancel", onPointerEnd);

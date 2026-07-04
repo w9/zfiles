@@ -92,6 +92,12 @@
     @apply border-border;
   }
 
+  /* App is a fixed-height shell; never let touch drags rubber-band the document. */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: Inter, system-ui, sans-serif;
