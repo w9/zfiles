@@ -157,15 +157,21 @@ import MarqueeOverlay from "./MarqueeOverlay";
 import type { ListingMarqueeLayoutResolver } from "./listingMarqueeSelect";
 import { pathsInIndexRange } from "./listingSelection";
 import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
-import { useListingSwipeRangeSelect } from "./useListingSwipeRangeSelect";
 import {
   shouldClearTouchSelectionOnBrowse,
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldTouchTapActivate,
   resolveListingFocusedPath,
 } from "./listingTouchSelect";
+import {
+  armedRangeSelection,
+  longPressGestureAction,
+  resolveArmedRangeMode,
+  type ArmedRangeMode,
+} from "./listingTouchSelectGestures";
+import { swipeRangeFromAnchor } from "./listingSwipeRangeSelect";
 import type { ContextMenuPointerEvent } from "./listingLongPressContextMenu";
-import { useListingLongPressSelectMode } from "./useListingLongPressSelectMode";
+import { useListingLongPressRangeSelect } from "./useListingLongPressRangeSelect";
 import { basename } from "@/fileOperations/paths";
 import { copyTextToClipboard } from "@/copyTextToClipboard";
 
@@ -254,7 +260,14 @@ export default function ExplorerApp() {
   const openContextMenuRef = useRef<
     (event: ContextMenuPointerEvent, path: string | null) => void
   >(() => {});
-  const enterSelectModeFromLongPressRef = useRef<(path: string | null) => void>(() => {});
+  const armLongPressRangeRef = useRef<(path: string | null) => boolean>(() => false);
+  const extendLongPressRangeRef = useRef<(targetPath: string | null) => void>(() => {});
+  const armedRangeSessionRef = useRef<{
+    base: Set<string>;
+    mode: ArmedRangeMode;
+    anchorPath: string;
+    anchorIndex: number;
+  } | null>(null);
   currentPathRef.current = currentPath;
   entriesRef.current = entries;
   listCursorRef.current = listCursor;
@@ -1226,43 +1239,29 @@ export default function ExplorerApp() {
     onEmptyClick: () => onListingEmptyClickRef.current(),
   });
 
-  const swipeRangeSelect = useListingSwipeRangeSelect({
-    selectionMode,
-    touchUi,
+  const longPressRangeSelect = useListingLongPressRangeSelect({
     enabled:
       listingLoaded &&
       !listingLoading &&
       !listingPaneOverlay &&
       activeListingEntries.length > 0 &&
       !gridResizeActive,
-    entries: activeListingEntries,
+    touchUi,
     scrollElementRef: listingViewportRef,
     layoutRef: listingMarqueeLayoutRef,
-    onSelectionChange: applyMarqueeSelection,
-  });
-
-  const longPressSelectMode = useListingLongPressSelectMode({
-    enabled:
-      listingLoaded &&
-      !listingLoading &&
-      !listingPaneOverlay &&
-      activeListingEntries.length > 0 &&
-      !gridResizeActive,
-    touchUi,
-    onEnter: (path) => enterSelectModeFromLongPressRef.current(path),
+    onLongPress: (path) => armLongPressRangeRef.current(path),
+    onSwipeExtend: (targetPath) => extendLongPressRangeRef.current(targetPath),
   });
 
   const onListingViewportPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       lastListingPointerTypeRef.current = event.pointerType;
-      longPressSelectMode.onViewportPointerDown(event);
-      swipeRangeSelect.onViewportPointerDown(event);
+      longPressRangeSelect.onViewportPointerDown(event);
       marqueeSelect.onViewportPointerDown(event);
     },
     [
-      longPressSelectMode.onViewportPointerDown,
+      longPressRangeSelect.onViewportPointerDown,
       marqueeSelect.onViewportPointerDown,
-      swipeRangeSelect.onViewportPointerDown,
     ],
   );
 
@@ -1447,23 +1446,69 @@ export default function ExplorerApp() {
     });
   }, [clearSelection]);
 
-  const enterSelectModeFromLongPress = useCallback((path: string | null) => {
-    setSelectionMode(true);
-    if (path == null) {
-      setSelectedPaths(new Set());
-      setSelectedPath(null);
-      return;
-    }
-    const rows = listingEntriesRef.current;
-    const displayIndex = rows.findIndex((row) => row.path === path);
-    setSelectedPaths(new Set([path]));
-    setSelectedPath(path);
-    if (displayIndex >= 0) {
-      setSelectedIndex(displayIndex);
-      selectionAnchorRef.current = displayIndex;
-    }
-  }, []);
-  enterSelectModeFromLongPressRef.current = enterSelectModeFromLongPress;
+  const armLongPressRange = useCallback(
+    (path: string | null): boolean => {
+      const action = longPressGestureAction({
+        selectionMode: selectionModeRef.current,
+        hasPath: path != null,
+      });
+      if (action === "none") {
+        return false;
+      }
+      if (action === "enter-select-mode") {
+        setSelectionMode(true);
+      }
+      // Entering select mode starts from an empty base so the long-pressed
+      // item becomes the sole selection, matching the previous behavior.
+      const base =
+        action === "enter-select-mode"
+          ? new Set<string>()
+          : new Set(selectedPathsRef.current);
+      if (path == null) {
+        setSelectedPaths(new Set());
+        setSelectedPath(null);
+        return false;
+      }
+      const anchorIndex = listingEntriesRef.current.findIndex(
+        (row) => row.path === path,
+      );
+      if (anchorIndex < 0) {
+        return false;
+      }
+      const mode = resolveArmedRangeMode({ baseSelection: base, anchorPath: path });
+      const next = armedRangeSelection(base, new Set([path]), mode);
+      applyMarqueeSelection(next, mode === "add" ? path : null);
+      navigator.vibrate?.(10);
+      armedRangeSessionRef.current = { base, mode, anchorPath: path, anchorIndex };
+      return true;
+    },
+    [applyMarqueeSelection],
+  );
+  armLongPressRangeRef.current = armLongPressRange;
+
+  const extendLongPressRange = useCallback(
+    (targetPath: string | null) => {
+      const armed = armedRangeSessionRef.current;
+      if (!armed) {
+        return;
+      }
+      const range = swipeRangeFromAnchor(
+        listingEntriesRef.current,
+        armed.anchorIndex,
+        targetPath,
+      );
+      const next = armedRangeSelection(armed.base, range, armed.mode);
+      const primaryPath =
+        targetPath && next.has(targetPath)
+          ? targetPath
+          : armed.mode === "add"
+            ? armed.anchorPath
+            : null;
+      applyMarqueeSelection(next, primaryPath);
+    },
+    [applyMarqueeSelection],
+  );
+  extendLongPressRangeRef.current = extendLongPressRange;
 
   const focusQuickFilter = useCallback(() => {
     const input = quickFilterInputRef.current;
@@ -2145,9 +2190,8 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
-                onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
+                onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
-                swipeSelectActive={touchUi && selectionMode}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
@@ -2179,9 +2223,8 @@ export default function ExplorerApp() {
                 listingViewportRef={listingViewportRef}
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
-                onEntryPointerDown={longPressSelectMode.onEntryPointerDown}
+                onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 marqueeActive={marqueeSelect.isActive}
-                swipeSelectActive={touchUi && selectionMode}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {
                   void fileOps.commitRename(path, name).then((ok) => {

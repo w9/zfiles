@@ -71,8 +71,6 @@ type VirtualListingProps = {
     path: string,
   ) => void;
   marqueeActive?: boolean;
-  /** Touch select mode: entries own the drag gesture (swipe range select). */
-  swipeSelectActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
 };
 
@@ -156,7 +154,6 @@ export default function VirtualListing({
   onViewportPointerDown,
   onEntryPointerDown,
   marqueeActive = false,
-  swipeSelectActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
@@ -357,7 +354,6 @@ export default function VirtualListing({
                 data-state={isSelected ? "selected" : undefined}
                 className={cn(
                   LISTING_ROW_CLASS,
-                  swipeSelectActive && "touch-none",
                   dimmed && "opacity-70",
                   isCut && LISTING_ROW_CUT_CLASS,
                   entry.quickFilterMatched === false && "opacity-40",
