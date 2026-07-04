@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, MoreVertical } from "lucide-react";
+import { MoreVertical, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,9 @@ import {
   splitActionsForToolbarOverflow,
 } from "./selectModeActionOverflow";
 import type { ContextMenuActionItem } from "./contextMenuActions";
+
+const selectModeIconButtonClass =
+  "h-8 w-8 shrink-0 rounded-xl touch-ui:h-11 touch-ui:w-11";
 
 type SelectModeActionToolbarProps = {
   actions: ContextMenuActionItem[];
@@ -49,7 +52,7 @@ function ActionIconButton({
           variant={action.variant === "destructive" ? "ghost" : "ghost"}
           size="icon"
           className={cn(
-            "h-8 w-8 shrink-0 touch-ui:h-11 touch-ui:w-11",
+            selectModeIconButtonClass,
             action.variant === "destructive" &&
               "text-destructive hover:text-destructive",
           )}
@@ -121,11 +124,11 @@ export default function SelectModeActionToolbar({
             type="button"
             variant="default"
             size="icon"
-            className="h-8 w-8 shrink-0 touch-ui:h-11 touch-ui:w-11"
+            className={selectModeIconButtonClass}
             aria-label={doneLabel}
             onClick={onDone}
           >
-            <Check className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">{doneLabel}</TooltipContent>
@@ -142,7 +145,7 @@ export default function SelectModeActionToolbar({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 touch-ui:h-11 touch-ui:w-11"
+                  className={selectModeIconButtonClass}
                   aria-label={overflowLabel}
                 >
                   <MoreVertical className="h-4 w-4" />

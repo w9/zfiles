@@ -1846,7 +1846,7 @@ export default function ExplorerApp() {
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 touch-ui:h-11 touch-ui:w-11"
+          className="h-8 w-8 rounded-xl touch-ui:h-11 touch-ui:w-11"
           aria-label={t("selection.mode.enter")}
           onClick={() => void actionSystem.invoke("selection.toggle-mode")}
         >
