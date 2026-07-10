@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -268,6 +269,7 @@ export default function MenuBar({
   uiMode,
   mobileMenuOnly = false,
 }: MenuBarProps) {
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const categoryMenus = buildCategoryMenus(registry.list(), contextKeys);
 
   if (categoryMenus.length === 0) {
@@ -304,11 +306,18 @@ export default function MenuBar({
         ))}
       </Menubar>
 
-      <DropdownMenu>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (!open) {
+            mobileMenuTriggerRef.current?.blur();
+          }
+        }}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <Button
+                ref={mobileMenuTriggerRef}
                 type="button"
                 variant="ghost"
                 size="icon"
@@ -324,7 +333,10 @@ export default function MenuBar({
           </TooltipTrigger>
           <TooltipContent side="bottom">{ariaLabel}</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent
+          align="start"
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
           {categoryMenus.map(({ categoryKey, items }) => (
             <DropdownMenuSub key={categoryKey}>
               <DropdownMenuSubTrigger>{labelForKey(categoryKey)}</DropdownMenuSubTrigger>
