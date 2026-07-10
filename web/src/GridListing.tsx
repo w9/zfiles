@@ -69,8 +69,18 @@ const GRID_ITEM_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
+/** Finger down before long-press arms — shallow inset, no focus bg. */
+const GRID_ITEM_PRESS_INSET_CLASS =
+  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
+/** Selected + short press: keep selection ring/bg and add shallow inset. */
+const GRID_ITEM_SELECTED_PRESS_INSET_CLASS =
+  "shadow-[0_0_0_2px_var(--primary),inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)] bg-primary/12 hover:bg-primary/16";
+/** Finger target during armed range select — deeper inset only (no focus bg). */
 const GRID_ITEM_LONG_PRESS_INSET_CLASS =
-  "shadow-[0_0_0_2px_var(--primary),inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)] bg-primary/20 hover:bg-primary/24";
+  "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
+/** Selected + armed long-press: keep selection ring/bg and add deeper inset. */
+const GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS =
+  "shadow-[0_0_0_2px_var(--primary),inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)] bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_RESIZING_CLASS =
   "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
@@ -320,15 +330,27 @@ export default function GridListing({
                           isResizing && GRID_ITEM_RESIZING_CLASS,
                           isSelected &&
                             !isResizing &&
+                            !isGestureHighlighted &&
                             !isGestureInset &&
                             (isFocused
                               ? GRID_ITEM_FOCUS_SELECTED_CLASS
                               : GRID_ITEM_SELECTED_CLASS),
-                          isGestureHighlighted &&
+                          isSelected &&
                             !isResizing &&
+                            isGestureHighlighted &&
                             !isGestureInset &&
-                            GRID_ITEM_FOCUS_SELECTED_CLASS,
-                          isGestureInset &&
+                            GRID_ITEM_SELECTED_PRESS_INSET_CLASS,
+                          isSelected &&
+                            !isResizing &&
+                            isGestureInset &&
+                            GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS,
+                          !isSelected &&
+                            isGestureHighlighted &&
+                            !isGestureInset &&
+                            !isResizing &&
+                            GRID_ITEM_PRESS_INSET_CLASS,
+                          !isSelected &&
+                            isGestureInset &&
                             !isResizing &&
                             GRID_ITEM_LONG_PRESS_INSET_CLASS,
                         )}

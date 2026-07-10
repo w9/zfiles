@@ -98,6 +98,10 @@ const LISTING_ROW_CLASS = cn(
 
 const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 const LISTING_ROW_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+/** Finger down before long-press arms — shallow inset, no focus bg. */
+const LISTING_ROW_PRESS_INSET_CLASS =
+  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
+/** Finger target during armed range select — deeper inset so selection bg stays readable. */
 const LISTING_ROW_LONG_PRESS_INSET_CLASS =
   "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
 const LISTING_ROW_CUT_CLASS = "opacity-45";
@@ -368,10 +372,12 @@ export default function VirtualListing({
                   isCut && LISTING_ROW_CUT_CLASS,
                   entry.quickFilterMatched === false && "opacity-40",
                   isSelected &&
-                    (isFocused
+                    (isFocused && !isGestureHighlighted && !isGestureInset
                       ? LISTING_ROW_FOCUS_SELECTED_CLASS
                       : LISTING_ROW_SELECTED_CLASS),
-                  isGestureHighlighted && LISTING_ROW_FOCUS_SELECTED_CLASS,
+                  isGestureHighlighted &&
+                    !isGestureInset &&
+                    LISTING_ROW_PRESS_INSET_CLASS,
                   isGestureInset && LISTING_ROW_LONG_PRESS_INSET_CLASS,
                 )}
                 style={{
