@@ -51,6 +51,7 @@ type VirtualListingProps = {
   selectedIndex: number;
   focusedPath?: string | null;
   gestureHighlightPath?: string | null;
+  gestureInsetPath?: string | null;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -97,6 +98,8 @@ const LISTING_ROW_CLASS = cn(
 
 const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
 const LISTING_ROW_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+const LISTING_ROW_LONG_PRESS_INSET_CLASS =
+  "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
 const LISTING_ROW_CUT_CLASS = "opacity-45";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
@@ -138,6 +141,7 @@ export default function VirtualListing({
   selectedIndex,
   focusedPath,
   gestureHighlightPath,
+  gestureInsetPath,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -345,6 +349,8 @@ export default function VirtualListing({
             const isFocused = focusedPath != null && entry.path === focusedPath;
             const isGestureHighlighted =
               gestureHighlightPath != null && entry.path === gestureHighlightPath;
+            const isGestureInset =
+              gestureInsetPath != null && entry.path === gestureInsetPath;
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
             const isCut = cutPathSet.has(entry.path);
             const isEditing = inlineEditPath === entry.path;
@@ -366,6 +372,7 @@ export default function VirtualListing({
                       ? LISTING_ROW_FOCUS_SELECTED_CLASS
                       : LISTING_ROW_SELECTED_CLASS),
                   isGestureHighlighted && LISTING_ROW_FOCUS_SELECTED_CLASS,
+                  isGestureInset && LISTING_ROW_LONG_PRESS_INSET_CLASS,
                 )}
                 style={{
                   gridTemplateColumns: columnGridTemplate,

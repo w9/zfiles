@@ -224,6 +224,7 @@ export default function ExplorerApp() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [touchPressHighlightPath, setTouchPressHighlightPath] =
     useState<string | null>(null);
+  const [longPressArmed, setLongPressArmed] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readEffectiveFolderViewSettings(initialPath).viewMode,
@@ -745,6 +746,7 @@ export default function ExplorerApp() {
     }
     setSelectionMode(false);
     setTouchPressHighlightPath(null);
+    setLongPressArmed(false);
     armedRangeSessionRef.current = null;
     clearSelection();
   }, [touchUi, clearSelection]);
@@ -1456,6 +1458,7 @@ export default function ExplorerApp() {
       if (current) {
         clearSelection();
         setTouchPressHighlightPath(null);
+        setLongPressArmed(false);
         armedRangeSessionRef.current = null;
       }
       return next;
@@ -1501,6 +1504,7 @@ export default function ExplorerApp() {
       applyMarqueeSelection(next, mode === "add" ? path : null);
       navigator.vibrate?.(10);
       armedRangeSessionRef.current = { base, mode, anchorPath: path, anchorIndex };
+      setLongPressArmed(true);
       return true;
     },
     [applyMarqueeSelection],
@@ -1539,6 +1543,7 @@ export default function ExplorerApp() {
 
   const endTouchPressHighlight = useCallback(() => {
     armedRangeSessionRef.current = null;
+    setLongPressArmed(false);
     setTouchPressHighlightPath(null);
   }, []);
   endTouchPressHighlightRef.current = endTouchPressHighlight;
@@ -1863,6 +1868,10 @@ export default function ExplorerApp() {
     touchUi,
     selectedPath,
   });
+  const gestureInsetPath =
+    longPressArmed && touchPressHighlightPath != null
+      ? touchPressHighlightPath
+      : null;
 
   const statusBarElement = (
     <StatusBar
@@ -2218,6 +2227,7 @@ export default function ExplorerApp() {
                 selectedIndex={selectedIndex}
                 focusedPath={listingFocusedPath}
                 gestureHighlightPath={touchPressHighlightPath}
+                gestureInsetPath={gestureInsetPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2253,6 +2263,7 @@ export default function ExplorerApp() {
                 selectedIndex={selectedIndex}
                 focusedPath={listingFocusedPath}
                 gestureHighlightPath={touchPressHighlightPath}
+                gestureInsetPath={gestureInsetPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}

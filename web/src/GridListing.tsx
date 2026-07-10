@@ -39,6 +39,7 @@ type GridListingProps = {
   selectedIndex: number;
   focusedPath?: string | null;
   gestureHighlightPath?: string | null;
+  gestureInsetPath?: string | null;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -68,6 +69,8 @@ const GRID_ITEM_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/12 hover:bg-primary/16";
 const GRID_ITEM_FOCUS_SELECTED_CLASS =
   "shadow-[0_0_0_2px_var(--primary)] bg-primary/20 hover:bg-primary/24";
+const GRID_ITEM_LONG_PRESS_INSET_CLASS =
+  "shadow-[0_0_0_2px_var(--primary),inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)] bg-primary/20 hover:bg-primary/24";
 const GRID_ITEM_RESIZING_CLASS =
   "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
@@ -80,6 +83,7 @@ export default function GridListing({
   selectedIndex,
   focusedPath,
   gestureHighlightPath,
+  gestureInsetPath,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -289,6 +293,8 @@ export default function GridListing({
                   const isFocused = focusedPath != null && entry.path === focusedPath;
                   const isGestureHighlighted =
                     gestureHighlightPath != null && entry.path === gestureHighlightPath;
+                  const isGestureInset =
+                    gestureInsetPath != null && entry.path === gestureInsetPath;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   const isCut = cutPathSet.has(entry.path);
                   const isEditing = inlineEditPath === entry.path;
@@ -314,12 +320,17 @@ export default function GridListing({
                           isResizing && GRID_ITEM_RESIZING_CLASS,
                           isSelected &&
                             !isResizing &&
+                            !isGestureInset &&
                             (isFocused
                               ? GRID_ITEM_FOCUS_SELECTED_CLASS
                               : GRID_ITEM_SELECTED_CLASS),
                           isGestureHighlighted &&
                             !isResizing &&
+                            !isGestureInset &&
                             GRID_ITEM_FOCUS_SELECTED_CLASS,
+                          isGestureInset &&
+                            !isResizing &&
+                            GRID_ITEM_LONG_PRESS_INSET_CLASS,
                         )}
                         onMouseDown={(event) => {
                           if (event.shiftKey) {
