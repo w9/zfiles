@@ -162,6 +162,7 @@ import {
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldTouchTapActivate,
   resolveListingFocusedPath,
+  resolveLongPressGestureHighlightPath,
 } from "./listingTouchSelect";
 import {
   armedRangeSelection,
@@ -221,6 +222,8 @@ export default function ExplorerApp() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
   const [selectionMode, setSelectionMode] = useState(false);
+  const [touchPressHighlightPath, setTouchPressHighlightPath] =
+    useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [listingViewMode, setListingViewMode] = useState<ListingViewMode>(() =>
     readEffectiveFolderViewSettings(initialPath).viewMode,
@@ -260,8 +263,10 @@ export default function ExplorerApp() {
   const openContextMenuRef = useRef<
     (event: ContextMenuPointerEvent, path: string | null) => void
   >(() => {});
+  const beginTouchPressHighlightRef = useRef<(path: string | null) => void>(() => {});
   const armLongPressRangeRef = useRef<(path: string | null) => boolean>(() => false);
   const extendLongPressRangeRef = useRef<(targetPath: string | null) => void>(() => {});
+  const endTouchPressHighlightRef = useRef<() => void>(() => {});
   const armedRangeSessionRef = useRef<{
     base: Set<string>;
     mode: ArmedRangeMode;
@@ -739,6 +744,8 @@ export default function ExplorerApp() {
       return;
     }
     setSelectionMode(false);
+    setTouchPressHighlightPath(null);
+    armedRangeSessionRef.current = null;
     clearSelection();
   }, [touchUi, clearSelection]);
 
@@ -1254,8 +1261,10 @@ export default function ExplorerApp() {
     touchUi,
     scrollElementRef: listingViewportRef,
     layoutRef: listingMarqueeLayoutRef,
+    onPressStart: (path) => beginTouchPressHighlightRef.current(path),
     onLongPress: (path) => armLongPressRangeRef.current(path),
     onSwipeExtend: (targetPath) => extendLongPressRangeRef.current(targetPath),
+    onGestureEnd: () => endTouchPressHighlightRef.current(),
   });
 
   const onListingViewportPointerDown = useCallback(
@@ -1446,10 +1455,17 @@ export default function ExplorerApp() {
       const next = !current;
       if (current) {
         clearSelection();
+        setTouchPressHighlightPath(null);
+        armedRangeSessionRef.current = null;
       }
       return next;
     });
   }, [clearSelection]);
+
+  const beginTouchPressHighlight = useCallback((path: string | null) => {
+    setTouchPressHighlightPath(path);
+  }, []);
+  beginTouchPressHighlightRef.current = beginTouchPressHighlight;
 
   const armLongPressRange = useCallback(
     (path: string | null): boolean => {
@@ -1510,10 +1526,22 @@ export default function ExplorerApp() {
             ? armed.anchorPath
             : null;
       applyMarqueeSelection(next, primaryPath);
+      setTouchPressHighlightPath(
+        resolveLongPressGestureHighlightPath({
+          targetPath,
+          anchorPath: armed.anchorPath,
+        }),
+      );
     },
     [applyMarqueeSelection],
   );
   extendLongPressRangeRef.current = extendLongPressRange;
+
+  const endTouchPressHighlight = useCallback(() => {
+    armedRangeSessionRef.current = null;
+    setTouchPressHighlightPath(null);
+  }, []);
+  endTouchPressHighlightRef.current = endTouchPressHighlight;
 
   const focusQuickFilter = useCallback(() => {
     const input = quickFilterInputRef.current;
@@ -2189,6 +2217,7 @@ export default function ExplorerApp() {
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
                 focusedPath={listingFocusedPath}
+                gestureHighlightPath={touchPressHighlightPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2223,6 +2252,7 @@ export default function ExplorerApp() {
                 entries={listingEntries}
                 selectedIndex={selectedIndex}
                 focusedPath={listingFocusedPath}
+                gestureHighlightPath={touchPressHighlightPath}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}

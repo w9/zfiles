@@ -7,6 +7,7 @@ import {
   shouldSkipDoubleClickActivate,
   shouldTouchTapActivate,
   resolveListingFocusedPath,
+  resolveLongPressGestureHighlightPath,
 } from "./listingTouchSelect";
 
 test("shouldTouchTapActivate requires touch UI outside selection mode", () => {
@@ -68,6 +69,33 @@ test("resolveListingFocusedPath hides focus highlight in touch UI", () => {
   assert.equal(
     resolveListingFocusedPath({ touchUi: false, selectedPath: null }),
     null,
+  );
+});
+
+test("resolveLongPressGestureHighlightPath follows the finger with anchor fallback", () => {
+  assert.equal(
+    resolveLongPressGestureHighlightPath({
+      targetPath: "/c",
+      anchorPath: "/a",
+    }),
+    "/c",
+  );
+  assert.equal(
+    resolveLongPressGestureHighlightPath({
+      targetPath: null,
+      anchorPath: "/a",
+    }),
+    "/a",
+  );
+});
+
+test("touch press highlight uses the pressed path until long-press arms", () => {
+  assert.equal(
+    resolveLongPressGestureHighlightPath({
+      targetPath: null,
+      anchorPath: "/pressed",
+    }),
+    "/pressed",
   );
 });
 

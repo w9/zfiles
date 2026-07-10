@@ -45,3 +45,11 @@ export function resolveListingFocusedPath(options: {
 }): string | null {
   return options.touchUi ? null : options.selectedPath;
 }
+
+/** Active row under the finger during a touch press or armed long-press drag. */
+export function resolveLongPressGestureHighlightPath(options: {
+  targetPath: string | null;
+  anchorPath: string;
+}): string {
+  return options.targetPath ?? options.anchorPath;
+}

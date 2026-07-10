@@ -38,6 +38,7 @@ type GridListingProps = {
   entries: ListingEntry[];
   selectedIndex: number;
   focusedPath?: string | null;
+  gestureHighlightPath?: string | null;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -78,6 +79,7 @@ export default function GridListing({
   entries,
   selectedIndex,
   focusedPath,
+  gestureHighlightPath,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -285,6 +287,8 @@ export default function GridListing({
                   const index = row.entryStartIndex + columnIndex;
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   const isFocused = focusedPath != null && entry.path === focusedPath;
+                  const isGestureHighlighted =
+                    gestureHighlightPath != null && entry.path === gestureHighlightPath;
                   const dimmed = shouldDimDotEntry(entry.name, entry.key);
                   const isCut = cutPathSet.has(entry.path);
                   const isEditing = inlineEditPath === entry.path;
@@ -313,6 +317,9 @@ export default function GridListing({
                             (isFocused
                               ? GRID_ITEM_FOCUS_SELECTED_CLASS
                               : GRID_ITEM_SELECTED_CLASS),
+                          isGestureHighlighted &&
+                            !isResizing &&
+                            GRID_ITEM_FOCUS_SELECTED_CLASS,
                         )}
                         onMouseDown={(event) => {
                           if (event.shiftKey) {

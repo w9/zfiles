@@ -50,6 +50,7 @@ type VirtualListingProps = {
   entries: ListingEntry[];
   selectedIndex: number;
   focusedPath?: string | null;
+  gestureHighlightPath?: string | null;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -136,6 +137,7 @@ export default function VirtualListing({
   entries,
   selectedIndex,
   focusedPath,
+  gestureHighlightPath,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -341,6 +343,8 @@ export default function VirtualListing({
             const entry = row.original;
             const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
             const isFocused = focusedPath != null && entry.path === focusedPath;
+            const isGestureHighlighted =
+              gestureHighlightPath != null && entry.path === gestureHighlightPath;
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
             const isCut = cutPathSet.has(entry.path);
             const isEditing = inlineEditPath === entry.path;
@@ -361,6 +365,7 @@ export default function VirtualListing({
                     (isFocused
                       ? LISTING_ROW_FOCUS_SELECTED_CLASS
                       : LISTING_ROW_SELECTED_CLASS),
+                  isGestureHighlighted && LISTING_ROW_FOCUS_SELECTED_CLASS,
                 )}
                 style={{
                   gridTemplateColumns: columnGridTemplate,

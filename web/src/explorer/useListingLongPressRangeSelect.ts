@@ -23,8 +23,12 @@ export type UseListingLongPressRangeSelectOptions = {
   layoutRef?: RefObject<ListingMarqueeLayoutResolver | null>;
   /** Long-press fired. Return true to arm drag-to-range-select for the rest of the gesture. */
   onLongPress: (path: string | null) => boolean;
+  /** Finger down on a listing row; highlight the pressed item. */
+  onPressStart?: (path: string | null) => void;
   /** Armed drag is over a row (or none); extend the range toward it. */
   onSwipeExtend: (targetPath: string | null) => void;
+  /** Touch press gesture ended (pointer up/cancel). */
+  onGestureEnd?: () => void;
 };
 
 type GestureSession = {
@@ -75,7 +79,9 @@ export function useListingLongPressRangeSelect({
   scrollElementRef,
   layoutRef,
   onLongPress,
+  onPressStart,
   onSwipeExtend,
+  onGestureEnd,
 }: UseListingLongPressRangeSelectOptions) {
   const sessionRef = useRef<GestureSession | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -83,12 +89,16 @@ export function useListingLongPressRangeSelect({
   const touchMoveBlockerRef = useRef<((event: TouchEvent) => void) | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
   const onLongPressRef = useRef(onLongPress);
+  const onPressStartRef = useRef(onPressStart);
   const onSwipeExtendRef = useRef(onSwipeExtend);
+  const onGestureEndRef = useRef(onGestureEnd);
   const touchUiRef = useRef(touchUi);
   const enabledRef = useRef(enabled);
 
   onLongPressRef.current = onLongPress;
+  onPressStartRef.current = onPressStart;
   onSwipeExtendRef.current = onSwipeExtend;
+  onGestureEndRef.current = onGestureEnd;
   touchUiRef.current = touchUi;
   enabledRef.current = enabled;
 
@@ -228,6 +238,7 @@ export function useListingLongPressRangeSelect({
         armed: false,
       };
       sessionRef.current = session;
+      onPressStartRef.current?.(path);
 
       const onPointerMove = (moveEvent: PointerEvent) => {
         const active = sessionRef.current;
@@ -251,7 +262,7 @@ export function useListingLongPressRangeSelect({
             thresholdPx: LISTING_LONG_PRESS_MOVE_THRESHOLD_PX,
           })
         ) {
-          endSession();
+          clearTimer();
         }
       };
 
@@ -272,6 +283,7 @@ export function useListingLongPressRangeSelect({
             }
           }
           endSession();
+          onGestureEndRef.current?.();
         }
       };
 
@@ -280,7 +292,7 @@ export function useListingLongPressRangeSelect({
       window.addEventListener("pointercancel", onPointerEnd);
       scheduleLongPress(session);
     },
-    [endSession, extendAt, scheduleLongPress, scrollElementRef, startAutoScroll, stopAutoScroll],
+    [clearTimer, endSession, extendAt, scheduleLongPress, scrollElementRef, startAutoScroll, stopAutoScroll],
   );
 
   const onEntryPointerDown = useCallback(
