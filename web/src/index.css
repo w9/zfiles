@@ -98,8 +98,29 @@
     overscroll-behavior: none;
   }
 
+  /*
+   * One shell color for html, body, and the explorer <main>. Keep the mix in a
+   * custom property so Tailwind does not rewrite `var(--primary) 5%` as an
+   * opacity utility (which would diverge from the intended opaque tint).
+   */
+  html {
+    --shell-background: var(--background);
+    background-color: var(--shell-background);
+    @apply transition-colors duration-200;
+  }
+
+  html[data-ui-mode="touch"][data-selection-mode="true"] {
+    /* Opaque equivalent of Tailwind `bg-primary/5` over `--background`. */
+    --shell-background: color-mix(
+      in oklab,
+      var(--primary) 5%,
+      var(--background)
+    );
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: var(--shell-background);
+    @apply text-foreground antialiased transition-colors duration-200;
     font-family: Inter, system-ui, sans-serif;
   }
 }

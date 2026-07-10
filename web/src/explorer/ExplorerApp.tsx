@@ -30,7 +30,6 @@ import { useTheme } from "../useTheme";
 import { useUiMode } from "../useUiMode";
 import { useCompactTouchChrome } from "../useCompactTouchChrome";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import {
   Tooltip,
@@ -68,6 +67,7 @@ import {
   selectionSnapshotForRefresh,
   shouldRefreshListing,
 } from "../listingRefresh";
+import { applySelectionModeShell } from "./selectionModeShell";
 import { notifyApiError, notifyError, notifyWarning } from "../notifyError";
 import {
   countSelectedFileFolders,
@@ -741,6 +741,11 @@ export default function ExplorerApp() {
     setSelectionMode(false);
     clearSelection();
   }, [touchUi, clearSelection]);
+
+  useEffect(() => {
+    applySelectionModeShell(touchUi && selectionMode);
+    return () => applySelectionModeShell(false);
+  }, [touchUi, selectionMode]);
 
   useEffect(() => {
     if (
@@ -1994,7 +1999,7 @@ export default function ExplorerApp() {
 
   return (
     <>
-    <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden p-2">
+    <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden bg-[var(--shell-background)] p-2 transition-colors duration-200">
       {!compactTouchChrome ? (
       <header className="shrink-0 space-y-4">
         {selectionMode && touchUi ? (
@@ -2140,10 +2145,7 @@ export default function ExplorerApp() {
 
       <section
         ref={mainContentRef}
-        className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card",
-          touchUi && selectionMode && "bg-primary/5 ring-1 ring-inset ring-primary/15",
-        )}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card"
       >
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
