@@ -73,6 +73,39 @@ function suppressNextClick(
   window.addEventListener("click", suppressClick, true);
 }
 
+/** How long to keep the post-long-press click suppressor after pointerup. */
+const CLICK_SUPPRESS_EXPIRE_MS = 50;
+
+function clearPendingClickSuppress(
+  pendingListenerRef: React.MutableRefObject<((event: MouseEvent) => void) | null>,
+) {
+  if (!pendingListenerRef.current) {
+    return;
+  }
+  window.removeEventListener("click", pendingListenerRef.current, true);
+  pendingListenerRef.current = null;
+}
+
+/**
+ * After an armed long-press ends, a trailing click may still fire (no-drag
+ * release). Keep the suppressor briefly for that click, then drop it so the
+ * next intentional tap is not eaten when no release click arrives (drag case).
+ */
+function expirePendingClickSuppressSoon(
+  pendingListenerRef: React.MutableRefObject<((event: MouseEvent) => void) | null>,
+) {
+  const listener = pendingListenerRef.current;
+  if (!listener) {
+    return;
+  }
+  window.setTimeout(() => {
+    if (pendingListenerRef.current !== listener) {
+      return;
+    }
+    clearPendingClickSuppress(pendingListenerRef);
+  }, CLICK_SUPPRESS_EXPIRE_MS);
+}
+
 export function useListingLongPressRangeSelect({
   enabled = true,
   touchUi,
@@ -281,6 +314,7 @@ export function useListingLongPressRangeSelect({
             if (scrollElement?.hasPointerCapture?.(active.pointerId)) {
               scrollElement.releasePointerCapture(active.pointerId);
             }
+            expirePendingClickSuppressSoon(pendingClickSuppressRef);
           }
           endSession();
           onGestureEndRef.current?.();
@@ -316,8 +350,7 @@ export function useListingLongPressRangeSelect({
     () => () => {
       endSession();
       if (pendingClickSuppressRef.current) {
-        window.removeEventListener("click", pendingClickSuppressRef.current, true);
-        pendingClickSuppressRef.current = null;
+        clearPendingClickSuppress(pendingClickSuppressRef);
       }
     },
     [endSession],
