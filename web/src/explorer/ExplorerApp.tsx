@@ -1763,6 +1763,9 @@ export default function ExplorerApp() {
       if (target.closest('[role="dialog"]')) {
         return true;
       }
+      if (target.closest('[role="toolbar"]')) {
+        return true;
+      }
       if (target.closest('[role="menu"]')) {
         return true;
       }
@@ -1778,6 +1781,9 @@ export default function ExplorerApp() {
 
     const onPointerDown = (event: MouseEvent) => {
       if (selectedPathsRef.current.size === 0) {
+        return;
+      }
+      if (selectionModeRef.current) {
         return;
       }
       if (blockSelectionClearRef.current) {

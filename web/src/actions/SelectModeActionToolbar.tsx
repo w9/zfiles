@@ -83,6 +83,7 @@ export default function SelectModeActionToolbar({
   className,
 }: SelectModeActionToolbarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const overflowTriggerRef = useRef<HTMLButtonElement>(null);
   const [visibleActions, setVisibleActions] = useState(actions);
   const [overflowActions, setOverflowActions] = useState<ContextMenuActionItem[]>(
     [],
@@ -122,7 +123,7 @@ export default function SelectModeActionToolbar({
         <TooltipTrigger asChild>
           <Button
             type="button"
-            variant="default"
+            variant="ghost"
             size="icon"
             className={selectModeIconButtonClass}
             aria-label={doneLabel}
@@ -137,11 +138,18 @@ export default function SelectModeActionToolbar({
         <ActionIconButton key={action.id} action={action} onInvoke={invoke} />
       ))}
       {overflowActions.length > 0 ? (
-        <DropdownMenu>
+        <DropdownMenu
+          onOpenChange={(open) => {
+            if (!open) {
+              overflowTriggerRef.current?.blur();
+            }
+          }}
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
                 <Button
+                  ref={overflowTriggerRef}
                   type="button"
                   variant="ghost"
                   size="icon"
@@ -154,7 +162,10 @@ export default function SelectModeActionToolbar({
             </TooltipTrigger>
             <TooltipContent side="bottom">{overflowLabel}</TooltipContent>
           </Tooltip>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent
+            align="end"
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
             {overflowActions.map((action) => (
               <DropdownMenuItem
                 key={action.id}
