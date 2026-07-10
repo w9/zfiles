@@ -40,6 +40,8 @@ type GridListingProps = {
   focusedPath?: string | null;
   gestureHighlightPath?: string | null;
   gestureInsetPath?: string | null;
+  /** When false, skip scrolling the selected row into view (touch multi-select). */
+  scrollSelectedIntoView?: boolean;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -94,6 +96,7 @@ export default function GridListing({
   focusedPath,
   gestureHighlightPath,
   gestureInsetPath,
+  scrollSelectedIntoView = true,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -202,11 +205,14 @@ export default function GridListing({
   }, [cardSize.height, virtualRows, virtualizer]);
 
   useEffect(() => {
+    if (!scrollSelectedIntoView) {
+      return;
+    }
     const row = virtualRowIndexForEntryIndex(virtualRows, selectedIndex);
     if (row >= 0 && row < virtualRows.length) {
       virtualizer.scrollToIndex(row, { align: "auto" });
     }
-  }, [selectedIndex, virtualRows, virtualizer]);
+  }, [selectedIndex, virtualRows, virtualizer, scrollSelectedIntoView]);
 
   useEffect(() => {
     if (!marqueeLayoutRef) {

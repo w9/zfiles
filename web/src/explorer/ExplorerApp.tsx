@@ -1216,19 +1216,32 @@ export default function ExplorerApp() {
       setSelectedPath(null);
       return;
     }
+    const rows = listingEntriesRef.current;
+    const prevSelectedPath = selectedPathRef.current;
+    // selectedPath must remain a still-selected entry (status / actions).
     const focusPath =
       primaryPath && paths.has(primaryPath)
         ? primaryPath
-        : ([...paths].find((path) =>
-            listingEntriesRef.current.some((entry) => entry.path === path),
-          ) ?? null);
+        : prevSelectedPath && paths.has(prevSelectedPath)
+          ? prevSelectedPath
+          : ([...paths].find((path) =>
+              rows.some((entry) => entry.path === path),
+            ) ?? null);
     if (!focusPath) {
       setSelectedPath(null);
       return;
     }
-    const focusIndex = listingEntriesRef.current.findIndex(
-      (entry) => entry.path === focusPath,
-    );
+    // selectedIndex follows the finger/primary when provided so range gestures
+    // do not jump focus to an arbitrary remaining selection (which also used to
+    // scroll that row into view on touch).
+    const primaryIndex =
+      primaryPath != null
+        ? rows.findIndex((entry) => entry.path === primaryPath)
+        : -1;
+    const focusIndex =
+      primaryIndex >= 0
+        ? primaryIndex
+        : rows.findIndex((entry) => entry.path === focusPath);
     setSelectedPath(focusPath);
     if (focusIndex >= 0) {
       setSelectedIndex(focusIndex);
@@ -1501,7 +1514,9 @@ export default function ExplorerApp() {
       }
       const mode = resolveArmedRangeMode({ baseSelection: base, anchorPath: path });
       const next = armedRangeSelection(base, new Set([path]), mode);
-      applyMarqueeSelection(next, mode === "add" ? path : null);
+      // Always pass the pressed path so selectedIndex tracks the finger even in
+      // subtract mode (where the path is removed from the selection set).
+      applyMarqueeSelection(next, path);
       navigator.vibrate?.(10);
       armedRangeSessionRef.current = { base, mode, anchorPath: path, anchorIndex };
       setLongPressArmed(true);
@@ -1523,12 +1538,8 @@ export default function ExplorerApp() {
         targetPath,
       );
       const next = armedRangeSelection(armed.base, range, armed.mode);
-      const primaryPath =
-        targetPath && next.has(targetPath)
-          ? targetPath
-          : armed.mode === "add"
-            ? armed.anchorPath
-            : null;
+      // Track the finger (or anchor) for selectedIndex even when subtract removes it.
+      const primaryPath = targetPath ?? armed.anchorPath;
       applyMarqueeSelection(next, primaryPath);
       setTouchPressHighlightPath(
         resolveLongPressGestureHighlightPath({
@@ -2228,6 +2239,7 @@ export default function ExplorerApp() {
                 focusedPath={listingFocusedPath}
                 gestureHighlightPath={touchPressHighlightPath}
                 gestureInsetPath={gestureInsetPath}
+                scrollSelectedIntoView={!touchUi}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2264,6 +2276,7 @@ export default function ExplorerApp() {
                 focusedPath={listingFocusedPath}
                 gestureHighlightPath={touchPressHighlightPath}
                 gestureInsetPath={gestureInsetPath}
+                scrollSelectedIntoView={!touchUi}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}

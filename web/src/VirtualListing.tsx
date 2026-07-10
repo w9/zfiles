@@ -52,6 +52,8 @@ type VirtualListingProps = {
   focusedPath?: string | null;
   gestureHighlightPath?: string | null;
   gestureInsetPath?: string | null;
+  /** When false, skip scrolling the selected row into view (touch multi-select). */
+  scrollSelectedIntoView?: boolean;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -146,6 +148,7 @@ export default function VirtualListing({
   focusedPath,
   gestureHighlightPath,
   gestureInsetPath,
+  scrollSelectedIntoView = true,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -253,10 +256,13 @@ export default function VirtualListing({
   );
 
   useEffect(() => {
+    if (!scrollSelectedIntoView) {
+      return;
+    }
     if (selectedIndex >= 0 && selectedIndex < rows.length) {
       virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
     }
-  }, [selectedIndex, rows.length, virtualizer]);
+  }, [selectedIndex, rows.length, virtualizer, scrollSelectedIntoView]);
 
   useEffect(() => {
     if (!marqueeLayoutRef) {
