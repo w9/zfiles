@@ -42,8 +42,20 @@ export function shouldSkipDoubleClickActivate(touchUi: boolean): boolean {
 export function resolveListingFocusedPath(options: {
   touchUi: boolean;
   selectedPath: string | null;
+  /** True only after plain arrow-key navigation (not range/pointer selection). */
+  keyboardFocusVisible?: boolean;
 }): string | null {
-  return options.touchUi ? null : options.selectedPath;
+  if (options.touchUi || options.keyboardFocusVisible === false) {
+    return null;
+  }
+  return options.selectedPath;
+}
+
+/** Show keyboard focus chrome for plain arrow moves; hide for range extend. */
+export function keyboardFocusVisibleAfterListingMove(
+  extendRange: boolean,
+): boolean {
+  return !extendRange;
 }
 
 /** Active row under the finger during a touch press or armed long-press drag. */

@@ -161,6 +161,7 @@ import {
   shouldClearTouchSelectionOnBrowse,
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldTouchTapActivate,
+  keyboardFocusVisibleAfterListingMove,
   resolveListingFocusedPath,
   resolveLongPressGestureHighlightPath,
 } from "./listingTouchSelect";
@@ -221,6 +222,7 @@ export default function ExplorerApp() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
+  const [keyboardFocusVisible, setKeyboardFocusVisible] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [touchPressHighlightPath, setTouchPressHighlightPath] =
     useState<string | null>(null);
@@ -356,15 +358,18 @@ export default function ExplorerApp() {
           ? restoreSelectionFromListing(data, previousPaths, previousPathForSelection)
           : null;
       if (restored) {
+        setKeyboardFocusVisible(false);
         setSelectedIndex(restored.index);
         setSelectedPath(restored.focusPath);
         setSelectedPaths(restored.paths);
         selectionAnchorRef.current = restored.index;
       } else if (previousPaths != null && previousPaths.size > 0) {
+        setKeyboardFocusVisible(false);
         setSelectedIndex(0);
         setSelectedPath(null);
         setSelectedPaths(new Set());
       } else {
+        setKeyboardFocusVisible(false);
         setSelectedIndex(0);
         setSelectedPath(null);
         setSelectedPaths(new Set());
@@ -721,6 +726,7 @@ export default function ExplorerApp() {
 
 
   const toggleMultiSelect = useCallback((path: string) => {
+    setKeyboardFocusVisible(false);
     setSelectedPaths((current) => {
       const next = new Set(current);
       if (next.has(path)) {
@@ -736,6 +742,7 @@ export default function ExplorerApp() {
   }, []);
 
   const clearSelection = useCallback(() => {
+    setKeyboardFocusVisible(false);
     setSelectedPaths(new Set());
     setSelectedPath(null);
   }, []);
@@ -1113,6 +1120,8 @@ export default function ExplorerApp() {
             return;
           }
 
+          setKeyboardFocusVisible(false);
+
           if (selectionModeRef.current) {
             if (event.shiftKey) {
               setSelectedPaths(
@@ -1211,6 +1220,7 @@ export default function ExplorerApp() {
     listingViewMode === "table" ? displayOrderedEntries : listingEntries;
 
   const applyMarqueeSelection = useCallback((paths: Set<string>, primaryPath: string | null) => {
+    setKeyboardFocusVisible(false);
     setSelectedPaths(paths);
     if (paths.size === 0) {
       setSelectedPath(null);
@@ -1319,6 +1329,7 @@ export default function ExplorerApp() {
     const matchIndex = firstQuickFilterMatchIndex(activeListingEntries);
     if (matchIndex >= 0) {
       const match = activeListingEntries[matchIndex]!;
+      setKeyboardFocusVisible(false);
       setSelectedIndex(matchIndex);
       setSelectedPath(match.path);
       setSelectedPaths(new Set([match.path]));
@@ -1340,6 +1351,9 @@ export default function ExplorerApp() {
       if (!entry) {
         return;
       }
+      setKeyboardFocusVisible(
+        keyboardFocusVisibleAfterListingMove(options?.extendRange === true),
+      );
       setSelectedIndex(index);
       if (options?.extendRange) {
         setSelectedPaths(pathsInIndexRange(rows, selectionAnchorRef.current, index));
@@ -1436,6 +1450,7 @@ export default function ExplorerApp() {
     }
     const lastPath = visiblePaths[visiblePaths.length - 1] ?? null;
     const lastIndex = rows.length - 1;
+    setKeyboardFocusVisible(false);
     setSelectedPaths(new Set(visiblePaths));
     setSelectedPath(lastPath);
     setSelectedIndex(lastIndex);
@@ -1681,11 +1696,13 @@ export default function ExplorerApp() {
       event.preventDefault();
 
       if (path == null) {
+        setKeyboardFocusVisible(false);
         setSelectedPaths(new Set());
         setSelectedPath(null);
       } else if (!selectedPathsRef.current.has(path)) {
         const rows = listingEntriesRef.current;
         const displayIndex = rows.findIndex((row) => row.path === path);
+        setKeyboardFocusVisible(false);
         setSelectedPaths(new Set([path]));
         setSelectedPath(path);
         if (displayIndex >= 0) {
@@ -1878,6 +1895,7 @@ export default function ExplorerApp() {
   const listingFocusedPath = resolveListingFocusedPath({
     touchUi,
     selectedPath,
+    keyboardFocusVisible,
   });
   const gestureInsetPath =
     longPressArmed && touchPressHighlightPath != null

@@ -99,7 +99,9 @@ const LISTING_ROW_CLASS = cn(
 );
 
 const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
-const LISTING_ROW_FOCUS_SELECTED_CLASS = "bg-primary/20 hover:bg-primary/24";
+/** Keyboard arrow focus — same shallow inset as short press. */
+const LISTING_ROW_FOCUS_SELECTED_CLASS =
+  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)] bg-primary/12 hover:bg-primary/16";
 /** Finger down before long-press arms — shallow inset, no focus bg. */
 const LISTING_ROW_PRESS_INSET_CLASS =
   "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";

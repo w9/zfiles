@@ -6,6 +6,7 @@ import {
   shouldClearTouchSelectionOutsideSelectionMode,
   shouldSkipDoubleClickActivate,
   shouldTouchTapActivate,
+  keyboardFocusVisibleAfterListingMove,
   resolveListingFocusedPath,
   resolveLongPressGestureHighlightPath,
 } from "./listingTouchSelect";
@@ -63,13 +64,48 @@ test("resolveListingFocusedPath hides focus highlight in touch UI", () => {
     null,
   );
   assert.equal(
-    resolveListingFocusedPath({ touchUi: false, selectedPath: "/a" }),
+    resolveListingFocusedPath({
+      touchUi: false,
+      selectedPath: "/a",
+      keyboardFocusVisible: true,
+    }),
     "/a",
   );
   assert.equal(
     resolveListingFocusedPath({ touchUi: false, selectedPath: null }),
     null,
   );
+});
+
+test("resolveListingFocusedPath shows focus only when keyboard focus is visible", () => {
+  assert.equal(
+    resolveListingFocusedPath({
+      touchUi: false,
+      selectedPath: "/a",
+      keyboardFocusVisible: false,
+    }),
+    null,
+  );
+  assert.equal(
+    resolveListingFocusedPath({
+      touchUi: false,
+      selectedPath: "/a",
+      keyboardFocusVisible: true,
+    }),
+    "/a",
+  );
+  assert.equal(
+    resolveListingFocusedPath({
+      touchUi: false,
+      selectedPath: "/a",
+    }),
+    "/a",
+  );
+});
+
+test("keyboardFocusVisibleAfterListingMove is true only for plain arrow moves", () => {
+  assert.equal(keyboardFocusVisibleAfterListingMove(false), true);
+  assert.equal(keyboardFocusVisibleAfterListingMove(true), false);
 });
 
 test("resolveLongPressGestureHighlightPath follows the finger with anchor fallback", () => {
