@@ -10,7 +10,6 @@ export const es: Record<MessageKey, string> = {
   "breadcrumb.forward": "Adelante",
   "breadcrumb.refresh": "Actualizar",
   "breadcrumb.cancel": "Cancelar",
-  "breadcrumb.hiddenSegmentsMenu": "Segmentos de ruta ocultos",
   "quickFilter.label": "Filtrar archivos",
   "quickFilter.placeholder": "Filtrar…",
   "quickFilter.clear": "Borrar filtro",

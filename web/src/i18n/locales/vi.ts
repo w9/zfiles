@@ -10,7 +10,6 @@ export const vi: Record<MessageKey, string> = {
   "breadcrumb.forward": "Tiến tới",
   "breadcrumb.refresh": "Làm mới",
   "breadcrumb.cancel": "Hủy",
-  "breadcrumb.hiddenSegmentsMenu": "Phân đoạn đường dẫn ẩn",
   "quickFilter.label": "Lọc tệp",
   "quickFilter.placeholder": "Lọc…",
   "quickFilter.clear": "Xóa bộ lọc",

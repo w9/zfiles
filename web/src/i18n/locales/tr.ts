@@ -10,7 +10,6 @@ export const tr: Record<MessageKey, string> = {
   "breadcrumb.forward": "İleri",
   "breadcrumb.refresh": "Yenile",
   "breadcrumb.cancel": "İptal",
-  "breadcrumb.hiddenSegmentsMenu": "Gizli yol bölümleri",
   "quickFilter.label": "Dosyaları filtrele",
   "quickFilter.placeholder": "Filtrele…",
   "quickFilter.clear": "Filtreyi temizle",

@@ -10,7 +10,6 @@ export const en = {
   "breadcrumb.forward": "Forward",
   "breadcrumb.refresh": "Refresh",
   "breadcrumb.cancel": "Cancel",
-  "breadcrumb.hiddenSegmentsMenu": "Hidden path segments",
   "quickFilter.label": "Filter files",
   "quickFilter.placeholder": "Filter…",
   "quickFilter.clear": "Clear filter",

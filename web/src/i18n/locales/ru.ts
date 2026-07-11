@@ -10,7 +10,6 @@ export const ru: Record<MessageKey, string> = {
   "breadcrumb.forward": "Вперёд",
   "breadcrumb.refresh": "Обновить",
   "breadcrumb.cancel": "Отмена",
-  "breadcrumb.hiddenSegmentsMenu": "Скрытые сегменты пути",
   "quickFilter.label": "Фильтровать файлы",
   "quickFilter.placeholder": "Фильтр…",
   "quickFilter.clear": "Очистить фильтр",

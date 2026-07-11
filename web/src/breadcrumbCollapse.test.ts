@@ -2,50 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  collapsedBreadcrumbMiddle,
-  middleSegmentIndices,
+  breadcrumbPathScrollLeftMax,
+  breadcrumbPathShowsLeftFade,
   pathForBreadcrumbPartIndex,
 } from "./breadcrumbCollapse";
-
-describe("middleSegmentIndices", () => {
-  it("returns no middle indices for root-only paths", () => {
-    assert.deepEqual(middleSegmentIndices(1), []);
-  });
-
-  it("returns no middle indices for root plus one segment", () => {
-    assert.deepEqual(middleSegmentIndices(2), []);
-  });
-
-  it("returns interior indices for deeper paths", () => {
-    assert.deepEqual(middleSegmentIndices(5), [1, 2, 3]);
-  });
-});
-
-describe("collapsedBreadcrumbMiddle", () => {
-  it("shows all middle segments when nothing is hidden", () => {
-    assert.deepEqual(collapsedBreadcrumbMiddle(5, 0), {
-      showEllipsis: false,
-      hiddenMiddleIndices: [],
-      visibleMiddleIndices: [1, 2, 3],
-    });
-  });
-
-  it("hides middle segments from the start and keeps trailing ones", () => {
-    assert.deepEqual(collapsedBreadcrumbMiddle(5, 2), {
-      showEllipsis: true,
-      hiddenMiddleIndices: [1, 2],
-      visibleMiddleIndices: [3],
-    });
-  });
-
-  it("can collapse every middle segment", () => {
-    assert.deepEqual(collapsedBreadcrumbMiddle(5, 99), {
-      showEllipsis: true,
-      hiddenMiddleIndices: [1, 2, 3],
-      visibleMiddleIndices: [],
-    });
-  });
-});
 
 describe("pathForBreadcrumbPartIndex", () => {
   it("maps breadcrumb indices to explorer paths", () => {
@@ -53,5 +13,27 @@ describe("pathForBreadcrumbPartIndex", () => {
     assert.equal(pathForBreadcrumbPartIndex(parts, 0), "alpha");
     assert.equal(pathForBreadcrumbPartIndex(parts, 1), "alpha/beta");
     assert.equal(pathForBreadcrumbPartIndex(parts, 3), "");
+  });
+});
+
+describe("breadcrumbPathScrollLeftMax", () => {
+  it("returns zero when content fits", () => {
+    assert.equal(breadcrumbPathScrollLeftMax(100, 200), 0);
+  });
+
+  it("returns the overflow amount when content is wider", () => {
+    assert.equal(breadcrumbPathScrollLeftMax(400, 250), 150);
+  });
+});
+
+describe("breadcrumbPathShowsLeftFade", () => {
+  it("hides the fade at the start of the scroll range", () => {
+    assert.equal(breadcrumbPathShowsLeftFade(0), false);
+    assert.equal(breadcrumbPathShowsLeftFade(1), false);
+  });
+
+  it("shows the fade once content is scrolled off to the left", () => {
+    assert.equal(breadcrumbPathShowsLeftFade(2), true);
+    assert.equal(breadcrumbPathShowsLeftFade(120), true);
   });
 });

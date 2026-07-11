@@ -1947,7 +1947,6 @@ export default function ExplorerApp() {
         onRefresh={() => void actionSystem.invoke("navigation.refresh")}
         onCancel={() => void actionSystem.invoke("navigation.cancel-load")}
         onNavigate={(path) => void navigateTo(path)}
-        hiddenSegmentsMenuLabel={t("breadcrumb.hiddenSegmentsMenu")}
         quickFilterLabel={t("quickFilter.label")}
         quickFilterPlaceholder={t("quickFilter.placeholder")}
         quickFilterClearLabel={t("quickFilter.clear")}

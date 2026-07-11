@@ -10,7 +10,6 @@ export const ja: Record<MessageKey, string> = {
   "breadcrumb.forward": "進む",
   "breadcrumb.refresh": "更新",
   "breadcrumb.cancel": "キャンセル",
-  "breadcrumb.hiddenSegmentsMenu": "非表示のパスセグメント",
   "quickFilter.label": "ファイルを絞り込む",
   "quickFilter.placeholder": "絞り込み…",
   "quickFilter.clear": "絞り込みをクリア",

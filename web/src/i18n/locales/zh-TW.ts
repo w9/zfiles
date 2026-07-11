@@ -10,7 +10,6 @@ export const zhTW: Record<MessageKey, string> = {
   "breadcrumb.forward": "下一頁",
   "breadcrumb.refresh": "重新整理",
   "breadcrumb.cancel": "取消",
-  "breadcrumb.hiddenSegmentsMenu": "隱藏的路徑段",
   "quickFilter.label": "篩選檔案",
   "quickFilter.placeholder": "篩選…",
   "quickFilter.clear": "清除篩選",

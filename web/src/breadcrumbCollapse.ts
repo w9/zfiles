@@ -1,43 +1,3 @@
-export type CollapsedBreadcrumbMiddle = {
-  showEllipsis: boolean;
-  visibleMiddleIndices: number[];
-  hiddenMiddleIndices: number[];
-};
-
-/** Middle segment indices between the first segment (0) and the current page (partCount - 1). */
-export function middleSegmentIndices(partCount: number): number[] {
-  if (partCount <= 2) {
-    return [];
-  }
-  return Array.from({ length: partCount - 2 }, (_, index) => index + 1);
-}
-
-/** Collapse middle segments from the start, keeping segments nearer the current page visible. */
-export function collapsedBreadcrumbMiddle(
-  partCount: number,
-  hiddenMiddleFromStart: number,
-): CollapsedBreadcrumbMiddle {
-  const middle = middleSegmentIndices(partCount);
-  if (middle.length === 0) {
-    return {
-      showEllipsis: false,
-      visibleMiddleIndices: [],
-      hiddenMiddleIndices: [],
-    };
-  }
-
-  const hiddenCount = Math.min(
-    Math.max(0, hiddenMiddleFromStart),
-    middle.length,
-  );
-
-  return {
-    showEllipsis: hiddenCount > 0,
-    hiddenMiddleIndices: middle.slice(0, hiddenCount),
-    visibleMiddleIndices: middle.slice(hiddenCount),
-  };
-}
-
 export function pathForBreadcrumbPartIndex(
   parts: string[],
   index: number,
@@ -46,4 +6,17 @@ export function pathForBreadcrumbPartIndex(
     return "";
   }
   return parts.slice(0, index + 1).join("/");
+}
+
+/** Max scrollLeft that aligns the path end with the visible right edge. */
+export function breadcrumbPathScrollLeftMax(
+  scrollWidth: number,
+  clientWidth: number,
+): number {
+  return Math.max(0, scrollWidth - clientWidth);
+}
+
+/** Left fade when content is scrolled off to the left. */
+export function breadcrumbPathShowsLeftFade(scrollLeft: number): boolean {
+  return scrollLeft > 1;
 }

@@ -10,7 +10,6 @@ export const zhCN: Record<MessageKey, string> = {
   "breadcrumb.forward": "前进",
   "breadcrumb.refresh": "刷新",
   "breadcrumb.cancel": "取消",
-  "breadcrumb.hiddenSegmentsMenu": "隐藏的路径段",
   "quickFilter.label": "筛选文件",
   "quickFilter.placeholder": "筛选…",
   "quickFilter.clear": "清除筛选",
