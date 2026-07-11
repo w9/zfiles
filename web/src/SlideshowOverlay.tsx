@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import {
   Tooltip,
   TooltipContent,
@@ -68,6 +69,7 @@ import {
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
 import { shouldClosePreviewOnBackdropClick } from "./slideshowBackdrop";
 import { previewKind } from "./imagePaths";
+import { previewChromeRegion } from "./previewChromeLayout";
 import { fetchPreviewText, exceedsTextPreviewHardLimit, canOfferTextPreview } from "./previewTextContent";
 import { renderMarkdownToSafeHtml } from "./renderMarkdown";
 
@@ -856,96 +858,33 @@ export default function SlideshowOverlay({
       </div>
 
       <div
-        className={cn(
-          "absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-4",
-          chromeTopClass,
-        )}
+        className={cn("absolute inset-x-0 top-0 w-full p-4", chromeTopClass)}
+        data-preview-chrome={previewChromeRegion("title")}
       >
-        <p className="max-w-[min(50vw,32rem)] truncate text-sm font-medium text-white drop-shadow-sm">
-          {fileName}
-          {paths.length > 1 ? (
-            <span
-              className="ml-2 text-white/75 tabular-nums"
-              aria-label={t("slideshow.counter", {
-                current: String(index + 1),
-                total: String(paths.length),
-              })}
-            >
-              {t("slideshow.counter", {
-                current: String(index + 1),
-                total: String(paths.length),
-              })}
-            </span>
-          ) : null}
-        </p>
-
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {isImageKind ? (
-            <>
+        <div className="flex w-full flex-col gap-0.5">
+          <p className="truncate text-sm font-medium text-white drop-shadow-sm">
+            {fileName}
+            {paths.length > 1 ? (
               <span
-                className="self-center px-0.5 text-xs tabular-nums text-white/90 drop-shadow-sm"
-                aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+                className="ml-2 text-white/75 tabular-nums"
+                aria-label={t("slideshow.counter", {
+                  current: String(index + 1),
+                  total: String(paths.length),
+                })}
               >
-                {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+                {t("slideshow.counter", {
+                  current: String(index + 1),
+                  total: String(paths.length),
+                })}
               </span>
-              <div className="flex items-center gap-1 rounded-md bg-black/50 p-1">
-            <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t("slideshow.zoomFit")}
-                onClick={() => {
-                  bumpActivity();
-                  setZoomMode("fit");
-                }}
-              >
-                <Maximize2 className="h-4 w-4" />
-              </Button>
-            </SlideshowIconTooltip>
-            <SlideshowIconTooltip label={t("slideshow.zoomActual")}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t("slideshow.zoomActual")}
-                onClick={() => {
-                  bumpActivity();
-                  setZoomMode("one-to-one");
-                }}
-              >
-                <Scan className="h-4 w-4" />
-              </Button>
-            </SlideshowIconTooltip>
-            <SlideshowIconTooltip label={t("slideshow.zoomOut")}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t("slideshow.zoomOut")}
-                onClick={handleZoomOut}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-            </SlideshowIconTooltip>
-            <SlideshowIconTooltip label={t("slideshow.zoomIn")}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t("slideshow.zoomIn")}
-                onClick={handleZoomIn}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </SlideshowIconTooltip>
-          </div>
-            </>
-          ) : null}
+            ) : null}
+          </p>
+          <p
+            className="truncate text-xs text-white/90 drop-shadow-sm"
+            data-preview-chrome={previewChromeRegion("metadata")}
+          >
+            {metadataLine || "—"}
+          </p>
         </div>
       </div>
 
@@ -1002,55 +941,117 @@ export default function SlideshowOverlay({
 
       <div
         className={cn(
-          "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4",
+          "absolute inset-x-0 bottom-0 flex w-full flex-wrap items-end justify-end gap-2 p-4",
           chromeBottomClass,
         )}
+        data-preview-chrome={previewChromeRegion("actions")}
       >
-        <p className="max-w-[min(70vw,48rem)] truncate text-xs text-white/90 drop-shadow-sm">
-          {metadataLine || "—"}
-        </p>
-
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {previewUrl ? (
-            <>
+        {isImageKind ? (
+          <ButtonGroup
+            aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+            data-preview-chrome={previewChromeRegion("zoom")}
+          >
+            <ButtonGroupText
+              className="h-8 border-white/15 bg-black/50 px-3 text-xs tabular-nums text-white shadow-none touch-ui:h-11"
+              aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+            >
+              {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
+            </ButtonGroupText>
+            <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
               <Button
                 type="button"
                 variant="secondary"
-                size="sm"
-                className="bg-black/50 text-white hover:bg-black/70"
-                asChild
-              >
-                <a href={previewUrl} download={fileName}>
-                  <Download className="h-4 w-4" />
-                  {t("slideshow.download")}
-                </a>
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="bg-black/50 text-white hover:bg-black/70"
+                size="icon"
+                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                aria-label={t("slideshow.zoomFit")}
                 onClick={() => {
                   bumpActivity();
-                  window.open(previewUrl, "_blank", "noopener,noreferrer");
+                  setZoomMode("fit");
                 }}
               >
-                <ExternalLink className="h-4 w-4" />
-                {t("slideshow.openInNewTab")}
+                <Maximize2 className="h-4 w-4" />
               </Button>
-            </>
-          ) : null}
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="bg-black/50 text-white hover:bg-black/70"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-            {t("slideshow.close")}
-          </Button>
-        </div>
+            </SlideshowIconTooltip>
+            <SlideshowIconTooltip label={t("slideshow.zoomActual")}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                aria-label={t("slideshow.zoomActual")}
+                onClick={() => {
+                  bumpActivity();
+                  setZoomMode("one-to-one");
+                }}
+              >
+                <Scan className="h-4 w-4" />
+              </Button>
+            </SlideshowIconTooltip>
+            <SlideshowIconTooltip label={t("slideshow.zoomOut")}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                aria-label={t("slideshow.zoomOut")}
+                onClick={handleZoomOut}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+            </SlideshowIconTooltip>
+            <SlideshowIconTooltip label={t("slideshow.zoomIn")}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                aria-label={t("slideshow.zoomIn")}
+                onClick={handleZoomIn}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </SlideshowIconTooltip>
+          </ButtonGroup>
+        ) : null}
+        {previewUrl ? (
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="bg-black/50 text-white hover:bg-black/70"
+              asChild
+            >
+              <a href={previewUrl} download={fileName}>
+                <Download className="h-4 w-4" />
+                {t("slideshow.download")}
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="bg-black/50 text-white hover:bg-black/70"
+              onClick={() => {
+                bumpActivity();
+                window.open(previewUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
+              <ExternalLink className="h-4 w-4" />
+              {t("slideshow.openInNewTab")}
+            </Button>
+          </>
+        ) : null}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="bg-black/50 text-white hover:bg-black/70"
+          onClick={() => onOpenChange(false)}
+        >
+          <X className="h-4 w-4" />
+          {t("slideshow.close")}
+        </Button>
       </div>
     </div>
   );
