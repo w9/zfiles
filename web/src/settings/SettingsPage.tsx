@@ -22,7 +22,6 @@ import { useGridCardSize } from "@/settings/GridCardSizeProvider";
 import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
 import { useGridThumbnailBadge } from "@/settings/GridThumbnailBadgeProvider";
 import { useSlideshowSettings } from "@/settings/SlideshowSettingsProvider";
-import { useSlideshowIntervalInput } from "@/settings/useSlideshowIntervalInput";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { useListingSortOrder } from "@/settings/ListingSortOrderProvider";
 import { useShowDotEntries } from "@/settings/ShowDotEntriesProvider";
@@ -193,15 +192,7 @@ export default function SettingsPage() {
     useGridImagePreviews();
   const { enabled: gridThumbnailBadgeEnabled, setEnabled: setGridThumbnailBadgeEnabled } =
     useGridThumbnailBadge();
-  const {
-    autoplayOnOpen,
-    setAutoplayOnOpen,
-    startAtActiveItem,
-    setStartAtActiveItem,
-    intervalSeconds,
-    setIntervalSeconds,
-  } = useSlideshowSettings();
-  const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds);
+  const { startAtActiveItem, setStartAtActiveItem } = useSlideshowSettings();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const { mode: uiMode, setMode: setUiMode } = useUiMode();
   const [pasteDestination, setPasteDestination] = useState(
@@ -298,52 +289,22 @@ export default function SettingsPage() {
                 { value: "disabled", label: t("settings.gridThumbnailBadge.disabled") },
               ]}
             />
-            <Field>
-              <FieldLabel>{t("settings.slideshow.label")}</FieldLabel>
-              <FieldDescription>{t("settings.slideshow.description")}</FieldDescription>
-              <FieldGroup className="gap-4">
-                <SettingsToggleField
-                  label={t("settings.slideshow.autoplay.label")}
-                  description={t("settings.slideshow.autoplay.description")}
-                  value={autoplayOnOpen ? "enabled" : "disabled"}
-                  onValueChange={(value) => setAutoplayOnOpen(value === "enabled")}
-                  options={[
-                    { value: "enabled", label: t("settings.slideshow.autoplay.enabled") },
-                    { value: "disabled", label: t("settings.slideshow.autoplay.disabled") },
-                  ]}
-                />
-                <SettingsToggleField
-                  label={t("settings.slideshow.startAtActiveItem.label")}
-                  description={t("settings.slideshow.startAtActiveItem.description")}
-                  value={startAtActiveItem ? "enabled" : "disabled"}
-                  onValueChange={(value) => setStartAtActiveItem(value === "enabled")}
-                  options={[
-                    {
-                      value: "enabled",
-                      label: t("settings.slideshow.startAtActiveItem.enabled"),
-                    },
-                    {
-                      value: "disabled",
-                      label: t("settings.slideshow.startAtActiveItem.disabled"),
-                    },
-                  ]}
-                />
-                <Field>
-                  <FieldLabel htmlFor="settings-slideshow-interval">
-                    {t("settings.slideshow.interval.label")}
-                  </FieldLabel>
-                  <FieldDescription>
-                    {t("settings.slideshow.interval.description")}
-                  </FieldDescription>
-                  <Input
-                    id="settings-slideshow-interval"
-                    type="number"
-                    className="h-9 w-28"
-                    {...slideshowIntervalInput}
-                  />
-                </Field>
-              </FieldGroup>
-            </Field>
+            <SettingsToggleField
+              label={t("settings.slideshow.startAtActiveItem.label")}
+              description={t("settings.slideshow.startAtActiveItem.description")}
+              value={startAtActiveItem ? "enabled" : "disabled"}
+              onValueChange={(value) => setStartAtActiveItem(value === "enabled")}
+              options={[
+                {
+                  value: "enabled",
+                  label: t("settings.slideshow.startAtActiveItem.enabled"),
+                },
+                {
+                  value: "disabled",
+                  label: t("settings.slideshow.startAtActiveItem.disabled"),
+                },
+              ]}
+            />
             <Field>
               <FieldLabel>{t("settings.gridCard.label")}</FieldLabel>
               <FieldDescription>{t("settings.gridCard.description")}</FieldDescription>

@@ -285,7 +285,8 @@ test("preview overlay opens for images", async ({ page }) => {
     await palette.getByRole("option", { name: "Preview" }).click();
     const preview = page.getByRole("dialog", { name: /slide-[ab]\.png/ });
     await expect(preview).toBeVisible();
-    await expect(preview.getByRole("button", { name: "Play" })).toBeEnabled();
+    await expect(preview.getByRole("button", { name: "Previous" })).toBeVisible();
+    await expect(preview.getByRole("button", { name: "Next" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(preview).not.toBeVisible();
   } finally {

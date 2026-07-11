@@ -24,19 +24,20 @@ function isListingFile(
   return true;
 }
 
+/**
+ * Preview paths for a multi-select set: selected non-directory files in listing order.
+ * Empty selection returns [] — callers open a single focused path when needed.
+ */
 export function resolveViewerPreviewPaths(
   selectedPaths: string[],
   listingEntries: Array<{ path: string; isDir: boolean }>,
 ): string[] {
-  const listingPaths = listingEntries.map((entry) => entry.path);
-  if (selectedPaths.length > 0) {
-    return sortPathsByListingOrder(
-      selectedPaths.filter((path) => isListingFile(path, listingEntries)),
-      listingPaths,
-    );
+  if (selectedPaths.length === 0) {
+    return [];
   }
+  const listingPaths = listingEntries.map((entry) => entry.path);
   return sortPathsByListingOrder(
-    listingEntries.filter((entry) => !entry.isDir).map((entry) => entry.path),
+    selectedPaths.filter((path) => isListingFile(path, listingEntries)),
     listingPaths,
   );
 }

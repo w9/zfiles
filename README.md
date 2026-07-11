@@ -15,7 +15,7 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 - **Resumable everywhere that matters** — HTTP Range on download, tus PATCH on upload, CLI `zfiles upload --resume` for pushing files to a remote instance.
 - **Virtual-scrolled listings** — List and grid views stay responsive on huge directories without loading the full tree into the DOM.
 - **Keyboard-first power UI** — Command palette, J/K navigation, Shift+J/K range select, marquee rubber-band selection, copy/cut/paste file ops.
-- **Fullscreen image slideshow** — Dimmed overlay viewer for images in the current folder: zoom, drag/pinch pan, autoplay, metadata; arrows, hjkl, or Space in grid view.
+- **Fullscreen preview** — Dimmed overlay for images and other browser-native media: zoom, drag/pinch pan, metadata; with a multi-file selection, prev/next and arrow keys step through the set; Space opens preview in grid view.
 - **LAN sharing built in** — Bind `0.0.0.0`, auto-generate a token, print a share URL and terminal QR code for phones and laptops on the network.
 - **Live refresh** — Filesystem watch pushes `filesystem_changed` over WebSocket; the current listing updates in place.
 - **Cloud mode without a zfiles server** — Static SPA only; temporary bucket credentials stay in `sessionStorage` and go straight to AWS/Cloudflare.
@@ -50,7 +50,7 @@ Open the URL from the startup banner (local mode opens your browser by default).
 - Context menu on rows and empty folder background; right-click outside selection retargets before open
 - Clipboard copy/cut/paste with conflict and destination dialogs; batch paste settings
 - Image preview for common formats in the preview pane; other types show metadata and download
-- Fullscreen image slideshow — open from the preview pane, context menu, or Space on an image in grid view; fit/1:1 zoom with live percentage, drag and pinch pan, play/pause with configurable interval, download and open-in-new-tab; settings for autoplay-on-open
+- Fullscreen preview — open from the context menu or Space on a file; fit/1:1 zoom with live percentage, drag and pinch pan; with two or more files selected, prev/next (and arrows) step through the selection; download and open-in-new-tab; optional start-at-active-item setting
 - Material Icon Theme file-type icons (generated at build time)
 - Read-only mode when the serve root is not writable; explicit `--read-only` for LAN shares
 - Symlink policy: follow outbound symlinks on localhost by default; stricter defaults on public binds
@@ -89,7 +89,7 @@ Non-loopback binds reject symlinks that escape the serve root by default (`follo
 
 **Why is there no filename search?** Search implied an index or recursive scan that fights the instant-start and no-metadata-in-your-repo goals. Quick filter narrows the *current* listing client-side; it is not a global search.
 
-**Why no plugins?** The previous plugin supervisor and JSON-RPC model were removed to keep the kernel small and the security surface predictable. Built-in file actions (`delete`, `mkdir`, `rename`, `copy`, `move`) cover explorer workflows; preview and fullscreen slideshow stay client-side for common images.
+**Why no plugins?** The previous plugin supervisor and JSON-RPC model were removed to keep the kernel small and the security surface predictable. Built-in file actions (`delete`, `mkdir`, `rename`, `copy`, `move`) cover explorer workflows; preview stays client-side for common media types.
 
 **Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want LAN sharing, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser.
 

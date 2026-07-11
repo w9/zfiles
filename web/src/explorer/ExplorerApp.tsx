@@ -789,14 +789,21 @@ export default function ExplorerApp() {
     [t],
   );
 
-  const getPreviewPaths = useCallback(
-    () =>
-      resolveViewerPreviewPaths(
-        Array.from(selectedPathsRef.current),
-        listingEntriesRef.current,
-      ),
-    [],
-  );
+  const getPreviewPaths = useCallback(() => {
+    const listing = listingEntriesRef.current;
+    const fromSelection = resolveViewerPreviewPaths(
+      Array.from(selectedPathsRef.current),
+      listing,
+    );
+    if (fromSelection.length > 0) {
+      return fromSelection;
+    }
+    const focused = selectedPathRef.current;
+    if (focused && listing.some((entry) => entry.path === focused && !entry.isDir)) {
+      return [focused];
+    }
+    return [];
+  }, []);
 
   const openPreview = useCallback((
     paths: string[],
@@ -876,9 +883,21 @@ export default function ExplorerApp() {
       path: entry.path,
       isDir: entry.is_dir,
     }));
-    return resolveViewerPreviewPaths(Array.from(selectedPaths), listingSource)
-      .length;
-  }, [selectedPaths, quickFilteredEntries]);
+    const fromSelection = resolveViewerPreviewPaths(
+      Array.from(selectedPaths),
+      listingSource,
+    );
+    if (fromSelection.length > 0) {
+      return fromSelection.length;
+    }
+    if (
+      selectedPath &&
+      listingSource.some((entry) => entry.path === selectedPath && !entry.isDir)
+    ) {
+      return 1;
+    }
+    return 0;
+  }, [selectedPaths, selectedPath, quickFilteredEntries]);
 
   const contextKeys = useMemo<ContextKeys>(
     () => ({

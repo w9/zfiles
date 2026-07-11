@@ -20,7 +20,7 @@ test("resolveViewerPreviewPaths filters selected paths to non-directory files", 
   );
 });
 
-test("resolveViewerPreviewPaths uses listing files when nothing is selected", () => {
+test("resolveViewerPreviewPaths returns empty when nothing is selected", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.zip", isDir: false },
@@ -28,12 +28,7 @@ test("resolveViewerPreviewPaths uses listing files when nothing is selected", ()
     { path: "/c.webm", isDir: false },
     { path: "/d.flac", isDir: false },
   ];
-  assert.deepEqual(resolveViewerPreviewPaths([], listing), [
-    "/a.png",
-    "/b.zip",
-    "/c.webm",
-    "/d.flac",
-  ]);
+  assert.deepEqual(resolveViewerPreviewPaths([], listing), []);
 });
 
 test("resolveViewerPreviewPaths excludes directories from selection", () => {
@@ -47,7 +42,7 @@ test("resolveViewerPreviewPaths excludes directories from selection", () => {
   );
 });
 
-test("resolveViewerPreviewPaths includes all file types in listing", () => {
+test("resolveViewerPreviewPaths keeps all selected file types in listing order", () => {
   const listing = [
     { path: "/a.png", isDir: false },
     { path: "/b.pdf", isDir: false },
@@ -56,14 +51,13 @@ test("resolveViewerPreviewPaths includes all file types in listing", () => {
     { path: "/e.svg", isDir: false },
     { path: "/f.zip", isDir: false },
   ];
-  assert.deepEqual(resolveViewerPreviewPaths([], listing), [
-    "/a.png",
-    "/b.pdf",
-    "/c.txt",
-    "/d.md",
-    "/e.svg",
-    "/f.zip",
-  ]);
+  assert.deepEqual(
+    resolveViewerPreviewPaths(
+      ["/f.zip", "/c.txt", "/a.png", "/d.md", "/b.pdf", "/e.svg"],
+      listing,
+    ),
+    ["/a.png", "/b.pdf", "/c.txt", "/d.md", "/e.svg", "/f.zip"],
+  );
 });
 
 test("sortPathsByListingOrder sorts selected paths by listing order", () => {
@@ -84,4 +78,10 @@ test("resolveSlideshowStartIndex honors explicit start path when requested", () 
   const paths = ["/a.png", "/b.png", "/c.png"];
   assert.equal(resolveSlideshowStartIndex(paths, "/b.png", false, true), 1);
   assert.equal(resolveSlideshowStartIndex(paths, "/missing.png", false, true), 0);
+});
+
+test("resolveSlideshowStartIndex uses active item when enabled", () => {
+  const paths = ["/a.png", "/b.png", "/c.png"];
+  assert.equal(resolveSlideshowStartIndex(paths, "/c.png", true), 2);
+  assert.equal(resolveSlideshowStartIndex(paths, "/missing.png", true), 0);
 });

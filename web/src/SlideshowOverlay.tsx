@@ -13,12 +13,12 @@ import {
 import { createPortal } from "react-dom";
 
 import {
+  ChevronLeft,
+  ChevronRight,
   Download,
   ExternalLink,
   Maximize2,
   Music,
-  Pause,
-  Play,
   Scan,
   X,
   ZoomIn,
@@ -26,8 +26,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -41,7 +39,6 @@ import {
   formatPreviewModified,
 } from "./preview-metadata";
 import { useSlideshowSettings } from "@/settings/SlideshowSettingsProvider";
-import { useSlideshowIntervalInput } from "@/settings/useSlideshowIntervalInput";
 import { useModifiedTimeFormat } from "@/settings/ModifiedTimeFormatProvider";
 import { cn } from "@/lib/utils";
 import { useExplorerBackend, type FileStat } from "./backend";
@@ -188,10 +185,8 @@ export default function SlideshowOverlay({
   const backend = useExplorerBackend();
   const { t, locale } = useTranslation();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
-  const { autoplayOnOpen, startAtActiveItem, intervalSeconds, setIntervalSeconds } =
-    useSlideshowSettings();
+  const { startAtActiveItem } = useSlideshowSettings();
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const [zoomMode, setZoomMode] = useState<ZoomMode>("default");
   const [manualScale, setManualScale] = useState(1);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
@@ -214,13 +209,9 @@ export default function SlideshowOverlay({
   const pinchSessionRef = useRef<PinchSession | null>(null);
   const suppressClickRef = useRef(false);
   const { chromeVisible, bumpActivity, setChromeLock } = useChromeAutoHide(open);
-  const slideshowIntervalInput = useSlideshowIntervalInput(intervalSeconds, setIntervalSeconds, {
-    onDraftChange: bumpActivity,
-    confirmOnEnter: true,
-    cancelOnEscape: true,
-  });
 
   const currentPath = paths[index] ?? null;
+  const canNavigate = paths.length > 1;
   const previewUrl = useDownloadUrl(backend, currentPath);
   const fileName = currentPath?.split("/").pop() ?? currentPath ?? "";
   const nativeKind = currentPath ? previewKind(currentPath) : null;
@@ -304,9 +295,8 @@ export default function SlideshowOverlay({
       honorStartPath,
     );
     setIndex(startIndex);
-    setPlaying(autoplayOnOpen);
     resetSlideView();
-  }, [open, paths, startPath, startAtActiveItem, honorStartPath, autoplayOnOpen, resetSlideView]);
+  }, [open, paths, startPath, startAtActiveItem, honorStartPath, resetSlideView]);
 
   useEffect(() => {
     if (!open || !currentPath) {
@@ -410,22 +400,20 @@ export default function SlideshowOverlay({
   }, [open]);
 
   const goNext = useCallback(() => {
+    if (paths.length <= 1) {
+      return;
+    }
     setIndex((current) => (current + 1) % paths.length);
     resetSlideView();
   }, [paths.length, resetSlideView]);
 
   const goPrev = useCallback(() => {
+    if (paths.length <= 1) {
+      return;
+    }
     setIndex((current) => (current - 1 + paths.length) % paths.length);
     resetSlideView();
   }, [paths.length, resetSlideView]);
-
-  useEffect(() => {
-    if (!open || !playing || paths.length <= 1 || !isImageKind) {
-      return;
-    }
-    const handle = window.setInterval(goNext, intervalSeconds * 1000);
-    return () => window.clearInterval(handle);
-  }, [open, playing, paths.length, goNext, intervalSeconds, isImageKind]);
 
   useEffect(() => {
     if (!open) {
@@ -438,9 +426,15 @@ export default function SlideshowOverlay({
       bumpActivity();
       const direction = slideshowNavDirection(event.key);
       if (direction === "next") {
+        if (!canNavigate) {
+          return;
+        }
         event.preventDefault();
         goNext();
       } else if (direction === "prev") {
+        if (!canNavigate) {
+          return;
+        }
         event.preventDefault();
         goPrev();
       } else if (event.key === "Escape") {
@@ -450,7 +444,7 @@ export default function SlideshowOverlay({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, goNext, goPrev, onOpenChange, bumpActivity]);
+  }, [open, canNavigate, goNext, goPrev, onOpenChange, bumpActivity]);
 
   const imageScale = effectiveScale(zoomMode, manualScale);
   const imageSized = naturalSize.width > 0 && naturalSize.height > 0;
@@ -526,7 +520,6 @@ export default function SlideshowOverlay({
       return;
     }
     bumpActivity();
-    setPlaying(false);
     const session: DragSession = {
       pointerId: event.pointerId,
       startPointer: { x: event.clientX, y: event.clientY },
@@ -589,7 +582,6 @@ export default function SlideshowOverlay({
     dragSessionRef.current = null;
     setIsDragging(false);
     bumpActivity();
-    setPlaying(false);
     const baseScale = effectiveScale(zoomMode, manualScale);
     beginManualZoom(baseScale);
     pinchSessionRef.current = {
@@ -932,43 +924,59 @@ export default function SlideshowOverlay({
               </Button>
             </SlideshowIconTooltip>
           </div>
-
-          <div className="flex items-center gap-2 rounded-md bg-black/50 p-1 backdrop-blur-sm">
-            <SlideshowIconTooltip
-              label={playing ? t("slideshow.pause") : t("slideshow.play")}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
-                aria-label={playing ? t("slideshow.pause") : t("slideshow.play")}
-                onClick={() => {
-                  bumpActivity();
-                  setPlaying((value) => !value);
-                }}
-                disabled={paths.length <= 1}
-              >
-                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-            </SlideshowIconTooltip>
-            <Field orientation="horizontal" className="w-auto items-center gap-1.5 text-xs text-white/90">
-              <FieldLabel htmlFor="slideshow-interval" className="sr-only">
-                {t("slideshow.interval")}
-              </FieldLabel>
-              <Input
-                id="slideshow-interval"
-                type="number"
-                className="h-8 w-16 border-white/20 bg-black/40 text-white"
-                {...slideshowIntervalInput}
-              />
-              <span aria-hidden>s</span>
-            </Field>
-          </div>
             </>
           ) : null}
         </div>
       </div>
+
+      {canNavigate ? (
+        <>
+          <div
+            className={cn(
+              "absolute top-1/2 left-3 z-10 -translate-y-1/2",
+              chromeClass,
+            )}
+          >
+            <SlideshowIconTooltip label={t("slideshow.previous")}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                aria-label={t("slideshow.previous")}
+                onClick={() => {
+                  bumpActivity();
+                  goPrev();
+                }}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </SlideshowIconTooltip>
+          </div>
+          <div
+            className={cn(
+              "absolute top-1/2 right-3 z-10 -translate-y-1/2",
+              chromeClass,
+            )}
+          >
+            <SlideshowIconTooltip label={t("slideshow.next")}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                aria-label={t("slideshow.next")}
+                onClick={() => {
+                  bumpActivity();
+                  goNext();
+                }}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </SlideshowIconTooltip>
+          </div>
+        </>
+      ) : null}
 
       <div
         className={cn(
