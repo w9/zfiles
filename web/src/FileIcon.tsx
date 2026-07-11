@@ -68,6 +68,8 @@ export function FileIcon({
         loading="lazy"
         width={resolvedSize}
         height={resolvedSize}
+        draggable={false}
+        onDragStart={(event) => event.preventDefault()}
       />
       {isSymlink ? (
         <TruncatedTextTooltip
