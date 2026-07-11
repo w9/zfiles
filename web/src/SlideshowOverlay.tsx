@@ -642,9 +642,29 @@ export default function SlideshowOverlay({
     .filter((part): part is string => Boolean(part && part !== "—"))
     .join(" · ");
 
-  const chromeClass = cn(
-    "pointer-events-auto transition-opacity duration-300",
-    chromeVisible ? "opacity-100" : "pointer-events-none opacity-0",
+  // Avoid opacity fades over the photo: Safari on iPhone re-tone-maps HDR/wide-gamut
+  // images for a frame when translucent layers animate opacity.
+  const chromeMotionClass = cn(
+    "pointer-events-auto transition-transform duration-300 ease-out",
+    !chromeVisible && "pointer-events-none",
+  );
+  const chromeTopClass = cn(chromeMotionClass, !chromeVisible && "-translate-y-full");
+  const chromeBottomClass = cn(
+    chromeMotionClass,
+    !chromeVisible && "translate-y-full",
+  );
+  const chromeLeftClass = cn(
+    chromeMotionClass,
+    // Element-relative -translate-x-full leaves a strip visible (left-3 + button width).
+    !chromeVisible && "-translate-x-[calc(100%+1.5rem)]",
+  );
+  const chromeRightClass = cn(
+    chromeMotionClass,
+    !chromeVisible && "translate-x-[calc(100%+1.5rem)]",
+  );
+  const chromeGradientClass = cn(
+    "pointer-events-none",
+    !chromeVisible && "invisible",
   );
 
   const overlay = (
@@ -684,14 +704,14 @@ export default function SlideshowOverlay({
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 via-black/20 to-transparent",
-          chromeClass,
+          chromeGradientClass,
         )}
         aria-hidden
       />
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 via-black/20 to-transparent",
-          chromeClass,
+          chromeGradientClass,
         )}
         aria-hidden
       />
@@ -712,9 +732,9 @@ export default function SlideshowOverlay({
           ) : isImageKind ? (
             <div
               ref={stageRef}
-              className={cn("touch-none select-none", stageCursorClass)}
+              className={cn("touch-none select-none isolate", stageCursorClass)}
               data-preview-content
-              style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}
+              style={{ transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0)` }}
               onPointerDown={handleStagePointerDown}
               onPointerMove={handleStagePointerMove}
               onPointerUp={endStagePointer}
@@ -838,7 +858,7 @@ export default function SlideshowOverlay({
       <div
         className={cn(
           "absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-4",
-          chromeClass,
+          chromeTopClass,
         )}
       >
         <p className="max-w-[min(50vw,32rem)] truncate text-sm font-medium text-white drop-shadow-sm">
@@ -868,7 +888,7 @@ export default function SlideshowOverlay({
               >
                 {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
               </span>
-              <div className="flex items-center gap-1 rounded-md bg-black/50 p-1 backdrop-blur-sm">
+              <div className="flex items-center gap-1 rounded-md bg-black/50 p-1">
             <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
               <Button
                 type="button"
@@ -934,8 +954,9 @@ export default function SlideshowOverlay({
           <div
             className={cn(
               "absolute top-1/2 left-3 z-10 -translate-y-1/2",
-              chromeClass,
+              chromeLeftClass,
             )}
+            aria-hidden={!chromeVisible}
           >
             <SlideshowIconTooltip label={t("slideshow.previous")}>
               <Button
@@ -956,8 +977,9 @@ export default function SlideshowOverlay({
           <div
             className={cn(
               "absolute top-1/2 right-3 z-10 -translate-y-1/2",
-              chromeClass,
+              chromeRightClass,
             )}
+            aria-hidden={!chromeVisible}
           >
             <SlideshowIconTooltip label={t("slideshow.next")}>
               <Button
@@ -981,7 +1003,7 @@ export default function SlideshowOverlay({
       <div
         className={cn(
           "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4",
-          chromeClass,
+          chromeBottomClass,
         )}
       >
         <p className="max-w-[min(70vw,48rem)] truncate text-xs text-white/90 drop-shadow-sm">
