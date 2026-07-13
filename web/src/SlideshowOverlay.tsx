@@ -17,16 +17,16 @@ import {
   ChevronRight,
   Download,
   ExternalLink,
-  Maximize2,
+  Maximize,
   Music,
-  Scan,
   X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ZoomOneToOneIcon } from "@/components/icons/ZoomOneToOneIcon";
 import {
   Tooltip,
   TooltipContent,
@@ -66,6 +66,7 @@ import {
   wheelZoomScale,
   type ZoomMode,
 } from "./slideshowZoom";
+import { ZOOM_HUD_VISIBLE_MS, nextZoomHudBaseline } from "./slideshowZoomHud";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
 import { shouldClosePreviewOnBackdropClick } from "./slideshowBackdrop";
 import { previewKind } from "./imagePaths";
@@ -209,6 +210,11 @@ export default function SlideshowOverlay({
   const imageRef = useRef<HTMLImageElement>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
   const pinchSessionRef = useRef<PinchSession | null>(null);
+  const zoomHudBaselineRef = useRef<number | null>(null);
+  const zoomHudTimerRef = useRef<number | null>(null);
+  const [zoomHudVisible, setZoomHudVisible] = useState(false);
+  const [zoomHudPercent, setZoomHudPercent] = useState(100);
+  const [zoomHudOpaque, setZoomHudOpaque] = useState(false);
   const suppressClickRef = useRef(false);
   const { chromeVisible, bumpActivity, setChromeLock } = useChromeAutoHide(open);
 
@@ -271,7 +277,47 @@ export default function SlideshowOverlay({
     setTextTruncated(false);
     setTextError(null);
     setTextLoading(false);
+    zoomHudBaselineRef.current = null;
+    if (zoomHudTimerRef.current != null) {
+      window.clearTimeout(zoomHudTimerRef.current);
+      zoomHudTimerRef.current = null;
+    }
+    setZoomHudVisible(false);
+    setZoomHudOpaque(false);
   }, []);
+
+  const clearZoomHudTimer = useCallback(() => {
+    if (zoomHudTimerRef.current != null) {
+      window.clearTimeout(zoomHudTimerRef.current);
+      zoomHudTimerRef.current = null;
+    }
+  }, []);
+
+  const revealZoomHudForScale = useCallback(
+    (scale: number) => {
+      const percent = formatZoomPercentage(scale);
+      const next = nextZoomHudBaseline(zoomHudBaselineRef.current, percent);
+      zoomHudBaselineRef.current = next.baseline;
+      if (!next.reveal) {
+        return;
+      }
+      clearZoomHudTimer();
+      setZoomHudPercent(percent);
+      setZoomHudVisible(true);
+      setZoomHudOpaque(false);
+      window.requestAnimationFrame(() => {
+        setZoomHudOpaque(true);
+      });
+      zoomHudTimerRef.current = window.setTimeout(() => {
+        setZoomHudOpaque(false);
+        zoomHudTimerRef.current = window.setTimeout(() => {
+          setZoomHudVisible(false);
+          zoomHudTimerRef.current = null;
+        }, 200);
+      }, ZOOM_HUD_VISIBLE_MS);
+    },
+    [clearZoomHudTimer],
+  );
 
   const effectiveScale = useCallback(
     (mode: ZoomMode, manual: number) =>
@@ -473,12 +519,31 @@ export default function SlideshowOverlay({
       ? "cursor-grab"
       : "cursor-default";
 
+  useEffect(() => {
+    if (!open || !isImageKind || !imageSized) {
+      return;
+    }
+    if (zoomHudBaselineRef.current !== null) {
+      return;
+    }
+    zoomHudBaselineRef.current = zoomPercent;
+  }, [open, isImageKind, imageSized, zoomPercent]);
+
+  useEffect(() => {
+    return () => {
+      if (zoomHudTimerRef.current != null) {
+        window.clearTimeout(zoomHudTimerRef.current);
+      }
+    };
+  }, []);
+
   const beginManualZoom = useCallback(
     (baseScale: number) => {
       setZoomMode("manual");
       setManualScale(baseScale);
+      revealZoomHudForScale(baseScale);
     },
-    [],
+    [revealZoomHudForScale],
   );
 
   const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
@@ -505,6 +570,7 @@ export default function SlideshowOverlay({
     setZoomMode("manual");
     setManualScale(newScale);
     setPanOffset(nextPan);
+    revealZoomHudForScale(newScale);
   };
 
   const handleZoomIn = () => {
@@ -599,13 +665,13 @@ export default function SlideshowOverlay({
     }
     event.preventDefault();
     bumpActivity();
-    setManualScale(
-      pinchZoomScale(
-        pinch.initialScale,
-        pinch.initialDistance,
-        touchPairDistance(event.touches),
-      ),
+    const nextScale = pinchZoomScale(
+      pinch.initialScale,
+      pinch.initialDistance,
+      touchPairDistance(event.touches),
     );
+    setManualScale(nextScale);
+    revealZoomHudForScale(nextScale);
   };
 
   const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
@@ -702,6 +768,23 @@ export default function SlideshowOverlay({
       }}
     >
       <div className="absolute inset-0 bg-black/80" aria-hidden />
+
+      {zoomHudVisible ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div
+            className={cn(
+              "rounded-md bg-black/60 px-4 py-2 text-2xl font-medium tabular-nums text-white drop-shadow-sm transition-opacity duration-200",
+              zoomHudOpaque ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {t("slideshow.zoomLevel", { percent: String(zoomHudPercent) })}
+          </div>
+        </div>
+      ) : null}
 
       <div
         className={cn(
@@ -951,12 +1034,6 @@ export default function SlideshowOverlay({
             aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
             data-preview-chrome={previewChromeRegion("zoom")}
           >
-            <ButtonGroupText
-              className="h-8 border-white/15 bg-black/50 px-3 text-xs tabular-nums text-white shadow-none touch-ui:h-11"
-              aria-label={t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
-            >
-              {t("slideshow.zoomLevel", { percent: String(zoomPercent) })}
-            </ButtonGroupText>
             <SlideshowIconTooltip label={t("slideshow.zoomFit")}>
               <Button
                 type="button"
@@ -967,9 +1044,11 @@ export default function SlideshowOverlay({
                 onClick={() => {
                   bumpActivity();
                   setZoomMode("fit");
+                  setPanOffset({ x: 0, y: 0 });
+                  revealZoomHudForScale(effectiveScale("fit", manualScale));
                 }}
               >
-                <Maximize2 className="h-4 w-4" />
+                <Maximize className="h-4 w-4" />
               </Button>
             </SlideshowIconTooltip>
             <SlideshowIconTooltip label={t("slideshow.zoomActual")}>
@@ -982,9 +1061,10 @@ export default function SlideshowOverlay({
                 onClick={() => {
                   bumpActivity();
                   setZoomMode("one-to-one");
+                  revealZoomHudForScale(effectiveScale("one-to-one", manualScale));
                 }}
               >
-                <Scan className="h-4 w-4" />
+                <ZoomOneToOneIcon className="h-4 w-4" />
               </Button>
             </SlideshowIconTooltip>
             <SlideshowIconTooltip label={t("slideshow.zoomOut")}>
