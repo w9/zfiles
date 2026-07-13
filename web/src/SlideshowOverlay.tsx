@@ -46,12 +46,14 @@ import { useExplorerBackend, type FileStat } from "./backend";
 import { useDownloadUrl } from "./useDownloadUrl";
 import {
   dragExceededClickThreshold,
+  panOffsetForPinch,
   panOffsetForZoomAtPoint,
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
   scaledImageSize,
   touchPairDistance,
+  touchPairMidpoint,
   type PanOffset,
 } from "./slideshowPan";
 import {
@@ -105,6 +107,8 @@ type DragSession = {
 type PinchSession = {
   initialDistance: number;
   initialScale: number;
+  initialPan: PanOffset;
+  initialMidpoint: { x: number; y: number };
 };
 
 function CenteredPreviewMessage({ children }: { children: ReactNode }) {
@@ -647,6 +651,10 @@ export default function SlideshowOverlay({
     if (event.touches.length !== 2) {
       return;
     }
+    const midpoint = touchPairMidpoint(event.touches);
+    if (!midpoint) {
+      return;
+    }
     dragSessionRef.current = null;
     setIsDragging(false);
     bumpActivity();
@@ -655,12 +663,18 @@ export default function SlideshowOverlay({
     pinchSessionRef.current = {
       initialDistance: touchPairDistance(event.touches),
       initialScale: baseScale,
+      initialPan: panOffset,
+      initialMidpoint: midpoint,
     };
   };
 
   const handleTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
     const pinch = pinchSessionRef.current;
     if (!pinch || event.touches.length < 2) {
+      return;
+    }
+    const midpoint = touchPairMidpoint(event.touches);
+    if (!midpoint) {
       return;
     }
     event.preventDefault();
@@ -670,7 +684,25 @@ export default function SlideshowOverlay({
       pinch.initialDistance,
       touchPairDistance(event.touches),
     );
+    const stage = stageRef.current;
+    let nextPan = pinch.initialPan;
+    if (stage) {
+      const rect = stage.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      nextPan = panOffsetForPinch(
+        pinch.initialPan,
+        {
+          x: pinch.initialMidpoint.x - centerX,
+          y: pinch.initialMidpoint.y - centerY,
+        },
+        { x: midpoint.x - centerX, y: midpoint.y - centerY },
+        pinch.initialScale,
+        nextScale,
+      );
+    }
     setManualScale(nextScale);
+    setPanOffset(nextPan);
     revealZoomHudForScale(nextScale);
   };
 

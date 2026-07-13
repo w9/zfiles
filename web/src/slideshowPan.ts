@@ -80,6 +80,43 @@ export function touchPairDistance(
   return Math.hypot(dx, dy);
 }
 
+/** Midpoint of the first two touches in client coordinates. */
+export function touchPairMidpoint(
+  touches: ArrayLike<{ clientX: number; clientY: number }>,
+): { x: number; y: number } | null {
+  if (touches.length < 2) {
+    return null;
+  }
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  };
+}
+
+/**
+ * Pan after a pinch that zooms around the initial midpoint and follows
+ * midpoint translation (simultaneous pan + zoom).
+ * Midpoint offsets are relative to the stage/viewport center.
+ */
+export function panOffsetForPinch(
+  initialPan: PanOffset,
+  initialMidOffsetFromCenter: PanOffset,
+  currentMidOffsetFromCenter: PanOffset,
+  initialScale: number,
+  currentScale: number,
+): PanOffset {
+  const afterZoom = panOffsetForZoomAtPoint(
+    initialPan,
+    initialMidOffsetFromCenter,
+    initialScale,
+    currentScale,
+  );
+  return {
+    x: afterZoom.x + (currentMidOffsetFromCenter.x - initialMidOffsetFromCenter.x),
+    y: afterZoom.y + (currentMidOffsetFromCenter.y - initialMidOffsetFromCenter.y),
+  };
+}
+
 export function pinchZoomScale(
   initialScale: number,
   initialDistance: number,

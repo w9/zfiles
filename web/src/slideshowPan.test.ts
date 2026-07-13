@@ -5,12 +5,14 @@ import {
   DRAG_CLICK_THRESHOLD_PX,
   dragExceededClickThreshold,
   imageOverflowsViewport,
+  panOffsetForPinch,
   panOffsetForZoomAtPoint,
   panOffsetFromDrag,
   pinchZoomScale,
   pointerDragDistance,
   showGrabCursor,
   touchPairDistance,
+  touchPairMidpoint,
 } from "./slideshowPan";
 
 test("panOffsetFromDrag follows pointer delta", () => {
@@ -66,4 +68,33 @@ test("touchPairDistance and pinchZoomScale", () => {
   );
   assert.equal(pinchZoomScale(1, 100, 200), 2);
   assert.equal(pinchZoomScale(1, 0, 200), 1);
+});
+
+test("touchPairMidpoint averages the first two touches", () => {
+  assert.deepEqual(
+    touchPairMidpoint([
+      { clientX: 0, clientY: 10 },
+      { clientX: 40, clientY: 50 },
+    ]),
+    { x: 20, y: 30 },
+  );
+  assert.equal(touchPairMidpoint([{ clientX: 0, clientY: 0 }]), null);
+});
+
+test("panOffsetForPinch zooms around midpoint and follows midpoint motion", () => {
+  // Zoom 1→2 at offset (100,0) with no midpoint motion: same as zoom-at-point.
+  assert.deepEqual(
+    panOffsetForPinch({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 0 }, 1, 2),
+    { x: -100, y: 0 },
+  );
+  // Same zoom, midpoint also moves by (+30, -10): add that translation.
+  assert.deepEqual(
+    panOffsetForPinch({ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 130, y: -10 }, 1, 2),
+    { x: -70, y: -10 },
+  );
+  // Pure pan (scale unchanged): only midpoint delta applies.
+  assert.deepEqual(
+    panOffsetForPinch({ x: 5, y: 5 }, { x: 0, y: 0 }, { x: 20, y: -15 }, 1, 1),
+    { x: 25, y: -10 },
+  );
 });
