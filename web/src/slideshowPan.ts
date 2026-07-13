@@ -96,7 +96,8 @@ export function touchPairMidpoint(
 /**
  * Pan after a pinch that zooms around the initial midpoint and follows
  * midpoint translation (simultaneous pan + zoom).
- * Midpoint offsets are relative to the stage/viewport center.
+ * Midpoint offsets are relative to the image visual center
+ * (layout/viewport center + current pan).
  */
 export function panOffsetForPinch(
   initialPan: PanOffset,

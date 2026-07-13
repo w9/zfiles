@@ -17,6 +17,8 @@ type PinchMemo = {
   mid: { x: number; y: number };
   /** Untransformed layout center (parent), not the translated stage rect. */
   layoutCenter: { x: number; y: number };
+  /** Last transform applied while both fingers were down (ignore lift-frame origin). */
+  lastActive: { x: number; y: number; scale: number };
 };
 
 function layoutCenterForStage(stage: HTMLElement): { x: number; y: number } {
@@ -46,7 +48,7 @@ export type SlideshowImageGestures = {
 
 /**
  * Image-stage drag / pinch / wheel via @use-gesture/react, rendered with
- * @react-spring/web (1:1 while gesturing, soft settle on release).
+ * @react-spring/web (1:1 while gesturing; drag fling soft-settles on release).
  */
 export function useSlideshowImageGestures(options: {
   enabled: boolean;
@@ -58,6 +60,8 @@ export function useSlideshowImageGestures(options: {
   const [stageEl, setStageEl] = useState<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const suppressClickRef = useRef(false);
+  const pinchActiveRef = useRef(false);
+  const ignoreDragUntilRef = useRef(0);
   const [{ x, y, scale }, api] = useSpring(() => ({
     x: 0,
     y: 0,
@@ -113,7 +117,7 @@ export function useSlideshowImageGestures(options: {
         velocity: [vx, vy],
         direction: [dirX, dirY],
       }) => {
-        if (pinching) {
+        if (pinching || pinchActiveRef.current || Date.now() < ignoreDragUntilRef.current) {
           return;
         }
         bumpActivity();
@@ -153,35 +157,59 @@ export function useSlideshowImageGestures(options: {
             return memo;
           }
           const layoutCenter = layoutCenterForStage(stageEl);
+          const pan = { x: x.get(), y: y.get() };
+          const startScale = scale.get();
+          // Offset from image visual center (layout center + pan), not layout alone.
           nextMemo = {
-            pan: { x: x.get(), y: y.get() },
-            scale: scale.get(),
+            pan,
+            scale: startScale,
             mid: {
-              x: ox - layoutCenter.x,
-              y: oy - layoutCenter.y,
+              x: ox - layoutCenter.x - pan.x,
+              y: oy - layoutCenter.y - pan.y,
             },
             layoutCenter,
+            lastActive: { x: pan.x, y: pan.y, scale: startScale },
           };
         }
         if (!nextMemo) {
           return memo;
         }
-        const { layoutCenter } = nextMemo;
+        pinchActiveRef.current = active;
+        if (!active) {
+          // Finger-lift origin is unreliable; freeze at last active transform (no spring).
+          ignoreDragUntilRef.current = Date.now() + 200;
+          const frozen = nextMemo.lastActive;
+          api.start({
+            x: frozen.x,
+            y: frozen.y,
+            scale: frozen.scale,
+            immediate: true,
+          });
+          revealZoomHudForScale(frozen.scale);
+          return nextMemo;
+        }
+        const { layoutCenter, pan: pan0 } = nextMemo;
+        // Keep mid relative to the *initial* visual center so (current - initial) is finger motion.
+        const currentMid = {
+          x: ox - layoutCenter.x - pan0.x,
+          y: oy - layoutCenter.y - pan0.y,
+        };
         const nextPan = panOffsetForPinch(
           nextMemo.pan,
           nextMemo.mid,
-          {
-            x: ox - layoutCenter.x,
-            y: oy - layoutCenter.y,
-          },
+          currentMid,
           nextMemo.scale,
           nextScale,
         );
+        nextMemo = {
+          ...nextMemo,
+          lastActive: { x: nextPan.x, y: nextPan.y, scale: nextScale },
+        };
         api.start({
           scale: nextScale,
           x: nextPan.x,
           y: nextPan.y,
-          immediate: active,
+          immediate: true,
           config: { tension: 280, friction: 32 },
         });
         revealZoomHudForScale(nextScale);
@@ -203,8 +231,8 @@ export function useSlideshowImageGestures(options: {
           nextPan = panOffsetForZoomAtPoint(
             nextPan,
             {
-              x: event.clientX - layoutCenter.x,
-              y: event.clientY - layoutCenter.y,
+              x: event.clientX - layoutCenter.x - nextPan.x,
+              y: event.clientY - layoutCenter.y - nextPan.y,
             },
             oldScale,
             newScale,
