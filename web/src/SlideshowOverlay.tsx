@@ -5,12 +5,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
   type ReactNode,
-  type TouchEvent as ReactTouchEvent,
-  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { animated } from "@react-spring/web";
 
 import {
   ChevronLeft,
@@ -45,27 +43,15 @@ import { cn } from "@/lib/utils";
 import { useExplorerBackend, type FileStat } from "./backend";
 import { useDownloadUrl } from "./useDownloadUrl";
 import {
-  dragExceededClickThreshold,
-  panOffsetForPinch,
-  panOffsetForZoomAtPoint,
-  panOffsetFromDrag,
-  pinchZoomScale,
-  pointerDragDistance,
-  scaledImageSize,
-  touchPairDistance,
-  touchPairMidpoint,
-  type PanOffset,
-} from "./slideshowPan";
-import {
   isPointerOverChrome,
   isSlideshowTypingTarget,
   slideshowNavDirection,
 } from "./slideshowNavigation";
 import {
+  fitScale,
   formatZoomPercentage,
   resolveImageScale,
   stepZoom,
-  wheelZoomScale,
   type ZoomMode,
 } from "./slideshowZoom";
 import { ZOOM_HUD_VISIBLE_MS, nextZoomHudBaseline } from "./slideshowZoomHud";
@@ -75,6 +61,7 @@ import { previewKind } from "./imagePaths";
 import { previewChromeRegion } from "./previewChromeLayout";
 import { fetchPreviewText, exceedsTextPreviewHardLimit, canOfferTextPreview } from "./previewTextContent";
 import { renderMarkdownToSafeHtml } from "./renderMarkdown";
+import { useSlideshowImageGestures } from "./useSlideshowImageGestures";
 
 const CHROME_IDLE_MS = 2000;
 const TOOLTIP_DELAY_MS = 1000;
@@ -96,20 +83,6 @@ function SlideshowIconTooltip({
     </Tooltip>
   );
 }
-
-type DragSession = {
-  pointerId: number;
-  startPointer: { x: number; y: number };
-  startPan: PanOffset;
-  moved: boolean;
-};
-
-type PinchSession = {
-  initialDistance: number;
-  initialScale: number;
-  initialPan: PanOffset;
-  initialMidpoint: { x: number; y: number };
-};
 
 function CenteredPreviewMessage({ children }: { children: ReactNode }) {
   return (
@@ -195,13 +168,11 @@ export default function SlideshowOverlay({
   const { startAtActiveItem } = useSlideshowSettings();
   const [index, setIndex] = useState(0);
   const [zoomMode, setZoomMode] = useState<ZoomMode>("default");
-  const [manualScale, setManualScale] = useState(1);
+  const [displayScale, setDisplayScale] = useState(1);
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [stat, setStat] = useState<FileStat | null>(null);
   const [statLoading, setStatLoading] = useState(false);
-  const [panOffset, setPanOffset] = useState<PanOffset>({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [textTruncated, setTextTruncated] = useState(false);
   const [textLoading, setTextLoading] = useState(false);
@@ -210,16 +181,12 @@ export default function SlideshowOverlay({
   );
   const [viewAsText, setViewAsText] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const dragSessionRef = useRef<DragSession | null>(null);
-  const pinchSessionRef = useRef<PinchSession | null>(null);
   const zoomHudBaselineRef = useRef<number | null>(null);
   const zoomHudTimerRef = useRef<number | null>(null);
   const [zoomHudVisible, setZoomHudVisible] = useState(false);
   const [zoomHudPercent, setZoomHudPercent] = useState(100);
   const [zoomHudOpaque, setZoomHudOpaque] = useState(false);
-  const suppressClickRef = useRef(false);
   const { chromeVisible, bumpActivity, setChromeLock } = useChromeAutoHide(open);
 
   const currentPath = paths[index] ?? null;
@@ -270,12 +237,7 @@ export default function SlideshowOverlay({
 
   const resetSlideView = useCallback(() => {
     setZoomMode("default");
-    setManualScale(1);
     setNaturalSize({ width: 0, height: 0 });
-    setPanOffset({ x: 0, y: 0 });
-    dragSessionRef.current = null;
-    pinchSessionRef.current = null;
-    setIsDragging(false);
     setViewAsText(false);
     setTextContent(null);
     setTextTruncated(false);
@@ -323,18 +285,27 @@ export default function SlideshowOverlay({
     [clearZoomHudTimer],
   );
 
-  const effectiveScale = useCallback(
-    (mode: ZoomMode, manual: number) =>
-      resolveImageScale(
-        mode,
-        manual,
-        naturalSize.width,
-        naturalSize.height,
-        viewportSize.width,
-        viewportSize.height,
-      ),
-    [naturalSize.height, naturalSize.width, viewportSize.height, viewportSize.width],
-  );
+  const onManualZoom = useCallback(() => setZoomMode("manual"), []);
+  const {
+    x,
+    y,
+    scale: springScale,
+    stageRef,
+    isDragging,
+    consumeSuppressClick,
+    setTransform,
+    getTransform,
+  } = useSlideshowImageGestures({
+    enabled: open && isImageKind,
+    bumpActivity,
+    revealZoomHudForScale,
+    onManualZoom,
+  });
+
+  useEffect(() => {
+    setTransform({ x: 0, y: 0, scale: 1, immediate: true });
+    setDisplayScale(1);
+  }, [currentPath, open, setTransform]);
 
   useEffect(() => {
     if (!open || paths.length === 0) {
@@ -498,11 +469,32 @@ export default function SlideshowOverlay({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, canNavigate, goNext, goPrev, onOpenChange, bumpActivity]);
 
-  const imageScale = effectiveScale(zoomMode, manualScale);
   const imageSized = naturalSize.width > 0 && naturalSize.height > 0;
-  const imageDisplaySize = imageSized
-    ? scaledImageSize(naturalSize.width, naturalSize.height, imageScale)
-    : null;
+
+  useLayoutEffect(() => {
+    if (!imageSized) {
+      return;
+    }
+    if (zoomMode === "manual") {
+      return;
+    }
+    const s = resolveImageScale(
+      zoomMode,
+      1,
+      naturalSize.width,
+      naturalSize.height,
+      viewportSize.width,
+      viewportSize.height,
+    );
+    if (zoomMode === "default") {
+      setTransform({ x: 0, y: 0, scale: s, immediate: true });
+    } else if (zoomMode === "fit") {
+      setTransform({ x: 0, y: 0, scale: s, immediate: true });
+    } else if (zoomMode === "one-to-one") {
+      setTransform({ scale: 1, immediate: true });
+    }
+    setDisplayScale(zoomMode === "one-to-one" ? 1 : s);
+  }, [imageSized, zoomMode, naturalSize, viewportSize, setTransform]);
 
   useLayoutEffect(() => {
     if (!open || !previewUrl || !isImageKind) {
@@ -515,7 +507,7 @@ export default function SlideshowOverlay({
     syncNaturalSizeFromImage(img);
   }, [open, previewUrl, currentPath, isImageKind, syncNaturalSizeFromImage]);
 
-  const zoomPercent = formatZoomPercentage(imageScale);
+  const zoomPercent = formatZoomPercentage(displayScale);
   const grabCursor = imageSized;
   const stageCursorClass = isDragging
     ? "cursor-grabbing"
@@ -541,100 +533,26 @@ export default function SlideshowOverlay({
     };
   }, []);
 
-  const beginManualZoom = useCallback(
-    (baseScale: number) => {
-      setZoomMode("manual");
-      setManualScale(baseScale);
-      revealZoomHudForScale(baseScale);
-    },
-    [revealZoomHudForScale],
-  );
-
-  const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    bumpActivity();
-    const oldScale = effectiveScale(zoomMode, manualScale);
-    const newScale = wheelZoomScale(oldScale, event.deltaY);
-    if (newScale === oldScale) {
-      return;
-    }
-    const stage = stageRef.current;
-    let nextPan = panOffset;
-    if (stage) {
-      const rect = stage.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      nextPan = panOffsetForZoomAtPoint(
-        panOffset,
-        { x: event.clientX - centerX, y: event.clientY - centerY },
-        oldScale,
-        newScale,
-      );
-    }
-    setZoomMode("manual");
-    setManualScale(newScale);
-    setPanOffset(nextPan);
-    revealZoomHudForScale(newScale);
-  };
-
   const handleZoomIn = () => {
     bumpActivity();
-    beginManualZoom(stepZoom(effectiveScale(zoomMode, manualScale), 1));
+    setZoomMode("manual");
+    const next = stepZoom(getTransform().scale, 1);
+    setTransform({ scale: next, immediate: true });
+    revealZoomHudForScale(next);
+    setDisplayScale(next);
   };
 
   const handleZoomOut = () => {
     bumpActivity();
-    beginManualZoom(stepZoom(effectiveScale(zoomMode, manualScale), -1));
-  };
-
-  const handleStagePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || pinchSessionRef.current) {
-      return;
-    }
-    bumpActivity();
-    const session: DragSession = {
-      pointerId: event.pointerId,
-      startPointer: { x: event.clientX, y: event.clientY },
-      startPan: panOffset,
-      moved: false,
-    };
-    dragSessionRef.current = session;
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleStagePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const session = dragSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) {
-      return;
-    }
-    const currentPointer = { x: event.clientX, y: event.clientY };
-    const distance = pointerDragDistance(session.startPointer, currentPointer);
-    if (dragExceededClickThreshold(distance)) {
-      session.moved = true;
-      bumpActivity();
-    }
-    setPanOffset(panOffsetFromDrag(session.startPan, session.startPointer, currentPointer));
-  };
-
-  const endStagePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const session = dragSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) {
-      return;
-    }
-    if (session.moved) {
-      suppressClickRef.current = true;
-    }
-    dragSessionRef.current = null;
-    setIsDragging(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
+    setZoomMode("manual");
+    const next = stepZoom(getTransform().scale, -1);
+    setTransform({ scale: next, immediate: true });
+    revealZoomHudForScale(next);
+    setDisplayScale(next);
   };
 
   const handleStageClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (suppressClickRef.current) {
-      suppressClickRef.current = false;
+    if (consumeSuppressClick()) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -645,71 +563,6 @@ export default function SlideshowOverlay({
       return;
     }
     onOpenChange(false);
-  };
-
-  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 2) {
-      return;
-    }
-    const midpoint = touchPairMidpoint(event.touches);
-    if (!midpoint) {
-      return;
-    }
-    dragSessionRef.current = null;
-    setIsDragging(false);
-    bumpActivity();
-    const baseScale = effectiveScale(zoomMode, manualScale);
-    beginManualZoom(baseScale);
-    pinchSessionRef.current = {
-      initialDistance: touchPairDistance(event.touches),
-      initialScale: baseScale,
-      initialPan: panOffset,
-      initialMidpoint: midpoint,
-    };
-  };
-
-  const handleTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
-    const pinch = pinchSessionRef.current;
-    if (!pinch || event.touches.length < 2) {
-      return;
-    }
-    const midpoint = touchPairMidpoint(event.touches);
-    if (!midpoint) {
-      return;
-    }
-    event.preventDefault();
-    bumpActivity();
-    const nextScale = pinchZoomScale(
-      pinch.initialScale,
-      pinch.initialDistance,
-      touchPairDistance(event.touches),
-    );
-    const stage = stageRef.current;
-    let nextPan = pinch.initialPan;
-    if (stage) {
-      const rect = stage.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      nextPan = panOffsetForPinch(
-        pinch.initialPan,
-        {
-          x: pinch.initialMidpoint.x - centerX,
-          y: pinch.initialMidpoint.y - centerY,
-        },
-        { x: midpoint.x - centerX, y: midpoint.y - centerY },
-        pinch.initialScale,
-        nextScale,
-      );
-    }
-    setManualScale(nextScale);
-    setPanOffset(nextPan);
-    revealZoomHudForScale(nextScale);
-  };
-
-  const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
-    if (event.touches.length < 2) {
-      pinchSessionRef.current = null;
-    }
   };
 
   if (!open || !currentPath) {
@@ -837,28 +690,19 @@ export default function SlideshowOverlay({
         ref={viewportRef}
         className={cn("absolute inset-0 overflow-hidden", isImageKind && "touch-none")}
         onClick={handleBackdropClick}
-        onWheel={isImageKind ? handleWheel : undefined}
-        onTouchStart={isImageKind ? handleTouchStart : undefined}
-        onTouchMove={isImageKind ? handleTouchMove : undefined}
-        onTouchEnd={isImageKind ? handleTouchEnd : undefined}
-        onTouchCancel={isImageKind ? handleTouchEnd : undefined}
       >
         <div className="flex h-full w-full items-center justify-center p-6">
           {!previewUrl ? (
             <p className="text-sm text-white/80">{t("preview.loading")}</p>
           ) : isImageKind ? (
-            <div
+            <animated.div
               ref={stageRef}
               className={cn("touch-none select-none isolate", stageCursorClass)}
               data-preview-content
-              style={{ transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0)` }}
-              onPointerDown={handleStagePointerDown}
-              onPointerMove={handleStagePointerMove}
-              onPointerUp={endStagePointer}
-              onPointerCancel={endStagePointer}
+              style={{ x, y, touchAction: "none" }}
               onClickCapture={handleStageClick}
             >
-              <img
+              <animated.img
                 key={currentPath}
                 ref={imageRef}
                 src={previewUrl}
@@ -866,15 +710,19 @@ export default function SlideshowOverlay({
                 draggable={false}
                 className="max-w-none select-none"
                 style={{
-                  width: imageDisplaySize?.width,
-                  height: imageDisplaySize?.height,
+                  width: springScale.to((s) =>
+                    naturalSize.width > 0 ? naturalSize.width * s : 0,
+                  ),
+                  height: springScale.to((s) =>
+                    naturalSize.height > 0 ? naturalSize.height * s : 0,
+                  ),
                   opacity: imageSized ? 1 : 0,
                 }}
                 onLoad={(event) => {
                   syncNaturalSizeFromImage(event.currentTarget);
                 }}
               />
-            </div>
+            </animated.div>
           ) : nativeKind === "video" ? (
             <video
               key={currentPath}
@@ -1075,9 +923,16 @@ export default function SlideshowOverlay({
                 aria-label={t("slideshow.zoomFit")}
                 onClick={() => {
                   bumpActivity();
+                  const fit = fitScale(
+                    naturalSize.width,
+                    naturalSize.height,
+                    viewportSize.width,
+                    viewportSize.height,
+                  );
                   setZoomMode("fit");
-                  setPanOffset({ x: 0, y: 0 });
-                  revealZoomHudForScale(effectiveScale("fit", manualScale));
+                  setTransform({ x: 0, y: 0, scale: fit, immediate: true });
+                  revealZoomHudForScale(fit);
+                  setDisplayScale(fit);
                 }}
               >
                 <Maximize className="h-4 w-4" />
@@ -1093,7 +948,9 @@ export default function SlideshowOverlay({
                 onClick={() => {
                   bumpActivity();
                   setZoomMode("one-to-one");
-                  revealZoomHudForScale(effectiveScale("one-to-one", manualScale));
+                  setTransform({ scale: 1, immediate: true });
+                  revealZoomHudForScale(1);
+                  setDisplayScale(1);
                 }}
               >
                 <ZoomOneToOneIcon className="h-4 w-4" />
