@@ -63,6 +63,25 @@
   -webkit-touch-callout: none;
 }
 
+/* Touch UI: native text selection fights file/chrome gestures (iOS blue handles).
+   Allow selection only in real text fields and explicitly marked regions. */
+html[data-ui-mode="touch"],
+html[data-ui-mode="touch"] body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html[data-ui-mode="touch"] input,
+html[data-ui-mode="touch"] textarea,
+html[data-ui-mode="touch"] [contenteditable="true"],
+html[data-ui-mode="touch"] [data-allow-select],
+html[data-ui-mode="touch"] [data-preview-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 .dark {
   --background: #111318;
   --foreground: #e8eaed;

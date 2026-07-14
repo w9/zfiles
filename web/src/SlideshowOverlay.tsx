@@ -537,6 +537,48 @@ export default function SlideshowOverlay({
     };
   }, []);
 
+  // Suppress native selection while preview is open (iOS double-tap can select
+  // through to body-level ranges). Allow only explicit text-preview regions.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const allowsSelection = (node: EventTarget | Node | null) => {
+      if (!(node instanceof Node)) {
+        return false;
+      }
+      const el = node instanceof Element ? node : node.parentElement;
+      return Boolean(el?.closest("[data-preview-selectable]"));
+    };
+
+    const clearDisallowedSelection = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        return;
+      }
+      if (allowsSelection(sel.anchorNode) && allowsSelection(sel.focusNode)) {
+        return;
+      }
+      sel.removeAllRanges();
+    };
+
+    const onSelectStart = (event: Event) => {
+      if (allowsSelection(event.target)) {
+        return;
+      }
+      event.preventDefault();
+    };
+
+    window.getSelection()?.removeAllRanges();
+    document.addEventListener("selectstart", onSelectStart, true);
+    document.addEventListener("selectionchange", clearDisallowedSelection);
+    return () => {
+      document.removeEventListener("selectstart", onSelectStart, true);
+      document.removeEventListener("selectionchange", clearDisallowedSelection);
+    };
+  }, [open]);
+
   const handleZoomIn = () => {
     bumpActivity();
     setZoomMode("manual");
@@ -626,7 +668,7 @@ export default function SlideshowOverlay({
 
   const overlay = (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-50 select-none [-webkit-touch-callout:none]"
       role="dialog"
       aria-modal="true"
       aria-label={t("slideshow.title", { name: fileName })}
@@ -786,7 +828,8 @@ export default function SlideshowOverlay({
                     </p>
                   ) : null}
                   <div
-                    className="min-h-0 flex-1 overflow-auto rounded-lg bg-zinc-900/80 p-6 text-left text-sm leading-relaxed text-white/90 [&_a]:text-sky-300 [&_a]:underline [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-4 [&_ol]:my-2 [&_ol]:list-decimal [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/40 [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc"
+                    data-preview-selectable
+                    className="min-h-0 flex-1 select-text overflow-auto rounded-lg bg-zinc-900/80 p-6 text-left text-sm leading-relaxed text-white/90 [&_a]:text-sky-300 [&_a]:underline [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_li]:ml-4 [&_ol]:my-2 [&_ol]:list-decimal [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/40 [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc"
                     dangerouslySetInnerHTML={{ __html: markdownHtml }}
                   />
                 </>
@@ -797,7 +840,10 @@ export default function SlideshowOverlay({
                       {t("preview.textTruncated")}
                     </p>
                   ) : null}
-                  <pre className="min-h-0 flex-1 overflow-auto rounded-lg bg-black/40 p-4 text-left font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/90">
+                  <pre
+                    data-preview-selectable
+                    className="min-h-0 flex-1 select-text overflow-auto rounded-lg bg-black/40 p-4 text-left font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/90"
+                  >
                     {textContent}
                   </pre>
                 </>
@@ -811,7 +857,7 @@ export default function SlideshowOverlay({
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 via-black/20 to-transparent",
+          "pointer-events-none absolute inset-x-0 top-0 h-28 select-none bg-gradient-to-b from-black/55 via-black/20 to-transparent",
           PREVIEW_CHROME_STACK_CLASS,
           chromeGradientClass,
         )}
@@ -819,7 +865,7 @@ export default function SlideshowOverlay({
       />
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 via-black/20 to-transparent",
+          "pointer-events-none absolute inset-x-0 bottom-0 h-32 select-none bg-gradient-to-t from-black/55 via-black/20 to-transparent",
           PREVIEW_CHROME_STACK_CLASS,
           chromeGradientClass,
         )}

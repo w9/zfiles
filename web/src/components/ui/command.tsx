@@ -45,10 +45,6 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
       <DialogContent
         className={cn(
           "gap-0 overflow-hidden rounded-xl border bg-popover p-0 text-popover-foreground shadow-lg sm:max-w-lg",
@@ -56,6 +52,12 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
+        {/* Keep a11y title/description inside Content so they unmount when closed
+            (outside Content they stay in the explorer DOM and iOS can select them). */}
+        <DialogHeader className="sr-only select-none">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
         {children}
       </DialogContent>
     </Dialog>
