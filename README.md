@@ -22,11 +22,21 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 
 ## Install
 
-**Pre-built Linux binaries** (static musl, x86_64 and aarch64) are on [GitHub Releases](https://github.com/w9/zfiles/releases):
+**Linux (recommended):**
 
 ```bash
-chmod +x zfiles-linux-x86_64
-./zfiles-linux-x86_64 ~/Downloads
+curl -fsSL https://raw.githubusercontent.com/w9/zfiles/main/scripts/install.sh | sh
+```
+
+Installs the latest musl release into `~/.local/bin` (no sudo). Ensure that directory is on your `PATH`, then run `zfiles ~/Downloads`.
+
+**Manual download** — static musl tarballs (x86_64 and aarch64) are on [GitHub Releases](https://github.com/w9/zfiles/releases):
+
+```bash
+curl -fsSL -o zfiles-linux-x86_64.tar.gz \
+  https://github.com/w9/zfiles/releases/latest/download/zfiles-linux-x86_64.tar.gz
+tar -xzf zfiles-linux-x86_64.tar.gz
+./zfiles ~/Downloads
 ```
 
 **From source:**
@@ -36,7 +46,7 @@ cargo build --release
 ./target/release/zfiles ~/Downloads
 ```
 
-Optional: `./scripts/install-local.sh` installs to `~/.cargo/bin`.
+Optional: `./scripts/install-local.sh` installs a local build to `~/.cargo/bin`.
 
 **Cloud SPA:** build with `cd web && pnpm install && pnpm build:cloud`, then deploy `web/dist-cloud/` to any static host. See [docs/cloud-connect.md](docs/cloud-connect.md) for credentials and [docs/cors.md](docs/cors.md) for bucket CORS.
 
