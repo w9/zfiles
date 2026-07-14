@@ -919,7 +919,7 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                className="h-8 w-8 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
                 aria-label={t("slideshow.zoomFit")}
                 onClick={() => {
                   bumpActivity();
@@ -943,7 +943,7 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                className="h-8 w-8 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
                 aria-label={t("slideshow.zoomActual")}
                 onClick={() => {
                   bumpActivity();
@@ -961,7 +961,7 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                className="h-8 w-8 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
                 aria-label={t("slideshow.zoomOut")}
                 onClick={handleZoomOut}
               >
@@ -973,7 +973,7 @@ export default function SlideshowOverlay({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 border border-white/15 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
+                className="h-8 w-8 bg-black/50 text-white hover:bg-black/70 touch-ui:h-11 touch-ui:w-11"
                 aria-label={t("slideshow.zoomIn")}
                 onClick={handleZoomIn}
               >
