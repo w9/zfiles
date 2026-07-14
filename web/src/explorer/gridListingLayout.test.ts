@@ -8,12 +8,25 @@ import {
 import {
   buildGridVirtualRows,
   gridEntryContentRect,
+  gridEntryHitExpand,
+  gridEntryHitRect,
   resolveGridSectionFolderCount,
   virtualRowIndexForEntryIndex,
 } from "./gridListingLayout";
 import { moveSectionedGridIndex } from "./listingGridNavigation";
 
 const CARD = { width: 100, height: 120 };
+
+function plainMetrics(entryCount: number, columnCount: number) {
+  return {
+    columnCount,
+    cardWidth: CARD.width,
+    cardHeight: CARD.height,
+    gap: GRID_GAP_PX,
+    padding: 12,
+    virtualRows: buildGridVirtualRows(entryCount, columnCount, 0),
+  };
+}
 
 test("resolveGridSectionFolderCount requires folders-first and both types", () => {
   const entries = [
@@ -61,6 +74,65 @@ test("gridEntryContentRect offsets file rows below folder section headers", () =
   assert.ok(folder);
   assert.ok(file);
   assert.ok(file.top > folder.top);
+});
+
+test("gridEntryHitExpand splits inter-item gaps and leaves outer edges alone", () => {
+  const metrics = plainMetrics(4, 2);
+  const half = GRID_GAP_PX / 2;
+  assert.deepEqual(gridEntryHitExpand(0, metrics), {
+    top: 0,
+    right: half,
+    bottom: half,
+    left: 0,
+  });
+  assert.deepEqual(gridEntryHitExpand(1, metrics), {
+    top: 0,
+    right: 0,
+    bottom: half,
+    left: half,
+  });
+  assert.deepEqual(gridEntryHitExpand(2, metrics), {
+    top: half,
+    right: half,
+    bottom: 0,
+    left: 0,
+  });
+  assert.deepEqual(gridEntryHitExpand(3, metrics), {
+    top: half,
+    right: 0,
+    bottom: 0,
+    left: half,
+  });
+});
+
+test("gridEntryHitRect neighbors meet with no dead zone in the gap", () => {
+  const metrics = plainMetrics(4, 2);
+  const left = gridEntryHitRect(0, metrics)!;
+  const right = gridEntryHitRect(1, metrics)!;
+  assert.equal(left.left + left.width, right.left);
+  const top = gridEntryHitRect(0, metrics)!;
+  const bottom = gridEntryHitRect(2, metrics)!;
+  assert.equal(top.top + top.height, bottom.top);
+});
+
+test("gridEntryHitExpand does not grow into section-header gaps", () => {
+  const metrics = {
+    columnCount: 2,
+    cardWidth: CARD.width,
+    cardHeight: CARD.height,
+    gap: GRID_GAP_PX,
+    padding: 12,
+    virtualRows: buildGridVirtualRows(4, 2, 2),
+  };
+  // Last folder row sits above the files header — no bottom expand.
+  assert.equal(gridEntryHitExpand(1, metrics)?.bottom, 0);
+  // First file row sits below the files header — no top expand.
+  assert.equal(gridEntryHitExpand(2, metrics)?.top, 0);
+});
+
+test("gridEntryHitRect keeps visual content rect when there is no neighbor", () => {
+  const metrics = plainMetrics(1, 2);
+  assert.deepEqual(gridEntryHitRect(0, metrics), gridEntryContentRect(0, metrics));
 });
 
 test("moveSectionedGridIndex crosses from folders to files on down", () => {

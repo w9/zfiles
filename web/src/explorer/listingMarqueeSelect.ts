@@ -2,7 +2,7 @@ import {
   buildGridVirtualRows,
   type GridListingLayoutMetrics,
   type GridVirtualRow,
-  gridEntryContentRect,
+  gridEntryHitRect,
 } from "./gridListingLayout";
 
 export type ClientRect = {
@@ -197,7 +197,7 @@ export function hitTestGridPathsWithContentMarquee(
 
   const hits: string[] = [];
   for (let index = 0; index < paths.length; index += 1) {
-    const cell = gridEntryContentRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics);
     if (!cell) {
       continue;
     }
@@ -246,7 +246,7 @@ export function findGridPathAtClientPoint(
   const contentY = clientYToContentY(scrollElement, clientY);
 
   for (let index = paths.length - 1; index >= 0; index -= 1) {
-    const cell = gridEntryContentRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics);
     if (!cell) {
       continue;
     }
@@ -306,7 +306,7 @@ export function collectGridEntryRects(
 
   const metrics = resolveGridMarqueeMetrics(paths, options);
   return paths.flatMap((path, index) => {
-    const cell = gridEntryContentRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics);
     if (!cell) {
       return [];
     }

@@ -195,22 +195,23 @@ test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
     padding: 12,
   });
 
+  // Hit rects expand halfway into inter-item gaps (gap=12 → 6px).
   assert.deepEqual(rects[0].rect, {
     left: 12,
     top: 12,
-    right: 112,
-    bottom: 92,
+    right: 118,
+    bottom: 98,
   });
   assert.deepEqual(rects[1].rect, {
-    left: 124,
+    left: 118,
     top: 12,
     right: 224,
-    bottom: 92,
+    bottom: 98,
   });
   assert.deepEqual(rects[2].rect, {
     left: 12,
-    top: 104,
-    right: 112,
+    top: 98,
+    right: 118,
     bottom: 184,
   });
 });
@@ -271,12 +272,13 @@ test("hitTestTablePathsWithContentMarquee auto-scroll extends swept range", () =
 test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
   const scrollElement = mockScrollElement(0);
   const paths = ["/a", "/b", "/c", "/d"];
+  // First row hit bottoms at 98 (card bottom 92 + half-gap); stop just above that.
   const hit = hitTestGridPathsWithContentMarquee(
     scrollElement,
     paths,
     {
       contentTop: 0,
-      contentBottom: 100,
+      contentBottom: 97,
       clientLeft: 0,
       clientRight: 200,
     },
@@ -290,6 +292,47 @@ test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
   );
 
   assert.deepEqual(hit, ["/a", "/b"]);
+});
+
+test("hitTestGridPathsWithContentMarquee includes inter-item gap midpoints", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = ["/a", "/b", "/c", "/d"];
+  const options = {
+    columnCount: 2,
+    cardWidth: 100,
+    cardHeight: 80,
+    gap: 12,
+    padding: 12,
+  };
+  // Horizontal gap between /a (right edge 112) and /b (left 124) meets at 118.
+  const horizontal = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 40,
+      contentBottom: 50,
+      clientLeft: 116,
+      clientRight: 120,
+    },
+    options,
+  );
+  assert.ok(horizontal.includes("/a") || horizontal.includes("/b"));
+  assert.equal(horizontal.includes("/c"), false);
+
+  // Vertical gap between row 0 (bottom 92) and row 1 (top 104) meets at 98.
+  const vertical = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 96,
+      contentBottom: 100,
+      clientLeft: 20,
+      clientRight: 40,
+    },
+    options,
+  );
+  assert.ok(vertical.includes("/a") || vertical.includes("/c"));
+  assert.equal(vertical.includes("/b"), false);
 });
 
 test("hitTestGridPathsWithContentMarquee ignores blank area right of last column", () => {

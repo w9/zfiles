@@ -7,6 +7,7 @@ import {
   buildGridVirtualRows,
   estimateGridVirtualRowSize,
   GRID_SECTION_HEADER_TOP_GAP_PX,
+  gridEntryHitExpand,
   resolveGridSectionFolderCount,
   virtualRowIndexForEntryIndex,
 } from "@/explorer/gridListingLayout";
@@ -306,6 +307,12 @@ export default function GridListing({
               >
                 {rowEntries.map((entry, columnIndex) => {
                   const index = row.entryStartIndex + columnIndex;
+                  const hitExpand = gridEntryHitExpand(index, gridMarqueeOptions) ?? {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                  };
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   const isFocused = focusedPath != null && entry.path === focusedPath;
                   const isGestureHighlighted =
@@ -329,38 +336,13 @@ export default function GridListing({
                         type="button"
                         data-listing-entry
                         data-listing-path={entry.path}
-                        className={cn(
-                          "absolute inset-0 flex select-none flex-col overflow-hidden hover:bg-accent/40 outline-none focus:outline-none focus-visible:outline-none",
-                          dimmed && "opacity-70",
-                          isCut && GRID_ITEM_CUT_CLASS,
-                          entry.quickFilterMatched === false && "opacity-40",
-                          isResizing && GRID_ITEM_RESIZING_CLASS,
-                          isSelected &&
-                            !isResizing &&
-                            !isGestureHighlighted &&
-                            !isGestureInset &&
-                            (isFocused
-                              ? GRID_ITEM_FOCUS_SELECTED_CLASS
-                              : GRID_ITEM_SELECTED_CLASS),
-                          isSelected &&
-                            !isResizing &&
-                            isGestureHighlighted &&
-                            !isGestureInset &&
-                            GRID_ITEM_SELECTED_PRESS_INSET_CLASS,
-                          isSelected &&
-                            !isResizing &&
-                            isGestureInset &&
-                            GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS,
-                          !isSelected &&
-                            isGestureHighlighted &&
-                            !isGestureInset &&
-                            !isResizing &&
-                            GRID_ITEM_PRESS_INSET_CLASS,
-                          !isSelected &&
-                            isGestureInset &&
-                            !isResizing &&
-                            GRID_ITEM_LONG_PRESS_INSET_CLASS,
-                        )}
+                        className="absolute select-none outline-none focus:outline-none focus-visible:outline-none"
+                        style={{
+                          top: -hitExpand.top,
+                          right: -hitExpand.right,
+                          bottom: -hitExpand.bottom,
+                          left: -hitExpand.left,
+                        }}
                         onMouseDown={(event) => {
                           if (event.shiftKey) {
                             event.preventDefault();
@@ -378,36 +360,77 @@ export default function GridListing({
                         }}
                         onContextMenu={entry.onContextMenu}
                       >
-                        <GridCardPreview
-                          path={entry.path}
-                          name={entry.name}
-                          isDir={entry.isDir}
-                          isSymlink={entry.isSymlink ?? false}
-                          previewsEnabled={gridImagePreviewsEnabled}
-                          iconTheme={iconTheme}
-                          pixelSize={iconPixelSize}
-                        />
                         <div
                           className={cn(
-                            "shrink-0 px-2 py-1.5 text-center",
-                            LISTING_ENTRY_TEXT_CLASS,
+                            "absolute flex flex-col overflow-hidden hover:bg-accent/40",
+                            dimmed && "opacity-70",
+                            isCut && GRID_ITEM_CUT_CLASS,
+                            entry.quickFilterMatched === false && "opacity-40",
+                            isResizing && GRID_ITEM_RESIZING_CLASS,
+                            isSelected &&
+                              !isResizing &&
+                              !isGestureHighlighted &&
+                              !isGestureInset &&
+                              (isFocused
+                                ? GRID_ITEM_FOCUS_SELECTED_CLASS
+                                : GRID_ITEM_SELECTED_CLASS),
+                            isSelected &&
+                              !isResizing &&
+                              isGestureHighlighted &&
+                              !isGestureInset &&
+                              GRID_ITEM_SELECTED_PRESS_INSET_CLASS,
+                            isSelected &&
+                              !isResizing &&
+                              isGestureInset &&
+                              GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS,
+                            !isSelected &&
+                              isGestureHighlighted &&
+                              !isGestureInset &&
+                              !isResizing &&
+                              GRID_ITEM_PRESS_INSET_CLASS,
+                            !isSelected &&
+                              isGestureInset &&
+                              !isResizing &&
+                              GRID_ITEM_LONG_PRESS_INSET_CLASS,
                           )}
+                          style={{
+                            top: hitExpand.top,
+                            left: hitExpand.left,
+                            width: cardSize.width,
+                            height: cardSize.height,
+                          }}
                         >
-                          {isEditing && onInlineCommit && onInlineCancel ? (
-                            <InlineNameInput
-                              initialName={entry.name}
-                              className="w-full text-left"
-                              busy={renameCommittingPath === entry.path}
-                              showBusyVisual={showRenameBusyVisual}
-                              onCommit={(name) => onInlineCommit(entry.path, name)}
-                              onCancel={() => onInlineCancel(entry.path, entry.name)}
-                            />
-                          ) : (
-                            <TruncatedTextTooltip
-                              text={entry.name}
-                              className="block truncate"
-                            />
-                          )}
+                          <GridCardPreview
+                            path={entry.path}
+                            name={entry.name}
+                            isDir={entry.isDir}
+                            isSymlink={entry.isSymlink ?? false}
+                            previewsEnabled={gridImagePreviewsEnabled}
+                            iconTheme={iconTheme}
+                            pixelSize={iconPixelSize}
+                          />
+                          <div
+                            className={cn(
+                              "shrink-0 px-2 py-1.5 text-center",
+                              LISTING_ENTRY_TEXT_CLASS,
+                            )}
+                          >
+                            {isEditing && onInlineCommit && onInlineCancel ? (
+                              <InlineNameInput
+                                initialName={entry.name}
+                                className="w-full text-left"
+                                busy={renameCommittingPath === entry.path}
+                                showBusyVisual={showRenameBusyVisual}
+                                onCommit={(name) => onInlineCommit(entry.path, name)}
+                                onCancel={() => onInlineCancel(entry.path, entry.name)}
+                              />
+                            ) : (
+                              <TruncatedTextTooltip
+                                text={entry.name}
+                                className="block truncate"
+                              />
+                            )}
+                          </div>
                         </div>
                       </button>
                       <div
