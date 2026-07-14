@@ -58,7 +58,11 @@ import { ZOOM_HUD_VISIBLE_MS, nextZoomHudBaseline } from "./slideshowZoomHud";
 import { resolveSlideshowStartIndex } from "./slideshowPathOrder";
 import { shouldClosePreviewOnBackdropClick } from "./slideshowBackdrop";
 import { previewKind } from "./imagePaths";
-import { previewChromeRegion } from "./previewChromeLayout";
+import {
+  PREVIEW_CHROME_LABEL_WRAP_CLASS,
+  PREVIEW_CHROME_STACK_CLASS,
+  previewChromeRegion,
+} from "./previewChromeLayout";
 import { fetchPreviewText, exceedsTextPreviewHardLimit, canOfferTextPreview } from "./previewTextContent";
 import { renderMarkdownToSafeHtml } from "./renderMarkdown";
 import { useSlideshowImageGestures } from "./useSlideshowImageGestures";
@@ -672,21 +676,6 @@ export default function SlideshowOverlay({
       ) : null}
 
       <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 via-black/20 to-transparent",
-          chromeGradientClass,
-        )}
-        aria-hidden
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 via-black/20 to-transparent",
-          chromeGradientClass,
-        )}
-        aria-hidden
-      />
-
-      <div
         ref={viewportRef}
         className={cn("absolute inset-0 overflow-hidden", isImageKind && "touch-none")}
         onClick={handleBackdropClick}
@@ -821,11 +810,37 @@ export default function SlideshowOverlay({
       </div>
 
       <div
-        className={cn("absolute inset-x-0 top-0 w-full p-4", chromeTopClass)}
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 via-black/20 to-transparent",
+          PREVIEW_CHROME_STACK_CLASS,
+          chromeGradientClass,
+        )}
+        aria-hidden
+      />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 via-black/20 to-transparent",
+          PREVIEW_CHROME_STACK_CLASS,
+          chromeGradientClass,
+        )}
+        aria-hidden
+      />
+
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 w-full p-4",
+          PREVIEW_CHROME_STACK_CLASS,
+          chromeTopClass,
+        )}
         data-preview-chrome={previewChromeRegion("title")}
       >
         <div className="flex w-full flex-col gap-0.5">
-          <p className="truncate text-sm font-medium text-white drop-shadow-sm">
+          <p
+            className={cn(
+              PREVIEW_CHROME_LABEL_WRAP_CLASS,
+              "text-sm font-medium text-white drop-shadow-sm",
+            )}
+          >
             {fileName}
             {paths.length > 1 ? (
               <span
@@ -843,7 +858,10 @@ export default function SlideshowOverlay({
             ) : null}
           </p>
           <p
-            className="truncate text-xs text-white/90 drop-shadow-sm"
+            className={cn(
+              PREVIEW_CHROME_LABEL_WRAP_CLASS,
+              "text-xs text-white/90 drop-shadow-sm",
+            )}
             data-preview-chrome={previewChromeRegion("metadata")}
           >
             {metadataLine || "—"}
@@ -855,7 +873,8 @@ export default function SlideshowOverlay({
         <>
           <div
             className={cn(
-              "absolute top-1/2 left-3 z-10 -translate-y-1/2",
+              "absolute top-1/2 left-3 -translate-y-1/2",
+              PREVIEW_CHROME_STACK_CLASS,
               chromeLeftClass,
             )}
             aria-hidden={!chromeVisible}
@@ -878,7 +897,8 @@ export default function SlideshowOverlay({
           </div>
           <div
             className={cn(
-              "absolute top-1/2 right-3 z-10 -translate-y-1/2",
+              "absolute top-1/2 right-3 -translate-y-1/2",
+              PREVIEW_CHROME_STACK_CLASS,
               chromeRightClass,
             )}
             aria-hidden={!chromeVisible}
@@ -905,6 +925,7 @@ export default function SlideshowOverlay({
       <div
         className={cn(
           "absolute inset-x-0 bottom-0 flex w-full flex-wrap items-end justify-end gap-2 p-4",
+          PREVIEW_CHROME_STACK_CLASS,
           chromeBottomClass,
         )}
         data-preview-chrome={previewChromeRegion("actions")}
