@@ -189,14 +189,22 @@ function QueueRowStats({ item }: QueueRowStatsProps) {
   const eta = formatEtaSeconds(item.etaSeconds);
   const head = t("upload.statsWithPercent", { status, percent, total });
 
-  if (item.status === "failed" && failedTooltip) {
+  if (item.status === "failed") {
+    const failedLabel = failedTooltip ? (
+      <UploadStatusTooltip content={<p>{failedTooltip}</p>}>
+        <span
+          tabIndex={0}
+          className={cn(statusHelpTriggerClassName(), "text-destructive")}
+        >
+          {status}
+        </span>
+      </UploadStatusTooltip>
+    ) : (
+      <span className="text-destructive">{status}</span>
+    );
     return (
       <span className="truncate">
-        <UploadStatusTooltip content={<p>{failedTooltip}</p>}>
-          <span tabIndex={0} className={statusHelpTriggerClassName()}>
-            {status}
-          </span>
-        </UploadStatusTooltip>
+        {failedLabel}
         {` · ${total}`}
       </span>
     );
