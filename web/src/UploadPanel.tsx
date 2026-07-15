@@ -590,7 +590,7 @@ export default function UploadPanel({
         </p>
       )}
       {showActionsFooter ? (
-        <div className="flex shrink-0 items-center gap-1 border-t px-4 py-3">
+        <div className="flex shrink-0 items-center justify-end gap-1 border-t px-4 py-3">
           <Button
             type="button"
             variant="ghost"
