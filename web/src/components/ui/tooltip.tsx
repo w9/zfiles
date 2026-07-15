@@ -22,13 +22,17 @@ function TooltipProvider({
 function Tooltip({
   open,
   onOpenChange,
+  allowTouchOpen = false,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Root> & {
+  /** Opt-in: allow controlled/press-open tooltips in touch UI (default: forced closed). */
+  allowTouchOpen?: boolean
+}) {
   const { resolved } = useUiMode()
-  const touchUi = resolved === "touch"
+  const touchBlocked = resolved === "touch" && !allowTouchOpen
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (touchUi && nextOpen) {
+    if (touchBlocked && nextOpen) {
       return
     }
     onOpenChange?.(nextOpen)
@@ -37,7 +41,7 @@ function Tooltip({
   return (
     <TooltipPrimitive.Root
       data-slot="tooltip"
-      open={touchUi ? false : open}
+      open={touchBlocked ? false : open}
       onOpenChange={handleOpenChange}
       {...props}
     />

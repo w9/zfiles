@@ -49,6 +49,52 @@ export const UPLOAD_HEADER_STATUS_KEYS: Record<UploadItemStatus, MessageKey> = {
 
 export type UploadHeaderSegment = { key: MessageKey; count: number };
 
+export function isTerminalUploadStatus(status: UploadItemStatus): boolean {
+  return status === "done" || status === "failed" || status === "cancelled";
+}
+
+/**
+ * Whether a queue row draws the in-row progress fill. Done items stay at full
+ * height without a success tint; terminal failed/cancelled never show a fill.
+ */
+export function queueRowShowsProgress(item: UploadQueueItem): boolean {
+  if (item.total <= 0 || item.status === "done") {
+    return false;
+  }
+  return (
+    !isTerminalUploadStatus(item.status) &&
+    item.status !== "pending" &&
+    item.status !== "awaiting_conflict"
+  );
+}
+
+/** Error text for the Failed status tooltip; omit when empty. */
+export function failedStatusTooltip(
+  error: string | null | undefined,
+): string | null {
+  if (error == null) {
+    return null;
+  }
+  const trimmed = error.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/** Bottom actions row is shown when the panel can choose files. */
+export function uploadPanelShowsActionsFooter(canChooseFiles: boolean): boolean {
+  return canChooseFiles;
+}
+
+/** Tap-to-toggle open state for upload status tooltips in touch UI. */
+export function nextTouchStatusTooltipOpen(
+  open: boolean,
+  action: "toggle" | "dismiss",
+): boolean {
+  if (action === "dismiss") {
+    return false;
+  }
+  return !open;
+}
+
 /**
  * Header summary segments for the merged list. Unfinished sessions slot in
  * after queued work and before finished history.

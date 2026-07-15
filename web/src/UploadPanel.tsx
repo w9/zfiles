@@ -1,5 +1,10 @@
-import { Pause, Play, X } from "lucide-react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import { ListChecks, Pause, Play, Upload, X } from "lucide-react";
+import {
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,6 +19,7 @@ import { FileIcon } from "./FileIcon";
 import { useTranslation } from "./i18n";
 import { formatRelativeModified, formatSize } from "./listing-format";
 import { useTheme } from "./useTheme";
+import { useUiMode } from "./useUiMode";
 import {
   unfinishedSessionPercent,
   unfinishedSessionProgressUnknown,
@@ -26,7 +32,15 @@ import {
   type UploadItemStatus,
   type UploadQueueItem,
 } from "./upload-queue";
-import { mergeUploadPanelRows, uploadHeaderSegments } from "./uploadPanelRows";
+import {
+  failedStatusTooltip,
+  isTerminalUploadStatus,
+  mergeUploadPanelRows,
+  nextTouchStatusTooltipOpen,
+  queueRowShowsProgress,
+  uploadHeaderSegments,
+  uploadPanelShowsActionsFooter,
+} from "./uploadPanelRows";
 
 export type UnfinishedSessionsPanelProps = {
   sessions: UnfinishedSessionView[];
@@ -82,24 +96,6 @@ function statusLabel(
   }
 }
 
-function isTerminalUploadStatus(status: UploadItemStatus): boolean {
-  return status === "done" || status === "failed" || status === "cancelled";
-}
-
-function queueRowShowsProgress(item: UploadQueueItem): boolean {
-  if (item.total <= 0) {
-    return false;
-  }
-  if (item.status === "done") {
-    return true;
-  }
-  return (
-    !isTerminalUploadStatus(item.status) &&
-    item.status !== "pending" &&
-    item.status !== "awaiting_conflict"
-  );
-}
-
 const rowProgressFillClasses: Record<"upload" | "local" | "success", string> = {
   upload: "bg-primary/20",
   local: "bg-muted-foreground/25",
@@ -125,6 +121,48 @@ function RowProgressBackground({ percent, variant }: RowProgressBackgroundProps)
   );
 }
 
+/** Status / help tooltip: hover on pointer UI, tap-to-toggle in touch UI. */
+function UploadStatusTooltip({
+  content,
+  children,
+}: {
+  content: ReactNode;
+  children: ReactElement;
+}) {
+  const { resolved } = useUiMode();
+  const touchUi = resolved === "touch";
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Tooltip
+      allowTouchOpen={touchUi}
+      open={touchUi ? open : undefined}
+      onOpenChange={touchUi ? setOpen : undefined}
+    >
+      <TooltipTrigger
+        asChild
+        onClick={
+          touchUi
+            ? (event) => {
+                event.preventDefault();
+                setOpen((current) => nextTouchStatusTooltipOpen(current, "toggle"));
+              }
+            : undefined
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs space-y-2">
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function statusHelpTriggerClassName(): string {
+  return "cursor-help underline decoration-dotted underline-offset-2";
+}
+
 type QueueRowStatsProps = {
   item: UploadQueueItem;
 };
@@ -132,6 +170,7 @@ type QueueRowStatsProps = {
 function QueueRowStats({ item }: QueueRowStatsProps) {
   const { t } = useTranslation();
   const status = statusLabel(item.status, t);
+  const failedTooltip = failedStatusTooltip(item.error);
 
   if (item.status === "pending" || item.status === "awaiting_conflict") {
     return (
@@ -149,6 +188,19 @@ function QueueRowStats({ item }: QueueRowStatsProps) {
   const speed = formatSpeed(item.speedBps);
   const eta = formatEtaSeconds(item.etaSeconds);
   const head = t("upload.statsWithPercent", { status, percent, total });
+
+  if (item.status === "failed" && failedTooltip) {
+    return (
+      <span className="truncate">
+        <UploadStatusTooltip content={<p>{failedTooltip}</p>}>
+          <span tabIndex={0} className={statusHelpTriggerClassName()}>
+            {status}
+          </span>
+        </UploadStatusTooltip>
+        {` · ${total}`}
+      </span>
+    );
+  }
 
   if (isTerminalUploadStatus(item.status)) {
     return <span className="truncate">{t("upload.statsBasic", { status, total })}</span>;
@@ -240,79 +292,76 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
           <RowProgressBackground percent={progressPercent} variant={progressVariant} />
         ) : null}
         <div className="relative flex items-center gap-2">
-        <FileIcon name={item.fileName} isDir={false} theme={iconTheme} size="xs" />
-        <div className="min-w-0 flex-1">
-          <TruncatedTextTooltip
-            as="p"
-            text={item.fileName}
-            className="truncate text-sm font-medium"
-          />
-          <TruncatedTextTooltip
-            as="p"
-            text={item.destPath}
-            className="truncate text-xs text-muted-foreground"
-          />
-        </div>
-        <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
-          <QueueRowStats item={item} />
-        </div>
-        {item.status === "done" ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            aria-label={t("upload.clearDone")}
-            onClick={() => onClearDone(item.id)}
-          >
-            <X className="size-4" />
-          </Button>
-        ) : item.status === "active" ||
-          item.status === "paused" ||
-          cancellable ? (
-          <div className="flex shrink-0 items-center gap-0.5">
-            {item.status === "active" ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                aria-label={t("upload.pause")}
-                onClick={() => onPause(item.id)}
-              >
-                <Pause className="size-4" />
-              </Button>
-            ) : null}
-            {item.status === "paused" ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                aria-label={t("upload.resume")}
-                onClick={() => onResume(item.id)}
-              >
-                <Play className="size-4" />
-              </Button>
-            ) : null}
-            {cancellable ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                aria-label={t("upload.cancel")}
-                onClick={() => onCancel(item.id)}
-              >
-                <X className="size-4" />
-              </Button>
-            ) : null}
+          <FileIcon name={item.fileName} isDir={false} theme={iconTheme} size="xs" />
+          <div className="min-w-0 flex-1">
+            <TruncatedTextTooltip
+              as="p"
+              text={item.fileName}
+              className="truncate text-sm font-medium"
+            />
+            <TruncatedTextTooltip
+              as="p"
+              text={item.destPath}
+              className="truncate text-xs text-muted-foreground"
+            />
           </div>
-        ) : null}
+          <div className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            <QueueRowStats item={item} />
+          </div>
+          {item.status === "done" ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              aria-label={t("upload.clearDone")}
+              onClick={() => onClearDone(item.id)}
+            >
+              <X className="size-4" />
+            </Button>
+          ) : item.status === "active" ||
+            item.status === "paused" ||
+            cancellable ? (
+            <div className="flex shrink-0 items-center gap-0.5">
+              {item.status === "active" ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t("upload.pause")}
+                  onClick={() => onPause(item.id)}
+                >
+                  <Pause className="size-4" />
+                </Button>
+              ) : null}
+              {item.status === "paused" ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t("upload.resume")}
+                  onClick={() => onResume(item.id)}
+                >
+                  <Play className="size-4" />
+                </Button>
+              ) : null}
+              {cancellable ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label={t("upload.cancel")}
+                  onClick={() => onCancel(item.id)}
+                >
+                  <X className="size-4" />
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-        {item.status === "failed" && item.error ? (
-          <p className="mt-2 text-xs text-destructive">{item.error}</p>
-        ) : null}
       </div>
     </li>
   );
@@ -370,46 +419,61 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
           <RowProgressBackground percent={sessionPercent} variant="local" />
         ) : null}
         <div className="relative flex items-center gap-2">
-        <FileIcon name={session.fileName} isDir={false} theme={iconTheme} size="xs" />
-        <div className="min-w-0 flex-1">
-          <TruncatedTextTooltip
-            as="p"
-            text={session.fileName}
-            className="truncate text-sm font-medium"
-          />
-          <TruncatedTextTooltip
-            as="p"
-            text={session.destPath}
-            className="truncate text-xs text-muted-foreground"
-          />
-        </div>
-        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                tabIndex={0}
-                className="cursor-help underline decoration-dotted underline-offset-2"
-              >
+          <FileIcon name={session.fileName} isDir={false} theme={iconTheme} size="xs" />
+          <div className="min-w-0 flex-1">
+            <TruncatedTextTooltip
+              as="p"
+              text={session.fileName}
+              className="truncate text-sm font-medium"
+            />
+            <TruncatedTextTooltip
+              as="p"
+              text={session.destPath}
+              className="truncate text-xs text-muted-foreground"
+            />
+          </div>
+          <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            <UploadStatusTooltip
+              content={
+                <>
+                  <p>
+                    {session.canResume
+                      ? t("upload.unfinished.description")
+                      : t("upload.startedElsewhere.description")}
+                  </p>
+                  {session.canResume && sessionProgressUnknown(session) ? (
+                    <p>{t("upload.multipart.progressUnknown")}</p>
+                  ) : null}
+                </>
+              }
+            >
+              <span tabIndex={0} className={statusHelpTriggerClassName()}>
                 {session.canResume
                   ? t("upload.status.unfinished")
                   : t("upload.status.startedElsewhere")}
               </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs space-y-2">
-              <p>
-                {session.canResume
-                  ? t("upload.unfinished.description")
-                  : t("upload.startedElsewhere.description")}
-              </p>
-              {session.canResume && sessionProgressUnknown(session) ? (
-                <p>{t("upload.multipart.progressUnknown")}</p>
-              ) : null}
-            </TooltipContent>
-          </Tooltip>
-          {statsRest ? ` · ${statsRest}` : null}
-        </p>
-        <div className="flex shrink-0 items-center gap-0.5">
-          {session.canResume && !readOnly ? (
+            </UploadStatusTooltip>
+            {statsRest ? ` · ${statsRest}` : null}
+          </p>
+          <div className="flex shrink-0 items-center gap-0.5">
+            {session.canResume && !readOnly ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    disabled={busy}
+                    aria-label={resumeLabel}
+                    onClick={() => onResume(session.uploadId)}
+                  >
+                    <Play className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{resumeLabel}</TooltipContent>
+              </Tooltip>
+            ) : null}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -418,32 +482,15 @@ function SessionRow({ session, iconTheme, readOnly, onResume, onAbort }: Session
                   size="icon"
                   className="h-8 w-8 shrink-0"
                   disabled={busy}
-                  aria-label={resumeLabel}
-                  onClick={() => onResume(session.uploadId)}
+                  aria-label={abortLabel}
+                  onClick={() => onAbort(session.uploadId)}
                 >
-                  <Play className="size-4" />
+                  <X className="size-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{resumeLabel}</TooltipContent>
+              <TooltipContent side="top">{abortLabel}</TooltipContent>
             </Tooltip>
-          ) : null}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                disabled={busy}
-                aria-label={abortLabel}
-                onClick={() => onAbort(session.uploadId)}
-              >
-                <X className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">{abortLabel}</TooltipContent>
-          </Tooltip>
-        </div>
+          </div>
         </div>
       </div>
     </li>
@@ -474,6 +521,7 @@ export default function UploadPanel({
       item.status === "failed" ||
       item.status === "cancelled",
   ).length;
+  const showActionsFooter = uploadPanelShowsActionsFooter(onChooseFiles != null);
 
   const headerTitle =
     rows.length > 0
@@ -495,43 +543,19 @@ export default function UploadPanel({
           text={headerTitle}
           className="min-w-0 flex-1 truncate text-sm font-medium"
         />
-        <div className="flex shrink-0 items-center gap-1">
-          {onChooseFiles ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onChooseFiles}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              {t("upload.chooseFiles")}
-            </Button>
-          ) : null}
-          {finishedCount > 0 ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onClearFinished}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              {t("upload.clearFinished")}
-            </Button>
-          ) : null}
-          {onClose ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              aria-label={t("upload.tray.close")}
-              onClick={onClose}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <X className="size-4" />
-            </Button>
-          ) : null}
-        </div>
+        {onClose ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={t("upload.tray.close")}
+            onClick={onClose}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <X className="size-4" />
+          </Button>
+        ) : null}
       </div>
       {rows.length > 0 ? (
         <ScrollArea className="min-h-0 flex-1">
@@ -565,6 +589,30 @@ export default function UploadPanel({
           {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
         </p>
       )}
+      {showActionsFooter ? (
+        <div className="flex shrink-0 items-center gap-1 border-t px-4 py-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onChooseFiles}
+          >
+            <Upload className="size-4" />
+            {t("upload.chooseFiles")}
+          </Button>
+          {finishedCount > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClearFinished}
+            >
+              <ListChecks className="size-4" />
+              {t("upload.clearFinished")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

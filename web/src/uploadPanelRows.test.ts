@@ -3,7 +3,14 @@ import { test } from "node:test";
 
 import type { UnfinishedSessionView } from "./unfinishedUploadSessions";
 import { createQueueItem, type UploadItemStatus, type UploadQueueItem } from "./upload-queue";
-import { mergeUploadPanelRows, uploadHeaderSegments } from "./uploadPanelRows";
+import {
+  failedStatusTooltip,
+  mergeUploadPanelRows,
+  nextTouchStatusTooltipOpen,
+  queueRowShowsProgress,
+  uploadHeaderSegments,
+  uploadPanelShowsActionsFooter,
+} from "./uploadPanelRows";
 
 function queueItem(
   name: string,
@@ -92,4 +99,44 @@ test("uploadHeaderSegments reports sessions alone when the queue is empty", () =
   assert.deepEqual(uploadHeaderSegments([], 3), [
     { key: "upload.queue.header.unfinished", count: 3 },
   ]);
+});
+
+test("queueRowShowsProgress skips done and other terminal/idle statuses", () => {
+  const base = queueItem("a.txt", 1, "active");
+  base.total = 100;
+  base.offset = 40;
+  assert.equal(queueRowShowsProgress({ ...base, status: "active" }), true);
+  assert.equal(queueRowShowsProgress({ ...base, status: "hashing" }), true);
+  assert.equal(queueRowShowsProgress({ ...base, status: "verifying" }), true);
+  assert.equal(queueRowShowsProgress({ ...base, status: "paused" }), true);
+  assert.equal(queueRowShowsProgress({ ...base, status: "done" }), false);
+  assert.equal(queueRowShowsProgress({ ...base, status: "failed" }), false);
+  assert.equal(queueRowShowsProgress({ ...base, status: "cancelled" }), false);
+  assert.equal(queueRowShowsProgress({ ...base, status: "pending" }), false);
+  assert.equal(
+    queueRowShowsProgress({ ...base, status: "awaiting_conflict" }),
+    false,
+  );
+  assert.equal(queueRowShowsProgress({ ...base, total: 0, status: "active" }), false);
+});
+
+test("failedStatusTooltip keeps non-empty errors and omits blanks", () => {
+  assert.equal(failedStatusTooltip("network reset"), "network reset");
+  assert.equal(failedStatusTooltip("  trim me  "), "trim me");
+  assert.equal(failedStatusTooltip(""), null);
+  assert.equal(failedStatusTooltip("   "), null);
+  assert.equal(failedStatusTooltip(null), null);
+  assert.equal(failedStatusTooltip(undefined), null);
+});
+
+test("uploadPanelShowsActionsFooter follows choose-files availability", () => {
+  assert.equal(uploadPanelShowsActionsFooter(true), true);
+  assert.equal(uploadPanelShowsActionsFooter(false), false);
+});
+
+test("nextTouchStatusTooltipOpen toggles and dismisses", () => {
+  assert.equal(nextTouchStatusTooltipOpen(false, "toggle"), true);
+  assert.equal(nextTouchStatusTooltipOpen(true, "toggle"), false);
+  assert.equal(nextTouchStatusTooltipOpen(true, "dismiss"), false);
+  assert.equal(nextTouchStatusTooltipOpen(false, "dismiss"), false);
 });
