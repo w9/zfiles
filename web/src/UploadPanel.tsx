@@ -121,7 +121,9 @@ function RowProgressBackground({ percent, variant }: RowProgressBackgroundProps)
   );
 }
 
-/** Status / help tooltip: hover on pointer UI, tap-to-toggle in touch UI. */
+/** Status / help tooltip: hover on pointer UI, tap-to-toggle in touch UI.
+ * Touch open state is click-owned only — wiring Radix onOpenChange races
+ * focus-open then click-toggle (flash) and blur-dismiss. */
 function UploadStatusTooltip({
   content,
   children,
@@ -134,11 +136,7 @@ function UploadStatusTooltip({
   const [open, setOpen] = useState(false);
 
   return (
-    <Tooltip
-      allowTouchOpen={touchUi}
-      open={touchUi ? open : undefined}
-      onOpenChange={touchUi ? setOpen : undefined}
-    >
+    <Tooltip allowTouchOpen={touchUi} open={touchUi ? open : undefined}>
       <TooltipTrigger
         asChild
         onClick={
@@ -285,7 +283,10 @@ function QueueRow({ item, iconTheme, onClearDone, onCancel, onPause, onResume }:
       )}
     >
       <div
-        className="relative px-4 py-3"
+        className={cn(
+          "relative px-4 py-3",
+          item.status === "failed" && "bg-destructive/15",
+        )}
         {...(showProgress
           ? {
               role: "progressbar",
