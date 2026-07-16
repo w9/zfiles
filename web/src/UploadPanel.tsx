@@ -150,8 +150,9 @@ function UploadStatusTooltip({
       >
         {children}
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-xs space-y-2">
-        {content}
+      <TooltipContent side="top" className="max-w-xs">
+        {/* Keep spacing off TooltipContent so it doesn't margin the arrow. */}
+        <div className="space-y-2 [&_p]:m-0">{content}</div>
       </TooltipContent>
     </Tooltip>
   );
