@@ -595,12 +595,14 @@ export default function UploadPanel({
           </ul>
         </ScrollArea>
       ) : (
-        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-          {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
-        </p>
+        <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6">
+          <p className="text-center text-sm text-muted-foreground">
+            {readOnly ? t("upload.readOnly") : t("upload.tray.empty")}
+          </p>
+        </div>
       )}
       {showActionsFooter ? (
-        <div className="flex shrink-0 items-center justify-end gap-1 border-t px-4 py-3">
+        <div className="mt-auto flex shrink-0 items-center justify-end gap-1 border-t px-4 py-3">
           <Button
             type="button"
             variant="ghost"
