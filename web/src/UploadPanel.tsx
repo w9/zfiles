@@ -569,7 +569,7 @@ export default function UploadPanel({
       </div>
       {rows.length > 0 ? (
         <ScrollArea className="min-h-0 flex-1">
-          <ul className="divide-y">
+          <ul>
             {rows.map((row) =>
               row.kind === "queue" ? (
                 <QueueRow
