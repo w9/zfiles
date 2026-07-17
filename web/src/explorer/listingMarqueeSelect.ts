@@ -426,10 +426,20 @@ export function selectionSetsEqual(a: Set<string>, b: Set<string>): boolean {
 }
 
 export function shouldIgnoreMarqueePointerTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) {
+  if (
+    target == null ||
+    typeof target !== "object" ||
+    typeof (target as Element).closest !== "function"
+  ) {
     return true;
   }
-  if (target.closest("input, textarea, [data-prevent-marquee], [data-grid-resize-handle]")) {
+  // Entry presses are for click/select and HTML5 item drag — marquee starts on
+  // empty viewport chrome only (Finder/Explorer-style).
+  if (
+    (target as Element).closest(
+      "input, textarea, [data-prevent-marquee], [data-grid-resize-handle], [data-listing-entry]",
+    )
+  ) {
     return true;
   }
   return false;

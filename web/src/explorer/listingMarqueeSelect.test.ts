@@ -14,6 +14,7 @@ import {
   rectsIntersect,
   selectionSetsEqual,
   shouldClearMultiSelectionOnEmptyClick,
+  shouldIgnoreMarqueePointerTarget,
 } from "./listingMarqueeSelect";
 import { buildGridVirtualRows } from "./gridListingLayout";
 
@@ -396,6 +397,17 @@ test("shouldClearMultiSelectionOnEmptyClick allows plain click on viewport backg
     }),
     true,
   );
+});
+
+test("shouldIgnoreMarqueePointerTarget skips listing entries so item drag is not marquee", () => {
+  const entry = {
+    closest: (selector: string) =>
+      selector.includes("[data-listing-entry]") ? entry : null,
+  } as unknown as Element;
+  const viewport = { closest: () => null } as unknown as Element;
+  assert.equal(shouldIgnoreMarqueePointerTarget(entry), true);
+  assert.equal(shouldIgnoreMarqueePointerTarget(viewport), false);
+  assert.equal(shouldIgnoreMarqueePointerTarget(null), true);
 });
 
 test("shouldClearMultiSelectionOnEmptyClick rejects drag, modifiers, and entry targets", () => {
