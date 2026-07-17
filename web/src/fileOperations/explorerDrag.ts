@@ -4,6 +4,32 @@ import { isDescendantPath, parentExplorerPath } from "./paths";
 /** Custom MIME type for in-app explorer path drags (not OS file drops). */
 export const EXPLORER_DRAG_MIME = "application/x-zfiles-explorer-paths";
 
+/** Mark icon / filename (and similar) hit targets that may start an item drag. */
+export const EXPLORER_DRAG_HANDLE_ATTR = "data-explorer-drag-handle";
+
+/**
+ * Unselected items: only icon/filename handles. Selected items: any point on the
+ * entry chrome (selection highlight) may start the drag.
+ */
+export function canStartExplorerEntryDrag(options: {
+  target: EventTarget | null;
+  isSelected: boolean;
+}): boolean {
+  if (options.isSelected) {
+    return true;
+  }
+  if (
+    options.target == null ||
+    typeof options.target !== "object" ||
+    typeof (options.target as Element).closest !== "function"
+  ) {
+    return false;
+  }
+  return (
+    (options.target as Element).closest(`[${EXPLORER_DRAG_HANDLE_ATTR}]`) != null
+  );
+}
+
 export type ExplorerDragPayload = {
   paths: string[];
 };

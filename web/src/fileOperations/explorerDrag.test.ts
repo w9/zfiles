@@ -3,8 +3,10 @@ import { test } from "node:test";
 
 import {
   canDropExplorerPaths,
+  canStartExplorerEntryDrag,
   dragEventHasExplorerPaths,
   dragEventHasExternalFiles,
+  EXPLORER_DRAG_HANDLE_ATTR,
   EXPLORER_DRAG_MIME,
   explorerDragOperationFromModifiers,
   parseExplorerDragPayload,
@@ -123,4 +125,36 @@ test("dragEventHasExplorerPaths and dragEventHasExternalFiles distinguish kinds"
   assert.equal(dragEventHasExternalFiles(["Files"]), true);
   assert.equal(dragEventHasExplorerPaths(["Files"]), false);
   assert.equal(dragEventHasExternalFiles(["text/plain"]), false);
+});
+
+test("canStartExplorerEntryDrag allows any target when selected", () => {
+  assert.equal(
+    canStartExplorerEntryDrag({ target: null, isSelected: true }),
+    true,
+  );
+  const padding = { closest: () => null } as unknown as Element;
+  assert.equal(
+    canStartExplorerEntryDrag({ target: padding, isSelected: true }),
+    true,
+  );
+});
+
+test("canStartExplorerEntryDrag requires handle when unselected", () => {
+  const handle = {
+    closest: (selector: string) =>
+      selector.includes(EXPLORER_DRAG_HANDLE_ATTR) ? handle : null,
+  } as unknown as Element;
+  const padding = { closest: () => null } as unknown as Element;
+  assert.equal(
+    canStartExplorerEntryDrag({ target: handle, isSelected: false }),
+    true,
+  );
+  assert.equal(
+    canStartExplorerEntryDrag({ target: padding, isSelected: false }),
+    false,
+  );
+  assert.equal(
+    canStartExplorerEntryDrag({ target: null, isSelected: false }),
+    false,
+  );
 });

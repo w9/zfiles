@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { FileClipboardOperation } from "@/fileOperations/clipboard";
 import {
   canDropExplorerPaths,
+  canStartExplorerEntryDrag,
   dragEventHasExplorerPaths,
   dropEffectForExplorerOperation,
   explorerDragOperationFromModifiers,
@@ -16,7 +17,10 @@ import type { MessageKey } from "@/i18n";
 type UseExplorerInternalDragOptions = {
   enabled: boolean;
   selectedPaths: ReadonlySet<string>;
-  formatDragLabel: (paths: readonly string[]) => string;
+  formatDragLabel: (
+    paths: readonly string[],
+    operation: FileClipboardOperation,
+  ) => string;
   onDropPaths: (
     paths: string[],
     operation: FileClipboardOperation,
@@ -38,6 +42,28 @@ function operationFromDragEvent(event: {
   return explorerDragOperationFromModifiers(modifiersFromDragEvent(event));
 }
 
+function operationFromKeyboardEvent(event: KeyboardEvent): FileClipboardOperation {
+  return explorerDragOperationFromModifiers({
+    ctrlKey: event.ctrlKey,
+    altKey: event.altKey,
+  });
+}
+
+const DRAG_BADGE_STYLE = [
+  "position:fixed",
+  "top:0",
+  "left:0",
+  "padding:4px 10px",
+  "border-radius:6px",
+  "background:color-mix(in oklab, CanvasText 88%, transparent)",
+  "color:Canvas",
+  "font:12px/1.3 system-ui,sans-serif",
+  "white-space:nowrap",
+  "pointer-events:none",
+  "z-index:9999",
+  "transform:translate(-9999px,-9999px)",
+].join(";");
+
 export function useExplorerInternalDrag({
   enabled,
   selectedPaths,
@@ -46,7 +72,9 @@ export function useExplorerInternalDrag({
 }: UseExplorerInternalDragOptions) {
   const [dropHighlightPath, setDropHighlightPath] = useState<string | null>(null);
   const sessionPathsRef = useRef<string[] | null>(null);
-  const dragImageElRef = useRef<HTMLDivElement | null>(null);
+  const sessionOperationRef = useRef<FileClipboardOperation>("cut");
+  const dragBadgeElRef = useRef<HTMLDivElement | null>(null);
+  const dragListenersCleanupRef = useRef<(() => void) | null>(null);
   const onDropPathsRef = useRef(onDropPaths);
   onDropPathsRef.current = onDropPaths;
   const formatDragLabelRef = useRef(formatDragLabel);
@@ -54,20 +82,46 @@ export function useExplorerInternalDrag({
   const selectedPathsRef = useRef(selectedPaths);
   selectedPathsRef.current = selectedPaths;
 
-  const clearDragImage = useCallback(() => {
-    dragImageElRef.current?.remove();
-    dragImageElRef.current = null;
+  const updateBadgeLabel = useCallback((operation: FileClipboardOperation) => {
+    const paths = sessionPathsRef.current;
+    const el = dragBadgeElRef.current;
+    if (!paths || !el) {
+      return;
+    }
+    sessionOperationRef.current = operation;
+    el.textContent = formatDragLabelRef.current(paths, operation);
+  }, []);
+
+  const positionBadge = useCallback((clientX: number, clientY: number) => {
+    const el = dragBadgeElRef.current;
+    if (!el) {
+      return;
+    }
+    el.style.transform = `translate(${clientX + 14}px, ${clientY + 14}px)`;
+  }, []);
+
+  const clearDragBadge = useCallback(() => {
+    dragListenersCleanupRef.current?.();
+    dragListenersCleanupRef.current = null;
+    dragBadgeElRef.current?.remove();
+    dragBadgeElRef.current = null;
   }, []);
 
   const endSession = useCallback(() => {
     sessionPathsRef.current = null;
+    sessionOperationRef.current = "cut";
     setDropHighlightPath(null);
-    clearDragImage();
-  }, [clearDragImage]);
+    clearDragBadge();
+  }, [clearDragBadge]);
 
   const onEntryDragStart = useCallback(
     (event: React.DragEvent<HTMLElement>, path: string) => {
       if (!enabled) {
+        event.preventDefault();
+        return;
+      }
+      const isSelected = selectedPathsRef.current.has(path);
+      if (!canStartExplorerEntryDrag({ target: event.target, isSelected })) {
         event.preventDefault();
         return;
       }
@@ -77,31 +131,47 @@ export function useExplorerInternalDrag({
         return;
       }
       sessionPathsRef.current = paths;
+      const operation = operationFromDragEvent(event);
+      sessionOperationRef.current = operation;
       setExplorerDragData(event.dataTransfer, paths);
       event.dataTransfer.effectAllowed = "copyMove";
 
-      clearDragImage();
-      const label = formatDragLabelRef.current(paths);
+      clearDragBadge();
       const el = document.createElement("div");
-      el.textContent = label;
-      el.style.cssText = [
-        "position:absolute",
-        "top:-1000px",
-        "left:-1000px",
-        "padding:4px 10px",
-        "border-radius:6px",
-        "background:color-mix(in oklab, CanvasText 88%, transparent)",
-        "color:Canvas",
-        "font:12px/1.3 system-ui,sans-serif",
-        "white-space:nowrap",
-        "pointer-events:none",
-        "z-index:9999",
-      ].join(";");
+      el.textContent = formatDragLabelRef.current(paths, operation);
+      el.style.cssText = DRAG_BADGE_STYLE;
       document.body.appendChild(el);
-      dragImageElRef.current = el;
-      event.dataTransfer.setDragImage(el, 16, 12);
+      dragBadgeElRef.current = el;
+      // Transparent drag image so the live badge is the only visual.
+      const blank = document.createElement("canvas");
+      blank.width = 1;
+      blank.height = 1;
+      event.dataTransfer.setDragImage(blank, 0, 0);
+      positionBadge(event.clientX, event.clientY);
+
+      const onDragOver = (moveEvent: DragEvent) => {
+        if (!sessionPathsRef.current) {
+          return;
+        }
+        positionBadge(moveEvent.clientX, moveEvent.clientY);
+        updateBadgeLabel(operationFromDragEvent(moveEvent));
+      };
+      const onKeyChange = (keyEvent: KeyboardEvent) => {
+        if (!sessionPathsRef.current) {
+          return;
+        }
+        updateBadgeLabel(operationFromKeyboardEvent(keyEvent));
+      };
+      window.addEventListener("dragover", onDragOver);
+      window.addEventListener("keydown", onKeyChange);
+      window.addEventListener("keyup", onKeyChange);
+      dragListenersCleanupRef.current = () => {
+        window.removeEventListener("dragover", onDragOver);
+        window.removeEventListener("keydown", onKeyChange);
+        window.removeEventListener("keyup", onKeyChange);
+      };
     },
-    [enabled, clearDragImage],
+    [enabled, clearDragBadge, positionBadge, updateBadgeLabel],
   );
 
   const onEntryDragEnd = useCallback(() => {
@@ -116,6 +186,8 @@ export function useExplorerInternalDrag({
         return false;
       }
       const operation = operationFromDragEvent(event);
+      updateBadgeLabel(operation);
+      positionBadge(event.clientX, event.clientY);
       const ok = canDropExplorerPaths({ destDir, sourcePaths: paths, operation });
       if (event.dataTransfer) {
         event.dataTransfer.dropEffect = ok
@@ -125,7 +197,7 @@ export function useExplorerInternalDrag({
       setDropHighlightPath(ok ? destDir : null);
       return ok;
     },
-    [enabled],
+    [enabled, positionBadge, updateBadgeLabel],
   );
 
   const onFolderDragOver = useCallback(
@@ -149,10 +221,7 @@ export function useExplorerInternalDrag({
   const onFolderDragLeave = useCallback(
     (event: React.DragEvent<HTMLElement>, destDir: string) => {
       const related = event.relatedTarget;
-      if (
-        related instanceof Node &&
-        event.currentTarget.contains(related)
-      ) {
+      if (related instanceof Node && event.currentTarget.contains(related)) {
         return;
       }
       setDropHighlightPath((current) => (current === destDir ? null : current));
@@ -227,10 +296,19 @@ export function useExplorerInternalDrag({
 
 export function defaultExplorerDragLabel(
   paths: readonly string[],
+  operation: FileClipboardOperation,
   t: (key: MessageKey, params?: Record<string, string>) => string,
 ): string {
-  if (paths.length === 1) {
-    return t("explorer.drag.one", { name: basename(paths[0] ?? "") });
-  }
-  return t("explorer.drag.many", { count: String(paths.length) });
+  const itemLabel =
+    paths.length === 1
+      ? t("explorer.drag.one", { name: basename(paths[0] ?? "") })
+      : t("explorer.drag.many", { count: String(paths.length) });
+  const operationLabel =
+    operation === "copy"
+      ? t("explorer.drag.operation.copy")
+      : t("explorer.drag.operation.move");
+  return t("explorer.drag.badge", {
+    operation: operationLabel,
+    label: itemLabel,
+  });
 }

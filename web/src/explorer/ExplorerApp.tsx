@@ -1917,7 +1917,8 @@ export default function ExplorerApp() {
 
   const entryDragEnabled = !touchUi && !readOnly && !operationPending;
   const formatExplorerDragLabel = useCallback(
-    (paths: readonly string[]) => defaultExplorerDragLabel(paths, t),
+    (paths: readonly string[], operation: "copy" | "cut") =>
+      defaultExplorerDragLabel(paths, operation, t),
     [t],
   );
   const pastePathsToDir = fileOps.pastePathsToDir;

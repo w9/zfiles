@@ -17,6 +17,7 @@ import {
   hitTestGridPathsWithContentMarquee,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
+import { EXPLORER_DRAG_HANDLE_ATTR } from "@/fileOperations/explorerDrag";
 import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
@@ -351,6 +352,17 @@ export default function GridListing({
                     entry.isDir &&
                     dropHighlightPath != null &&
                     dropHighlightPath === entry.path;
+                  const canDragEntry = entryDragEnabled && !isEditing;
+                  const handleDragProps = canDragEntry
+                    ? {
+                        [EXPLORER_DRAG_HANDLE_ATTR]: "",
+                        draggable: true as const,
+                        onDragStart: (event: React.DragEvent<HTMLElement>) =>
+                          onEntryDragStart?.(event, entry.path),
+                        onDragEnd: (event: React.DragEvent<HTMLElement>) =>
+                          onEntryDragEnd?.(event),
+                      }
+                    : undefined;
                   return (
                     <div
                       key={entry.key}
@@ -364,7 +376,7 @@ export default function GridListing({
                         type="button"
                         data-listing-entry
                         data-listing-path={entry.path}
-                        draggable={entryDragEnabled && !isEditing}
+                        draggable={canDragEntry && isSelected}
                         className="absolute select-none outline-none focus:outline-none focus-visible:outline-none"
                         style={{
                           top: -hitExpand.top,
@@ -441,15 +453,17 @@ export default function GridListing({
                             height: cardSize.height,
                           }}
                         >
-                          <GridCardPreview
-                            path={entry.path}
-                            name={entry.name}
-                            isDir={entry.isDir}
-                            isSymlink={entry.isSymlink ?? false}
-                            previewsEnabled={gridImagePreviewsEnabled}
-                            iconTheme={iconTheme}
-                            pixelSize={iconPixelSize}
-                          />
+                          <div className="min-h-0 min-w-0 flex-1" {...handleDragProps}>
+                            <GridCardPreview
+                              path={entry.path}
+                              name={entry.name}
+                              isDir={entry.isDir}
+                              isSymlink={entry.isSymlink ?? false}
+                              previewsEnabled={gridImagePreviewsEnabled}
+                              iconTheme={iconTheme}
+                              pixelSize={iconPixelSize}
+                            />
+                          </div>
                           <div
                             className={cn(
                               "shrink-0 px-2 py-1.5 text-center",
@@ -466,10 +480,12 @@ export default function GridListing({
                                 onCancel={() => onInlineCancel(entry.path, entry.name)}
                               />
                             ) : (
-                              <TruncatedTextTooltip
-                                text={entry.name}
-                                className="block truncate"
-                              />
+                              <div {...handleDragProps}>
+                                <TruncatedTextTooltip
+                                  text={entry.name}
+                                  className="block truncate"
+                                />
+                              </div>
                             )}
                           </div>
                         </div>

@@ -27,6 +27,7 @@ import {
   LISTING_TABLE_ROW_HEIGHT_PX,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
+import { EXPLORER_DRAG_HANDLE_ATTR } from "@/fileOperations/explorerDrag";
 import { createListingColumns } from "@/listing-columns";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
@@ -392,6 +393,17 @@ export default function VirtualListing({
             const isEditing = inlineEditPath === entry.path;
             const isDropTarget =
               entry.isDir && dropHighlightPath != null && dropHighlightPath === entry.path;
+            const canDragEntry = entryDragEnabled && !isEditing;
+            const handleDragProps = canDragEntry
+              ? {
+                  [EXPLORER_DRAG_HANDLE_ATTR]: "",
+                  draggable: true as const,
+                  onDragStart: (event: React.DragEvent<HTMLElement>) =>
+                    onEntryDragStart?.(event, entry.path),
+                  onDragEnd: (event: React.DragEvent<HTMLElement>) =>
+                    onEntryDragEnd?.(event),
+                }
+              : undefined;
 
             return (
               <div
@@ -400,7 +412,7 @@ export default function VirtualListing({
                 data-listing-entry
                 data-listing-path={entry.path}
                 data-state={isSelected ? "selected" : undefined}
-                draggable={entryDragEnabled && !isEditing}
+                draggable={canDragEntry && isSelected}
                 className={cn(
                   LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
@@ -447,6 +459,7 @@ export default function VirtualListing({
                   role="gridcell"
                   className={cn("flex h-9 items-center justify-end", CELL_CLIP)}
                   style={{ gridColumn: 1 }}
+                  {...handleDragProps}
                 >
                   <FileIcon
                     name={entry.name}
@@ -475,10 +488,12 @@ export default function VirtualListing({
                         onCancel={() => onInlineCancel(entry.path, entry.name)}
                       />
                     ) : (
-                      <TruncatedTextTooltip
-                        text={entry.name}
-                        className="min-w-0 truncate"
-                      />
+                      <div className="min-w-0 truncate" {...handleDragProps}>
+                        <TruncatedTextTooltip
+                          text={entry.name}
+                          className="min-w-0 truncate"
+                        />
+                      </div>
                     )
                   ) : (
                     flexRender(cell.column.columnDef.cell, cell.getContext())
