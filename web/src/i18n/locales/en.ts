@@ -41,6 +41,8 @@ export const en = {
   "backend.connectedTooltip": "Connected to {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connected to {{backend}}",
   "backend.connectingTooltip": "Connecting to the zfiles server…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} items",
   "upload.drop": "Drop files anywhere to upload",
   "upload.uploading": "Uploading…",
   "upload.uploadingProgress": "Uploading… {{percent}}%",

@@ -41,6 +41,8 @@ export const zhCN: Record<MessageKey, string> = {
   "backend.connectedTooltip": "已连接到 {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "已连接到 {{backend}}",
   "backend.connectingTooltip": "正在连接 zfiles 服务器…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} 项",
   "upload.drop": "将文件拖放到任意位置上传",
   "upload.uploading": "上传中…",
   "upload.uploadingProgress": "上传中… {{percent}}%",

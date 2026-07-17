@@ -42,6 +42,8 @@ export const ru: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Подключено к {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Подключено к {{backend}}",
   "backend.connectingTooltip": "Подключение к серверу zfiles…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} объектов",
   "upload.drop": "Перетащите файлы в любое место для загрузки",
   "upload.uploading": "Загрузка…",
   "upload.uploadingProgress": "Загрузка… {{percent}}%",

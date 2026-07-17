@@ -41,6 +41,8 @@ export const zhTW: Record<MessageKey, string> = {
   "backend.connectedTooltip": "已連線至 {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "已連線至 {{backend}}",
   "backend.connectingTooltip": "正在連線至 zfiles 伺服器…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} 項",
   "upload.drop": "將檔案拖放到任意位置以上傳",
   "upload.uploading": "上傳中…",
   "upload.uploadingProgress": "上傳中… {{percent}}%",

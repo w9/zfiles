@@ -138,6 +138,92 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
     });
   }, []);
 
+  const pasteClipboardToDir = useCallback(
+    async (activeClipboard: FileClipboard, destDir: string) => {
+      if (activeClipboard.paths.length === 0) {
+        return;
+      }
+
+      let listingEntries = deps.entries;
+      if (destDir !== deps.currentPath) {
+        try {
+          listingEntries = [];
+          let cursor: string | undefined;
+          do {
+            const page = await deps.backend.list(destDir, cursor);
+            listingEntries.push(...page.entries);
+            cursor = page.nextCursor;
+          } while (cursor);
+        } catch (err) {
+          if (cloudAuth.handleAuthError(err)) {
+            return;
+          }
+          notifyError(deps.t("error.actionFailed", { status: "failed" }));
+          return;
+        }
+      }
+
+      const entriesByPath = new Map(deps.entries.map((entry) => [entry.path, entry]));
+      const batchOnError: PasteBatchOnError = readStoredPasteBatchOnError();
+      let result;
+      try {
+        result = await performPaste({
+          backend: deps.backend,
+          clipboard: activeClipboard,
+          destDir,
+          listingEntries,
+          allEntriesByPath: entriesByPath,
+          batchOnError,
+          askConflict: askPasteConflict,
+        });
+      } catch (err) {
+        if (cloudAuth.handleAuthError(err)) {
+          return;
+        }
+        notifyError(deps.t("error.actionFailed", { status: "failed" }));
+        return;
+      }
+
+      if (result.cancelled) {
+        return;
+      }
+
+      if (activeClipboard.operation === "cut" && result.succeeded.length > 0) {
+        setClipboard((current) => {
+          if (current?.operation !== "cut") {
+            return current;
+          }
+          const sameSet =
+            current.paths.length === activeClipboard.paths.length &&
+            current.paths.every((path) => activeClipboard.paths.includes(path));
+          return sameSet ? null : current;
+        });
+      }
+
+      await deps.loadListing(deps.currentPath, { preserveSelection: true });
+
+      if (result.failed.length > 0 || result.succeeded.length > 0) {
+        const parts: string[] = [];
+        if (result.succeeded.length > 0) {
+          parts.push(
+            deps.t("paste.result.succeeded", {
+              count: String(result.succeeded.length),
+            }),
+          );
+        }
+        if (result.failed.length > 0) {
+          parts.push(
+            deps.t("paste.result.failed", { count: String(result.failed.length) }),
+          );
+        }
+        if (result.failed.length > 0) {
+          notifyError(parts.join(" · "));
+        }
+      }
+    },
+    [cloudAuth, deps, askPasteConflict],
+  );
+
   const pasteFromClipboard = useCallback(async () => {
     if (!clipboard || clipboard.paths.length === 0) {
       return;
@@ -146,57 +232,21 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
     if (destDir == null) {
       return;
     }
+    await pasteClipboardToDir(clipboard, destDir);
+  }, [clipboard, resolvePasteDestDir, pasteClipboardToDir]);
 
-    const entriesByPath = new Map(deps.entries.map((entry) => [entry.path, entry]));
-    const batchOnError: PasteBatchOnError = readStoredPasteBatchOnError();
-    let result;
-    try {
-      result = await performPaste({
-        backend: deps.backend,
-        clipboard,
-        destDir,
-        listingEntries: deps.entries,
-        allEntriesByPath: entriesByPath,
-        batchOnError,
-        askConflict: askPasteConflict,
+  const pastePathsToDir = useCallback(
+    async (
+      paths: string[],
+      operation: FileClipboard["operation"],
+      destDir: string,
+    ) => {
+      await deps.runWithPending("file.paste", async () => {
+        await pasteClipboardToDir({ operation, paths }, destDir);
       });
-    } catch (err) {
-      if (cloudAuth.handleAuthError(err)) {
-        return;
-      }
-      notifyError(deps.t("error.actionFailed", { status: "failed" }));
-      return;
-    }
-
-    if (result.cancelled) {
-      return;
-    }
-
-    if (clipboard.operation === "cut" && result.succeeded.length > 0) {
-      setClipboard(null);
-    }
-
-    await deps.loadListing(deps.currentPath, { preserveSelection: true });
-
-    if (result.failed.length > 0 || result.succeeded.length > 0) {
-      const parts: string[] = [];
-      if (result.succeeded.length > 0) {
-        parts.push(
-          deps.t("paste.result.succeeded", {
-            count: String(result.succeeded.length),
-          }),
-        );
-      }
-      if (result.failed.length > 0) {
-        parts.push(
-          deps.t("paste.result.failed", { count: String(result.failed.length) }),
-        );
-      }
-      if (result.failed.length > 0) {
-        notifyError(parts.join(" · "));
-      }
-    }
-  }, [clipboard, cloudAuth, deps, askPasteConflict, resolvePasteDestDir]);
+    },
+    [deps, pasteClipboardToDir],
+  );
 
   const createNewFolder = useCallback(async () => {
     const existingNames = new Set(deps.entries.map((entry) => entry.name));
@@ -345,6 +395,7 @@ export function useExplorerFileOps(deps: ExplorerFileOpsDeps) {
     cutSelection,
     clearClipboard,
     pasteFromClipboard,
+    pastePathsToDir,
     createNewFolder,
     startRename,
     commitRename,

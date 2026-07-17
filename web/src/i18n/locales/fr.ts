@@ -42,6 +42,8 @@ export const fr: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Connecté à {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connecté à {{backend}}",
   "backend.connectingTooltip": "Connexion au serveur zfiles…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} éléments",
   "upload.drop": "Déposez des fichiers n'importe où pour les téléverser",
   "upload.uploading": "Téléversement…",
   "upload.uploadingProgress": "Téléversement… {{percent}} %",

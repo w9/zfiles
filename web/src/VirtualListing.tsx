@@ -74,6 +74,21 @@ type VirtualListingProps = {
     event: React.PointerEvent<HTMLElement>,
     path: string,
   ) => void;
+  entryDragEnabled?: boolean;
+  dropHighlightPath?: string | null;
+  onEntryDragStart?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onEntryDragEnd?: (event: React.DragEvent<HTMLElement>) => void;
+  onFolderDragOver?: (
+    event: React.DragEvent<HTMLElement>,
+    path: string,
+    isDir: boolean,
+  ) => void;
+  onFolderDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onFolderDrop?: (
+    event: React.DragEvent<HTMLElement>,
+    path: string,
+    isDir: boolean,
+  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
 };
@@ -109,6 +124,8 @@ const LISTING_ROW_PRESS_INSET_CLASS =
 const LISTING_ROW_LONG_PRESS_INSET_CLASS =
   "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
 const LISTING_ROW_CUT_CLASS = "opacity-45";
+const LISTING_ROW_DROP_TARGET_CLASS =
+  "bg-primary/20 ring-2 ring-inset ring-primary/50";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
 
@@ -168,6 +185,13 @@ export default function VirtualListing({
   marqueeLayoutRef,
   onViewportPointerDown,
   onEntryPointerDown,
+  entryDragEnabled = false,
+  dropHighlightPath = null,
+  onEntryDragStart,
+  onEntryDragEnd,
+  onFolderDragOver,
+  onFolderDragLeave,
+  onFolderDrop,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
@@ -366,6 +390,8 @@ export default function VirtualListing({
             const dimmed = shouldDimDotEntry(entry.name, entry.key);
             const isCut = cutPathSet.has(entry.path);
             const isEditing = inlineEditPath === entry.path;
+            const isDropTarget =
+              entry.isDir && dropHighlightPath != null && dropHighlightPath === entry.path;
 
             return (
               <div
@@ -374,6 +400,7 @@ export default function VirtualListing({
                 data-listing-entry
                 data-listing-path={entry.path}
                 data-state={isSelected ? "selected" : undefined}
+                draggable={entryDragEnabled && !isEditing}
                 className={cn(
                   LISTING_ROW_CLASS,
                   dimmed && "opacity-70",
@@ -387,6 +414,7 @@ export default function VirtualListing({
                     !isGestureInset &&
                     LISTING_ROW_PRESS_INSET_CLASS,
                   isGestureInset && LISTING_ROW_LONG_PRESS_INSET_CLASS,
+                  isDropTarget && LISTING_ROW_DROP_TARGET_CLASS,
                 )}
                 style={{
                   gridTemplateColumns: columnGridTemplate,
@@ -400,6 +428,13 @@ export default function VirtualListing({
                 }}
                 onClick={(event) => entry.onSelect(event, item.index)}
                 onPointerDown={(event) => onEntryPointerDown?.(event, entry.path)}
+                onDragStart={(event) => onEntryDragStart?.(event, entry.path)}
+                onDragEnd={(event) => onEntryDragEnd?.(event)}
+                onDragOver={(event) =>
+                  onFolderDragOver?.(event, entry.path, entry.isDir)
+                }
+                onDragLeave={(event) => onFolderDragLeave?.(event, entry.path)}
+                onDrop={(event) => onFolderDrop?.(event, entry.path, entry.isDir)}
                 onDoubleClick={() => {
                   if (shouldSkipDoubleClickActivate?.()) {
                     return;

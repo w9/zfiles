@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+import { dragEventHasExternalFiles } from "@/fileOperations/explorerDrag";
+
 export function dragEventHasFiles(event: DragEvent): boolean {
   return event.dataTransfer?.types.includes("Files") ?? false;
+}
+
+function shouldHandleUploadDrop(event: DragEvent): boolean {
+  return dragEventHasExternalFiles(event.dataTransfer?.types);
 }
 
 export type DroppedUploadFile = {
@@ -81,7 +87,7 @@ export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions)
     }
 
     const onDragEnter = (event: DragEvent) => {
-      if (!dragEventHasFiles(event)) {
+      if (!shouldHandleUploadDrop(event)) {
         return;
       }
       event.preventDefault();
@@ -90,7 +96,7 @@ export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions)
     };
 
     const onDragOver = (event: DragEvent) => {
-      if (!dragEventHasFiles(event)) {
+      if (!shouldHandleUploadDrop(event)) {
         return;
       }
       event.preventDefault();
@@ -100,7 +106,7 @@ export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions)
     };
 
     const onDragLeave = (event: DragEvent) => {
-      if (!dragEventHasFiles(event)) {
+      if (!shouldHandleUploadDrop(event)) {
         return;
       }
       event.preventDefault();
@@ -111,7 +117,7 @@ export function useGlobalFileDrop({ enabled, onDrop }: UseGlobalFileDropOptions)
     };
 
     const onDropHandler = (event: DragEvent) => {
-      if (!dragEventHasFiles(event)) {
+      if (!shouldHandleUploadDrop(event)) {
         return;
       }
       event.preventDefault();

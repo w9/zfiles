@@ -42,6 +42,8 @@ export const ko: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}}에 연결됨",
   "backend.connectedTooltipBackendOnly": "{{backend}}에 연결됨",
   "backend.connectingTooltip": "zfiles 서버에 연결하는 중…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}}개 항목",
   "upload.drop": "어디에나 파일을 끌어다 놓아 업로드",
   "upload.uploading": "업로드 중…",
   "upload.uploadingProgress": "업로드 중… {{percent}}%",

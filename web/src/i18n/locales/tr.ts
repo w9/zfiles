@@ -42,6 +42,8 @@ export const tr: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}} bağlantısı kuruldu",
   "backend.connectedTooltipBackendOnly": "{{backend}} bağlantısı kuruldu",
   "backend.connectingTooltip": "zfiles sunucusuna bağlanılıyor…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} öğe",
   "upload.drop": "Yüklemek için dosyaları herhangi bir yere bırakın",
   "upload.uploading": "Yükleniyor…",
   "upload.uploadingProgress": "Yükleniyor… %{{percent}}",

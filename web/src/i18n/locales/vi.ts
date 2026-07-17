@@ -42,6 +42,8 @@ export const vi: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Đã kết nối tới {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Đã kết nối tới {{backend}}",
   "backend.connectingTooltip": "Đang kết nối tới máy chủ zfiles…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} mục",
   "upload.drop": "Thả tệp vào bất kỳ đâu để tải lên",
   "upload.uploading": "Đang tải lên…",
   "upload.uploadingProgress": "Đang tải lên… {{percent}}%",

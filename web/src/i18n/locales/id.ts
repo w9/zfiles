@@ -42,6 +42,8 @@ export const id: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Terhubung ke {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Terhubung ke {{backend}}",
   "backend.connectingTooltip": "Menghubungkan ke server zfiles…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} item",
   "upload.drop": "Letakkan berkas di mana saja untuk mengunggah",
   "upload.uploading": "Mengunggah…",
   "upload.uploadingProgress": "Mengunggah… {{percent}}%",

@@ -67,6 +67,10 @@ type ExplorerBreadcrumbProps = {
   onQuickFilterKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   quickFilterInputRef?: RefObject<HTMLInputElement | null>;
   showNavButtons?: boolean;
+  dropHighlightPath?: string | null;
+  onPathDragOver?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onPathDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onPathDrop?: (event: React.DragEvent<HTMLElement>, path: string) => void;
 };
 
 export default function ExplorerBreadcrumb({
@@ -96,6 +100,10 @@ export default function ExplorerBreadcrumb({
   onQuickFilterKeyDown,
   quickFilterInputRef,
   showNavButtons = true,
+  dropHighlightPath = null,
+  onPathDragOver,
+  onPathDragLeave,
+  onPathDrop,
 }: ExplorerBreadcrumbProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentPath);
@@ -112,18 +120,28 @@ export default function ExplorerBreadcrumb({
     !editing,
   );
 
+  const pathDropTargetClass =
+    "rounded-sm bg-primary/20 ring-2 ring-inset ring-primary/50";
+
   const renderSegmentLink = (index: number) => {
     const part = parts[index];
     const path = pathForBreadcrumbPartIndex(parts, index);
+    const isDropTarget = dropHighlightPath != null && dropHighlightPath === path;
     return (
       <BreadcrumbLink asChild>
         <button
           type="button"
-          className="cursor-pointer bg-transparent p-0 whitespace-nowrap"
+          className={cn(
+            "cursor-pointer bg-transparent p-0 whitespace-nowrap",
+            isDropTarget && pathDropTargetClass,
+          )}
           onClick={(event) => {
             event.stopPropagation();
             onNavigate(path);
           }}
+          onDragOver={(event) => onPathDragOver?.(event, path)}
+          onDragLeave={(event) => onPathDragLeave?.(event, path)}
+          onDrop={(event) => onPathDrop?.(event, path)}
         >
           {part}
         </button>
@@ -246,10 +264,26 @@ export default function ExplorerBreadcrumb({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className={cn(
+            "size-7 shrink-0",
+            dropHighlightPath === "" && pathDropTargetClass,
+          )}
           aria-label={rootAriaLabel}
           disabled={!currentPath}
           onClick={() => onNavigate("")}
+          onDragOver={(event) => {
+            if (!currentPath) {
+              return;
+            }
+            onPathDragOver?.(event, "");
+          }}
+          onDragLeave={(event) => onPathDragLeave?.(event, "")}
+          onDrop={(event) => {
+            if (!currentPath) {
+              return;
+            }
+            onPathDrop?.(event, "");
+          }}
         >
           <Home className="size-4" aria-hidden="true" />
         </Button>

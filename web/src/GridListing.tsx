@@ -61,6 +61,21 @@ type GridListingProps = {
     event: React.PointerEvent<HTMLElement>,
     path: string,
   ) => void;
+  entryDragEnabled?: boolean;
+  dropHighlightPath?: string | null;
+  onEntryDragStart?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onEntryDragEnd?: (event: React.DragEvent<HTMLElement>) => void;
+  onFolderDragOver?: (
+    event: React.DragEvent<HTMLElement>,
+    path: string,
+    isDir: boolean,
+  ) => void;
+  onFolderDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  onFolderDrop?: (
+    event: React.DragEvent<HTMLElement>,
+    path: string,
+    isDir: boolean,
+  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
@@ -88,6 +103,8 @@ const GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS =
 const GRID_ITEM_RESIZING_CLASS =
   "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
+const GRID_ITEM_DROP_TARGET_CLASS =
+  "bg-primary/20 ring-2 ring-inset ring-primary/50";
 
 const VIEWPORT_PADDING_PX = 12;
 const GRID_VIRTUAL_OVERSCAN_ROWS = 8;
@@ -114,6 +131,13 @@ export default function GridListing({
   marqueeLayoutRef,
   onViewportPointerDown,
   onEntryPointerDown,
+  entryDragEnabled = false,
+  dropHighlightPath = null,
+  onEntryDragStart,
+  onEntryDragEnd,
+  onFolderDragOver,
+  onFolderDragLeave,
+  onFolderDrop,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
@@ -323,6 +347,10 @@ export default function GridListing({
                   const isCut = cutPathSet.has(entry.path);
                   const isEditing = inlineEditPath === entry.path;
                   const isResizing = resizingPath === entry.path;
+                  const isDropTarget =
+                    entry.isDir &&
+                    dropHighlightPath != null &&
+                    dropHighlightPath === entry.path;
                   return (
                     <div
                       key={entry.key}
@@ -336,6 +364,7 @@ export default function GridListing({
                         type="button"
                         data-listing-entry
                         data-listing-path={entry.path}
+                        draggable={entryDragEnabled && !isEditing}
                         className="absolute select-none outline-none focus:outline-none focus-visible:outline-none"
                         style={{
                           top: -hitExpand.top,
@@ -351,6 +380,17 @@ export default function GridListing({
                         onClick={(event) => entry.onSelect(event, index)}
                         onPointerDown={(event) =>
                           onEntryPointerDown?.(event, entry.path)
+                        }
+                        onDragStart={(event) => onEntryDragStart?.(event, entry.path)}
+                        onDragEnd={(event) => onEntryDragEnd?.(event)}
+                        onDragOver={(event) =>
+                          onFolderDragOver?.(event, entry.path, entry.isDir)
+                        }
+                        onDragLeave={(event) =>
+                          onFolderDragLeave?.(event, entry.path)
+                        }
+                        onDrop={(event) =>
+                          onFolderDrop?.(event, entry.path, entry.isDir)
                         }
                         onDoubleClick={() => {
                           if (shouldSkipDoubleClickActivate?.()) {
@@ -392,6 +432,7 @@ export default function GridListing({
                               isGestureInset &&
                               !isResizing &&
                               GRID_ITEM_LONG_PRESS_INSET_CLASS,
+                            isDropTarget && GRID_ITEM_DROP_TARGET_CLASS,
                           )}
                           style={{
                             top: hitExpand.top,

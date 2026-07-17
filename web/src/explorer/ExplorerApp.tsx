@@ -131,6 +131,10 @@ import type { ListingNavigationSnapshot } from "./listingNavigationSnapshot";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
+import {
+  defaultExplorerDragLabel,
+  useExplorerInternalDrag,
+} from "./useExplorerInternalDrag";
 import { resolveGridSectionFolderCount } from "./gridListingLayout";
 
 function multipartToUnfinishedSession(session: MultipartSessionView): UnfinishedSessionView {
@@ -1911,6 +1915,29 @@ export default function ExplorerApp() {
     onDrop: onUpload,
   });
 
+  const entryDragEnabled = !touchUi && !readOnly && !operationPending;
+  const formatExplorerDragLabel = useCallback(
+    (paths: readonly string[]) => defaultExplorerDragLabel(paths, t),
+    [t],
+  );
+  const pastePathsToDir = fileOps.pastePathsToDir;
+  const onExplorerDropPaths = useCallback(
+    (
+      paths: string[],
+      operation: "copy" | "cut",
+      destDir: string,
+    ) => {
+      void pastePathsToDir(paths, operation, destDir);
+    },
+    [pastePathsToDir],
+  );
+  const internalDrag = useExplorerInternalDrag({
+    enabled: entryDragEnabled,
+    selectedPaths,
+    formatDragLabel: formatExplorerDragLabel,
+    onDropPaths: onExplorerDropPaths,
+  });
+
   const listingFocusedPath = resolveListingFocusedPath({
     touchUi,
     selectedPath,
@@ -1993,6 +2020,10 @@ export default function ExplorerApp() {
         onQuickFilterKeyDown={handleQuickFilterKeyDown}
         quickFilterInputRef={quickFilterInputRef}
         showNavButtons={!compactTouchChrome}
+        dropHighlightPath={internalDrag.dropHighlightPath}
+        onPathDragOver={internalDrag.onBreadcrumbDragOver}
+        onPathDragLeave={internalDrag.onBreadcrumbDragLeave}
+        onPathDrop={internalDrag.onBreadcrumbDrop}
       />
     </section>
   );
@@ -2286,6 +2317,13 @@ export default function ExplorerApp() {
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
+                entryDragEnabled={entryDragEnabled}
+                dropHighlightPath={internalDrag.dropHighlightPath}
+                onEntryDragStart={internalDrag.onEntryDragStart}
+                onEntryDragEnd={internalDrag.onEntryDragEnd}
+                onFolderDragOver={internalDrag.onFolderDragOver}
+                onFolderDragLeave={internalDrag.onFolderDragLeave}
+                onFolderDrop={internalDrag.onFolderDrop}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
@@ -2322,6 +2360,13 @@ export default function ExplorerApp() {
                 marqueeLayoutRef={listingMarqueeLayoutRef}
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
+                entryDragEnabled={entryDragEnabled}
+                dropHighlightPath={internalDrag.dropHighlightPath}
+                onEntryDragStart={internalDrag.onEntryDragStart}
+                onEntryDragEnd={internalDrag.onEntryDragEnd}
+                onFolderDragOver={internalDrag.onFolderDragOver}
+                onFolderDragLeave={internalDrag.onFolderDragLeave}
+                onFolderDrop={internalDrag.onFolderDrop}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {

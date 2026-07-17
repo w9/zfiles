@@ -42,6 +42,8 @@ export const ja: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}} に接続済み",
   "backend.connectedTooltipBackendOnly": "{{backend}} に接続済み",
   "backend.connectingTooltip": "zfiles サーバーに接続しています…",
+  "explorer.drag.one": "{{name}}",
+  "explorer.drag.many": "{{count}} 項目",
   "upload.drop": "どこにでもファイルをドロップしてアップロード",
   "upload.uploading": "アップロード中…",
   "upload.uploadingProgress": "アップロード中… {{percent}}%",
