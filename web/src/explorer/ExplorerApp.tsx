@@ -669,9 +669,9 @@ export default function ExplorerApp() {
     if (selected.length > 0) {
       return selected;
     }
-    const path =
-      selectedPathRef.current ??
-      listingEntriesRef.current[selectedIndexRef.current]?.path;
+    // Do not fall back to selectedIndex: after clearSelection it often remains 0,
+    // so paste treated the first row as selected even when nothing was selected.
+    const path = selectedPathRef.current;
     return path ? [path] : [];
   }, []);
 
