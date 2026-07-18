@@ -34,8 +34,10 @@ import type { EntrySummarySource } from "@/infoSelectionSummary";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-/** Keep the tooltip centered on the pointer (grid cards are large drag nodes). */
-const snapCenterToCursor: Modifier = ({
+/** Place the tooltip to the right of the pointer (grid cards are large drag nodes). */
+const OVERLAY_CURSOR_GAP_X_PX = 12;
+
+const snapBesideCursor: Modifier = ({
   activatorEvent,
   draggingNodeRect,
   transform,
@@ -51,7 +53,7 @@ const snapCenterToCursor: Modifier = ({
   const offsetY = activatorCoordinates.y - draggingNodeRect.top;
   return {
     ...transform,
-    x: transform.x + offsetX - draggingNodeRect.width / 2,
+    x: transform.x + offsetX + OVERLAY_CURSOR_GAP_X_PX,
     y: transform.y + offsetY - draggingNodeRect.height / 2,
   };
 };
@@ -292,7 +294,7 @@ export default function ExplorerDndProvider({
         dropAnimation={null}
         className="pointer-events-none"
         style={{ width: "auto", height: "auto" }}
-        modifiers={[snapCenterToCursor]}
+        modifiers={[snapBesideCursor]}
       >
         {activePath != null && overlayText ? (
           <div className={OVERLAY_TOOLTIP_CLASS}>{overlayText}</div>
