@@ -433,11 +433,11 @@ export function shouldIgnoreMarqueePointerTarget(target: EventTarget | null): bo
   ) {
     return true;
   }
-  // Entry presses are for click/select and HTML5 item drag — marquee starts on
-  // empty viewport chrome only (Finder/Explorer-style).
+  // Drag handles / selected drag surface own the gesture; elsewhere on a row
+  // (e.g. size/date columns) may start marquee. Empty viewport still marquees.
   if (
     (target as Element).closest(
-      "input, textarea, [data-prevent-marquee], [data-grid-resize-handle], [data-listing-entry]",
+      "input, textarea, [data-prevent-marquee], [data-grid-resize-handle], [data-explorer-drag-handle], [data-explorer-drag-surface]",
     )
   ) {
     return true;

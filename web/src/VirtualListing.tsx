@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -11,15 +11,12 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Layout } from "react-resizable-panels";
 
-import { FileIcon } from "@/FileIcon";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
-import InlineNameInput from "@/explorer/InlineNameInput";
 import {
   collectTableEntryRects,
   findTablePathAtClientPoint,
@@ -27,18 +24,15 @@ import {
   LISTING_TABLE_ROW_HEIGHT_PX,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
-import { EXPLORER_DRAG_HANDLE_ATTR } from "@/fileOperations/explorerDrag";
+import { useExplorerDndUi } from "@/explorer/ExplorerDndProvider";
+import { VirtualListingEntryRow } from "@/explorer/VirtualListingEntryRow";
 import { createListingColumns } from "@/listing-columns";
-import { formatModifiedAbsolute } from "@/listing-format";
-import { shouldDimDotEntry } from "@/listingFilter";
 import {
   LISTING_ENTRY_TEXT_CLASS,
   LISTING_ICON_COLUMN_WIDTH_PX,
 } from "@/listing-styles";
 import {
   layoutToListingRowGridTemplate,
-  listingColumnGutterGridColumn,
-  listingDataCellGridColumn,
   prependIconColumnToMeasuredGridTemplate,
 } from "@/listing-table-layout";
 import type { FileIconTheme } from "@/fileIcons";
@@ -76,20 +70,6 @@ type VirtualListingProps = {
     path: string,
   ) => void;
   entryDragEnabled?: boolean;
-  dropHighlightPath?: string | null;
-  onEntryDragStart?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onEntryDragEnd?: (event: React.DragEvent<HTMLElement>) => void;
-  onFolderDragOver?: (
-    event: React.DragEvent<HTMLElement>,
-    path: string,
-    isDir: boolean,
-  ) => void;
-  onFolderDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onFolderDrop?: (
-    event: React.DragEvent<HTMLElement>,
-    path: string,
-    isDir: boolean,
-  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
 };
@@ -100,33 +80,8 @@ const DEFAULT_COLUMN_LAYOUT: Layout = {
   modified: 27,
 };
 
-const CELL_CLIP = "min-w-0 overflow-hidden";
-const CELL_TEXT = cn("block min-w-0 truncate", LISTING_ENTRY_TEXT_CLASS);
-
-const BODY_COLUMN_GUTTER_CLASS = "border-r border-transparent";
-
 const BODY_SCROLL_PEER_HOVER_CLASS =
   "peer-hover/listing-header:[&_[data-listing-gutter]]:border-border";
-
-const LISTING_ROW_CLASS = cn(
-  "absolute left-0 grid w-full cursor-default select-none",
-  "hover:bg-accent/60",
-  "outline-none focus:outline-none focus-visible:outline-none",
-);
-
-const LISTING_ROW_SELECTED_CLASS = "bg-primary/12 hover:bg-primary/16";
-/** Keyboard arrow focus — same shallow inset as short press. */
-const LISTING_ROW_FOCUS_SELECTED_CLASS =
-  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)] bg-primary/12 hover:bg-primary/16";
-/** Finger down before long-press arms — shallow inset, no focus bg. */
-const LISTING_ROW_PRESS_INSET_CLASS =
-  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
-/** Finger target during armed range select — deeper inset so selection bg stays readable. */
-const LISTING_ROW_LONG_PRESS_INSET_CLASS =
-  "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
-const LISTING_ROW_CUT_CLASS = "opacity-45";
-const LISTING_ROW_DROP_TARGET_CLASS =
-  "bg-primary/20 ring-2 ring-inset ring-primary/50";
 
 const LISTING_HEADER_ROW_CLASS = "h-10 max-h-10 overflow-hidden";
 
@@ -187,15 +142,10 @@ export default function VirtualListing({
   onViewportPointerDown,
   onEntryPointerDown,
   entryDragEnabled = false,
-  dropHighlightPath = null,
-  onEntryDragStart,
-  onEntryDragEnd,
-  onFolderDragOver,
-  onFolderDragLeave,
-  onFolderDrop,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
+  const { dropHighlightPath, dragFadePathSet } = useExplorerDndUi();
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: "name", desc: false },
@@ -383,160 +333,40 @@ export default function VirtualListing({
             const row = rows[item.index];
             const entry = row.original;
             const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
-            const isFocused = focusedPath != null && entry.path === focusedPath;
-            const isGestureHighlighted =
-              gestureHighlightPath != null && entry.path === gestureHighlightPath;
-            const isGestureInset =
-              gestureInsetPath != null && entry.path === gestureInsetPath;
-            const dimmed = shouldDimDotEntry(entry.name, entry.key);
-            const isCut = cutPathSet.has(entry.path);
-            const isEditing = inlineEditPath === entry.path;
-            const isDropTarget =
-              entry.isDir && dropHighlightPath != null && dropHighlightPath === entry.path;
-            const canDragEntry = entryDragEnabled && !isEditing;
-            const handleDragProps = canDragEntry
-              ? {
-                  [EXPLORER_DRAG_HANDLE_ATTR]: "",
-                  draggable: true as const,
-                  onDragStart: (event: React.DragEvent<HTMLElement>) =>
-                    onEntryDragStart?.(event, entry.path),
-                  onDragEnd: (event: React.DragEvent<HTMLElement>) =>
-                    onEntryDragEnd?.(event),
-                }
-              : undefined;
-
             return (
-              <div
+              <VirtualListingEntryRow
                 key={entry.key}
-                role="row"
-                data-listing-entry
-                data-listing-path={entry.path}
-                data-state={isSelected ? "selected" : undefined}
-                draggable={canDragEntry && isSelected}
-                className={cn(
-                  LISTING_ROW_CLASS,
-                  dimmed && "opacity-70",
-                  isCut && LISTING_ROW_CUT_CLASS,
-                  entry.quickFilterMatched === false && "opacity-40",
-                  isSelected &&
-                    (isFocused && !isGestureHighlighted && !isGestureInset
-                      ? LISTING_ROW_FOCUS_SELECTED_CLASS
-                      : LISTING_ROW_SELECTED_CLASS),
-                  isGestureHighlighted &&
-                    !isGestureInset &&
-                    LISTING_ROW_PRESS_INSET_CLASS,
-                  isGestureInset && LISTING_ROW_LONG_PRESS_INSET_CLASS,
-                  isDropTarget && LISTING_ROW_DROP_TARGET_CLASS,
-                )}
-                style={{
-                  gridTemplateColumns: columnGridTemplate,
-                  transform: `translateY(${item.start}px)`,
-                  height: `${item.size}px`,
-                }}
-                onMouseDown={(event) => {
-                  if (event.shiftKey) {
-                    event.preventDefault();
-                  }
-                }}
-                onClick={(event) => entry.onSelect(event, item.index)}
-                onPointerDown={(event) => onEntryPointerDown?.(event, entry.path)}
-                onDragStart={(event) => onEntryDragStart?.(event, entry.path)}
-                onDragEnd={(event) => onEntryDragEnd?.(event)}
-                onDragOver={(event) =>
-                  onFolderDragOver?.(event, entry.path, entry.isDir)
+                row={row}
+                itemIndex={item.index}
+                itemStart={item.start}
+                itemSize={item.size}
+                columnGridTemplate={columnGridTemplate}
+                isSelected={isSelected}
+                isFocused={focusedPath != null && entry.path === focusedPath}
+                isGestureHighlighted={
+                  gestureHighlightPath != null && entry.path === gestureHighlightPath
                 }
-                onDragLeave={(event) => onFolderDragLeave?.(event, entry.path)}
-                onDrop={(event) => onFolderDrop?.(event, entry.path, entry.isDir)}
-                onDoubleClick={() => {
-                  if (shouldSkipDoubleClickActivate?.()) {
-                    return;
-                  }
-                  entry.onActivate();
-                }}
-                onContextMenu={entry.onContextMenu}
-              >
-                <div
-                  role="gridcell"
-                  className={cn("flex h-9 items-center justify-end", CELL_CLIP)}
-                  style={{ gridColumn: 1 }}
-                  {...handleDragProps}
-                >
-                  <FileIcon
-                    name={entry.name}
-                    isDir={entry.isDir}
-                    isSymlink={entry.isSymlink}
-                    theme={iconTheme}
-                    size="xs"
-                  />
-                </div>
-                {row.getVisibleCells().map((cell, columnIndex) => {
-                  const gridColumn = listingDataCellGridColumn(columnIndex);
-                  const modifiedTitle =
-                    cell.column.id === "modified" &&
-                    columnLabels.modifiedTimeFormat === "relative"
-                      ? formatModifiedAbsolute(entry.modified, columnLabels.locale) ??
-                        undefined
-                      : undefined;
-                  const isName = columnIndex === 0;
-                  const content = isName ? (
-                    isEditing && onInlineCommit && onInlineCancel ? (
-                      <InlineNameInput
-                        initialName={entry.name}
-                        busy={renameCommittingPath === entry.path}
-                        showBusyVisual={showRenameBusyVisual}
-                        onCommit={(name) => onInlineCommit(entry.path, name)}
-                        onCancel={() => onInlineCancel(entry.path, entry.name)}
-                      />
-                    ) : (
-                      <div className="min-w-0 truncate" {...handleDragProps}>
-                        <TruncatedTextTooltip
-                          text={entry.name}
-                          className="min-w-0 truncate"
-                        />
-                      </div>
-                    )
-                  ) : (
-                    flexRender(cell.column.columnDef.cell, cell.getContext())
-                  );
-
-                  return (
-                    <Fragment key={cell.id}>
-                      {columnIndex > 0 ? (
-                        <div
-                          data-listing-gutter
-                          aria-hidden
-                          className={BODY_COLUMN_GUTTER_CLASS}
-                          style={{ gridColumn: listingColumnGutterGridColumn(columnIndex) }}
-                        />
-                      ) : null}
-                      <div
-                        role="gridcell"
-                        className={cn("p-0", CELL_CLIP)}
-                        style={{ gridColumn }}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-9 min-w-0 items-center overflow-hidden px-2",
-                            LISTING_ENTRY_TEXT_CLASS,
-                            isName && "w-full",
-                            columnIndex === 1 && "justify-end text-right",
-                          )}
-                        >
-                          {isName ? (
-                            content
-                          ) : modifiedTitle ? (
-                            <TruncatedTextTooltip text={modifiedTitle} className={CELL_TEXT}>
-                              {content}
-                            </TruncatedTextTooltip>
-                          ) : (
-                            <span className={CELL_TEXT}>{content}</span>
-                          )}
-                        </div>
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
+                isGestureInset={
+                  gestureInsetPath != null && entry.path === gestureInsetPath
+                }
+                isCut={cutPathSet.has(entry.path)}
+                isDragFaded={dragFadePathSet.has(entry.path)}
+                dropHighlight={
+                  entry.isDir &&
+                  dropHighlightPath != null &&
+                  dropHighlightPath === entry.path
+                }
+                isEditing={inlineEditPath === entry.path}
+                entryDragEnabled={entryDragEnabled}
+                renameCommittingPath={renameCommittingPath}
+                showRenameBusyVisual={showRenameBusyVisual}
+                onInlineCommit={onInlineCommit}
+                onInlineCancel={onInlineCancel}
+                onEntryPointerDown={onEntryPointerDown}
+                shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
+                columnLabels={columnLabels}
+                iconTheme={iconTheme}
+              />
             );
           })}
         </div>

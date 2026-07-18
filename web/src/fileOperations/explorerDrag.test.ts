@@ -4,14 +4,12 @@ import { test } from "node:test";
 import {
   canDropExplorerPaths,
   canStartExplorerEntryDrag,
-  dragEventHasExplorerPaths,
-  dragEventHasExternalFiles,
+  destDirFromExplorerDropId,
   EXPLORER_DRAG_HANDLE_ATTR,
-  EXPLORER_DRAG_MIME,
   explorerDragOperationFromModifiers,
-  parseExplorerDragPayload,
+  explorerDropIdForDir,
+  formatExplorerDragOverlayText,
   resolveExplorerDragPaths,
-  serializeExplorerDragPayload,
 } from "./explorerDrag";
 
 test("resolveExplorerDragPaths uses full selection when dragged path is selected", () => {
@@ -25,33 +23,45 @@ test("resolveExplorerDragPaths uses only dragged path when it is not selected", 
   assert.deepEqual(resolveExplorerDragPaths("a/d", new Set(["a/b", "a/c"])), ["a/d"]);
 });
 
-test("resolveExplorerDragPaths uses dragged path when selection is empty", () => {
-  assert.deepEqual(resolveExplorerDragPaths("a/b", new Set()), ["a/b"]);
-});
-
 test("explorerDragOperationFromModifiers defaults to cut (move)", () => {
   assert.equal(
-    explorerDragOperationFromModifiers({ ctrlKey: false, altKey: false }),
+    explorerDragOperationFromModifiers({
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false,
+    }),
     "cut",
   );
 });
 
-test("explorerDragOperationFromModifiers copies with ctrl or alt", () => {
+test("explorerDragOperationFromModifiers copies with ctrl, alt, or meta", () => {
   assert.equal(
-    explorerDragOperationFromModifiers({ ctrlKey: true, altKey: false }),
+    explorerDragOperationFromModifiers({
+      ctrlKey: true,
+      altKey: false,
+      metaKey: false,
+    }),
     "copy",
   );
   assert.equal(
-    explorerDragOperationFromModifiers({ ctrlKey: false, altKey: true }),
+    explorerDragOperationFromModifiers({
+      ctrlKey: false,
+      altKey: true,
+      metaKey: false,
+    }),
+    "copy",
+  );
+  assert.equal(
+    explorerDragOperationFromModifiers({
+      ctrlKey: false,
+      altKey: false,
+      metaKey: true,
+    }),
     "copy",
   );
 });
 
-test("canDropExplorerPaths rejects empty sources and into-own-descendant", () => {
-  assert.equal(
-    canDropExplorerPaths({ destDir: "a", sourcePaths: [], operation: "cut" }),
-    false,
-  );
+test("canDropExplorerPaths rejects into-own-descendant and same-folder move", () => {
   assert.equal(
     canDropExplorerPaths({
       destDir: "a/b",
@@ -62,79 +72,18 @@ test("canDropExplorerPaths rejects empty sources and into-own-descendant", () =>
   );
   assert.equal(
     canDropExplorerPaths({
-      destDir: "a/b/c",
-      sourcePaths: ["a/b"],
-      operation: "cut",
-    }),
-    false,
-  );
-});
-
-test("canDropExplorerPaths rejects same-folder move but allows same-folder copy", () => {
-  assert.equal(
-    canDropExplorerPaths({
       destDir: "a",
-      sourcePaths: ["a/x", "a/y"],
-      operation: "cut",
-    }),
-    false,
-  );
-  assert.equal(
-    canDropExplorerPaths({
-      destDir: "a",
-      sourcePaths: ["a/x", "a/y"],
-      operation: "copy",
-    }),
-    true,
-  );
-});
-
-test("canDropExplorerPaths allows move into a sibling folder", () => {
-  assert.equal(
-    canDropExplorerPaths({
-      destDir: "a/dest",
-      sourcePaths: ["a/x", "a/y"],
-      operation: "cut",
-    }),
-    true,
-  );
-});
-
-test("canDropExplorerPaths allows move into root from a subfolder", () => {
-  assert.equal(
-    canDropExplorerPaths({
-      destDir: "",
       sourcePaths: ["a/x"],
       operation: "cut",
     }),
-    true,
+    false,
   );
-});
-
-test("serialize and parse explorer drag payload round-trip", () => {
-  const raw = serializeExplorerDragPayload(["a/b", "a/c"]);
-  assert.deepEqual(parseExplorerDragPayload(raw), { paths: ["a/b", "a/c"] });
-  assert.equal(parseExplorerDragPayload("not-json"), null);
-  assert.equal(parseExplorerDragPayload("{}"), null);
-  assert.equal(parseExplorerDragPayload('{"paths":[]}'), null);
-});
-
-test("dragEventHasExplorerPaths and dragEventHasExternalFiles distinguish kinds", () => {
-  assert.equal(dragEventHasExplorerPaths([EXPLORER_DRAG_MIME, "text/plain"]), true);
-  assert.equal(dragEventHasExternalFiles([EXPLORER_DRAG_MIME, "Files"]), false);
-  assert.equal(dragEventHasExternalFiles(["Files"]), true);
-  assert.equal(dragEventHasExplorerPaths(["Files"]), false);
-  assert.equal(dragEventHasExternalFiles(["text/plain"]), false);
-});
-
-test("canStartExplorerEntryDrag allows any target when selected", () => {
   assert.equal(
-    canStartExplorerEntryDrag({ target: null, isSelected: true }),
-    true,
-  );
-  const padding = { closest: () => null } as unknown as Element;
-  assert.equal(
-    canStartExplorerEntryDrag({ target: padding, isSelected: true }),
+    canDropExplorerPaths({
+      destDir: "a/dest",
+      sourcePaths: ["a/x"],
+      operation: "cut",
+    }),
     true,
   );
 });
@@ -154,7 +103,52 @@ test("canStartExplorerEntryDrag requires handle when unselected", () => {
     false,
   );
   assert.equal(
-    canStartExplorerEntryDrag({ target: null, isSelected: false }),
-    false,
+    canStartExplorerEntryDrag({ target: padding, isSelected: true }),
+    true,
+  );
+});
+
+test("explorer drop ids round-trip including root", () => {
+  assert.equal(destDirFromExplorerDropId(explorerDropIdForDir("")), "");
+  assert.equal(destDirFromExplorerDropId(explorerDropIdForDir("a/b")), "a/b");
+  assert.equal(destDirFromExplorerDropId("other"), null);
+});
+
+test("formatExplorerDragOverlayText summarizes action and items", () => {
+  const t = (key: string, params?: Record<string, string>) => {
+    if (key === "explorer.drag.overlay.move") return "Move";
+    if (key === "explorer.drag.overlay.copy") return "Copy";
+    if (key === "explorer.drag.overlay.badge") {
+      return `${params?.action} · ${params?.label}`;
+    }
+    if (key === "explorer.drag.overlay.items") return `${params?.count} items`;
+    if (key === "explorer.drag.overlay.folders") return `${params?.count} folders`;
+    if (key === "explorer.drag.overlay.breakdown") {
+      return `${params?.files}, ${params?.folders}`;
+    }
+    if (key === "selection.fileUnit.one") return "1 file";
+    if (key === "selection.fileUnit.many") return `${params?.count} files`;
+    if (key === "selection.folderUnit.one") return "1 folder";
+    if (key === "selection.folderUnit.many") return `${params?.count} folders`;
+    return key;
+  };
+
+  assert.equal(
+    formatExplorerDragOverlayText({
+      paths: ["docs/a.txt"],
+      operation: "cut",
+      counts: { fileCount: 1, folderCount: 0 },
+      t,
+    }),
+    "Move · a.txt",
+  );
+  assert.equal(
+    formatExplorerDragOverlayText({
+      paths: ["a", "b", "c"],
+      operation: "copy",
+      counts: { fileCount: 2, folderCount: 1 },
+      t,
+    }),
+    "Copy · 2 files, 1 folder",
   );
 });

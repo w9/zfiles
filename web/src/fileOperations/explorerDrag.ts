@@ -1,11 +1,25 @@
 import type { FileClipboardOperation } from "./clipboard";
-import { isDescendantPath, parentExplorerPath } from "./paths";
+import { basename, isDescendantPath, parentExplorerPath } from "./paths";
 
-/** Custom MIME type for in-app explorer path drags (not OS file drops). */
-export const EXPLORER_DRAG_MIME = "application/x-zfiles-explorer-paths";
-
-/** Mark icon / filename (and similar) hit targets that may start an item drag. */
+/** Mark icon / filename hit targets that may start an item drag when unselected. */
 export const EXPLORER_DRAG_HANDLE_ATTR = "data-explorer-drag-handle";
+
+/** Mark selected entry chrome that may start a drag anywhere on the highlight. */
+export const EXPLORER_DRAG_SURFACE_ATTR = "data-explorer-drag-surface";
+
+const EXPLORER_DROP_ID_PREFIX = "explorer-drop:";
+
+export function explorerDropIdForDir(destDir: string): string {
+  return `${EXPLORER_DROP_ID_PREFIX}${destDir}`;
+}
+
+export function destDirFromExplorerDropId(id: string | number): string | null {
+  const value = String(id);
+  if (!value.startsWith(EXPLORER_DROP_ID_PREFIX)) {
+    return null;
+  }
+  return value.slice(EXPLORER_DROP_ID_PREFIX.length);
+}
 
 /**
  * Unselected items: only icon/filename handles. Selected items: any point on the
@@ -30,10 +44,6 @@ export function canStartExplorerEntryDrag(options: {
   );
 }
 
-export type ExplorerDragPayload = {
-  paths: string[];
-};
-
 export function resolveExplorerDragPaths(
   draggedPath: string,
   selectedPaths: ReadonlySet<string>,
@@ -45,14 +55,14 @@ export function resolveExplorerDragPaths(
 }
 
 /**
- * Default is move (`cut`). Copy when Ctrl (Win/Linux) or Alt/Option (macOS) is held.
- * Either modifier requests copy so both platforms are covered without UA sniffing.
+ * Default is move (`cut`). Copy when Ctrl, Alt/Option, or Meta/Cmd is held.
  */
 export function explorerDragOperationFromModifiers(modifiers: {
   ctrlKey: boolean;
   altKey: boolean;
+  metaKey: boolean;
 }): FileClipboardOperation {
-  if (modifiers.ctrlKey || modifiers.altKey) {
+  if (modifiers.ctrlKey || modifiers.altKey || modifiers.metaKey) {
     return "copy";
   }
   return "cut";
@@ -86,32 +96,8 @@ export function canDropExplorerPaths(options: {
   return true;
 }
 
-export function serializeExplorerDragPayload(paths: readonly string[]): string {
-  return JSON.stringify({ paths: [...paths] } satisfies ExplorerDragPayload);
-}
-
-export function parseExplorerDragPayload(raw: string): ExplorerDragPayload | null {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      !("paths" in parsed) ||
-      !Array.isArray((parsed as ExplorerDragPayload).paths)
-    ) {
-      return null;
-    }
-    const paths = (parsed as ExplorerDragPayload).paths.filter(
-      (path): path is string => typeof path === "string" && path.length > 0,
-    );
-    if (paths.length === 0) {
-      return null;
-    }
-    return { paths };
-  } catch {
-    return null;
-  }
-}
+/** Used by OS upload drop to ignore in-app path drags if both ever appear. */
+export const EXPLORER_DRAG_MIME = "application/x-zfiles-explorer-paths";
 
 function dataTransferTypesList(
   types: readonly string[] | DOMStringList | undefined,
@@ -122,43 +108,58 @@ function dataTransferTypesList(
   return Array.from(types as ArrayLike<string>);
 }
 
-export function dragEventHasExplorerPaths(
-  types: readonly string[] | DOMStringList | undefined,
-): boolean {
-  return dataTransferTypesList(types).includes(EXPLORER_DRAG_MIME);
-}
-
 export function dragEventHasExternalFiles(
   types: readonly string[] | DOMStringList | undefined,
 ): boolean {
   const list = dataTransferTypesList(types);
-  // Prefer explorer MIME when both are present (should not happen for our drags).
   if (list.includes(EXPLORER_DRAG_MIME)) {
     return false;
   }
   return list.includes("Files");
 }
 
-export function setExplorerDragData(
-  dataTransfer: DataTransfer,
-  paths: readonly string[],
-): void {
-  const payload = serializeExplorerDragPayload(paths);
-  dataTransfer.setData(EXPLORER_DRAG_MIME, payload);
-  // Some browsers require a known type for the drag to start.
-  dataTransfer.setData("text/plain", paths.join("\n"));
-}
+export type ExplorerDragOverlayCounts = {
+  fileCount: number;
+  folderCount: number;
+};
 
-export function readExplorerDragPaths(dataTransfer: DataTransfer): string[] | null {
-  const raw = dataTransfer.getData(EXPLORER_DRAG_MIME);
-  if (!raw) {
-    return null;
+export function formatExplorerDragOverlayText(options: {
+  paths: readonly string[];
+  operation: FileClipboardOperation;
+  counts: ExplorerDragOverlayCounts;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}): string {
+  const { paths, operation, counts, t } = options;
+  const action =
+    operation === "copy"
+      ? t("explorer.drag.overlay.copy")
+      : t("explorer.drag.overlay.move");
+
+  if (paths.length === 1) {
+    return t("explorer.drag.overlay.badge", {
+      action,
+      label: basename(paths[0] ?? ""),
+    });
   }
-  return parseExplorerDragPayload(raw)?.paths ?? null;
-}
 
-export function dropEffectForExplorerOperation(
-  operation: FileClipboardOperation,
-): DataTransfer["dropEffect"] {
-  return operation === "copy" ? "copy" : "move";
+  const { fileCount, folderCount } = counts;
+  let label: string;
+  if (fileCount > 0 && folderCount > 0) {
+    label = t("explorer.drag.overlay.breakdown", {
+      files:
+        fileCount === 1
+          ? t("selection.fileUnit.one")
+          : t("selection.fileUnit.many", { count: String(fileCount) }),
+      folders:
+        folderCount === 1
+          ? t("selection.folderUnit.one")
+          : t("selection.folderUnit.many", { count: String(folderCount) }),
+    });
+  } else if (folderCount > 0) {
+    label = t("explorer.drag.overlay.folders", { count: String(folderCount) });
+  } else {
+    label = t("explorer.drag.overlay.items", { count: String(paths.length) });
+  }
+
+  return t("explorer.drag.overlay.badge", { action, label });
 }

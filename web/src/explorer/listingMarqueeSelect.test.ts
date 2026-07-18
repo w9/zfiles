@@ -399,13 +399,23 @@ test("shouldClearMultiSelectionOnEmptyClick allows plain click on viewport backg
   );
 });
 
-test("shouldIgnoreMarqueePointerTarget skips listing entries so item drag is not marquee", () => {
-  const entry = {
+test("shouldIgnoreMarqueePointerTarget skips drag handles/surfaces but not bare entry padding", () => {
+  const handle = {
     closest: (selector: string) =>
-      selector.includes("[data-listing-entry]") ? entry : null,
+      selector.includes("[data-explorer-drag-handle]") ? handle : null,
+  } as unknown as Element;
+  const surface = {
+    closest: (selector: string) =>
+      selector.includes("[data-explorer-drag-surface]") ? surface : null,
+  } as unknown as Element;
+  const entryPadding = {
+    closest: (selector: string) =>
+      selector.includes("[data-listing-entry]") ? entryPadding : null,
   } as unknown as Element;
   const viewport = { closest: () => null } as unknown as Element;
-  assert.equal(shouldIgnoreMarqueePointerTarget(entry), true);
+  assert.equal(shouldIgnoreMarqueePointerTarget(handle), true);
+  assert.equal(shouldIgnoreMarqueePointerTarget(surface), true);
+  assert.equal(shouldIgnoreMarqueePointerTarget(entryPadding), false);
   assert.equal(shouldIgnoreMarqueePointerTarget(viewport), false);
   assert.equal(shouldIgnoreMarqueePointerTarget(null), true);
 });

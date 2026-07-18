@@ -8,7 +8,6 @@ import { QuestionMarkIcon } from "@/components/icons/QuestionMarkIcon";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -25,6 +24,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ExplorerFolderDropTarget } from "@/explorer/ExplorerEntryDnd";
+import { useExplorerDndUi } from "@/explorer/ExplorerDndProvider";
 import { cn } from "@/lib/utils";
 import { pathForBreadcrumbPartIndex } from "./breadcrumbCollapse";
 import { normalizeExplorerPath } from "./explorer/path";
@@ -67,10 +68,7 @@ type ExplorerBreadcrumbProps = {
   onQuickFilterKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   quickFilterInputRef?: RefObject<HTMLInputElement | null>;
   showNavButtons?: boolean;
-  dropHighlightPath?: string | null;
-  onPathDragOver?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onPathDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onPathDrop?: (event: React.DragEvent<HTMLElement>, path: string) => void;
+  pathDropEnabled?: boolean;
 };
 
 export default function ExplorerBreadcrumb({
@@ -100,11 +98,9 @@ export default function ExplorerBreadcrumb({
   onQuickFilterKeyDown,
   quickFilterInputRef,
   showNavButtons = true,
-  dropHighlightPath = null,
-  onPathDragOver,
-  onPathDragLeave,
-  onPathDrop,
+  pathDropEnabled = false,
 }: ExplorerBreadcrumbProps) {
+  const { dropHighlightPath } = useExplorerDndUi();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentPath);
   const [quickFilterFocused, setQuickFilterFocused] = useState(false);
@@ -120,32 +116,29 @@ export default function ExplorerBreadcrumb({
     !editing,
   );
 
-  const pathDropTargetClass =
-    "rounded-sm bg-primary/20 ring-2 ring-inset ring-primary/50";
-
   const renderSegmentLink = (index: number) => {
     const part = parts[index];
     const path = pathForBreadcrumbPartIndex(parts, index);
     const isDropTarget = dropHighlightPath != null && dropHighlightPath === path;
     return (
-      <BreadcrumbLink asChild>
+      <ExplorerFolderDropTarget
+        path={path}
+        disabled={!pathDropEnabled}
+        highlight={isDropTarget}
+        asChild
+      >
         <button
           type="button"
-          className={cn(
-            "cursor-pointer bg-transparent p-0 whitespace-nowrap",
-            isDropTarget && pathDropTargetClass,
-          )}
+          data-slot="breadcrumb-link"
+          className="cursor-pointer bg-transparent p-0 whitespace-nowrap transition-colors hover:text-foreground"
           onClick={(event) => {
             event.stopPropagation();
             onNavigate(path);
           }}
-          onDragOver={(event) => onPathDragOver?.(event, path)}
-          onDragLeave={(event) => onPathDragLeave?.(event, path)}
-          onDrop={(event) => onPathDrop?.(event, path)}
         >
           {part}
         </button>
-      </BreadcrumbLink>
+      </ExplorerFolderDropTarget>
     );
   };
 
@@ -260,33 +253,24 @@ export default function ExplorerBreadcrumb({
         />
       ) : null}
       <div className="relative flex min-w-0 flex-1 self-stretch items-center gap-0.5 sm:gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "size-7 shrink-0",
-            dropHighlightPath === "" && pathDropTargetClass,
-          )}
-          aria-label={rootAriaLabel}
-          disabled={!currentPath}
-          onClick={() => onNavigate("")}
-          onDragOver={(event) => {
-            if (!currentPath) {
-              return;
-            }
-            onPathDragOver?.(event, "");
-          }}
-          onDragLeave={(event) => onPathDragLeave?.(event, "")}
-          onDrop={(event) => {
-            if (!currentPath) {
-              return;
-            }
-            onPathDrop?.(event, "");
-          }}
+        <ExplorerFolderDropTarget
+          path=""
+          disabled={!pathDropEnabled || !currentPath}
+          highlight={dropHighlightPath === ""}
+          asChild
         >
-          <Home className="size-4" aria-hidden="true" />
-        </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-7 shrink-0"
+            aria-label={rootAriaLabel}
+            disabled={!currentPath}
+            onClick={() => onNavigate("")}
+          >
+            <Home className="size-4" aria-hidden="true" />
+          </Button>
+        </ExplorerFolderDropTarget>
         {!editing ? (
           <div
             className={cn(

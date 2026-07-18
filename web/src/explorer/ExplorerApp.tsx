@@ -131,10 +131,7 @@ import type { ListingNavigationSnapshot } from "./listingNavigationSnapshot";
 import { useExplorerNavigation } from "./useExplorerNavigation";
 import { explorerPathFromPathname } from "./explorerUrl";
 import { useExplorerFileOps } from "./useExplorerFileOps";
-import {
-  defaultExplorerDragLabel,
-  useExplorerInternalDrag,
-} from "./useExplorerInternalDrag";
+import ExplorerDndProvider from "./ExplorerDndProvider";
 import { resolveGridSectionFolderCount } from "./gridListingLayout";
 
 function multipartToUnfinishedSession(session: MultipartSessionView): UnfinishedSessionView {
@@ -1916,11 +1913,6 @@ export default function ExplorerApp() {
   });
 
   const entryDragEnabled = !touchUi && !readOnly && !operationPending;
-  const formatExplorerDragLabel = useCallback(
-    (paths: readonly string[], operation: "copy" | "cut") =>
-      defaultExplorerDragLabel(paths, operation, t),
-    [t],
-  );
   const pastePathsToDir = fileOps.pastePathsToDir;
   const onExplorerDropPaths = useCallback(
     (
@@ -1932,12 +1924,6 @@ export default function ExplorerApp() {
     },
     [pastePathsToDir],
   );
-  const internalDrag = useExplorerInternalDrag({
-    enabled: entryDragEnabled,
-    selectedPaths,
-    formatDragLabel: formatExplorerDragLabel,
-    onDropPaths: onExplorerDropPaths,
-  });
 
   const listingFocusedPath = resolveListingFocusedPath({
     touchUi,
@@ -2021,10 +2007,7 @@ export default function ExplorerApp() {
         onQuickFilterKeyDown={handleQuickFilterKeyDown}
         quickFilterInputRef={quickFilterInputRef}
         showNavButtons={!compactTouchChrome}
-        dropHighlightPath={internalDrag.dropHighlightPath}
-        onPathDragOver={internalDrag.onBreadcrumbDragOver}
-        onPathDragLeave={internalDrag.onBreadcrumbDragLeave}
-        onPathDrop={internalDrag.onBreadcrumbDrop}
+        pathDropEnabled={entryDragEnabled}
       />
     </section>
   );
@@ -2114,6 +2097,12 @@ export default function ExplorerApp() {
   );
 
   return (
+    <ExplorerDndProvider
+      enabled={entryDragEnabled}
+      selectedPaths={selectedPaths}
+      entryByPath={entryByPath}
+      onDropPaths={onExplorerDropPaths}
+    >
     <>
     <main className="flex h-dvh w-full flex-col gap-2 overflow-hidden bg-[var(--shell-background)] p-2 transition-colors duration-200">
       {!compactTouchChrome ? (
@@ -2319,12 +2308,6 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 entryDragEnabled={entryDragEnabled}
-                dropHighlightPath={internalDrag.dropHighlightPath}
-                onEntryDragStart={internalDrag.onEntryDragStart}
-                onEntryDragEnd={internalDrag.onEntryDragEnd}
-                onFolderDragOver={internalDrag.onFolderDragOver}
-                onFolderDragLeave={internalDrag.onFolderDragLeave}
-                onFolderDrop={internalDrag.onFolderDrop}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
@@ -2362,12 +2345,6 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 entryDragEnabled={entryDragEnabled}
-                dropHighlightPath={internalDrag.dropHighlightPath}
-                onEntryDragStart={internalDrag.onEntryDragStart}
-                onEntryDragEnd={internalDrag.onEntryDragEnd}
-                onFolderDragOver={internalDrag.onFolderDragOver}
-                onFolderDragLeave={internalDrag.onFolderDragLeave}
-                onFolderDrop={internalDrag.onFolderDrop}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={(path, name) => {
@@ -2572,5 +2549,6 @@ export default function ExplorerApp() {
     </main>
     <Toaster richColors closeButton position="bottom-right" />
     </>
+    </ExplorerDndProvider>
   );
 }

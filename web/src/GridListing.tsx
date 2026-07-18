@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import GridCardPreview from "@/GridCardPreview";
-import InlineNameInput from "@/explorer/InlineNameInput";
 import {
   buildGridVirtualRows,
   estimateGridVirtualRowSize,
@@ -17,15 +15,14 @@ import {
   hitTestGridPathsWithContentMarquee,
   type ListingMarqueeLayoutResolver,
 } from "@/explorer/listingMarqueeSelect";
-import { EXPLORER_DRAG_HANDLE_ATTR } from "@/fileOperations/explorerDrag";
+import { useExplorerDndUi } from "@/explorer/ExplorerDndProvider";
+import { GridListingEntryCard } from "@/explorer/GridListingEntryCard";
 import { useGridCardResize } from "@/explorer/useGridCardResize";
 import type { FileIconTheme } from "@/fileIcons";
 import { useTranslation } from "@/i18n";
-import { shouldDimDotEntry } from "@/listingFilter";
-import { LISTING_ENTRY_TEXT_CLASS, LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
+import { LISTING_HEADER_TEXT_CLASS } from "@/listing-styles";
 import type { ListingEntry } from "@/listing-types";
 import { cn } from "@/lib/utils";
-import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import {
   GRID_GAP_PX,
   computeGridColumnCount,
@@ -63,49 +60,12 @@ type GridListingProps = {
     path: string,
   ) => void;
   entryDragEnabled?: boolean;
-  dropHighlightPath?: string | null;
-  onEntryDragStart?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onEntryDragEnd?: (event: React.DragEvent<HTMLElement>) => void;
-  onFolderDragOver?: (
-    event: React.DragEvent<HTMLElement>,
-    path: string,
-    isDir: boolean,
-  ) => void;
-  onFolderDragLeave?: (event: React.DragEvent<HTMLElement>, path: string) => void;
-  onFolderDrop?: (
-    event: React.DragEvent<HTMLElement>,
-    path: string,
-    isDir: boolean,
-  ) => void;
   marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
   onResetCardSize?: () => void;
 };
-
-const GRID_ITEM_SELECTED_CLASS =
-  "bg-primary/12 hover:bg-primary/16";
-/** Keyboard arrow focus — same shallow inset as short press. */
-const GRID_ITEM_FOCUS_SELECTED_CLASS =
-  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)] bg-primary/12 hover:bg-primary/16";
-/** Finger down before long-press arms — shallow inset, no focus bg. */
-const GRID_ITEM_PRESS_INSET_CLASS =
-  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
-/** Selected + short press: selection bg and shallow inset. */
-const GRID_ITEM_SELECTED_PRESS_INSET_CLASS =
-  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)] bg-primary/12 hover:bg-primary/16";
-/** Finger target during armed range select — deeper inset only (no focus bg). */
-const GRID_ITEM_LONG_PRESS_INSET_CLASS =
-  "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)]";
-/** Selected + armed long-press: selection bg and deeper inset. */
-const GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS =
-  "shadow-[inset_0_2px_10px_0_color-mix(in_oklab,var(--primary)_22%,transparent)] bg-primary/12 hover:bg-primary/16";
-const GRID_ITEM_RESIZING_CLASS =
-  "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
-const GRID_ITEM_CUT_CLASS = "opacity-45";
-const GRID_ITEM_DROP_TARGET_CLASS =
-  "bg-primary/20 ring-2 ring-inset ring-primary/50";
 
 const VIEWPORT_PADDING_PX = 12;
 const GRID_VIRTUAL_OVERSCAN_ROWS = 8;
@@ -133,18 +93,13 @@ export default function GridListing({
   onViewportPointerDown,
   onEntryPointerDown,
   entryDragEnabled = false,
-  dropHighlightPath = null,
-  onEntryDragStart,
-  onEntryDragEnd,
-  onFolderDragOver,
-  onFolderDragLeave,
-  onFolderDrop,
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
   onCardSizeChange,
   onResetCardSize,
 }: GridListingProps) {
+  const { dropHighlightPath, dragFadePathSet } = useExplorerDndUi();
   const { t } = useTranslation();
   const { cardSize, setCardSize: setCardSizeFromProvider, resetToDefault } = useGridCardSize();
   const setCardSize = onCardSizeChange ?? setCardSizeFromProvider;
@@ -339,174 +294,46 @@ export default function GridListing({
                     left: 0,
                   };
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
-                  const isFocused = focusedPath != null && entry.path === focusedPath;
-                  const isGestureHighlighted =
-                    gestureHighlightPath != null && entry.path === gestureHighlightPath;
-                  const isGestureInset =
-                    gestureInsetPath != null && entry.path === gestureInsetPath;
-                  const dimmed = shouldDimDotEntry(entry.name, entry.key);
-                  const isCut = cutPathSet.has(entry.path);
-                  const isEditing = inlineEditPath === entry.path;
-                  const isResizing = resizingPath === entry.path;
-                  const isDropTarget =
-                    entry.isDir &&
-                    dropHighlightPath != null &&
-                    dropHighlightPath === entry.path;
-                  const canDragEntry = entryDragEnabled && !isEditing;
-                  const handleDragProps = canDragEntry
-                    ? {
-                        [EXPLORER_DRAG_HANDLE_ATTR]: "",
-                        draggable: true as const,
-                        onDragStart: (event: React.DragEvent<HTMLElement>) =>
-                          onEntryDragStart?.(event, entry.path),
-                        onDragEnd: (event: React.DragEvent<HTMLElement>) =>
-                          onEntryDragEnd?.(event),
-                      }
-                    : undefined;
                   return (
-                    <div
+                    <GridListingEntryCard
                       key={entry.key}
-                      className="group relative"
-                      style={{
-                        width: cardSize.width,
-                        height: cardSize.height,
-                      }}
-                    >
-                      <button
-                        type="button"
-                        data-listing-entry
-                        data-listing-path={entry.path}
-                        draggable={canDragEntry && isSelected}
-                        className="absolute select-none outline-none focus:outline-none focus-visible:outline-none"
-                        style={{
-                          top: -hitExpand.top,
-                          right: -hitExpand.right,
-                          bottom: -hitExpand.bottom,
-                          left: -hitExpand.left,
-                        }}
-                        onMouseDown={(event) => {
-                          if (event.shiftKey) {
-                            event.preventDefault();
-                          }
-                        }}
-                        onClick={(event) => entry.onSelect(event, index)}
-                        onPointerDown={(event) =>
-                          onEntryPointerDown?.(event, entry.path)
-                        }
-                        onDragStart={(event) => onEntryDragStart?.(event, entry.path)}
-                        onDragEnd={(event) => onEntryDragEnd?.(event)}
-                        onDragOver={(event) =>
-                          onFolderDragOver?.(event, entry.path, entry.isDir)
-                        }
-                        onDragLeave={(event) =>
-                          onFolderDragLeave?.(event, entry.path)
-                        }
-                        onDrop={(event) =>
-                          onFolderDrop?.(event, entry.path, entry.isDir)
-                        }
-                        onDoubleClick={() => {
-                          if (shouldSkipDoubleClickActivate?.()) {
-                            return;
-                          }
-                          entry.onActivate();
-                        }}
-                        onContextMenu={entry.onContextMenu}
-                      >
-                        <div
-                          className={cn(
-                            "absolute flex flex-col overflow-hidden hover:bg-accent/40",
-                            dimmed && "opacity-70",
-                            isCut && GRID_ITEM_CUT_CLASS,
-                            entry.quickFilterMatched === false && "opacity-40",
-                            isResizing && GRID_ITEM_RESIZING_CLASS,
-                            isSelected &&
-                              !isResizing &&
-                              !isGestureHighlighted &&
-                              !isGestureInset &&
-                              (isFocused
-                                ? GRID_ITEM_FOCUS_SELECTED_CLASS
-                                : GRID_ITEM_SELECTED_CLASS),
-                            isSelected &&
-                              !isResizing &&
-                              isGestureHighlighted &&
-                              !isGestureInset &&
-                              GRID_ITEM_SELECTED_PRESS_INSET_CLASS,
-                            isSelected &&
-                              !isResizing &&
-                              isGestureInset &&
-                              GRID_ITEM_SELECTED_LONG_PRESS_INSET_CLASS,
-                            !isSelected &&
-                              isGestureHighlighted &&
-                              !isGestureInset &&
-                              !isResizing &&
-                              GRID_ITEM_PRESS_INSET_CLASS,
-                            !isSelected &&
-                              isGestureInset &&
-                              !isResizing &&
-                              GRID_ITEM_LONG_PRESS_INSET_CLASS,
-                            isDropTarget && GRID_ITEM_DROP_TARGET_CLASS,
-                          )}
-                          style={{
-                            top: hitExpand.top,
-                            left: hitExpand.left,
-                            width: cardSize.width,
-                            height: cardSize.height,
-                          }}
-                        >
-                          <div className="min-h-0 min-w-0 flex-1" {...handleDragProps}>
-                            <GridCardPreview
-                              path={entry.path}
-                              name={entry.name}
-                              isDir={entry.isDir}
-                              isSymlink={entry.isSymlink ?? false}
-                              previewsEnabled={gridImagePreviewsEnabled}
-                              iconTheme={iconTheme}
-                              pixelSize={iconPixelSize}
-                            />
-                          </div>
-                          <div
-                            className={cn(
-                              "shrink-0 px-2 py-1.5 text-center",
-                              LISTING_ENTRY_TEXT_CLASS,
-                            )}
-                          >
-                            {isEditing && onInlineCommit && onInlineCancel ? (
-                              <InlineNameInput
-                                initialName={entry.name}
-                                className="w-full text-left"
-                                busy={renameCommittingPath === entry.path}
-                                showBusyVisual={showRenameBusyVisual}
-                                onCommit={(name) => onInlineCommit(entry.path, name)}
-                                onCancel={() => onInlineCancel(entry.path, entry.name)}
-                              />
-                            ) : (
-                              <div {...handleDragProps}>
-                                <TruncatedTextTooltip
-                                  text={entry.name}
-                                  className="block truncate"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                      <div
-                        role="separator"
-                        aria-label={t("listing.grid.resizeHandle")}
-                        data-grid-resize-handle
-                        data-prevent-marquee
-                        className={cn(
-                          "absolute bottom-0 right-0 z-10 flex h-4 w-4 translate-x-0.5 translate-y-0.5 cursor-nwse-resize items-end justify-end p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
-                        )}
-                        onPointerDown={onHandlePointerDown(entry.path)}
-                        onDoubleClick={onHandleDoubleClick}
-                      >
-                        <span
-                          aria-hidden
-                          className="h-2.5 w-2.5 border-r-2 border-b-2 border-muted-foreground/70"
-                        />
-                      </div>
-                    </div>
+                      entry={entry}
+                      index={index}
+                      cardWidth={cardSize.width}
+                      cardHeight={cardSize.height}
+                      hitExpand={hitExpand}
+                      isSelected={isSelected}
+                      isFocused={focusedPath != null && entry.path === focusedPath}
+                      isGestureHighlighted={
+                        gestureHighlightPath != null &&
+                        entry.path === gestureHighlightPath
+                      }
+                      isGestureInset={
+                        gestureInsetPath != null && entry.path === gestureInsetPath
+                      }
+                      isCut={cutPathSet.has(entry.path)}
+                      isDragFaded={dragFadePathSet.has(entry.path)}
+                      isEditing={inlineEditPath === entry.path}
+                      isResizing={resizingPath === entry.path}
+                      dropHighlight={
+                        entry.isDir &&
+                        dropHighlightPath != null &&
+                        dropHighlightPath === entry.path
+                      }
+                      entryDragEnabled={entryDragEnabled}
+                      renameCommittingPath={renameCommittingPath}
+                      showRenameBusyVisual={showRenameBusyVisual}
+                      onInlineCommit={onInlineCommit}
+                      onInlineCancel={onInlineCancel}
+                      onEntryPointerDown={onEntryPointerDown}
+                      shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
+                      previewsEnabled={gridImagePreviewsEnabled}
+                      iconTheme={iconTheme}
+                      iconPixelSize={iconPixelSize}
+                      resizeHandleLabel={t("listing.grid.resizeHandle")}
+                      onResizePointerDown={onHandlePointerDown(entry.path)}
+                      onResizeDoubleClick={onHandleDoubleClick}
+                    />
                   );
                 })}
               </div>

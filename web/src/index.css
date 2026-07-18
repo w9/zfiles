@@ -182,3 +182,10 @@ html[data-ui-mode="touch"] [data-preview-selectable] {
     pointer-events: auto;
   }
 }
+
+/* While explorer internal DnD is active, suppress text I-beam over names/overlay. */
+html.explorer-dnd-dragging,
+html.explorer-dnd-dragging * {
+  cursor: default !important;
+  user-select: none !important;
+}
