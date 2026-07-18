@@ -34,8 +34,9 @@ import type { EntrySummarySource } from "@/infoSelectionSummary";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-/** Place the tooltip to the right of the pointer (grid cards are large drag nodes). */
+/** Place the tooltip at the bottom-right of the pointer. */
 const OVERLAY_CURSOR_GAP_X_PX = 12;
+const OVERLAY_CURSOR_GAP_Y_PX = 12;
 
 const snapBesideCursor: Modifier = ({
   activatorEvent,
@@ -54,7 +55,7 @@ const snapBesideCursor: Modifier = ({
   return {
     ...transform,
     x: transform.x + offsetX + OVERLAY_CURSOR_GAP_X_PX,
-    y: transform.y + offsetY - draggingNodeRect.height / 2,
+    y: transform.y + offsetY + OVERLAY_CURSOR_GAP_Y_PX,
   };
 };
 
