@@ -9,6 +9,7 @@ import {
   explorerDragOperationFromModifiers,
   explorerDropIdForDir,
   formatExplorerDragOverlayText,
+  middleEllipsizeName,
   resolveExplorerDragPaths,
 } from "./explorerDrag";
 
@@ -114,6 +115,14 @@ test("explorer drop ids round-trip including root", () => {
   assert.equal(destDirFromExplorerDropId("other"), null);
 });
 
+test("middleEllipsizeName keeps short names and middle-ellipsizes long ones", () => {
+  assert.equal(middleEllipsizeName("short.txt"), "short.txt");
+  assert.equal(
+    middleEllipsizeName("abcdefghijklmnopqrstuvwxyz0123456789.txt"),
+    "abcdefghijklmn…0123456789.txt",
+  );
+});
+
 test("formatExplorerDragOverlayText summarizes action and items", () => {
   const t = (key: string, params?: Record<string, string>) => {
     if (key === "explorer.drag.overlay.move") return "Move";
@@ -121,7 +130,6 @@ test("formatExplorerDragOverlayText summarizes action and items", () => {
     if (key === "explorer.drag.overlay.badge") {
       return `${params?.action} · ${params?.label}`;
     }
-    if (key === "explorer.drag.overlay.items") return `${params?.count} items`;
     if (key === "explorer.drag.overlay.folders") return `${params?.count} folders`;
     if (key === "explorer.drag.overlay.breakdown") {
       return `${params?.files}, ${params?.folders}`;
@@ -150,5 +158,23 @@ test("formatExplorerDragOverlayText summarizes action and items", () => {
       t,
     }),
     "Copy · 2 files, 1 folder",
+  );
+  assert.equal(
+    formatExplorerDragOverlayText({
+      paths: ["a.txt", "b.txt", "c.txt"],
+      operation: "cut",
+      counts: { fileCount: 3, folderCount: 0 },
+      t,
+    }),
+    "Move · 3 files",
+  );
+  assert.equal(
+    formatExplorerDragOverlayText({
+      paths: ["dir/abcdefghijklmnopqrstuvwxyz0123456789.txt"],
+      operation: "copy",
+      counts: { fileCount: 1, folderCount: 0 },
+      t,
+    }),
+    "Copy · abcdefghijklmn…0123456789.txt",
   );
 });

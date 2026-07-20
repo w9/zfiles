@@ -38,6 +38,7 @@ const LISTING_ROW_LONG_PRESS_INSET_CLASS =
 const LISTING_ROW_CUT_CLASS = "opacity-45";
 const LISTING_ROW_DROP_TARGET_CLASS =
   "bg-primary/20 ring-2 ring-inset ring-primary/50";
+const LISTING_ROW_DROP_CANDIDATE_CLASS = "bg-primary/8";
 
 export function VirtualListingEntryRow({
   row,
@@ -52,6 +53,7 @@ export function VirtualListingEntryRow({
   isCut,
   isDragFaded,
   dropHighlight,
+  dropCandidate,
   isEditing,
   entryDragEnabled,
   renameCommittingPath,
@@ -75,6 +77,7 @@ export function VirtualListingEntryRow({
   isCut: boolean;
   isDragFaded: boolean;
   dropHighlight: boolean;
+  dropCandidate: boolean;
   isEditing: boolean;
   entryDragEnabled: boolean;
   renameCommittingPath?: string | null;
@@ -100,8 +103,9 @@ export function VirtualListingEntryRow({
       isSelected={isSelected}
       enabled={canDrag}
       dropHighlight={dropHighlight}
+      dropCandidate={dropCandidate}
     >
-      {({ setNodeRef, isDropTarget, surfaceProps }) => (
+      {({ setNodeRef, isDropTarget, isDropCandidate, surfaceProps }) => (
         <div
           ref={setNodeRef}
           role="row"
@@ -122,6 +126,7 @@ export function VirtualListingEntryRow({
               LISTING_ROW_PRESS_INSET_CLASS,
             isGestureInset && LISTING_ROW_LONG_PRESS_INSET_CLASS,
             isDropTarget && LISTING_ROW_DROP_TARGET_CLASS,
+            isDropCandidate && LISTING_ROW_DROP_CANDIDATE_CLASS,
           )}
           style={{
             gridTemplateColumns: columnGridTemplate,

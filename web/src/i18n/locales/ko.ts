@@ -131,7 +131,6 @@ export const ko: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "이동",
   "explorer.drag.overlay.copy": "복사",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}}개 항목",
   "explorer.drag.overlay.folders": "폴더 {{count}}개",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "폴더 1개 선택됨",

@@ -131,7 +131,6 @@ export const ru: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "Переместить",
   "explorer.drag.overlay.copy": "Копировать",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} объектов",
   "explorer.drag.overlay.folders": "{{count}} каталогов",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "Выбран 1 каталог",

@@ -100,7 +100,7 @@ export default function ExplorerBreadcrumb({
   showNavButtons = true,
   pathDropEnabled = false,
 }: ExplorerBreadcrumbProps) {
-  const { dropHighlightPath } = useExplorerDndUi();
+  const { dropHighlightPath, isValidDropDest } = useExplorerDndUi();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentPath);
   const [quickFilterFocused, setQuickFilterFocused] = useState(false);
@@ -120,11 +120,14 @@ export default function ExplorerBreadcrumb({
     const part = parts[index];
     const path = pathForBreadcrumbPartIndex(parts, index);
     const isDropTarget = dropHighlightPath != null && dropHighlightPath === path;
+    const isDropCandidate =
+      pathDropEnabled && isValidDropDest(path) && !isDropTarget;
     return (
       <ExplorerFolderDropTarget
         path={path}
         disabled={!pathDropEnabled}
         highlight={isDropTarget}
+        candidate={isDropCandidate}
         asChild
       >
         <button
@@ -257,6 +260,12 @@ export default function ExplorerBreadcrumb({
           path=""
           disabled={!pathDropEnabled || !currentPath}
           highlight={dropHighlightPath === ""}
+          candidate={
+            pathDropEnabled &&
+            Boolean(currentPath) &&
+            isValidDropDest("") &&
+            dropHighlightPath !== ""
+          }
           asChild
         >
           <Button

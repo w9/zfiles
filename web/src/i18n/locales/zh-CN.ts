@@ -126,7 +126,6 @@ export const zhCN: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "移动",
   "explorer.drag.overlay.copy": "复制",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} 项",
   "explorer.drag.overlay.folders": "{{count}} 个文件夹",
   "explorer.drag.overlay.breakdown": "{{files}}，{{folders}}",
   "selection.folderSelected": "已选择 1 个文件夹",

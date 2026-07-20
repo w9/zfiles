@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const FOLDER_DROP_HIGHLIGHT_CLASS =
   "rounded-sm bg-primary/20 ring-2 ring-inset ring-primary/50";
+const FOLDER_DROP_CANDIDATE_CLASS = "rounded-sm bg-primary/8";
 
 type EntryDragContextValue = {
   enabled: boolean;
@@ -47,18 +48,22 @@ export function ExplorerEntryDragSource({
   isSelected,
   enabled,
   dropHighlight,
+  dropCandidate,
   children,
 }: {
   path: string;
   isDir: boolean;
   isSelected: boolean;
   enabled: boolean;
-  /** External highlight when this folder is a valid drop over target. */
+  /** Strong highlight when this folder is the active valid drop over target. */
   dropHighlight?: boolean;
+  /** Subtle wash when this folder is a valid drop while dragging. */
+  dropCandidate?: boolean;
   children: (api: {
     setNodeRef: (node: HTMLElement | null) => void;
     isDragging: boolean;
     isDropTarget: boolean;
+    isDropCandidate: boolean;
     /** When selected, spread on the selection chrome so it owns the drag gesture. */
     surfaceProps: Record<string, unknown>;
   }) => ReactNode;
@@ -74,13 +79,14 @@ export function ExplorerEntryDragSource({
     data: { kind: "entry" as const, path },
   });
 
-  const { setNodeRef: setDropRef, isOver } = useDroppable({
+  const { setNodeRef: setDropRef } = useDroppable({
     id: explorerDropIdForDir(path),
     disabled: !enabled || !isDir,
     data: { kind: "folder" as const, path },
   });
 
-  const isDropTarget = Boolean(dropHighlight || (isOver && isDir));
+  const isDropTarget = Boolean(dropHighlight);
+  const isDropCandidate = Boolean(dropCandidate && !dropHighlight);
 
   const surfaceProps =
     enabled && isSelected
@@ -99,6 +105,7 @@ export function ExplorerEntryDragSource({
         setNodeRef: mergeRefs(setDragRef, setDropRef),
         isDragging,
         isDropTarget,
+        isDropCandidate,
         surfaceProps,
       })}
     </EntryDragContext.Provider>
@@ -156,32 +163,38 @@ export function ExplorerFolderDropTarget({
   path,
   disabled,
   highlight,
+  candidate,
   className,
   asChild = false,
   children,
 }: {
   path: string;
   disabled?: boolean;
-  /** Prefer provider-validated highlight over raw isOver. */
+  /** Strong highlight for the active valid over target. */
   highlight?: boolean;
+  /** Subtle wash for other valid drop destinations while dragging. */
+  candidate?: boolean;
   className?: string;
   /** Merge droppable onto the child (avoid wrapper + child double chrome). */
   asChild?: boolean;
   children: ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef } = useDroppable({
     id: explorerDropIdForDir(path),
     disabled,
     data: { kind: "folder" as const, path },
   });
 
-  const showHighlight = Boolean(highlight ?? isOver);
   const Comp = asChild ? Slot : "div";
 
   return (
     <Comp
       ref={setNodeRef}
-      className={cn(className, showHighlight && FOLDER_DROP_HIGHLIGHT_CLASS)}
+      className={cn(
+        className,
+        highlight && FOLDER_DROP_HIGHLIGHT_CLASS,
+        !highlight && candidate && FOLDER_DROP_CANDIDATE_CLASS,
+      )}
     >
       {children}
     </Comp>

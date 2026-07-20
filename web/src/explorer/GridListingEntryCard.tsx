@@ -27,6 +27,7 @@ const GRID_ITEM_RESIZING_CLASS =
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 const GRID_ITEM_DROP_TARGET_CLASS =
   "bg-primary/20 ring-2 ring-inset ring-primary/50";
+const GRID_ITEM_DROP_CANDIDATE_CLASS = "bg-primary/8";
 
 export function GridListingEntryCard({
   entry,
@@ -43,6 +44,7 @@ export function GridListingEntryCard({
   isEditing,
   isResizing,
   dropHighlight,
+  dropCandidate,
   entryDragEnabled,
   renameCommittingPath,
   showRenameBusyVisual,
@@ -71,6 +73,7 @@ export function GridListingEntryCard({
   isEditing: boolean;
   isResizing: boolean;
   dropHighlight: boolean;
+  dropCandidate: boolean;
   entryDragEnabled: boolean;
   renameCommittingPath?: string | null;
   showRenameBusyVisual?: boolean;
@@ -105,8 +108,9 @@ export function GridListingEntryCard({
         isSelected={isSelected}
         enabled={canDrag}
         dropHighlight={dropHighlight}
+        dropCandidate={dropCandidate}
       >
-        {({ setNodeRef, isDropTarget, surfaceProps }) => (
+        {({ setNodeRef, isDropTarget, isDropCandidate, surfaceProps }) => (
           <button
             ref={setNodeRef}
             type="button"
@@ -168,6 +172,7 @@ export function GridListingEntryCard({
                   !isResizing &&
                   GRID_ITEM_LONG_PRESS_INSET_CLASS,
                 isDropTarget && GRID_ITEM_DROP_TARGET_CLASS,
+                isDropCandidate && GRID_ITEM_DROP_CANDIDATE_CLASS,
               )}
               style={{
                 top: hitExpand.top,

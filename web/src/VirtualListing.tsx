@@ -145,7 +145,8 @@ export default function VirtualListing({
   marqueeActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
-  const { dropHighlightPath, dragFadePathSet } = useExplorerDndUi();
+  const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
+    useExplorerDndUi();
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: "name", desc: false },
@@ -355,6 +356,11 @@ export default function VirtualListing({
                   entry.isDir &&
                   dropHighlightPath != null &&
                   dropHighlightPath === entry.path
+                }
+                dropCandidate={
+                  entry.isDir &&
+                  isValidDropDest(entry.path) &&
+                  dropHighlightPath !== entry.path
                 }
                 isEditing={inlineEditPath === entry.path}
                 entryDragEnabled={entryDragEnabled}

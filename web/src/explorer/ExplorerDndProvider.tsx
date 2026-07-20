@@ -67,12 +67,15 @@ type ExplorerDndUi = {
   dragFadePathSet: ReadonlySet<string>;
   dropHighlightPath: string | null;
   activeDragPath: string | null;
+  /** True while dragging when destDir is a valid drop for the current payload. */
+  isValidDropDest: (destDir: string) => boolean;
 };
 
 const ExplorerDndUiContext = createContext<ExplorerDndUi>({
   dragFadePathSet: new Set(),
   dropHighlightPath: null,
   activeDragPath: null,
+  isValidDropDest: () => false,
 });
 
 export function useExplorerDndUi(): ExplorerDndUi {
@@ -243,6 +246,20 @@ export default function ExplorerDndProvider({
       : null;
   }, [dragPaths, operation, overDestDir]);
 
+  const isValidDropDest = useCallback(
+    (destDir: string) => {
+      if (activePath == null || dragPaths.length === 0) {
+        return false;
+      }
+      return canDropExplorerPaths({
+        destDir,
+        sourcePaths: dragPaths,
+        operation,
+      });
+    },
+    [activePath, dragPaths, operation],
+  );
+
   const overlayText = useMemo(() => {
     if (dragPaths.length === 0) {
       return "";
@@ -264,8 +281,9 @@ export default function ExplorerDndProvider({
       dragFadePathSet,
       dropHighlightPath,
       activeDragPath: activePath,
+      isValidDropDest,
     }),
-    [activePath, dragFadePathSet, dropHighlightPath],
+    [activePath, dragFadePathSet, dropHighlightPath, isValidDropDest],
   );
 
   // Virtualized rows use CSS translateY; default transform-agnostic measuring

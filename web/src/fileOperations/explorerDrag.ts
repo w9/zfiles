@@ -123,6 +123,19 @@ export type ExplorerDragOverlayCounts = {
   folderCount: number;
 };
 
+/** Middle-ellipsis for long single-file names in the drag overlay. */
+export function middleEllipsizeName(
+  name: string,
+  options?: { head?: number; tail?: number },
+): string {
+  const head = options?.head ?? 14;
+  const tail = options?.tail ?? 14;
+  if (name.length <= head + tail + 1) {
+    return name;
+  }
+  return `${name.slice(0, head)}…${name.slice(name.length - tail)}`;
+}
+
 export function formatExplorerDragOverlayText(options: {
   paths: readonly string[];
   operation: FileClipboardOperation;
@@ -138,7 +151,7 @@ export function formatExplorerDragOverlayText(options: {
   if (paths.length === 1) {
     return t("explorer.drag.overlay.badge", {
       action,
-      label: basename(paths[0] ?? ""),
+      label: middleEllipsizeName(basename(paths[0] ?? "")),
     });
   }
 
@@ -158,7 +171,10 @@ export function formatExplorerDragOverlayText(options: {
   } else if (folderCount > 0) {
     label = t("explorer.drag.overlay.folders", { count: String(folderCount) });
   } else {
-    label = t("explorer.drag.overlay.items", { count: String(paths.length) });
+    label =
+      fileCount === 1
+        ? t("selection.fileUnit.one")
+        : t("selection.fileUnit.many", { count: String(fileCount) });
   }
 
   return t("explorer.drag.overlay.badge", { action, label });

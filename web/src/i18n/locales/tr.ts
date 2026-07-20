@@ -131,7 +131,6 @@ export const tr: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "Taşı",
   "explorer.drag.overlay.copy": "Kopyala",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} öğe",
   "explorer.drag.overlay.folders": "{{count}} klasör",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "1 klasör seçildi",

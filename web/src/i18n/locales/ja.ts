@@ -131,7 +131,6 @@ export const ja: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "移動",
   "explorer.drag.overlay.copy": "コピー",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} 件",
   "explorer.drag.overlay.folders": "フォルダー {{count}} 件",
   "explorer.drag.overlay.breakdown": "{{files}}、{{folders}}",
   "selection.folderSelected": "1 件のフォルダーを選択中",

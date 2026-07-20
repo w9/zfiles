@@ -99,7 +99,8 @@ export default function GridListing({
   onCardSizeChange,
   onResetCardSize,
 }: GridListingProps) {
-  const { dropHighlightPath, dragFadePathSet } = useExplorerDndUi();
+  const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
+    useExplorerDndUi();
   const { t } = useTranslation();
   const { cardSize, setCardSize: setCardSizeFromProvider, resetToDefault } = useGridCardSize();
   const setCardSize = onCardSizeChange ?? setCardSizeFromProvider;
@@ -319,6 +320,11 @@ export default function GridListing({
                         entry.isDir &&
                         dropHighlightPath != null &&
                         dropHighlightPath === entry.path
+                      }
+                      dropCandidate={
+                        entry.isDir &&
+                        isValidDropDest(entry.path) &&
+                        dropHighlightPath !== entry.path
                       }
                       entryDragEnabled={entryDragEnabled}
                       renameCommittingPath={renameCommittingPath}

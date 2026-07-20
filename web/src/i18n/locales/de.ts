@@ -131,7 +131,6 @@ export const de: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "Verschieben",
   "explorer.drag.overlay.copy": "Kopieren",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} Elemente",
   "explorer.drag.overlay.folders": "{{count}} Ordner",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "1 Ordner ausgewählt",

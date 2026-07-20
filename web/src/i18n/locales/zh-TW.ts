@@ -126,7 +126,6 @@ export const zhTW: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "移動",
   "explorer.drag.overlay.copy": "複製",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} 項",
   "explorer.drag.overlay.folders": "{{count}} 個資料夾",
   "explorer.drag.overlay.breakdown": "{{files}}，{{folders}}",
   "selection.folderSelected": "已選取 1 個資料夾",

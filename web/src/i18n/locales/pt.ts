@@ -131,7 +131,6 @@ export const pt: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "Mover",
   "explorer.drag.overlay.copy": "Copiar",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} itens",
   "explorer.drag.overlay.folders": "{{count}} pastas",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "1 pasta selecionada",

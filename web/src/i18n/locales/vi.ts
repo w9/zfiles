@@ -131,7 +131,6 @@ export const vi: Record<MessageKey, string> = {
   "explorer.drag.overlay.move": "Di chuyển",
   "explorer.drag.overlay.copy": "Sao chép",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} mục",
   "explorer.drag.overlay.folders": "{{count}} thư mục",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "Đã chọn 1 thư mục",

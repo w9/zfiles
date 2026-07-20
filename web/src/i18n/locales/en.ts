@@ -129,7 +129,6 @@ export const en = {
   "explorer.drag.overlay.move": "Move",
   "explorer.drag.overlay.copy": "Copy",
   "explorer.drag.overlay.badge": "{{action}} · {{label}}",
-  "explorer.drag.overlay.items": "{{count}} items",
   "explorer.drag.overlay.folders": "{{count}} folders",
   "explorer.drag.overlay.breakdown": "{{files}}, {{folders}}",
   "selection.folderSelected": "1 folder selected",
