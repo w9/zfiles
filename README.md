@@ -60,6 +60,7 @@ Open the URL from the startup banner (local mode opens your browser by default).
 - Inline rename (F2) and new-folder creation in list and grid views
 - Context menu on rows and empty folder background; right-click outside selection retargets before open
 - Clipboard copy/cut/paste with conflict and destination dialogs; batch paste settings
+- Drag-and-drop — move or copy items in the explorer; drop files from your OS to upload
 - Image preview for common formats in the preview pane; other types show metadata and download
 - Fullscreen preview — open from the context menu or Space on a file; fit/1:1 zoom with live percentage, drag and pinch pan; with two or more files selected, prev/next (and arrows) step through the selection; download and open-in-new-tab; optional start-at-active-item setting
 - Material Icon Theme file-type icons (generated at build time)
