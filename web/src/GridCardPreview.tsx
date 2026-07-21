@@ -3,6 +3,10 @@ import { Play } from "lucide-react";
 
 import { FileIcon } from "@/FileIcon";
 import { useExplorerBackend } from "@/backend";
+import {
+  GRID_CARD_MEDIA_OBJECT_CLASS,
+  GRID_CARD_MEDIA_SHELL_CLASS,
+} from "@/explorer/gridCardMediaLayout";
 import type { FileIconTheme } from "@/fileIcons";
 import { isBrowserPreviewImage, isBrowserPreviewVideo } from "@/imagePaths";
 import { cn } from "@/lib/utils";
@@ -60,10 +64,7 @@ export default function GridCardPreview({
     thumbnailBadgeEnabled && showVideoPreview && loaded && !failed;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex min-h-0 flex-1 items-center justify-center p-2"
-    >
+    <div ref={containerRef} className={GRID_CARD_MEDIA_SHELL_CLASS}>
       {showIcon ? (
         <FileIcon
           name={name}
@@ -81,7 +82,7 @@ export default function GridCardPreview({
           loading="lazy"
           fetchPriority={inView ? "high" : "low"}
           className={cn(
-            "max-h-full max-w-full object-contain",
+            GRID_CARD_MEDIA_OBJECT_CLASS,
             loaded ? "opacity-100" : "pointer-events-none absolute opacity-0",
           )}
           onLoad={() => setLoaded(true)}
@@ -97,7 +98,8 @@ export default function GridCardPreview({
           playsInline
           draggable={false}
           className={cn(
-            "pointer-events-none max-h-full max-w-full object-contain",
+            "pointer-events-none",
+            GRID_CARD_MEDIA_OBJECT_CLASS,
             loaded ? "opacity-100" : "absolute opacity-0",
           )}
           onLoadedData={(event) => {

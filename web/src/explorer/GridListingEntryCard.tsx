@@ -4,6 +4,7 @@ import {
   ExplorerDragHandle,
   ExplorerEntryDragSource,
 } from "@/explorer/ExplorerEntryDnd";
+import { GRID_CARD_MEDIA_SLOT_CLASS } from "@/explorer/gridCardMediaLayout";
 import type { FileIconTheme } from "@/fileIcons";
 import { shouldDimDotEntry } from "@/listingFilter";
 import { LISTING_ENTRY_TEXT_CLASS } from "@/listing-styles";
@@ -182,7 +183,7 @@ export function GridListingEntryCard({
                 height: cardHeight,
               }}
             >
-              <ExplorerDragHandle className="min-h-0 min-w-0 flex-1">
+              <ExplorerDragHandle className={GRID_CARD_MEDIA_SLOT_CLASS}>
                 <GridCardPreview
                   path={entry.path}
                   name={entry.name}
