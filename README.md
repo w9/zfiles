@@ -2,7 +2,7 @@
 
 `zfiles` is a modern, web-based file explorer packed into a single, zero-dependency binary. Think of it as a much faster, fully-featured `python -m http.server` that also supports file uploads.
 
-Written in Rust, the sub-10MB executable boots the UI in under 10ms, regardless of directory size. Just type `zfiles` to instantly manage your files. It features a multilingual UI, ships with basic security defaults, and plays perfectly with VSCode's Remote SSH and `xdg-open` wiring.
+Written in Rust, the sub-10MB executable boots the UI in under 10ms, regardless of directory size. Just type `zfiles` to instantly manage your files. It features a multilingual UI that works across screen sizes and input devices, ships with basic security defaults, and plays perfectly with VSCode's Remote SSH and `xdg-open` wiring.
 
 https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 
@@ -14,6 +14,7 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 - **Wire-speed transfers** — Linux downloads use `sendfile(2)` on the hot path; uploads use tus with atomic rename completion; cloud mode uses S3 multipart and Range GET.
 - **Resumable everywhere that matters** — HTTP Range on download, tus PATCH on upload, CLI `zfiles upload --resume` for pushing files to a remote instance.
 - **Virtual-scrolled listings** — List and grid views stay responsive on huge directories without loading the full tree into the DOM.
+- **Works across screen sizes and input devices** — Phone through desktop layouts; mouse+keyboard and touch.
 - **Keyboard-first power UI** — Command palette, J/K navigation, Shift+J/K range select, marquee rubber-band selection, copy/cut/paste file ops.
 - **Fullscreen preview** — Dimmed overlay for images and other browser-native media: zoom, drag/pinch pan, metadata; with a multi-file selection, prev/next and arrow keys step through the set; Space opens preview in grid view.
 - **LAN sharing built in** — Bind `0.0.0.0`, auto-generate a token, print a share URL and terminal QR code for phones and laptops on the network.
