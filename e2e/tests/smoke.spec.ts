@@ -70,8 +70,9 @@ test("explorer lists served files", async ({ page }) => {
 
 test("status bar shows connected backend status", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("status", { name: /backend connected/i })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText(/connected to/i);
+  const backendStatus = page.getByRole("status", { name: /backend connected/i });
+  await expect(backendStatus).toBeVisible();
+  await expect(backendStatus).toContainText(/connected to/i);
 });
 
 test("status bar opens keyboard shortcuts from Help menu", async ({ page }) => {
@@ -275,10 +276,8 @@ test("preview overlay opens for images", async ({ page }) => {
   try {
     await page.goto("http://127.0.0.1:9881/");
     await page.getByRole("button", { name: "Grid view" }).click();
-    await page.getByRole("button", { name: "slide-a.png", exact: true }).click();
-    await page
-      .getByRole("button", { name: "slide-b.png", exact: true })
-      .click({ modifiers: ["ControlOrMeta"] });
+    await listingEntry(page, "slide-a.png").click();
+    await listingEntry(page, "slide-b.png").click({ modifiers: ["ControlOrMeta"] });
     await page.keyboard.press("Control+P");
     const palette = page.getByRole("dialog");
     await palette.getByPlaceholder("Type a command…").fill("Preview");
