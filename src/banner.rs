@@ -10,8 +10,8 @@ pub struct ServeBanner {
     pub read_only: bool,
     pub auto_read_only: bool,
     pub state_dir: Option<String>,
-    pub public_share: bool,
-    pub share_note: Option<String>,
+    pub is_public: bool,
+    pub public_note: Option<String>,
     pub vite_dev: Option<String>,
     pub qr: Option<String>,
 }
@@ -109,17 +109,17 @@ impl ServeBanner {
             &shorten_home(&self.root, home.as_deref()),
         )));
         lines.push(colors.dim(&label_row("Mode", mode)));
-        if self.public_share {
-            lines.push(colors.dim(&label_row("Access", "sharing on LAN")));
+        if self.is_public {
+            lines.push(colors.dim(&label_row("Access", "public on LAN")));
         } else if self.token.is_some() {
             lines.push(colors.dim(&label_row("Access", "token required")));
         }
-        if self.public_share
+        if self.is_public
             && let Some(token) = &self.token
         {
             lines.push(colors.dim(&label_row("Token", token)));
         }
-        if let Some(note) = &self.share_note {
+        if let Some(note) = &self.public_note {
             lines.push(colors.dim(&label_row("Note", note)));
         }
         if let Some(vite_dev) = &self.vite_dev {
@@ -184,8 +184,8 @@ mod tests {
             read_only: false,
             auto_read_only: false,
             state_dir: None,
-            public_share: false,
-            share_note: None,
+            is_public: false,
+            public_note: None,
             vite_dev: None,
             qr: None,
         }
@@ -274,10 +274,10 @@ mod tests {
     }
 
     #[test]
-    fn share_banner_lists_token_row_lan_access_and_inline_qr_after_url() {
+    fn public_banner_lists_token_row_lan_access_and_inline_qr_after_url() {
         let banner = ServeBanner {
             url: "http://192.168.0.5:8080/?token=abc123".to_string(),
-            public_share: true,
+            is_public: true,
             qr: Some("█▀█\n▀ ▀".to_string()),
             ..sample_banner()
         };
@@ -288,7 +288,7 @@ mod tests {
             .expect("url line");
         let access_idx = lines
             .iter()
-            .position(|line| line.contains("Access:") && line.contains("sharing on LAN"))
+            .position(|line| line.contains("Access:") && line.contains("public on LAN"))
             .expect("access row");
         let token_idx = lines
             .iter()
@@ -310,11 +310,11 @@ mod tests {
     }
 
     #[test]
-    fn public_share_banner_can_explain_share_host_fallback() {
+    fn public_banner_can_explain_public_host_fallback() {
         let banner = ServeBanner {
-            public_share: true,
-            share_note: Some(
-                "could not detect a LAN IP for 0.0.0.0; using localhost for the share URL"
+            is_public: true,
+            public_note: Some(
+                "could not detect a LAN IP for 0.0.0.0; using localhost for the public URL"
                     .to_string(),
             ),
             ..sample_banner()

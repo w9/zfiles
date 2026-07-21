@@ -144,7 +144,7 @@ pub struct ServeArgs {
     #[arg(short, long, default_value_t = false)]
     pub token: bool,
 
-    /// Print a scannable QR code for the share URL in the startup banner
+    /// Print a scannable QR code for the public URL in the startup banner
     #[arg(short, long, default_value_t = false, conflicts_with = "no_qr")]
     pub qr: bool,
 
@@ -152,9 +152,9 @@ pub struct ServeArgs {
     #[arg(long, action = clap::ArgAction::SetTrue, conflicts_with = "qr")]
     pub no_qr: bool,
 
-    /// LAN share preset: bind `0.0.0.0`, enable `--token` and `--qr` (overridable)
+    /// Public LAN preset: bind `0.0.0.0`, enable `--token` and `--qr` (overridable)
     #[arg(long, default_value_t = false)]
-    pub share: bool,
+    pub public: bool,
 
     /// Token lifetime (e.g. 2h, 30m)
     #[arg(long, value_name = "DURATION")]
@@ -181,9 +181,9 @@ pub struct ServeArgs {
     #[arg(long, value_name = "LOCALE")]
     pub lang: Option<String>,
 
-    /// Hostname for the LAN share URL when binding `0.0.0.0` (falls back to `$HOSTNAME`, then external IP)
+    /// Hostname for the public URL when binding `0.0.0.0` (falls back to `$HOSTNAME`, then external IP)
     #[arg(long, value_name = "HOSTNAME")]
-    pub share_host: Option<String>,
+    pub public_host: Option<String>,
 
     /// Proxy UI assets to a Vite dev server for hot module replacement
     #[cfg(feature = "dev-frontend")]
@@ -208,7 +208,7 @@ impl Cli {
 
 impl ServeArgs {
     pub fn normalize(&mut self) {
-        if self.share {
+        if self.public {
             if self.bind == DEFAULT_BIND {
                 self.bind = "0.0.0.0".to_string();
             }
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_share_host_flag() {
+    fn parse_public_host_flag() {
         let cli = Cli::parse_from([
             "zfiles",
             "--bind",
@@ -391,15 +391,15 @@ mod tests {
             "--port",
             "8080",
             "--token",
-            "--share-host",
+            "--public-host",
             "mybox.local",
         ]);
-        assert_eq!(cli.serve.share_host.as_deref(), Some("mybox.local"));
+        assert_eq!(cli.serve.public_host.as_deref(), Some("mybox.local"));
     }
 
     #[test]
-    fn share_preset_sets_bind_token_and_qr() {
-        let mut serve = Cli::parse_from(["zfiles", "--share"]).serve;
+    fn public_preset_sets_bind_token_and_qr() {
+        let mut serve = Cli::parse_from(["zfiles", "--public"]).serve;
         serve.normalize();
         assert_eq!(serve.bind, "0.0.0.0");
         assert!(serve.token);
@@ -408,9 +408,9 @@ mod tests {
     }
 
     #[test]
-    fn share_preset_overridden_by_explicit_bind_and_no_qr() {
+    fn public_preset_overridden_by_explicit_bind_and_no_qr() {
         let mut serve =
-            Cli::parse_from(["zfiles", "--share", "--bind", "192.168.1.5", "--no-qr"]).serve;
+            Cli::parse_from(["zfiles", "--public", "--bind", "192.168.1.5", "--no-qr"]).serve;
         serve.normalize();
         assert_eq!(serve.bind, "192.168.1.5");
         assert!(serve.token);

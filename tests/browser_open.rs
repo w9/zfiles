@@ -116,7 +116,7 @@ fn token_startup_prints_hex_auth_token_in_banner() {
 }
 
 #[test]
-fn public_bind_with_share_host_uses_override_in_banner_url() {
+fn public_bind_with_public_host_uses_override_in_banner_url() {
     let dir = tempdir().unwrap();
     let output = collect_startup_stdout(
         &[
@@ -126,7 +126,7 @@ fn public_bind_with_share_host_uses_override_in_banner_url() {
             "0",
             "--token",
             "--no-open",
-            "--share-host",
+            "--public-host",
             "share.example",
         ],
         dir.path(),
@@ -136,11 +136,11 @@ fn public_bind_with_share_host_uses_override_in_banner_url() {
         output.lines().any(|line| {
             line.contains('→') && line.contains("http://share.example:") && line.contains("token=")
         }),
-        "expected share-host override in banner URL:\n{output}"
+        "expected public-host override in banner URL:\n{output}"
     );
     assert!(
         !output.lines().any(|line| line.contains("http://0.0.0.0:")),
-        "share URL must not expose the wildcard bind address:\n{output}"
+        "public URL must not expose the wildcard bind address:\n{output}"
     );
 }
 
@@ -161,7 +161,7 @@ fn public_bind_falls_back_to_hostname_env_in_banner_url() {
     );
     assert!(
         !output.lines().any(|line| line.contains("http://0.0.0.0:")),
-        "share URL must not expose the wildcard bind address:\n{output}"
+        "public URL must not expose the wildcard bind address:\n{output}"
     );
 }
 

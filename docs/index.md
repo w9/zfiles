@@ -9,7 +9,7 @@ zfiles is a dual-mode file explorer delivered as a single, zero-dependency stati
 - Wire-speed transfers via `sendfile(2)` and the tus resumable upload protocol
 - Single ~10 MB musl binary (Linux x86_64/aarch64) with SPA embedded
 - Keyboard-first UI with command palette, virtual-scrolled listings, and image slideshow
-- LAN sharing via bearer token + optional QR code
+- Public LAN access via bearer token + optional QR code
 - 14 locales, fullscreen image viewer, file operation conflict resolution
 
 ---

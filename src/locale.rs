@@ -10,7 +10,7 @@ pub fn parse_locale(value: &str) -> Result<&'static str> {
     }
 }
 
-pub fn share_url(host: &str, token: Option<&str>, lang: Option<&str>) -> String {
+pub fn explorer_url(host: &str, token: Option<&str>, lang: Option<&str>) -> String {
     let mut params = Vec::new();
     if let Some(token) = token {
         params.push(format!("token={token}"));
@@ -42,9 +42,9 @@ mod tests {
     }
 
     #[test]
-    fn share_url_includes_token_and_lang_query() {
+    fn explorer_url_includes_token_and_lang_query() {
         assert_eq!(
-            share_url(
+            explorer_url(
                 "127.0.0.1:9000",
                 Some("a1b2c3d4e5f6789012345678abcdef01"),
                 Some("zh-CN"),
@@ -52,11 +52,11 @@ mod tests {
             "http://127.0.0.1:9000/?token=a1b2c3d4e5f6789012345678abcdef01&lang=zh-CN"
         );
         assert_eq!(
-            share_url("127.0.0.1:9000", None, Some("en")),
+            explorer_url("127.0.0.1:9000", None, Some("en")),
             "http://127.0.0.1:9000/?lang=en"
         );
         assert_eq!(
-            share_url("127.0.0.1:9000", None, None),
+            explorer_url("127.0.0.1:9000", None, None),
             "http://127.0.0.1:9000/"
         );
     }

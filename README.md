@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 - **Works across screen sizes and input devices** — Phone through desktop layouts; mouse+keyboard and touch.
 - **Keyboard-first power UI** — Command palette, J/K navigation, Shift+J/K range select, marquee rubber-band selection, copy/cut/paste file ops.
 - **Fullscreen preview** — Dimmed overlay for images and other browser-native media: zoom, drag/pinch pan, metadata; with a multi-file selection, prev/next and arrow keys step through the set; Space opens preview in grid view.
-- **LAN sharing built in** — Bind `0.0.0.0`, auto-generate a token, print a share URL and terminal QR code for phones and laptops on the network.
+- **Public LAN access built in** — Bind `0.0.0.0`, auto-generate a token, print a public URL and terminal QR code for phones and laptops on the network.
 - **Live refresh** — Filesystem watch pushes `filesystem_changed` over WebSocket; the current listing updates in place.
 - **Cloud mode without a zfiles server** — Static SPA only; temporary bucket credentials stay in `sessionStorage` and go straight to AWS/Cloudflare.
 
@@ -64,7 +64,7 @@ Open the URL from the startup banner (local mode opens your browser by default).
 - Image preview for common formats in the preview pane; other types show metadata and download
 - Fullscreen preview — open from the context menu or Space on a file; fit/1:1 zoom with live percentage, drag and pinch pan; with two or more files selected, prev/next (and arrows) step through the selection; download and open-in-new-tab; optional start-at-active-item setting
 - Material Icon Theme file-type icons (generated at build time)
-- Read-only mode when the serve root is not writable; explicit `--read-only` for LAN shares
+- Read-only mode when the serve root is not writable; explicit `--read-only` for public LAN serves
 - Symlink policy: follow outbound symlinks on localhost by default; stricter defaults on public binds
 - Token auth for non-loopback binds; bearer token, query token, or auth cookie
 - Background daemon — single folder or multi-share `daemon.toml`
@@ -91,9 +91,9 @@ Downloads expose HTTP Range; on Linux the kernel uses `sendfile(2)` for zero-cop
 
 Cloud uploads run S3 multipart from the browser via `@aws-sdk/lib-storage`; downloads use Range GET. Any HTTP client that speaks Range or tus can talk to the local kernel — including `curl --continue-at` and the bundled `zfiles upload` command with `--resume`.
 
-## LAN sharing and auth
+## Public LAN access and auth
 
-To expose a folder on the network, use the share preset: `zfiles --share -p 8080` (binds `0.0.0.0`, enables token auth and a terminal QR code). Equivalent: `zfiles -b 0.0.0.0 -p 8080 -t -q`. The startup banner prints a share URL; clients authenticate with the token in the query string, `Authorization: Bearer`, or an HTTP-only cookie set on first visit. Add `--read-only` (or `-r`) for shares that should list and download but not mutate.
+To expose a folder on the network, use the public preset: `zfiles --public -p 8080` (binds `0.0.0.0`, enables token auth and a terminal QR code). Equivalent: `zfiles -b 0.0.0.0 -p 8080 -t -q`. The startup banner prints a public URL; clients authenticate with the token in the query string, `Authorization: Bearer`, or an HTTP-only cookie set on first visit. Add `--read-only` (or `-r`) for public serves that should list and download but not mutate.
 
 Non-loopback binds reject symlinks that escape the serve root by default (`follow_symlinks_outside_root` is off unless you opt in). `/api/health` reports `read_only` and symlink policy. Session tokens for auth are in-memory with expiry — no session table on disk.
 
@@ -103,7 +103,7 @@ Non-loopback binds reject symlinks that escape the serve root by default (`follo
 
 **Why no plugins?** The previous plugin supervisor and JSON-RPC model were removed to keep the kernel small and the security surface predictable. Built-in file actions (`delete`, `mkdir`, `rename`, `copy`, `move`) cover explorer workflows; preview stays client-side for common media types.
 
-**Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want LAN sharing, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser.
+**Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want public LAN access, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser.
 
 **Is it safe to expose on my LAN?** Use `--token` on any non-loopback bind, prefer `--read-only` when writes are not needed, and treat the printed URL like a password. There is no built-in TLS on the kernel listener yet — terminate TLS at a reverse proxy if you expose beyond a trusted network.
 

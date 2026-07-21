@@ -51,11 +51,11 @@ fn public_bind_with_token_prints_scannable_qr_code() {
         output
             .lines()
             .any(|line| line.contains('→') && line.contains("http://") && line.contains("token=")),
-        "expected spotlighted share URL with hex token in startup banner:\n{output}"
+        "expected spotlighted public URL with hex token in startup banner:\n{output}"
     );
     assert!(
         !output.lines().any(|line| line.contains("http://0.0.0.0:")),
-        "share URL must not expose the wildcard bind address:\n{output}"
+        "public URL must not expose the wildcard bind address:\n{output}"
     );
     assert!(
         output.contains("Scan to open on another device"),

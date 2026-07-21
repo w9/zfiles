@@ -53,7 +53,7 @@ Plugins and filename search are **removed from the project**, not deferred. They
 
 ### Security and privacy (local mode)
 
-- Existing bearer-token / HttpOnly cookie auth model is preserved for LAN shares (`--token`, `--read-only`, `--expire`); expiry is in-memory only.
+- Existing bearer-token / HttpOnly cookie auth model is preserved for public LAN serves (`--token`, `--read-only`, `--expire`); expiry is in-memory only.
 - Local mode never sends filesystem credentials to `zfiles.com`.
 
 ### Cross-origin boundary
@@ -331,7 +331,7 @@ Before calling the refactor complete, a human (or scripted browser walkthrough) 
 **Local mode**
 - [ ] `zfiles .` cold-starts in under 100 ms to first byte (informal check).
 - [ ] Browser opens localhost URL; no request to `zfiles.com`.
-- [ ] LAN share with `--token` still works.
+- [ ] Public LAN serve with `--token` still works.
 - [ ] tus upload resumes after simulated disconnect.
 
 **Cloud mode**

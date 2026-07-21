@@ -1,4 +1,4 @@
-//! LAN share authentication for `--token` mode.
+//! Public LAN authentication for `--token` mode.
 //!
 //! One bearer token lives in [`AuthConfig`] for the process lifetime. Clients may
 //! send it via `Authorization: Bearer`, `?token=` (bootstrap), or the HttpOnly

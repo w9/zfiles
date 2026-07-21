@@ -119,7 +119,7 @@ export function newQueueItemId(): string {
       return crypto.randomUUID();
     }
   } catch {
-    // Safari iOS on http:// LAN shares has no secure context.
+    // Safari iOS on http:// public LAN binds has no secure context.
   }
   return `upload-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }

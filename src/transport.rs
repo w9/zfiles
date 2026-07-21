@@ -162,21 +162,19 @@ pub async fn serve(mut serve: ServeArgs) -> anyhow::Result<()> {
     let open_browser = serve.should_open_browser(&config);
     let ui_lang = serve.locale()?;
     let explorer_url = browser::open_url(&bound, share_token.as_deref(), ui_lang);
-    let public_share = serve.token && serve.is_public_bind()?;
-    let public_share_url = public_share.then(|| {
-        browser::public_share_url(
+    let is_public = serve.token && serve.is_public_bind()?;
+    let public_url = is_public.then(|| {
+        browser::public_url(
             &bound,
             share_token.as_deref(),
             ui_lang,
-            serve.share_host.as_deref(),
+            serve.public_host.as_deref(),
         )
     });
-    let banner_url = public_share_url
+    let banner_url = public_url
         .as_ref()
-        .map_or_else(|| explorer_url.clone(), |share| share.url.clone());
-    let share_note = public_share_url
-        .as_ref()
-        .and_then(|share| share.note.clone());
+        .map_or_else(|| explorer_url.clone(), |public| public.url.clone());
+    let public_note = public_url.as_ref().and_then(|public| public.note.clone());
 
     let qr = serve
         .qr
@@ -196,8 +194,8 @@ pub async fn serve(mut serve: ServeArgs) -> anyhow::Result<()> {
         read_only,
         auto_read_only: layout.auto_read_only,
         state_dir: Some(state_dir.display().to_string()),
-        public_share,
-        share_note,
+        is_public,
+        public_note,
         #[cfg(feature = "dev-frontend")]
         vite_dev: serve
             .vite_dev_enabled()
