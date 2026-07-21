@@ -260,14 +260,14 @@ export const ja: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "最大幅 (px)",
   "settings.gridCard.maxHeight": "最大高さ (px)",
   "settings.gridCard.maxHint": "0 は制限なし。",
-  "settings.gridImagePreviews.label": "グリッドメディアプレビュー",
+  "settings.gridImagePreviews.label": "メディアプレビュー",
   "settings.gridImagePreviews.description":
-    "ブラウザがネイティブ表示できる画像・動画（JPEG、PNG、WebP、GIF、MP4、WebM など）のサムネイルをグリッドカードに表示します。",
+    "ブラウザがネイティブ表示できる画像・動画（JPEG、PNG、WebP、GIF、MP4、WebM など）のサムネイルをリストおよびグリッド表示に表示します。",
   "settings.gridImagePreviews.enabled": "オン",
   "settings.gridImagePreviews.disabled": "オフ",
   "settings.gridThumbnailBadge.label": "動画サムネイルバッジ",
   "settings.gridThumbnailBadge.description":
-    "グリッドの動画ポスターサムネイルに再生アイコンと再生時間を表示します。",
+    "動画ポスターサムネイルに再生アイコンを表示します（グリッド表示では再生時間も表示）。",
   "settings.gridThumbnailBadge.enabled": "オン",
   "settings.gridThumbnailBadge.disabled": "オフ",
   "settings.slideshow.startAtActiveItem.label": "アクティブな項目から開始",

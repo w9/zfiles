@@ -260,14 +260,14 @@ export const ko: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "최대 너비 (px)",
   "settings.gridCard.maxHeight": "최대 높이 (px)",
   "settings.gridCard.maxHint": "0은 제한 없음.",
-  "settings.gridImagePreviews.label": "그리드 미디어 미리보기",
+  "settings.gridImagePreviews.label": "미디어 미리보기",
   "settings.gridImagePreviews.description":
-    "브라우저가 기본 표시하는 이미지·동영상(JPEG, PNG, WebP, GIF, MP4, WebM 등)의 썸네일을 그리드 카드에 표시합니다.",
+    "브라우저가 기본 표시하는 이미지·동영상(JPEG, PNG, WebP, GIF, MP4, WebM 등)의 썸네일을 목록 및 그리드 보기에 표시합니다.",
   "settings.gridImagePreviews.enabled": "켜기",
   "settings.gridImagePreviews.disabled": "끄기",
   "settings.gridThumbnailBadge.label": "동영상 썸네일 배지",
   "settings.gridThumbnailBadge.description":
-    "그리드 동영상 포스터 썸네일에 재생 아이콘과 재생 시간을 표시합니다.",
+    "동영상 포스터 썸네일에 재생 아이콘을 표시합니다(그리드 보기에서는 재생 시간도 표시).",
   "settings.gridThumbnailBadge.enabled": "켜기",
   "settings.gridThumbnailBadge.disabled": "끄기",
   "settings.slideshow.startAtActiveItem.label": "활성 항목에서 시작",

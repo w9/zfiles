@@ -259,14 +259,14 @@ export const es: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Ancho máximo (px)",
   "settings.gridCard.maxHeight": "Alto máximo (px)",
   "settings.gridCard.maxHint": "Use 0 para sin límite.",
-  "settings.gridImagePreviews.label": "Vistas previas de medios en cuadrícula",
+  "settings.gridImagePreviews.label": "Vistas previas de medios",
   "settings.gridImagePreviews.description":
-    "Muestra miniaturas de imágenes y vídeos en las tarjetas de la cuadrícula para archivos que el navegador puede mostrar de forma nativa (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
+    "Muestra miniaturas de imágenes y vídeos en las vistas de lista y cuadrícula para archivos que el navegador puede mostrar de forma nativa (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
   "settings.gridImagePreviews.enabled": "Activado",
   "settings.gridImagePreviews.disabled": "Desactivado",
   "settings.gridThumbnailBadge.label": "Insignias de miniaturas de vídeo",
   "settings.gridThumbnailBadge.description":
-    "Muestra un icono de reproducción y la duración en las miniaturas de vídeo de la cuadrícula.",
+    "Muestra un icono de reproducción en las miniaturas de vídeo (con duración en la vista de cuadrícula).",
   "settings.gridThumbnailBadge.enabled": "Activado",
   "settings.gridThumbnailBadge.disabled": "Desactivado",
   "settings.slideshow.startAtActiveItem.label": "Empezar en el elemento activo",

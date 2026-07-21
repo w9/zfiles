@@ -261,14 +261,14 @@ export const it: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Larghezza massima (px)",
   "settings.gridCard.maxHeight": "Altezza massima (px)",
   "settings.gridCard.maxHint": "Usa 0 per nessun limite.",
-  "settings.gridImagePreviews.label": "Anteprime multimediali in griglia",
+  "settings.gridImagePreviews.label": "Anteprime multimediali",
   "settings.gridImagePreviews.description":
-    "Mostra miniature di immagini e video nelle schede della griglia per file visualizzabili nativamente dal browser (JPEG, PNG, WebP, GIF, MP4, WebM, ecc.).",
+    "Mostra miniature di immagini e video nelle viste elenco e griglia per file visualizzabili nativamente dal browser (JPEG, PNG, WebP, GIF, MP4, WebM, ecc.).",
   "settings.gridImagePreviews.enabled": "Attivo",
   "settings.gridImagePreviews.disabled": "Disattivo",
   "settings.gridThumbnailBadge.label": "Badge anteprime video",
   "settings.gridThumbnailBadge.description":
-    "Mostra un'icona play e la durata sulle anteprime video in griglia.",
+    "Mostra un'icona play sulle anteprime video (con durata nella vista griglia).",
   "settings.gridThumbnailBadge.enabled": "Attivo",
   "settings.gridThumbnailBadge.disabled": "Disattivo",
   "settings.slideshow.startAtActiveItem.label": "Inizia dall'elemento attivo",

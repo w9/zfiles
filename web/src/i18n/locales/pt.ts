@@ -261,14 +261,14 @@ export const pt: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Largura máxima (px)",
   "settings.gridCard.maxHeight": "Altura máxima (px)",
   "settings.gridCard.maxHint": "Use 0 para sem limite.",
-  "settings.gridImagePreviews.label": "Pré-visualizações de mídia na grade",
+  "settings.gridImagePreviews.label": "Pré-visualizações de mídia",
   "settings.gridImagePreviews.description":
-    "Mostra miniaturas de imagens e vídeos nos cartões da grade para arquivos exibíveis nativamente pelo navegador (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
+    "Mostra miniaturas de imagens e vídeos nas vistas de lista e grade para arquivos exibíveis nativamente pelo navegador (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
   "settings.gridImagePreviews.enabled": "Ativado",
   "settings.gridImagePreviews.disabled": "Desativado",
   "settings.gridThumbnailBadge.label": "Distintivos de miniaturas de vídeo",
   "settings.gridThumbnailBadge.description":
-    "Mostra um ícone de reprodução e a duração nas miniaturas de vídeo da grade.",
+    "Mostra um ícone de reprodução nas miniaturas de vídeo (com duração na vista em grade).",
   "settings.gridThumbnailBadge.enabled": "Ativado",
   "settings.gridThumbnailBadge.disabled": "Desativado",
   "settings.slideshow.startAtActiveItem.label": "Começar no item ativo",

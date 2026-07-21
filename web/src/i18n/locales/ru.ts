@@ -260,14 +260,14 @@ export const ru: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Макс. ширина (px)",
   "settings.gridCard.maxHeight": "Макс. высота (px)",
   "settings.gridCard.maxHint": "0 — без ограничения.",
-  "settings.gridImagePreviews.label": "Превью медиа в сетке",
+  "settings.gridImagePreviews.label": "Превью медиа",
   "settings.gridImagePreviews.description":
-    "Показывать миниатюры изображений и видео на карточках сетки для файлов, которые браузер отображает нативно (JPEG, PNG, WebP, GIF, MP4, WebM и т. п.).",
+    "Показывать миниатюры изображений и видео в списке и сетке для файлов, которые браузер отображает нативно (JPEG, PNG, WebP, GIF, MP4, WebM и т. п.).",
   "settings.gridImagePreviews.enabled": "Вкл.",
   "settings.gridImagePreviews.disabled": "Выкл.",
   "settings.gridThumbnailBadge.label": "Метки видео-миниатюр",
   "settings.gridThumbnailBadge.description":
-    "Показывать значок воспроизведения и длительность на постерных миниатюрах видео в сетке.",
+    "Показывать значок воспроизведения на постерных миниатюрах видео (с длительностью в виде сетки).",
   "settings.gridThumbnailBadge.enabled": "Вкл.",
   "settings.gridThumbnailBadge.disabled": "Выкл.",
   "settings.slideshow.startAtActiveItem.label": "Начинать с активного элемента",

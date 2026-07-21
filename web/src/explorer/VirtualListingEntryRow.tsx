@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { flexRender, type Row } from "@tanstack/react-table";
 
-import { FileIcon } from "@/FileIcon";
+import EntryMediaPreview from "@/EntryMediaPreview";
 import { TruncatedTextTooltip } from "@/components/truncated-text-tooltip";
 import InlineNameInput from "@/explorer/InlineNameInput";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/listing-table-layout";
 import type { ListingEntry, ListingColumnLabels } from "@/listing-types";
 import { cn } from "@/lib/utils";
+import { useGridImagePreviews } from "@/settings/GridImagePreviewsProvider";
 
 const CELL_CLIP = "min-w-0 overflow-hidden";
 const CELL_TEXT = cn("block min-w-0 truncate", LISTING_ENTRY_TEXT_CLASS);
@@ -94,6 +95,7 @@ export function VirtualListingEntryRow({
   iconTheme: FileIconTheme;
 }) {
   const entry = row.original;
+  const { enabled: mediaPreviewsEnabled } = useGridImagePreviews();
   const dimmed = shouldDimDotEntry(entry.name, entry.key);
   const canDrag = entryDragEnabled && !isEditing;
 
@@ -155,12 +157,15 @@ export function VirtualListingEntryRow({
             className={cn("flex h-9 items-center justify-end", CELL_CLIP)}
             style={{ gridColumn: 1 }}
           >
-            <FileIcon
+            <EntryMediaPreview
+              path={entry.path}
               name={entry.name}
               isDir={entry.isDir}
-              isSymlink={entry.isSymlink}
-              theme={iconTheme}
-              size="xs"
+              isSymlink={entry.isSymlink ?? false}
+              previewsEnabled={mediaPreviewsEnabled}
+              iconTheme={iconTheme}
+              pixelSize={16}
+              surface="list"
             />
           </ExplorerDragHandle>
           {row.getVisibleCells().map((cell, columnIndex) => {

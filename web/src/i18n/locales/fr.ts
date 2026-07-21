@@ -261,14 +261,14 @@ export const fr: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Largeur maximale (px)",
   "settings.gridCard.maxHeight": "Hauteur maximale (px)",
   "settings.gridCard.maxHint": "Utilisez 0 pour aucune limite.",
-  "settings.gridImagePreviews.label": "Aperçus multimédias en grille",
+  "settings.gridImagePreviews.label": "Aperçus multimédias",
   "settings.gridImagePreviews.description":
-    "Affiche des miniatures d'images et de vidéos dans les cartes de la grille pour les fichiers affichables nativement par le navigateur (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
+    "Affiche des miniatures d'images et de vidéos dans les vues liste et grille pour les fichiers affichables nativement par le navigateur (JPEG, PNG, WebP, GIF, MP4, WebM, etc.).",
   "settings.gridImagePreviews.enabled": "Activé",
   "settings.gridImagePreviews.disabled": "Désactivé",
   "settings.gridThumbnailBadge.label": "Badges des miniatures vidéo",
   "settings.gridThumbnailBadge.description":
-    "Affiche une icône de lecture et la durée sur les miniatures vidéo de la grille.",
+    "Affiche une icône de lecture sur les miniatures vidéo (avec durée en vue grille).",
   "settings.gridThumbnailBadge.enabled": "Activé",
   "settings.gridThumbnailBadge.disabled": "Désactivé",
   "settings.slideshow.startAtActiveItem.label": "Commencer à l'élément actif",

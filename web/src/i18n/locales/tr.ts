@@ -260,14 +260,14 @@ export const tr: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Maksimum genişlik (px)",
   "settings.gridCard.maxHeight": "Maksimum yükseklik (px)",
   "settings.gridCard.maxHint": "0 sınır yok anlamına gelir.",
-  "settings.gridImagePreviews.label": "Izgara medya önizlemeleri",
+  "settings.gridImagePreviews.label": "Medya önizlemeleri",
   "settings.gridImagePreviews.description":
-    "Tarayıcının yerel olarak gösterebildiği görseller ve videolar (JPEG, PNG, WebP, GIF, MP4, WebM vb.) için ızgara kartlarında küçük resimler gösterir.",
+    "Tarayıcının yerel olarak gösterebildiği görseller ve videolar (JPEG, PNG, WebP, GIF, MP4, WebM vb.) için liste ve ızgara görünümlerinde küçük resimler gösterir.",
   "settings.gridImagePreviews.enabled": "Açık",
   "settings.gridImagePreviews.disabled": "Kapalı",
   "settings.gridThumbnailBadge.label": "Video küçük resim rozetleri",
   "settings.gridThumbnailBadge.description":
-    "Izgara video poster küçük resimlerinde oynat simgesi ve süreyi gösterir.",
+    "Video poster küçük resimlerinde oynat simgesi gösterir (ızgara görünümünde süreyle birlikte).",
   "settings.gridThumbnailBadge.enabled": "Açık",
   "settings.gridThumbnailBadge.disabled": "Kapalı",
   "settings.slideshow.startAtActiveItem.label": "Etkin öğeden başla",

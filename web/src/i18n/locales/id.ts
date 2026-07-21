@@ -260,14 +260,14 @@ export const id: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Lebar maksimum (px)",
   "settings.gridCard.maxHeight": "Tinggi maksimum (px)",
   "settings.gridCard.maxHint": "Gunakan 0 untuk tanpa batas.",
-  "settings.gridImagePreviews.label": "Pratinjau media grid",
+  "settings.gridImagePreviews.label": "Pratinjau media",
   "settings.gridImagePreviews.description":
-    "Tampilkan thumbnail gambar dan video di kartu grid untuk berkas yang dapat ditampilkan browser secara native (JPEG, PNG, WebP, GIF, MP4, WebM, dll.).",
+    "Tampilkan thumbnail gambar dan video di tampilan daftar dan grid untuk berkas yang dapat ditampilkan browser secara native (JPEG, PNG, WebP, GIF, MP4, WebM, dll.).",
   "settings.gridImagePreviews.enabled": "Aktif",
   "settings.gridImagePreviews.disabled": "Nonaktif",
   "settings.gridThumbnailBadge.label": "Lencana thumbnail video",
   "settings.gridThumbnailBadge.description":
-    "Tampilkan ikon putar dan durasi pada thumbnail poster video di grid.",
+    "Tampilkan ikon putar pada thumbnail poster video (dengan durasi di tampilan grid).",
   "settings.gridThumbnailBadge.enabled": "Aktif",
   "settings.gridThumbnailBadge.disabled": "Nonaktif",
   "settings.slideshow.startAtActiveItem.label": "Mulai dari item aktif",

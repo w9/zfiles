@@ -260,14 +260,14 @@ export const vi: Record<MessageKey, string> = {
   "settings.gridCard.maxWidth": "Chiều rộng tối đa (px)",
   "settings.gridCard.maxHeight": "Chiều cao tối đa (px)",
   "settings.gridCard.maxHint": "Dùng 0 để không giới hạn.",
-  "settings.gridImagePreviews.label": "Xem trước phương tiện lưới",
+  "settings.gridImagePreviews.label": "Xem trước phương tiện",
   "settings.gridImagePreviews.description":
-    "Hiển thị hình thu nhỏ ảnh và video trên thẻ lưới cho tệp trình duyệt hiển thị được gốc (JPEG, PNG, WebP, GIF, MP4, WebM, v.v.).",
+    "Hiển thị hình thu nhỏ ảnh và video trong chế độ danh sách và lưới cho tệp trình duyệt hiển thị được gốc (JPEG, PNG, WebP, GIF, MP4, WebM, v.v.).",
   "settings.gridImagePreviews.enabled": "Bật",
   "settings.gridImagePreviews.disabled": "Tắt",
   "settings.gridThumbnailBadge.label": "Huy hiệu thumbnail video",
   "settings.gridThumbnailBadge.description":
-    "Hiển thị biểu tượng phát và thời lượng trên thumbnail poster video trong lưới.",
+    "Hiển thị biểu tượng phát trên thumbnail poster video (kèm thời lượng ở chế độ lưới).",
   "settings.gridThumbnailBadge.enabled": "Bật",
   "settings.gridThumbnailBadge.disabled": "Tắt",
   "settings.slideshow.startAtActiveItem.label": "Bắt đầu từ mục đang hoạt động",

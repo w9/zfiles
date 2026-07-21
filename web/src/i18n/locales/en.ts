@@ -258,14 +258,14 @@ export const en = {
   "settings.gridCard.maxWidth": "Maximum width (px)",
   "settings.gridCard.maxHeight": "Maximum height (px)",
   "settings.gridCard.maxHint": "Use 0 for no limit.",
-  "settings.gridImagePreviews.label": "Grid media previews",
+  "settings.gridImagePreviews.label": "Media previews",
   "settings.gridImagePreviews.description":
-    "Show image and video thumbnails in grid cards for files the browser can display natively (JPEG, PNG, WebP, GIF, MP4, WebM, and similar).",
+    "Show image and video thumbnails in list and grid views for files the browser can display natively (JPEG, PNG, WebP, GIF, MP4, WebM, and similar).",
   "settings.gridImagePreviews.enabled": "On",
   "settings.gridImagePreviews.disabled": "Off",
   "settings.gridThumbnailBadge.label": "Video thumbnail badges",
   "settings.gridThumbnailBadge.description":
-    "Show a play icon and duration on grid video poster thumbnails.",
+    "Show a play icon on video poster thumbnails (with duration in grid view).",
   "settings.gridThumbnailBadge.enabled": "On",
   "settings.gridThumbnailBadge.disabled": "Off",
   "settings.slideshow.startAtActiveItem.label": "Start at active item",
