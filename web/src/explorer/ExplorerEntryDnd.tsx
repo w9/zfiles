@@ -20,8 +20,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const FOLDER_DROP_HIGHLIGHT_CLASS =
-  "rounded-sm bg-primary/20 ring-2 ring-inset ring-primary/50";
-const FOLDER_DROP_CANDIDATE_CLASS = "rounded-sm bg-primary/8";
+  "rounded-sm ring-2 ring-inset ring-primary/50";
+const FOLDER_DROP_CANDIDATE_CLASS =
+  "rounded-sm ring-2 ring-inset ring-primary/25";
 
 type EntryDragContextValue = {
   enabled: boolean;

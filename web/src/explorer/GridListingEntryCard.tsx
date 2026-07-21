@@ -26,8 +26,9 @@ const GRID_ITEM_RESIZING_CLASS =
   "shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const GRID_ITEM_CUT_CLASS = "opacity-45";
 const GRID_ITEM_DROP_TARGET_CLASS =
-  "bg-primary/20 ring-2 ring-inset ring-primary/50";
-const GRID_ITEM_DROP_CANDIDATE_CLASS = "bg-primary/8";
+  "ring-2 ring-inset ring-primary/50";
+const GRID_ITEM_DROP_CANDIDATE_CLASS =
+  "ring-2 ring-inset ring-primary/25";
 
 export function GridListingEntryCard({
   entry,
