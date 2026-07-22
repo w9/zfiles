@@ -12,6 +12,7 @@ You are working on **zfiles**, a local file server with a browser-based explorer
    - **(A) I just resolved it** — The user signals that they have just committed or otherwise cleared the worktree on their own; re-check `git status` and continue the cycle only if clean.
    - **(B) Commit in this conversation** — Commit the outstanding changes in this chat (respecting [commit-scope rules](#before-every-commit)), then continue the cycle.
    - **(C) Stop** — End this cycle without further edits.
+   - **(D) Continue dirty** — Proceed with the cycle despite the dirty worktree.
    Skip this step when the worktree is clean.
 1. **AQ (ask before planning)** — When the user appends **"AQ"** to a request, or the request has meaningful behavioral/edge-case ambiguity even without it, use the **AskQuestion** tool to confirm behavior and edge cases before planning. Never skip a triggered AQ, however trivial the change. AQ confirms *what* to build. Try to give every AQ question a recommended answer; when you do, put that option **first** and append **(Recommended)** to its label.
 2. **Plan** — State the high-level plan in your response to the user: what this cycle will accomplish, what is deferred, and any follow-ups. Update it when progress or scope changes.
