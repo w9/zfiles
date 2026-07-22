@@ -103,61 +103,13 @@ test("computeMarqueeSelection does not add unselected paths on ctrl", () => {
   assert.deepEqual([...next].sort(), ["/keep"]);
 });
 
-test("syncListingSelectionDom toggles data-state on mounted entries", () => {
-  const makeNode = (path: string, selected: boolean) => {
-    const classes = new Set<string>(selected ? ["bg-primary/12"] : []);
-    const node = {
-      state: selected ? ("selected" as string | null) : null,
-      classes,
-      getAttribute(name: string) {
-        return name === "data-listing-path" ? path : null;
-      },
-      setAttribute(name: string, value: string) {
-        if (name === "data-state") {
-          node.state = value;
-        }
-      },
-      removeAttribute(name: string) {
-        if (name === "data-state") {
-          node.state = null;
-        }
-      },
-      classList: {
-        add: (...tokens: string[]) => {
-          for (const token of tokens) {
-            classes.add(token);
-          }
-        },
-        remove: (...tokens: string[]) => {
-          for (const token of tokens) {
-            classes.delete(token);
-          }
-        },
-      },
-    };
-    return node;
-  };
-  const a = makeNode("/a", true);
-  const b = makeNode("/b", false);
-  syncListingSelectionDom(
-    { querySelectorAll: () => [a, b] } as unknown as ParentNode,
-    new Set(["/b"]),
-  );
-  assert.equal(a.state, null);
-  assert.equal(b.state, "selected");
-  assert.equal(a.classes.has("bg-primary/12"), false);
-  assert.equal(b.classes.has("bg-primary/12"), true);
-});
-
-test("syncListingSelectionDom does not apply keyboard focus inset shadow", () => {
-  const focusInset =
-    "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
-  const classes = new Set<string>([focusInset]);
+function makeDomNode(path: string, selected: boolean, chrome?: ReturnType<typeof makeDomNode>) {
+  const classes = new Set<string>(selected ? ["bg-primary/12"] : []);
   const node = {
-    state: null as string | null,
+    state: selected ? ("selected" as string | null) : null,
     classes,
     getAttribute(name: string) {
-      return name === "data-listing-path" ? "/a" : null;
+      return name === "data-listing-path" ? path : null;
     },
     setAttribute(name: string, value: string) {
       if (name === "data-state") {
@@ -168,6 +120,15 @@ test("syncListingSelectionDom does not apply keyboard focus inset shadow", () =>
       if (name === "data-state") {
         node.state = null;
       }
+    },
+    querySelector(selector: string) {
+      if (
+        chrome &&
+        selector.includes("[data-listing-selection-chrome]")
+      ) {
+        return chrome;
+      }
+      return null;
     },
     classList: {
       add: (...tokens: string[]) => {
@@ -182,13 +143,47 @@ test("syncListingSelectionDom does not apply keyboard focus inset shadow", () =>
       },
     },
   };
+  return node;
+}
+
+test("syncListingSelectionDom toggles data-state on mounted entries", () => {
+  const a = makeDomNode("/a", true);
+  const b = makeDomNode("/b", false);
+  syncListingSelectionDom(
+    { querySelectorAll: () => [a, b] } as unknown as ParentNode,
+    new Set(["/b"]),
+  );
+  assert.equal(a.state, null);
+  assert.equal(b.state, "selected");
+  assert.equal(a.classes.has("bg-primary/12"), false);
+  assert.equal(b.classes.has("bg-primary/12"), true);
+});
+
+test("syncListingSelectionDom paints grid card chrome, not hit-expand entry", () => {
+  const chrome = makeDomNode("/a", false);
+  const entry = makeDomNode("/a", false, chrome);
+  entry.classes.add("bg-primary/12");
+  syncListingSelectionDom(
+    { querySelectorAll: () => [entry] } as unknown as ParentNode,
+    new Set(["/a"]),
+  );
+  assert.equal(entry.state, "selected");
+  assert.equal(entry.classes.has("bg-primary/12"), false);
+  assert.equal(chrome.classes.has("bg-primary/12"), true);
+});
+
+test("syncListingSelectionDom does not apply keyboard focus inset shadow", () => {
+  const focusInset =
+    "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
+  const node = makeDomNode("/a", false);
+  node.classes.add(focusInset);
   syncListingSelectionDom(
     { querySelectorAll: () => [node] } as unknown as ParentNode,
     new Set(["/a"]),
   );
   assert.equal(node.state, "selected");
-  assert.equal(classes.has("bg-primary/12"), true);
-  assert.equal(classes.has(focusInset), false);
+  assert.equal(node.classes.has("bg-primary/12"), true);
+  assert.equal(node.classes.has(focusInset), false);
 });
 
 test("pointerDistance measures drag length", () => {
@@ -261,7 +256,7 @@ test("collectTableEntryRects hit-tests scrolled-out rows against marquee", () =>
   assert.deepEqual(hit, ["/item-10"]);
 });
 
-test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
+test("collectGridEntryRects maps content cells on desktop (no gap expand)", () => {
   const scrollElement = {
     scrollTop: 0,
     getBoundingClientRect: () => ({
@@ -283,6 +278,51 @@ test("collectGridEntryRects maps grid cells to viewport coordinates", () => {
     cardHeight: 80,
     gap: 12,
     padding: 12,
+  });
+
+  assert.deepEqual(rects[0].rect, {
+    left: 12,
+    top: 12,
+    right: 112,
+    bottom: 92,
+  });
+  assert.deepEqual(rects[1].rect, {
+    left: 124,
+    top: 12,
+    right: 224,
+    bottom: 92,
+  });
+  assert.deepEqual(rects[2].rect, {
+    left: 12,
+    top: 104,
+    right: 112,
+    bottom: 184,
+  });
+});
+
+test("collectGridEntryRects expands into gaps when expandHitIntoGaps", () => {
+  const scrollElement = {
+    scrollTop: 0,
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      right: 300,
+      bottom: 300,
+      width: 300,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+  } as unknown as HTMLElement;
+
+  const rects = collectGridEntryRects(scrollElement, ["/a", "/b", "/c", "/d"], {
+    columnCount: 2,
+    cardWidth: 100,
+    cardHeight: 80,
+    gap: 12,
+    padding: 12,
+    expandHitIntoGaps: true,
   });
 
   // Hit rects expand halfway into inter-item gaps (gap=12 → 6px).
@@ -362,13 +402,13 @@ test("hitTestTablePathsWithContentMarquee auto-scroll extends swept range", () =
 test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
   const scrollElement = mockScrollElement(0);
   const paths = ["/a", "/b", "/c", "/d"];
-  // First row hit bottoms at 98 (card bottom 92 + half-gap); stop just above that.
+  // First row content bottoms at 92; stop just above second-row content.
   const hit = hitTestGridPathsWithContentMarquee(
     scrollElement,
     paths,
     {
       contentTop: 0,
-      contentBottom: 97,
+      contentBottom: 93,
       clientLeft: 0,
       clientRight: 200,
     },
@@ -384,7 +424,7 @@ test("hitTestGridPathsWithContentMarquee respects content bounds", () => {
   assert.deepEqual(hit, ["/a", "/b"]);
 });
 
-test("hitTestGridPathsWithContentMarquee includes inter-item gap midpoints", () => {
+test("hitTestGridPathsWithContentMarquee includes inter-item gap midpoints when expanded", () => {
   const scrollElement = mockScrollElement(0);
   const paths = ["/a", "/b", "/c", "/d"];
   const options = {
@@ -393,6 +433,7 @@ test("hitTestGridPathsWithContentMarquee includes inter-item gap midpoints", () 
     cardHeight: 80,
     gap: 12,
     padding: 12,
+    expandHitIntoGaps: true,
   };
   // Horizontal gap between /a (right edge 112) and /b (left 124) meets at 118.
   const horizontal = hitTestGridPathsWithContentMarquee(
@@ -423,6 +464,43 @@ test("hitTestGridPathsWithContentMarquee includes inter-item gap midpoints", () 
   );
   assert.ok(vertical.includes("/a") || vertical.includes("/c"));
   assert.equal(vertical.includes("/b"), false);
+});
+
+test("hitTestGridPathsWithContentMarquee leaves desktop gaps as non-item areas", () => {
+  const scrollElement = mockScrollElement(0);
+  const paths = ["/a", "/b", "/c", "/d"];
+  const options = {
+    columnCount: 2,
+    cardWidth: 100,
+    cardHeight: 80,
+    gap: 12,
+    padding: 12,
+  };
+  const horizontal = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 40,
+      contentBottom: 50,
+      clientLeft: 116,
+      clientRight: 120,
+    },
+    options,
+  );
+  assert.deepEqual(horizontal, []);
+
+  const vertical = hitTestGridPathsWithContentMarquee(
+    scrollElement,
+    paths,
+    {
+      contentTop: 96,
+      contentBottom: 100,
+      clientLeft: 20,
+      clientRight: 40,
+    },
+    options,
+  );
+  assert.deepEqual(vertical, []);
 });
 
 test("hitTestGridPathsWithContentMarquee ignores blank area right of last column", () => {

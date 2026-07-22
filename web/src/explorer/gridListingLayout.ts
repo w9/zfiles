@@ -211,14 +211,26 @@ export function gridEntryHitExpand(
   };
 }
 
-/** Visual card bounds expanded into neighboring inter-item gaps for hit testing. */
+export type GridEntryHitRectOptions = {
+  /** Touch UI: expand halfway into inter-item gaps. Desktop: content rect only. */
+  expandIntoGaps?: boolean;
+};
+
+/** Card hit bounds; optionally expanded into neighboring inter-item gaps. */
 export function gridEntryHitRect(
   entryIndex: number,
   metrics: GridListingLayoutMetrics,
+  options?: GridEntryHitRectOptions,
 ): GridEntryRect | null {
   const visual = gridEntryContentRect(entryIndex, metrics);
+  if (!visual) {
+    return null;
+  }
+  if (!options?.expandIntoGaps) {
+    return visual;
+  }
   const expand = gridEntryHitExpand(entryIndex, metrics);
-  if (!visual || !expand) {
+  if (!expand) {
     return null;
   }
   return {
@@ -228,3 +240,10 @@ export function gridEntryHitRect(
     height: visual.height + expand.top + expand.bottom,
   };
 }
+
+export const GRID_ENTRY_NO_HIT_EXPAND: GridEntryHitExpand = {
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+};

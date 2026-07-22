@@ -142,6 +142,7 @@ export function GridListingEntryCard({
             {...surfaceProps}
           >
             <div
+              data-listing-selection-chrome
               className={cn(
                 "absolute flex flex-col overflow-hidden hover:bg-accent/40",
                 dimmed && "opacity-70",

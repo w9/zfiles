@@ -165,18 +165,22 @@ export function findTablePathAtClientPoint(
   return paths[index];
 }
 
+export type GridMarqueeLayoutOptions = {
+  columnCount: number;
+  cardWidth: number;
+  cardHeight: number;
+  gap: number;
+  padding: number;
+  virtualRows?: readonly GridVirtualRow[];
+  /** Touch UI: expand hit targets into inter-item gaps. Desktop leaves gaps empty. */
+  expandHitIntoGaps?: boolean;
+};
+
 export function hitTestGridPathsWithContentMarquee(
   scrollElement: HTMLElement,
   paths: readonly string[],
   bounds: ListingMarqueeContentBounds,
-  options: {
-    columnCount: number;
-    cardWidth: number;
-    cardHeight: number;
-    gap: number;
-    padding: number;
-    virtualRows?: readonly GridVirtualRow[];
-  },
+  options: GridMarqueeLayoutOptions,
 ): string[] {
   const { columnCount } = options;
   if (columnCount <= 0) {
@@ -184,6 +188,7 @@ export function hitTestGridPathsWithContentMarquee(
   }
 
   const metrics = resolveGridMarqueeMetrics(paths, options);
+  const hitOptions = { expandIntoGaps: options.expandHitIntoGaps === true };
   const contentTop = Math.min(bounds.contentTop, bounds.contentBottom);
   const contentBottom = Math.max(bounds.contentTop, bounds.contentBottom);
   const contentLeft = Math.min(
@@ -197,7 +202,7 @@ export function hitTestGridPathsWithContentMarquee(
 
   const hits: string[] = [];
   for (let index = 0; index < paths.length; index += 1) {
-    const cell = gridEntryHitRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics, hitOptions);
     if (!cell) {
       continue;
     }
@@ -217,14 +222,7 @@ export function findGridPathAtClientPoint(
   paths: readonly string[],
   clientX: number,
   clientY: number,
-  options: {
-    columnCount: number;
-    cardWidth: number;
-    cardHeight: number;
-    gap: number;
-    padding: number;
-    virtualRows?: readonly GridVirtualRow[];
-  },
+  options: GridMarqueeLayoutOptions,
 ): string | null {
   const { columnCount } = options;
   if (columnCount <= 0) {
@@ -242,11 +240,12 @@ export function findGridPathAtClientPoint(
   }
 
   const metrics = resolveGridMarqueeMetrics(paths, options);
+  const hitOptions = { expandIntoGaps: options.expandHitIntoGaps === true };
   const contentX = clientXToContentX(scrollElement, clientX);
   const contentY = clientYToContentY(scrollElement, clientY);
 
   for (let index = paths.length - 1; index >= 0; index -= 1) {
-    const cell = gridEntryHitRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics, hitOptions);
     if (!cell) {
       continue;
     }
@@ -288,14 +287,7 @@ export function collectTableEntryRects(
 export function collectGridEntryRects(
   scrollElement: HTMLElement,
   paths: readonly string[],
-  options: {
-    columnCount: number;
-    cardWidth: number;
-    cardHeight: number;
-    gap: number;
-    padding: number;
-    virtualRows?: readonly GridVirtualRow[];
-  },
+  options: GridMarqueeLayoutOptions,
 ): ListingMarqueeEntryRect[] {
   const viewportRect = scrollElement.getBoundingClientRect();
   const scrollTop = scrollElement.scrollTop;
@@ -305,8 +297,9 @@ export function collectGridEntryRects(
   }
 
   const metrics = resolveGridMarqueeMetrics(paths, options);
+  const hitOptions = { expandIntoGaps: options.expandHitIntoGaps === true };
   return paths.flatMap((path, index) => {
-    const cell = gridEntryHitRect(index, metrics);
+    const cell = gridEntryHitRect(index, metrics, hitOptions);
     if (!cell) {
       return [];
     }
@@ -328,14 +321,7 @@ export function collectGridEntryRects(
 
 function resolveGridMarqueeMetrics(
   paths: readonly string[],
-  options: {
-    columnCount: number;
-    cardWidth: number;
-    cardHeight: number;
-    gap: number;
-    padding: number;
-    virtualRows?: readonly GridVirtualRow[];
-  },
+  options: GridMarqueeLayoutOptions,
 ): GridListingLayoutMetrics {
   return {
     columnCount: options.columnCount,
@@ -438,6 +424,8 @@ const LISTING_ROW_FOCUS_INSET_CLASS =
 /**
  * Paint selection on currently mounted listing entries without a React commit.
  * Used while a marquee drag is active so highlights track the rect immediately.
+ * Grid cards expose `[data-listing-selection-chrome]` on the visual card so the
+ * hit-expand button never receives the selection wash.
  */
 export function syncListingSelectionDom(
   root: ParentNode | null,
@@ -449,21 +437,32 @@ export function syncListingSelectionDom(
   const nodes = root.querySelectorAll<HTMLElement>(
     "[data-listing-entry][data-listing-path]",
   );
-  for (const node of nodes) {
-    const path = node.getAttribute("data-listing-path");
+  for (const entry of nodes) {
+    const path = entry.getAttribute("data-listing-path");
     if (!path) {
       continue;
     }
+    const chrome =
+      (typeof entry.querySelector === "function"
+        ? entry.querySelector<HTMLElement>("[data-listing-selection-chrome]")
+        : null) ?? entry;
+    if (chrome !== entry) {
+      // Clear any leftover wash on the expanded hit target.
+      entry.classList.remove(
+        ...MARQUEE_LIVE_SELECTED_CLASSES,
+        LISTING_ROW_FOCUS_INSET_CLASS,
+      );
+    }
     const shouldSelect = selected.has(path);
     if (shouldSelect) {
-      node.setAttribute("data-state", "selected");
-      node.classList.add(...MARQUEE_LIVE_SELECTED_CLASSES);
+      entry.setAttribute("data-state", "selected");
+      chrome.classList.add(...MARQUEE_LIVE_SELECTED_CLASSES);
       // Marquee must not apply keyboard focus chrome; also clears a prior
       // focus inset left on memoized rows that skip re-render.
-      node.classList.remove(LISTING_ROW_FOCUS_INSET_CLASS);
+      chrome.classList.remove(LISTING_ROW_FOCUS_INSET_CLASS);
     } else {
-      node.removeAttribute("data-state");
-      node.classList.remove(
+      entry.removeAttribute("data-state");
+      chrome.classList.remove(
         ...MARQUEE_LIVE_SELECTED_CLASSES,
         LISTING_ROW_FOCUS_INSET_CLASS,
       );

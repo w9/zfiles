@@ -4,6 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   buildGridVirtualRows,
   estimateGridVirtualRowSize,
+  GRID_ENTRY_NO_HIT_EXPAND,
   GRID_SECTION_HEADER_TOP_GAP_PX,
   gridEntryHitExpand,
   resolveGridSectionFolderCount,
@@ -66,6 +67,8 @@ type GridListingProps = {
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
   onResetCardSize?: () => void;
+  /** Touch UI expands card hit targets into inter-item gaps; desktop does not. */
+  touchUi?: boolean;
 };
 
 const VIEWPORT_PADDING_PX = 12;
@@ -99,6 +102,7 @@ export default function GridListing({
   onResizeActiveChange,
   onCardSizeChange,
   onResetCardSize,
+  touchUi = false,
 }: GridListingProps) {
   const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
     useExplorerDndUi();
@@ -140,8 +144,9 @@ export default function GridListing({
       gap: GRID_GAP_PX,
       padding: VIEWPORT_PADDING_PX,
       virtualRows,
+      expandHitIntoGaps: touchUi,
     }),
-    [cardSize.height, cardSize.width, columnCount, virtualRows],
+    [cardSize.height, cardSize.width, columnCount, touchUi, virtualRows],
   );
 
   const { onHandlePointerDown, onHandleDoubleClick, resizingPath } = useGridCardResize({
@@ -292,12 +297,10 @@ export default function GridListing({
               >
                 {rowEntries.map((entry, columnIndex) => {
                   const index = row.entryStartIndex + columnIndex;
-                  const hitExpand = gridEntryHitExpand(index, gridMarqueeOptions) ?? {
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                  };
+                  const hitExpand = touchUi
+                    ? (gridEntryHitExpand(index, gridMarqueeOptions) ??
+                      GRID_ENTRY_NO_HIT_EXPAND)
+                    : GRID_ENTRY_NO_HIT_EXPAND;
                   const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
                   return (
                     <GridListingEntryCard

@@ -2338,6 +2338,7 @@ export default function ExplorerApp() {
                 onResetCardSize={handleResetGridCardSize}
                 onInlineCommit={handleInlineCommit}
                 onInlineCancel={handleInlineCancel}
+                touchUi={touchUi}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"

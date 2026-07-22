@@ -105,14 +105,26 @@ test("gridEntryHitExpand splits inter-item gaps and leaves outer edges alone", (
   });
 });
 
-test("gridEntryHitRect neighbors meet with no dead zone in the gap", () => {
+test("gridEntryHitRect with expandIntoGaps meets neighbors with no dead zone", () => {
+  const metrics = plainMetrics(4, 2);
+  const expand = { expandIntoGaps: true } as const;
+  const left = gridEntryHitRect(0, metrics, expand)!;
+  const right = gridEntryHitRect(1, metrics, expand)!;
+  assert.equal(left.left + left.width, right.left);
+  const top = gridEntryHitRect(0, metrics, expand)!;
+  const bottom = gridEntryHitRect(2, metrics, expand)!;
+  assert.equal(top.top + top.height, bottom.top);
+});
+
+test("gridEntryHitRect without expand leaves a dead zone in inter-item gaps", () => {
   const metrics = plainMetrics(4, 2);
   const left = gridEntryHitRect(0, metrics)!;
   const right = gridEntryHitRect(1, metrics)!;
-  assert.equal(left.left + left.width, right.left);
+  assert.ok(left.left + left.width < right.left);
   const top = gridEntryHitRect(0, metrics)!;
   const bottom = gridEntryHitRect(2, metrics)!;
-  assert.equal(top.top + top.height, bottom.top);
+  assert.ok(top.top + top.height < bottom.top);
+  assert.deepEqual(left, gridEntryContentRect(0, metrics));
 });
 
 test("gridEntryHitExpand does not grow into section-header gaps", () => {
@@ -132,7 +144,10 @@ test("gridEntryHitExpand does not grow into section-header gaps", () => {
 
 test("gridEntryHitRect keeps visual content rect when there is no neighbor", () => {
   const metrics = plainMetrics(1, 2);
-  assert.deepEqual(gridEntryHitRect(0, metrics), gridEntryContentRect(0, metrics));
+  assert.deepEqual(
+    gridEntryHitRect(0, metrics, { expandIntoGaps: true }),
+    gridEntryContentRect(0, metrics),
+  );
 });
 
 test("moveSectionedGridIndex crosses from folders to files on down", () => {
