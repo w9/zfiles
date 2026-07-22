@@ -2311,7 +2311,6 @@ export default function ExplorerApp() {
                 )}
               </div>
             ) : null}
-            <MarqueeOverlay overlayRef={marqueeSelect.overlayRef} />
             {listingViewMode === "grid" ? (
               <GridListing
                 entries={listingEntries}
@@ -2339,6 +2338,9 @@ export default function ExplorerApp() {
                 onInlineCommit={handleInlineCommit}
                 onInlineCancel={handleInlineCancel}
                 touchUi={touchUi}
+                marqueeOverlay={
+                  <MarqueeOverlay overlayRef={marqueeSelect.overlayRef} />
+                }
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
@@ -2363,6 +2365,9 @@ export default function ExplorerApp() {
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 entryDragEnabled={entryDragEnabled}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
+                marqueeOverlay={
+                  <MarqueeOverlay overlayRef={marqueeSelect.overlayRef} />
+                }
                 onInlineCommit={handleInlineCommit}
                 onInlineCancel={handleInlineCancel}
                 ariaLabel={t("listing.label")}

@@ -11,25 +11,33 @@ function ScrollArea({
   viewportClassName,
   onViewportPointerDown,
   listingViewport = false,
+  overlay,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   viewportRef?: React.Ref<HTMLDivElement>
   viewportClassName?: string
   onViewportPointerDown?: React.PointerEventHandler<HTMLDivElement>
   listingViewport?: boolean
+  /** Absolute sibling of the viewport (e.g. marquee host); does not scroll with content. */
+  overlay?: React.ReactNode
 }) {
   const { resolved } = useUiMode()
 
   if (resolved === "touch") {
     return (
-      <div
-        ref={viewportRef}
-        data-slot="scroll-area"
-        onPointerDown={onViewportPointerDown}
-        {...(listingViewport ? { "data-listing-viewport": "" } : {})}
-        className={cn("overflow-auto", className, viewportClassName)}
-      >
-        {children}
+      <div data-slot="scroll-area" className={cn("relative", className)}>
+        <div
+          ref={viewportRef}
+          onPointerDown={onViewportPointerDown}
+          {...(listingViewport ? { "data-listing-viewport": "" } : {})}
+          className={cn(
+            "absolute inset-0 overflow-auto",
+            viewportClassName,
+          )}
+        >
+          {children}
+        </div>
+        {overlay}
       </div>
     )
   }
@@ -52,6 +60,7 @@ function ScrollArea({
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
+      {overlay}
       <ScrollBar />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>

@@ -7,9 +7,11 @@ import {
   type ClientRect,
   type ListingMarqueeLayoutResolver,
   type MarqueeModifiers,
+  clientXToContentX,
   clientYToContentY,
   collectDomEntryRectsFromViewport,
   computeMarqueeSelection,
+  contentMarqueeToViewportLocal,
   findEntryPathAtPoint,
   hitTestEntryPaths,
   normalizeMarqueeRect,
@@ -34,7 +36,7 @@ export type UseListingMarqueeSelectOptions = {
 export type UseListingMarqueeSelectResult = {
   /** True while a marquee drag is in progress (ref — does not trigger renders). */
   isActiveRef: RefObject<boolean>;
-  /** Mount target for the fixed marquee rectangle. */
+  /** Mount target for the viewport-local marquee rectangle. */
   overlayRef: RefObject<HTMLDivElement | null>;
   onViewportPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
 };
@@ -50,6 +52,7 @@ type DragSession = {
   baseSelection: Set<string>;
   modifiers: MarqueeModifiers;
   lastHoveredPath: string | null;
+  startContentX: number | null;
   startContentY: number | null;
   lastSelection: Set<string> | null;
   pointerTarget: EventTarget | null;
@@ -133,22 +136,39 @@ export function useListingMarqueeSelect({
         return;
       }
 
-      const marquee = normalizeMarqueeRect(
-        session.startX,
-        session.startY,
-        clientX,
-        clientY,
-      );
-      paintMarqueeOverlay(overlayRef.current, marquee);
-
+      if (session.started && session.startContentX == null) {
+        session.startContentX = clientXToContentX(scrollElement, session.startX);
+      }
       if (session.started && session.startContentY == null) {
         session.startContentY = clientYToContentY(scrollElement, session.startY);
+      }
+
+      const contentX = clientXToContentX(scrollElement, clientX);
+      const contentY = clientYToContentY(scrollElement, clientY);
+      if (session.startContentX != null && session.startContentY != null) {
+        paintMarqueeOverlay(
+          overlayRef.current,
+          contentMarqueeToViewportLocal({
+            startContentX: session.startContentX,
+            startContentY: session.startContentY,
+            contentX,
+            contentY,
+            scrollLeft: scrollElement.scrollLeft,
+            scrollTop: scrollElement.scrollTop,
+          }),
+        );
       }
 
       const layout = layoutRef?.current;
       const usesContentMarquee =
         layout?.hitTestContentMarquee != null && session.startContentY != null;
 
+      const marquee = normalizeMarqueeRect(
+        session.startX,
+        session.startY,
+        clientX,
+        clientY,
+      );
       const entryRects = usesContentMarquee
         ? []
         : collectEntryRectsFromViewport(scrollElement, layoutRef);
@@ -157,7 +177,7 @@ export function useListingMarqueeSelect({
         usesContentMarquee && layout != null
           ? layout.hitTestContentMarquee(scrollElement, {
               contentTop: session.startContentY!,
-              contentBottom: clientYToContentY(scrollElement, clientY),
+              contentBottom: contentY,
               clientLeft: Math.min(session.startX, clientX),
               clientRight: Math.max(session.startX, clientX),
             })
@@ -228,11 +248,15 @@ export function useListingMarqueeSelect({
     autoScrollFrameRef.current = requestAnimationFrame(startAutoScroll);
   }, [applyMarqueeAt, scrollElementRef, stopAutoScroll]);
 
+  const detachScrollListenerRef = useRef<(() => void) | null>(null);
+
   const endSession = useCallback(
     (_session: DragSession | null, didMarquee: boolean) => {
       sessionRef.current = null;
       isActiveRef.current = false;
       paintMarqueeOverlay(overlayRef.current, null);
+      detachScrollListenerRef.current?.();
+      detachScrollListenerRef.current = null;
       const scrollElement = scrollElementRef.current;
       if (scrollElement) {
         setViewportMarqueeActive(scrollElement, false);
@@ -248,6 +272,8 @@ export function useListingMarqueeSelect({
   useEffect(
     () => () => {
       stopAutoScroll();
+      detachScrollListenerRef.current?.();
+      detachScrollListenerRef.current = null;
       if (pendingClickSuppressRef.current) {
         window.removeEventListener(
           "click",
@@ -292,6 +318,7 @@ export function useListingMarqueeSelect({
           metaKey: event.metaKey,
         },
         lastHoveredPath: null,
+        startContentX: null,
         startContentY: null,
         lastSelection: null,
         pointerTarget: event.target,
@@ -322,6 +349,18 @@ export function useListingMarqueeSelect({
           isActiveRef.current = true;
           setViewportMarqueeActive(scrollElement, true);
           scrollElement.setPointerCapture(active.pointerId);
+          detachScrollListenerRef.current?.();
+          const onScroll = () => {
+            const live = sessionRef.current;
+            if (!live?.started) {
+              return;
+            }
+            applyMarqueeAt(live.clientX, live.clientY, live);
+          };
+          scrollElement.addEventListener("scroll", onScroll, { passive: true });
+          detachScrollListenerRef.current = () => {
+            scrollElement.removeEventListener("scroll", onScroll);
+          };
         }
 
         active.clientX = moveEvent.clientX;

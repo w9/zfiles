@@ -100,7 +100,30 @@ export function clientXToContentX(
   clientX: number,
 ): number {
   const viewportRect = scrollElement.getBoundingClientRect();
-  return clientX - viewportRect.left;
+  return scrollElement.scrollLeft + (clientX - viewportRect.left);
+}
+
+/**
+ * Map a content-space marquee (same coords as hit-testing) into the listing
+ * viewport's local box so a clipped absolute overlay tracks scroll.
+ */
+export function contentMarqueeToViewportLocal(options: {
+  startContentX: number;
+  startContentY: number;
+  contentX: number;
+  contentY: number;
+  scrollLeft: number;
+  scrollTop: number;
+}): ClientRect {
+  return {
+    left:
+      Math.min(options.startContentX, options.contentX) - options.scrollLeft,
+    top: Math.min(options.startContentY, options.contentY) - options.scrollTop,
+    right:
+      Math.max(options.startContentX, options.contentX) - options.scrollLeft,
+    bottom:
+      Math.max(options.startContentY, options.contentY) - options.scrollTop,
+  };
 }
 
 function contentRangesOverlap(

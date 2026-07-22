@@ -5,6 +5,7 @@ import {
   collectGridEntryRects,
   collectTableEntryRects,
   computeMarqueeSelection,
+  contentMarqueeToViewportLocal,
   hitTestEntryPaths,
   hitTestGridPathsWithContentMarquee,
   hitTestTablePathsWithContentMarquee,
@@ -22,6 +23,7 @@ import { buildGridVirtualRows } from "./gridListingLayout";
 function mockScrollElement(scrollTop: number) {
   return {
     scrollTop,
+    scrollLeft: 0,
     getBoundingClientRect: () => ({
       left: 0,
       top: 0,
@@ -35,6 +37,43 @@ function mockScrollElement(scrollTop: number) {
     }),
   } as unknown as HTMLElement;
 }
+
+test("contentMarqueeToViewportLocal keeps the content anchor under scroll", () => {
+  const atRest = contentMarqueeToViewportLocal({
+    startContentX: 20,
+    startContentY: 100,
+    contentX: 80,
+    contentY: 180,
+    scrollLeft: 0,
+    scrollTop: 0,
+  });
+  assert.deepEqual(atRest, { left: 20, top: 100, right: 80, bottom: 180 });
+
+  const scrolled = contentMarqueeToViewportLocal({
+    startContentX: 20,
+    startContentY: 100,
+    contentX: 80,
+    contentY: 280,
+    scrollLeft: 0,
+    scrollTop: 120,
+  });
+  // Start corner moves up with content; end grows with the longer content span.
+  assert.deepEqual(scrolled, { left: 20, top: -20, right: 80, bottom: 160 });
+});
+
+test("contentMarqueeToViewportLocal orders inverted drag corners", () => {
+  assert.deepEqual(
+    contentMarqueeToViewportLocal({
+      startContentX: 90,
+      startContentY: 200,
+      contentX: 10,
+      contentY: 40,
+      scrollLeft: 0,
+      scrollTop: 0,
+    }),
+    { left: 10, top: 40, right: 90, bottom: 200 },
+  );
+});
 
 test("normalizeMarqueeRect orders corners regardless of drag direction", () => {
   assert.deepEqual(normalizeMarqueeRect(10, 20, 30, 5), {

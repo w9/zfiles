@@ -1,6 +1,6 @@
 [package]
 name = "zfiles"
-version = "0.2.189"
+version = "0.2.190"
 edition = "2024"
 license = "MIT"
 build = "build.rs"

@@ -69,6 +69,8 @@ type GridListingProps = {
   onResetCardSize?: () => void;
   /** Touch UI expands card hit targets into inter-item gaps; desktop does not. */
   touchUi?: boolean;
+  /** Clipped marquee host; absolute sibling of the scroll viewport. */
+  marqueeOverlay?: React.ReactNode;
 };
 
 const VIEWPORT_PADDING_PX = 12;
@@ -103,6 +105,7 @@ export default function GridListing({
   onCardSizeChange,
   onResetCardSize,
   touchUi = false,
+  marqueeOverlay,
 }: GridListingProps) {
   const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
     useExplorerDndUi();
@@ -248,16 +251,17 @@ export default function GridListing({
       )}
       aria-label={ariaLabel}
     >
-      <div
-        ref={setViewportRef}
-        data-listing-viewport=""
-        className="min-h-0 flex-1 overflow-auto overscroll-contain p-3"
-        onPointerDown={onViewportPointerDown}
-      >
+      <div className="relative min-h-0 flex-1">
         <div
-          className="relative w-full"
-          style={{ height: `${virtualizer.getTotalSize()}px` }}
+          ref={setViewportRef}
+          data-listing-viewport=""
+          className="absolute inset-0 overflow-auto overscroll-contain p-3"
+          onPointerDown={onViewportPointerDown}
         >
+          <div
+            className="relative w-full"
+            style={{ height: `${virtualizer.getTotalSize()}px` }}
+          >
           {virtualizer.getVirtualItems().map((virtualItem) => {
             const row = virtualRows[virtualItem.index]!;
             if (row.kind === "header") {
@@ -352,7 +356,9 @@ export default function GridListing({
               </div>
             );
           })}
+          </div>
         </div>
+        {marqueeOverlay}
       </div>
     </div>
   );

@@ -73,6 +73,8 @@ type VirtualListingProps = {
   ) => void;
   entryDragEnabled?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
+  /** Clipped marquee host; absolute sibling of the scroll viewport. */
+  marqueeOverlay?: React.ReactNode;
 };
 
 const DEFAULT_COLUMN_LAYOUT: Layout = {
@@ -145,6 +147,7 @@ export default function VirtualListing({
   onEntryPointerDown,
   entryDragEnabled = false,
   shouldSkipDoubleClickActivate,
+  marqueeOverlay,
 }: VirtualListingProps) {
   const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
     useExplorerDndUi();
@@ -359,6 +362,7 @@ export default function VirtualListing({
         onViewportPointerDown={onViewportPointerDown}
         className={cn("min-h-0 flex-1", BODY_SCROLL_PEER_HOVER_CLASS)}
         viewportClassName="[&>div]:!block overscroll-contain"
+        overlay={marqueeOverlay}
       >
         <div
           className="relative w-full"

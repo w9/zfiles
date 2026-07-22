@@ -6,7 +6,7 @@ type MarqueeOverlayProps = {
   overlayRef: RefObject<HTMLDivElement | null>;
 };
 
-/** Paint the fixed marquee rect without a React commit. */
+/** Paint the viewport-local marquee rect without a React commit. */
 export function paintMarqueeOverlay(
   el: HTMLElement | null,
   rect: ClientRect | null,
@@ -25,14 +25,21 @@ export function paintMarqueeOverlay(
   el.style.height = `${rect.bottom - rect.top}px`;
 }
 
-/** Always-mounted host; visibility/geometry updated imperatively during drag. */
+/**
+ * Clipped host for the listing viewport. Mount as an absolute sibling of the
+ * scroll element (not inside scrolling content) so geometry stays viewport-local.
+ */
 export default function MarqueeOverlay({ overlayRef }: MarqueeOverlayProps) {
   return (
     <div
-      ref={overlayRef}
-      className="pointer-events-none fixed z-30 border border-primary/60 bg-primary/10"
-      style={{ display: "none" }}
+      className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
       aria-hidden
-    />
+    >
+      <div
+        ref={overlayRef}
+        className="absolute border border-primary/60 bg-primary/10"
+        style={{ display: "none" }}
+      />
+    </div>
   );
 }
