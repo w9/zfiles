@@ -155,6 +155,7 @@ function multipartToUnfinishedSession(session: MultipartSessionView): Unfinished
 import PasteDestinationDialog from "./PasteDestinationDialog";
 import PasteConflictDialog from "./PasteConflictDialog";
 import MarqueeOverlay from "./MarqueeOverlay";
+import { setListingSelectionPaths } from "./listingSelectionStore";
 import type { ListingMarqueeLayoutResolver } from "./listingMarqueeSelect";
 import { pathsInIndexRange } from "./listingSelection";
 import { useListingMarqueeSelect } from "./useListingMarqueeSelect";
@@ -285,6 +286,8 @@ export default function ExplorerApp() {
   selectedPathsRef.current = selectedPaths;
   selectedPathRef.current = selectedPath;
   selectionModeRef.current = selectionMode;
+  // Keep path-level subscribers in sync without re-rendering untouched rows.
+  setListingSelectionPaths(selectedPaths);
 
   const notifyStorageError = useCallback(
     (err: unknown) => {
@@ -1241,6 +1244,9 @@ export default function ExplorerApp() {
 
   const applyMarqueeSelection = useCallback((paths: Set<string>, primaryPath: string | null) => {
     setKeyboardFocusVisible(false);
+    // Called on marquee finalize (and non-drag selection helpers). Mid-drag
+    // highlights are painted via syncListingSelectionDom so React does not
+    // re-render rows on every pointer move.
     setSelectedPaths(paths);
     if (paths.size === 0) {
       setSelectedPath(null);
@@ -1840,11 +1846,10 @@ export default function ExplorerApp() {
     uploadConflictItem != null ||
     fileOps.pasteDestOpen ||
     fileOps.pasteConflict != null ||
-    fileOps.inlineEditPath != null ||
-    marqueeSelect.isActive;
+    fileOps.inlineEditPath != null;
 
   onListingEmptyClickRef.current = () => {
-    if (blockSelectionClearRef.current) {
+    if (blockSelectionClearRef.current || marqueeSelect.isActiveRef.current) {
       return;
     }
     if (selectedPathsRef.current.size === 0) {
@@ -1890,7 +1895,7 @@ export default function ExplorerApp() {
       if (selectionModeRef.current) {
         return;
       }
-      if (blockSelectionClearRef.current) {
+      if (blockSelectionClearRef.current || marqueeSelect.isActiveRef.current) {
         return;
       }
       if (shouldIgnoreTarget(event.target)) {
@@ -2306,7 +2311,7 @@ export default function ExplorerApp() {
                 )}
               </div>
             ) : null}
-            <MarqueeOverlay rect={marqueeSelect.marqueeRect} />
+            <MarqueeOverlay overlayRef={marqueeSelect.overlayRef} />
             {listingViewMode === "grid" ? (
               <GridListing
                 entries={listingEntries}
@@ -2315,6 +2320,7 @@ export default function ExplorerApp() {
                 gestureHighlightPath={touchPressHighlightPath}
                 gestureInsetPath={gestureInsetPath}
                 scrollSelectedIntoView={!touchUi}
+                scrollIntoViewSuppressedRef={marqueeSelect.isActiveRef}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2326,7 +2332,6 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 entryDragEnabled={entryDragEnabled}
-                marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
@@ -2345,6 +2350,7 @@ export default function ExplorerApp() {
                 gestureHighlightPath={touchPressHighlightPath}
                 gestureInsetPath={gestureInsetPath}
                 scrollSelectedIntoView={!touchUi}
+                scrollIntoViewSuppressedRef={marqueeSelect.isActiveRef}
                 multiSelectedPaths={selectedPaths}
                 cutPaths={fileOps.cutPaths}
                 inlineEditPath={fileOps.inlineEditPath}
@@ -2355,7 +2361,6 @@ export default function ExplorerApp() {
                 onViewportPointerDown={onListingViewportPointerDown}
                 onEntryPointerDown={longPressRangeSelect.onEntryPointerDown}
                 entryDragEnabled={entryDragEnabled}
-                marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
                 onInlineCommit={handleInlineCommit}
                 onInlineCancel={handleInlineCancel}

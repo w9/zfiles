@@ -49,6 +49,8 @@ type VirtualListingProps = {
   gestureInsetPath?: string | null;
   /** When false, skip scrolling the selected row into view (touch multi-select). */
   scrollSelectedIntoView?: boolean;
+  /** When true, skip scroll-into-view without re-rendering the listing (marquee). */
+  scrollIntoViewSuppressedRef?: React.RefObject<boolean>;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -70,7 +72,6 @@ type VirtualListingProps = {
     path: string,
   ) => void;
   entryDragEnabled?: boolean;
-  marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
 };
 
@@ -124,7 +125,8 @@ export default function VirtualListing({
   gestureHighlightPath,
   gestureInsetPath,
   scrollSelectedIntoView = true,
-  multiSelectedPaths,
+  scrollIntoViewSuppressedRef,
+  multiSelectedPaths: _multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
   renameCommittingPath,
@@ -142,7 +144,6 @@ export default function VirtualListing({
   onViewportPointerDown,
   onEntryPointerDown,
   entryDragEnabled = false,
-  marqueeActive = false,
   shouldSkipDoubleClickActivate,
 }: VirtualListingProps) {
   const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
@@ -178,6 +179,7 @@ export default function VirtualListing({
     () => shouldSkipDoubleClickActivateRef.current?.() ?? false,
     [],
   );
+
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -264,13 +266,19 @@ export default function VirtualListing({
   );
 
   useEffect(() => {
-    if (!scrollSelectedIntoView) {
+    if (!scrollSelectedIntoView || scrollIntoViewSuppressedRef?.current) {
       return;
     }
     if (selectedIndex >= 0 && selectedIndex < rows.length) {
       virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
     }
-  }, [selectedIndex, rows.length, virtualizer, scrollSelectedIntoView]);
+  }, [
+    selectedIndex,
+    rows.length,
+    virtualizer,
+    scrollSelectedIntoView,
+    scrollIntoViewSuppressedRef,
+  ]);
 
   useEffect(() => {
     if (!marqueeLayoutRef) {
@@ -350,10 +358,7 @@ export default function VirtualListing({
         listingViewport
         onViewportPointerDown={onViewportPointerDown}
         className={cn("min-h-0 flex-1", BODY_SCROLL_PEER_HOVER_CLASS)}
-        viewportClassName={cn(
-          "[&>div]:!block overscroll-contain",
-          marqueeActive && "select-none",
-        )}
+        viewportClassName="[&>div]:!block overscroll-contain"
       >
         <div
           className="relative w-full"
@@ -363,7 +368,6 @@ export default function VirtualListing({
           {virtualizer.getVirtualItems().map((item) => {
             const row = rows[item.index];
             const entry = row.original;
-            const isSelected = multiSelectedPaths?.has(entry.path) ?? false;
             return (
               <VirtualListingEntryRow
                 key={entry.key}
@@ -372,7 +376,6 @@ export default function VirtualListing({
                 itemStart={item.start}
                 itemSize={item.size}
                 columnGridTemplate={columnGridTemplate}
-                isSelected={isSelected}
                 isFocused={focusedPath != null && entry.path === focusedPath}
                 isGestureHighlighted={
                   gestureHighlightPath != null && entry.path === gestureHighlightPath

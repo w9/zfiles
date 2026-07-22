@@ -41,6 +41,8 @@ type GridListingProps = {
   gestureInsetPath?: string | null;
   /** When false, skip scrolling the selected row into view (touch multi-select). */
   scrollSelectedIntoView?: boolean;
+  /** When true, skip scroll-into-view without re-rendering the listing (marquee). */
+  scrollIntoViewSuppressedRef?: React.RefObject<boolean>;
   multiSelectedPaths?: Set<string>;
   cutPaths?: string[];
   inlineEditPath?: string | null;
@@ -60,7 +62,6 @@ type GridListingProps = {
     path: string,
   ) => void;
   entryDragEnabled?: boolean;
-  marqueeActive?: boolean;
   shouldSkipDoubleClickActivate?: () => boolean;
   onResizeActiveChange?: (active: boolean) => void;
   onCardSizeChange?: (size: GridCardSize) => void;
@@ -77,6 +78,7 @@ export default function GridListing({
   gestureHighlightPath,
   gestureInsetPath,
   scrollSelectedIntoView = true,
+  scrollIntoViewSuppressedRef,
   multiSelectedPaths,
   cutPaths = [],
   inlineEditPath,
@@ -93,7 +95,6 @@ export default function GridListing({
   onViewportPointerDown,
   onEntryPointerDown,
   entryDragEnabled = false,
-  marqueeActive = false,
   shouldSkipDoubleClickActivate,
   onResizeActiveChange,
   onCardSizeChange,
@@ -188,14 +189,20 @@ export default function GridListing({
   }, [cardSize.height, virtualRows, virtualizer]);
 
   useEffect(() => {
-    if (!scrollSelectedIntoView) {
+    if (!scrollSelectedIntoView || scrollIntoViewSuppressedRef?.current) {
       return;
     }
     const row = virtualRowIndexForEntryIndex(virtualRows, selectedIndex);
     if (row >= 0 && row < virtualRows.length) {
       virtualizer.scrollToIndex(row, { align: "auto" });
     }
-  }, [selectedIndex, virtualRows, virtualizer, scrollSelectedIntoView]);
+  }, [
+    selectedIndex,
+    virtualRows,
+    virtualizer,
+    scrollSelectedIntoView,
+    scrollIntoViewSuppressedRef,
+  ]);
 
   useEffect(() => {
     if (!marqueeLayoutRef) {
@@ -239,10 +246,7 @@ export default function GridListing({
       <div
         ref={setViewportRef}
         data-listing-viewport=""
-        className={cn(
-          "min-h-0 flex-1 overflow-auto overscroll-contain p-3",
-          marqueeActive && "select-none",
-        )}
+        className="min-h-0 flex-1 overflow-auto overscroll-contain p-3"
         onPointerDown={onViewportPointerDown}
       >
         <div

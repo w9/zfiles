@@ -15,6 +15,7 @@ import {
   selectionSetsEqual,
   shouldClearMultiSelectionOnEmptyClick,
   shouldIgnoreMarqueePointerTarget,
+  syncListingSelectionDom,
 } from "./listingMarqueeSelect";
 import { buildGridVirtualRows } from "./gridListingLayout";
 
@@ -100,6 +101,94 @@ test("computeMarqueeSelection does not add unselected paths on ctrl", () => {
     metaKey: false,
   });
   assert.deepEqual([...next].sort(), ["/keep"]);
+});
+
+test("syncListingSelectionDom toggles data-state on mounted entries", () => {
+  const makeNode = (path: string, selected: boolean) => {
+    const classes = new Set<string>(selected ? ["bg-primary/12"] : []);
+    const node = {
+      state: selected ? ("selected" as string | null) : null,
+      classes,
+      getAttribute(name: string) {
+        return name === "data-listing-path" ? path : null;
+      },
+      setAttribute(name: string, value: string) {
+        if (name === "data-state") {
+          node.state = value;
+        }
+      },
+      removeAttribute(name: string) {
+        if (name === "data-state") {
+          node.state = null;
+        }
+      },
+      classList: {
+        add: (...tokens: string[]) => {
+          for (const token of tokens) {
+            classes.add(token);
+          }
+        },
+        remove: (...tokens: string[]) => {
+          for (const token of tokens) {
+            classes.delete(token);
+          }
+        },
+      },
+    };
+    return node;
+  };
+  const a = makeNode("/a", true);
+  const b = makeNode("/b", false);
+  syncListingSelectionDom(
+    { querySelectorAll: () => [a, b] } as unknown as ParentNode,
+    new Set(["/b"]),
+  );
+  assert.equal(a.state, null);
+  assert.equal(b.state, "selected");
+  assert.equal(a.classes.has("bg-primary/12"), false);
+  assert.equal(b.classes.has("bg-primary/12"), true);
+});
+
+test("syncListingSelectionDom does not apply keyboard focus inset shadow", () => {
+  const focusInset =
+    "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
+  const classes = new Set<string>([focusInset]);
+  const node = {
+    state: null as string | null,
+    classes,
+    getAttribute(name: string) {
+      return name === "data-listing-path" ? "/a" : null;
+    },
+    setAttribute(name: string, value: string) {
+      if (name === "data-state") {
+        node.state = value;
+      }
+    },
+    removeAttribute(name: string) {
+      if (name === "data-state") {
+        node.state = null;
+      }
+    },
+    classList: {
+      add: (...tokens: string[]) => {
+        for (const token of tokens) {
+          classes.add(token);
+        }
+      },
+      remove: (...tokens: string[]) => {
+        for (const token of tokens) {
+          classes.delete(token);
+        }
+      },
+    },
+  };
+  syncListingSelectionDom(
+    { querySelectorAll: () => [node] } as unknown as ParentNode,
+    new Set(["/a"]),
+  );
+  assert.equal(node.state, "selected");
+  assert.equal(classes.has("bg-primary/12"), true);
+  assert.equal(classes.has(focusInset), false);
 });
 
 test("pointerDistance measures drag length", () => {

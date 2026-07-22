@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import {
   MARQUEE_AUTO_SCROLL_MARGIN_PX,
@@ -17,7 +17,9 @@ import {
   selectionSetsEqual,
   shouldClearMultiSelectionOnEmptyClick,
   shouldIgnoreMarqueePointerTarget,
+  syncListingSelectionDom,
 } from "@/explorer/listingMarqueeSelect";
+import { paintMarqueeOverlay } from "@/explorer/MarqueeOverlay";
 
 export type UseListingMarqueeSelectOptions = {
   selectedPaths: Set<string>;
@@ -30,8 +32,10 @@ export type UseListingMarqueeSelectOptions = {
 };
 
 export type UseListingMarqueeSelectResult = {
-  isActive: boolean;
-  marqueeRect: ClientRect | null;
+  /** True while a marquee drag is in progress (ref — does not trigger renders). */
+  isActiveRef: RefObject<boolean>;
+  /** Mount target for the fixed marquee rectangle. */
+  overlayRef: RefObject<HTMLDivElement | null>;
   onViewportPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
 };
 
@@ -80,6 +84,10 @@ function suppressMarqueeEndClick(
   window.addEventListener("click", suppressNextClick, true);
 }
 
+function setViewportMarqueeActive(scrollElement: HTMLElement, active: boolean) {
+  scrollElement.classList.toggle("select-none", active);
+}
+
 export function useListingMarqueeSelect({
   selectedPaths,
   enabled = true,
@@ -89,8 +97,8 @@ export function useListingMarqueeSelect({
   onSelectionChange,
   onEmptyClick,
 }: UseListingMarqueeSelectOptions): UseListingMarqueeSelectResult {
-  const [isActive, setIsActive] = useState(false);
-  const [marqueeRect, setMarqueeRect] = useState<ClientRect | null>(null);
+  const isActiveRef = useRef(false);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const sessionRef = useRef<DragSession | null>(null);
   const pendingClickSuppressRef = useRef<((event: MouseEvent) => void) | null>(
     null,
@@ -131,7 +139,7 @@ export function useListingMarqueeSelect({
         clientX,
         clientY,
       );
-      setMarqueeRect(marquee);
+      paintMarqueeOverlay(overlayRef.current, marquee);
 
       if (session.started && session.startContentY == null) {
         session.startContentY = clientYToContentY(scrollElement, session.startY);
@@ -181,12 +189,16 @@ export function useListingMarqueeSelect({
         session.lastHoveredPath = hoveredPath;
       }
 
-      if (
+      const selectionChanged =
         session.lastSelection == null ||
-        !selectionSetsEqual(session.lastSelection, resolvedSelection)
-      ) {
-        onSelectionChangeRef.current(resolvedSelection, session.lastHoveredPath);
+        !selectionSetsEqual(session.lastSelection, resolvedSelection);
+      if (selectionChanged) {
+        // Live chrome only — avoid React row commits while the rect is moving.
+        syncListingSelectionDom(scrollElement, resolvedSelection);
         session.lastSelection = new Set(resolvedSelection);
+      }
+      if (options?.finalize) {
+        onSelectionChangeRef.current(resolvedSelection, session.lastHoveredPath);
       }
     },
     [layoutRef, scrollElementRef],
@@ -217,16 +229,20 @@ export function useListingMarqueeSelect({
   }, [applyMarqueeAt, scrollElementRef, stopAutoScroll]);
 
   const endSession = useCallback(
-    (session: DragSession | null, didMarquee: boolean) => {
+    (_session: DragSession | null, didMarquee: boolean) => {
       sessionRef.current = null;
-      setIsActive(false);
-      setMarqueeRect(null);
+      isActiveRef.current = false;
+      paintMarqueeOverlay(overlayRef.current, null);
+      const scrollElement = scrollElementRef.current;
+      if (scrollElement) {
+        setViewportMarqueeActive(scrollElement, false);
+      }
       stopAutoScroll();
       if (didMarquee) {
         suppressMarqueeEndClick(pendingClickSuppressRef);
       }
     },
-    [stopAutoScroll],
+    [scrollElementRef, stopAutoScroll],
   );
 
   useEffect(
@@ -303,7 +319,8 @@ export function useListingMarqueeSelect({
             return;
           }
           active.started = true;
-          setIsActive(true);
+          isActiveRef.current = true;
+          setViewportMarqueeActive(scrollElement, true);
           scrollElement.setPointerCapture(active.pointerId);
         }
 
@@ -323,7 +340,9 @@ export function useListingMarqueeSelect({
         if (active.started) {
           active.clientX = endEvent.clientX;
           active.clientY = endEvent.clientY;
-          applyMarqueeAt(endEvent.clientX, endEvent.clientY, active, { finalize: true });
+          applyMarqueeAt(endEvent.clientX, endEvent.clientY, active, {
+            finalize: true,
+          });
           if (scrollElement.hasPointerCapture(active.pointerId)) {
             scrollElement.releasePointerCapture(active.pointerId);
           }
@@ -348,12 +367,19 @@ export function useListingMarqueeSelect({
       window.addEventListener("pointerup", onPointerEnd);
       window.addEventListener("pointercancel", onPointerEnd);
     },
-    [applyMarqueeAt, enabled, endSession, scrollElementRef, startAutoScroll, stopAutoScroll],
+    [
+      applyMarqueeAt,
+      enabled,
+      endSession,
+      scrollElementRef,
+      startAutoScroll,
+      stopAutoScroll,
+    ],
   );
 
   return {
-    isActive,
-    marqueeRect,
+    isActiveRef,
+    overlayRef,
     onViewportPointerDown,
   };
 }

@@ -8,6 +8,7 @@ import {
   ExplorerDragHandle,
   ExplorerEntryDragSource,
 } from "@/explorer/ExplorerEntryDnd";
+import { useListingPathSelected } from "@/explorer/useListingPathSelected";
 import type { FileIconTheme } from "@/fileIcons";
 import { formatModifiedAbsolute } from "@/listing-format";
 import { shouldDimDotEntry } from "@/listingFilter";
@@ -48,7 +49,6 @@ type VirtualListingEntryRowProps = {
   itemStart: number;
   itemSize: number;
   columnGridTemplate: string;
-  isSelected: boolean;
   isFocused: boolean;
   isGestureHighlighted: boolean;
   isGestureInset: boolean;
@@ -75,6 +75,9 @@ function virtualListingEntryRowPropsAreEqual(
   prev: VirtualListingEntryRowProps,
   next: VirtualListingEntryRowProps,
 ): boolean {
+  // Selection chrome is driven by listingSelectionStore + DOM sync during
+  // marquee — intentionally omitted so parent selection Set identity changes
+  // do not re-render every visible row.
   // Callbacks are intentionally ignored: VirtualListing passes ref-stable wrappers.
   return (
     prev.row.original.key === next.row.original.key &&
@@ -83,7 +86,6 @@ function virtualListingEntryRowPropsAreEqual(
     prev.itemStart === next.itemStart &&
     prev.itemSize === next.itemSize &&
     prev.columnGridTemplate === next.columnGridTemplate &&
-    prev.isSelected === next.isSelected &&
     prev.isFocused === next.isFocused &&
     prev.isGestureHighlighted === next.isGestureHighlighted &&
     prev.isGestureInset === next.isGestureInset &&
@@ -106,7 +108,6 @@ function VirtualListingEntryRowComponent({
   itemStart,
   itemSize,
   columnGridTemplate,
-  isSelected,
   isFocused,
   isGestureHighlighted,
   isGestureInset,
@@ -126,6 +127,7 @@ function VirtualListingEntryRowComponent({
   iconTheme,
 }: VirtualListingEntryRowProps) {
   const entry = row.original;
+  const isSelected = useListingPathSelected(entry.path);
   const { enabled: mediaPreviewsEnabled } = useGridImagePreviews();
   const dimmed = shouldDimDotEntry(entry.name, entry.key);
   const canDrag = entryDragEnabled && !isEditing;

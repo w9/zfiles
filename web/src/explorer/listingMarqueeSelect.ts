@@ -425,6 +425,52 @@ export function selectionSetsEqual(a: Set<string>, b: Set<string>): boolean {
   return true;
 }
 
+/** Plain selected chrome only — never the keyboard-focus inset shadow. */
+const MARQUEE_LIVE_SELECTED_CLASSES = [
+  "bg-primary/12",
+  "hover:bg-primary/16",
+] as const;
+
+/** Keyboard-nav inset; strip if present so marquee never leaves focus chrome. */
+const LISTING_ROW_FOCUS_INSET_CLASS =
+  "shadow-[inset_0_1px_6px_0_color-mix(in_oklab,var(--primary)_12%,transparent)]";
+
+/**
+ * Paint selection on currently mounted listing entries without a React commit.
+ * Used while a marquee drag is active so highlights track the rect immediately.
+ */
+export function syncListingSelectionDom(
+  root: ParentNode | null,
+  selected: ReadonlySet<string>,
+): void {
+  if (!root || typeof root.querySelectorAll !== "function") {
+    return;
+  }
+  const nodes = root.querySelectorAll<HTMLElement>(
+    "[data-listing-entry][data-listing-path]",
+  );
+  for (const node of nodes) {
+    const path = node.getAttribute("data-listing-path");
+    if (!path) {
+      continue;
+    }
+    const shouldSelect = selected.has(path);
+    if (shouldSelect) {
+      node.setAttribute("data-state", "selected");
+      node.classList.add(...MARQUEE_LIVE_SELECTED_CLASSES);
+      // Marquee must not apply keyboard focus chrome; also clears a prior
+      // focus inset left on memoized rows that skip re-render.
+      node.classList.remove(LISTING_ROW_FOCUS_INSET_CLASS);
+    } else {
+      node.removeAttribute("data-state");
+      node.classList.remove(
+        ...MARQUEE_LIVE_SELECTED_CLASSES,
+        LISTING_ROW_FOCUS_INSET_CLASS,
+      );
+    }
+  }
+}
+
 export function shouldIgnoreMarqueePointerTarget(target: EventTarget | null): boolean {
   if (
     target == null ||
