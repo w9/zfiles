@@ -148,6 +148,36 @@ export default function VirtualListing({
   const { dropHighlightPath, dragFadePathSet, isValidDropDest } =
     useExplorerDndUi();
   const cutPathSet = useMemo(() => new Set(cutPaths), [cutPaths]);
+
+  // Stable identities for row memo: parent often passes fresh function props.
+  const onInlineCommitRef = useRef(onInlineCommit);
+  const onInlineCancelRef = useRef(onInlineCancel);
+  const onEntryPointerDownRef = useRef(onEntryPointerDown);
+  const shouldSkipDoubleClickActivateRef = useRef(shouldSkipDoubleClickActivate);
+  onInlineCommitRef.current = onInlineCommit;
+  onInlineCancelRef.current = onInlineCancel;
+  onEntryPointerDownRef.current = onEntryPointerDown;
+  shouldSkipDoubleClickActivateRef.current = shouldSkipDoubleClickActivate;
+
+  const stableOnInlineCommit = useCallback((path: string, name: string) => {
+    onInlineCommitRef.current?.(path, name);
+  }, []);
+  const stableOnInlineCancel = useCallback(
+    (path: string, initialName: string) => {
+      onInlineCancelRef.current?.(path, initialName);
+    },
+    [],
+  );
+  const stableOnEntryPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLElement>, path: string) => {
+      onEntryPointerDownRef.current?.(event, path);
+    },
+    [],
+  );
+  const stableShouldSkipDoubleClickActivate = useCallback(
+    () => shouldSkipDoubleClickActivateRef.current?.() ?? false,
+    [],
+  );
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -366,10 +396,10 @@ export default function VirtualListing({
                 entryDragEnabled={entryDragEnabled}
                 renameCommittingPath={renameCommittingPath}
                 showRenameBusyVisual={showRenameBusyVisual}
-                onInlineCommit={onInlineCommit}
-                onInlineCancel={onInlineCancel}
-                onEntryPointerDown={onEntryPointerDown}
-                shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
+                onInlineCommit={stableOnInlineCommit}
+                onInlineCancel={stableOnInlineCancel}
+                onEntryPointerDown={stableOnEntryPointerDown}
+                shouldSkipDoubleClickActivate={stableShouldSkipDoubleClickActivate}
                 columnLabels={columnLabels}
                 iconTheme={iconTheme}
               />

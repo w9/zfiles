@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
 import { FileIcon } from "@/FileIcon";
@@ -35,7 +35,7 @@ type EntryMediaPreviewProps = {
   surface?: EntryMediaPreviewSurface;
 };
 
-export default function EntryMediaPreview({
+function EntryMediaPreview({
   path,
   name,
   isDir,
@@ -160,3 +160,5 @@ export default function EntryMediaPreview({
     </div>
   );
 }
+
+export default memo(EntryMediaPreview);

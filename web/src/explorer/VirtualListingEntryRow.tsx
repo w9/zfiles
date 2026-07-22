@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { flexRender, type Row } from "@tanstack/react-table";
 
 import EntryMediaPreview from "@/EntryMediaPreview";
@@ -42,31 +42,7 @@ const LISTING_ROW_DROP_TARGET_CLASS =
 const LISTING_ROW_DROP_CANDIDATE_CLASS =
   "ring-2 ring-inset ring-primary/25";
 
-export function VirtualListingEntryRow({
-  row,
-  itemIndex,
-  itemStart,
-  itemSize,
-  columnGridTemplate,
-  isSelected,
-  isFocused,
-  isGestureHighlighted,
-  isGestureInset,
-  isCut,
-  isDragFaded,
-  dropHighlight,
-  dropCandidate,
-  isEditing,
-  entryDragEnabled,
-  renameCommittingPath,
-  showRenameBusyVisual,
-  onInlineCommit,
-  onInlineCancel,
-  onEntryPointerDown,
-  shouldSkipDoubleClickActivate,
-  columnLabels,
-  iconTheme,
-}: {
+type VirtualListingEntryRowProps = {
   row: Row<ListingEntry>;
   itemIndex: number;
   itemStart: number;
@@ -93,7 +69,62 @@ export function VirtualListingEntryRow({
   shouldSkipDoubleClickActivate?: () => boolean;
   columnLabels: ListingColumnLabels;
   iconTheme: FileIconTheme;
-}) {
+};
+
+function virtualListingEntryRowPropsAreEqual(
+  prev: VirtualListingEntryRowProps,
+  next: VirtualListingEntryRowProps,
+): boolean {
+  // Callbacks are intentionally ignored: VirtualListing passes ref-stable wrappers.
+  return (
+    prev.row.original.key === next.row.original.key &&
+    prev.row.original === next.row.original &&
+    prev.itemIndex === next.itemIndex &&
+    prev.itemStart === next.itemStart &&
+    prev.itemSize === next.itemSize &&
+    prev.columnGridTemplate === next.columnGridTemplate &&
+    prev.isSelected === next.isSelected &&
+    prev.isFocused === next.isFocused &&
+    prev.isGestureHighlighted === next.isGestureHighlighted &&
+    prev.isGestureInset === next.isGestureInset &&
+    prev.isCut === next.isCut &&
+    prev.isDragFaded === next.isDragFaded &&
+    prev.dropHighlight === next.dropHighlight &&
+    prev.dropCandidate === next.dropCandidate &&
+    prev.isEditing === next.isEditing &&
+    prev.entryDragEnabled === next.entryDragEnabled &&
+    prev.renameCommittingPath === next.renameCommittingPath &&
+    prev.showRenameBusyVisual === next.showRenameBusyVisual &&
+    prev.columnLabels === next.columnLabels &&
+    prev.iconTheme === next.iconTheme
+  );
+}
+
+function VirtualListingEntryRowComponent({
+  row,
+  itemIndex,
+  itemStart,
+  itemSize,
+  columnGridTemplate,
+  isSelected,
+  isFocused,
+  isGestureHighlighted,
+  isGestureInset,
+  isCut,
+  isDragFaded,
+  dropHighlight,
+  dropCandidate,
+  isEditing,
+  entryDragEnabled,
+  renameCommittingPath,
+  showRenameBusyVisual,
+  onInlineCommit,
+  onInlineCancel,
+  onEntryPointerDown,
+  shouldSkipDoubleClickActivate,
+  columnLabels,
+  iconTheme,
+}: VirtualListingEntryRowProps) {
   const entry = row.original;
   const { enabled: mediaPreviewsEnabled } = useGridImagePreviews();
   const dimmed = shouldDimDotEntry(entry.name, entry.key);
@@ -242,3 +273,8 @@ export function VirtualListingEntryRow({
     </ExplorerEntryDragSource>
   );
 }
+
+export const VirtualListingEntryRow = memo(
+  VirtualListingEntryRowComponent,
+  virtualListingEntryRowPropsAreEqual,
+);

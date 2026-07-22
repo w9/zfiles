@@ -1329,6 +1329,24 @@ export default function ExplorerApp() {
     [],
   );
 
+  const handleInlineCommit = useCallback(
+    (path: string, name: string) => {
+      void fileOps.commitRename(path, name).then((ok) => {
+        if (ok) {
+          fileOps.setInlineEditPath(null);
+        }
+      });
+    },
+    [fileOps.commitRename, fileOps.setInlineEditPath],
+  );
+
+  const handleInlineCancel = useCallback(
+    (path: string, initialName: string) => {
+      void fileOps.cancelInlineEdit(path, initialName);
+    },
+    [fileOps.cancelInlineEdit],
+  );
+
   useEffect(() => {
     listingEntriesRef.current = activeListingEntries;
     const path = selectedPathRef.current;
@@ -2313,16 +2331,8 @@ export default function ExplorerApp() {
                 onResizeActiveChange={setGridResizeActive}
                 onCardSizeChange={handleCardSizeChange}
                 onResetCardSize={handleResetGridCardSize}
-                onInlineCommit={(path, name) => {
-                  void fileOps.commitRename(path, name).then((ok) => {
-                    if (ok) {
-                      fileOps.setInlineEditPath(null);
-                    }
-                  });
-                }}
-                onInlineCancel={(path, initialName) => {
-                  void fileOps.cancelInlineEdit(path, initialName);
-                }}
+                onInlineCommit={handleInlineCommit}
+                onInlineCancel={handleInlineCancel}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
@@ -2347,16 +2357,8 @@ export default function ExplorerApp() {
                 entryDragEnabled={entryDragEnabled}
                 marqueeActive={marqueeSelect.isActive}
                 shouldSkipDoubleClickActivate={shouldSkipDoubleClickActivate}
-                onInlineCommit={(path, name) => {
-                  void fileOps.commitRename(path, name).then((ok) => {
-                    if (ok) {
-                      fileOps.setInlineEditPath(null);
-                    }
-                  });
-                }}
-                onInlineCancel={(path, initialName) => {
-                  void fileOps.cancelInlineEdit(path, initialName);
-                }}
+                onInlineCommit={handleInlineCommit}
+                onInlineCancel={handleInlineCancel}
                 ariaLabel={t("listing.label")}
                 iconTheme={resolvedTheme}
                 className="h-full rounded-none border-0 shadow-none"
