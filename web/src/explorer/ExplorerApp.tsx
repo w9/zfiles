@@ -555,6 +555,8 @@ export default function ExplorerApp() {
     [multipartSessions, tusSessions],
   );
 
+  const inlineEditPathRef = useRef<string | null>(null);
+
   const handleKernelEvent = useCallback(
     (event: BackendEvent) => {
       switch (event.type) {
@@ -564,7 +566,9 @@ export default function ExplorerApp() {
           break;
         case "filesystem_changed": {
           if (
-            !shouldRefreshListing(event.path, currentPathRef.current)
+            !shouldRefreshListing(event.path, currentPathRef.current) ||
+            // Reloading mid-edit would tear down the inline editor and discard the draft.
+            inlineEditPathRef.current != null
           ) {
             break;
           }
@@ -706,6 +710,7 @@ export default function ExplorerApp() {
     t,
     runWithPending,
   });
+  inlineEditPathRef.current = fileOps.inlineEditPath;
 
   const runBulkAction = useCallback(
     async (actionId: string, paths: string[]) => {

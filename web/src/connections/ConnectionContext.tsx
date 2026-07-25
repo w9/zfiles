@@ -28,6 +28,7 @@ import type {
   S3ConnectionSettings,
   S3Credentials,
 } from "@/cloud/types";
+import { defaultStorageManager, readStorageEstimate } from "@/browserfs/quota";
 import { explorerHistoryHrefForPath } from "@/explorer/explorerUrl";
 import { useTranslation } from "@/i18n";
 import ConnectionDialog, { connectionDisplayName } from "./ConnectionDialog";
@@ -208,6 +209,7 @@ export function ConnectionProvider({
   const [activating, setActivating] = useState(false);
   const [authExpired, setAuthExpired] = useState(false);
   const [frozen, setFrozen] = useState(false);
+  const [browserUsageBytes, setBrowserUsageBytes] = useState<number | null>(null);
   const activeRef = useRef(active);
   const ephemeralRef = useRef(ephemeral);
   ephemeralRef.current = ephemeral;
@@ -441,6 +443,22 @@ export function ConnectionProvider({
     [activate, connectFromUrl, failFromBoot, registry, t],
   );
 
+  // Origin-wide usage, so it works whether or not Browser storage is the active volume.
+  useEffect(() => {
+    if (dialog?.view !== "list") {
+      return;
+    }
+    let cancelled = false;
+    void readStorageEstimate(defaultStorageManager()).then((estimate) => {
+      if (!cancelled) {
+        setBrowserUsageBytes(estimate?.usage ?? null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dialog]);
+
   useEffect(() => {
     if (!registry || bootResolved.current) {
       return;
@@ -596,6 +614,7 @@ export function ConnectionProvider({
           activeId={active.record.id}
           manageable={registry != null}
           busy={activating}
+          browserUsageBytes={browserUsageBytes}
           hasStoredCredentials={(id) => registry?.hasStoredCredentials(id) ?? false}
           onActivate={activateFromDialog}
           onCreate={() => setDialog({ view: "editor", mode: "create" })}

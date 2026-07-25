@@ -24,12 +24,16 @@ import type {
   UploadProgress,
 } from "./types";
 
+/** Just enough of `window` to hear about focus; injectable so tests need no DOM. */
+export type FocusTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
 export type BrowserBackendOptions = BrowserFsStoreOptions & {
   store?: BrowserFsStore;
   createObjectURL?: (blob: Blob) => string;
   revokeObjectURL?: (url: string) => void;
   storage?: StorageManagerLike;
   maxCachedUrls?: number;
+  focusTarget?: FocusTarget | null;
 };
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -66,11 +70,21 @@ export class BrowserBackend implements ExplorerBackend {
   private readonly urls: BlobUrlCache;
   private readonly storage: StorageManagerLike | undefined;
   private readonly listeners = new Set<(event: BackendEvent) => void>();
+  private readonly focusTarget: FocusTarget | null;
+  private onFocus: (() => void) | null = null;
+  private lastListedPath = "";
   private persistRequested = false;
 
   constructor(options: BrowserBackendOptions = {}) {
-    const { store, createObjectURL, revokeObjectURL, storage, maxCachedUrls, ...storeOptions } =
-      options;
+    const {
+      store,
+      createObjectURL,
+      revokeObjectURL,
+      storage,
+      maxCachedUrls,
+      focusTarget,
+      ...storeOptions
+    } = options;
     this.store = store ?? new BrowserFsStore(storeOptions);
     this.ownsStore = store == null;
     this.urls = new BlobUrlCache({
@@ -79,10 +93,13 @@ export class BrowserBackend implements ExplorerBackend {
       maxEntries: maxCachedUrls,
     });
     this.storage = storage ?? defaultStorageManager();
+    this.focusTarget =
+      focusTarget === undefined ? (typeof window === "undefined" ? null : window) : focusTarget;
   }
 
   async list(path: string, _cursor?: string): Promise<ListResult> {
     const nodes = await this.store.listChildren(path);
+    this.lastListedPath = normalizePath(path);
     return { entries: nodes.map(toFileEntry).sort(compareEntries) };
   }
 
@@ -219,20 +236,43 @@ export class BrowserBackend implements ExplorerBackend {
     onStatus?: (status: BackendStatus) => void,
   ): () => void {
     this.listeners.add(onEvent);
+    this.watchFocus();
     onStatus?.("connecting");
     onEvent({ type: "connected", version: "browser", read_only: false });
     onStatus?.("connected");
     return () => {
       this.listeners.delete(onEvent);
+      if (this.listeners.size === 0) {
+        this.unwatchFocus();
+      }
     };
   }
 
   dispose(): void {
+    this.unwatchFocus();
     this.urls.clear();
     this.listeners.clear();
     if (this.ownsStore) {
       this.store.close();
     }
+  }
+
+  /** Every tab on the origin shares one database, so re-read the listing on focus. */
+  private watchFocus(): void {
+    if (!this.focusTarget || this.onFocus) {
+      return;
+    }
+    this.onFocus = () => {
+      this.notifyChanged([this.lastListedPath]);
+    };
+    this.focusTarget.addEventListener("focus", this.onFocus);
+  }
+
+  private unwatchFocus(): void {
+    if (this.focusTarget && this.onFocus) {
+      this.focusTarget.removeEventListener("focus", this.onFocus);
+    }
+    this.onFocus = null;
   }
 
   private notifyChanged(paths: Iterable<string>): void {

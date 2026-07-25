@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 ## Highlights
 
 - **Single static binary (local mode)** — React UI embedded via `rust-embed`; drop a musl build on Linux and run.
-- **Same explorer, two backends** — Shared React code talks to a local kernel or directly to S3/R2 through one `ExplorerBackend` interface.
+- **Same explorer, three backends** — Shared React code talks to a local kernel, the browser's own IndexedDB storage, or directly to S3/R2 through one `ExplorerBackend` interface.
 - **Instant cold start** — No directory scan, index build, or cache warm-up on startup; time-to-first-byte stays under the design SLA regardless of tree size.
 - **Wire-speed transfers** — Linux downloads use `sendfile(2)` on the hot path; uploads use tus with atomic rename completion; cloud mode uses S3 multipart and Range GET.
 - **Resumable everywhere that matters** — HTTP Range on download, tus PATCH on upload, CLI `zfiles upload --resume` for pushing files to a remote instance.
@@ -19,7 +19,7 @@ https://github.com/user-attachments/assets/232764c6-a090-4565-b696-3aea36209732
 - **Fullscreen preview** — Dimmed overlay for images and other browser-native media: zoom, drag/pinch pan, metadata; with a multi-file selection, prev/next and arrow keys step through the set; Space opens preview in grid view.
 - **Public LAN access built in** — Bind `0.0.0.0`, auto-generate a token, print a public URL and terminal QR code for phones and laptops on the network.
 - **Live refresh** — Filesystem watch pushes `filesystem_changed` over WebSocket; the current listing updates in place.
-- **Cloud mode without a zfiles server** — Static SPA only; temporary bucket credentials stay in `sessionStorage` and go straight to AWS/Cloudflare.
+- **Cloud mode without a zfiles server** — Static SPA only. It opens into browser storage with nothing to configure; buckets are connections you attach, and their keys are only saved if you ask.
 
 ## Install
 
@@ -75,7 +75,7 @@ Open the URL from the startup banner (local mode opens your browser by default).
 
 ## Dual-mode architecture
 
-Local mode ships as one process: axum serves REST, tus upload, WebSocket events, and the embedded SPA from a single musl-friendly binary. Cloud mode is the same React explorer compiled with `S3Backend` instead of `KernelBackend` — no kernel in the request path for object storage. Credentials entered in the connect dialog are validated with `HeadBucket`, stored in tab-scoped `sessionStorage`, and sent only to the cloud provider’s API. The UI, action system, selection model, and preview pane are shared; mode differences live behind the backend trait and build entry points (`main-local.tsx` vs `main-cloud.tsx`).
+Local mode ships as one process: axum serves REST, tus upload, WebSocket events, and the embedded SPA from a single musl-friendly binary. Cloud mode is the same React explorer with no kernel in the request path: it mounts `BrowserBackend` (IndexedDB on your device) on first paint and swaps in `S3Backend` when you activate a bucket connection. Credentials are validated with `HeadBucket`, kept in memory unless you tick **Remember keys on this device**, and sent only to the cloud provider’s API. The UI, action system, selection model, and preview pane are shared; mode differences live behind the backend interface and build entry points (`main-local.tsx` vs `main-cloud.tsx`).
 
 Because a public HTTPS page cannot reliably call `http://127.0.0.1:<port>` (mixed content and Private Network Access), local filesystem mode always opens the embedded app on localhost. Cloud mode is meant for self-hosted static deploys or a future hosted origin — not as a remote control panel for your laptop’s disk.
 
@@ -103,7 +103,7 @@ Non-loopback binds reject symlinks that escape the serve root by default (`follo
 
 **Why no plugins?** The previous plugin supervisor and JSON-RPC model were removed to keep the kernel small and the security surface predictable. Built-in file actions (`delete`, `mkdir`, `rename`, `copy`, `move`) cover explorer workflows; preview stays client-side for common media types.
 
-**Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want public LAN access, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser.
+**Local mode or cloud mode?** Use the binary when the files live on a machine you control and you want public LAN access, tus upload, or a single artifact to copy around. Use the cloud SPA when objects already live in S3 or R2 and you only need temporary credentials in the browser — or when you just want a scratch filesystem in the browser with nothing to install.
 
 **Is it safe to expose on my LAN?** Use `--token` on any non-loopback bind, prefer `--read-only` when writes are not needed, and treat the printed URL like a password. There is no built-in TLS on the kernel listener yet — terminate TLS at a reverse proxy if you expose beyond a trusted network.
 
@@ -121,7 +121,7 @@ Non-loopback binds reject symlinks that escape the serve root by default (`follo
 | Dual-mode migration and module layout | [design/dual_mode_refactor.md](design/dual_mode_refactor.md) |
 | XDG config, tus spools, per-folder state | [design/config_and_cache.md](design/config_and_cache.md) |
 | Action system and keyboard commands | [design/action_system.md](design/action_system.md) |
-| Cloud connect flow, URL params, credentials | [docs/cloud-connect.md](docs/cloud-connect.md) |
+| Browser storage, connections, URL params, credentials | [docs/cloud-connect.md](docs/cloud-connect.md) |
 | Bucket CORS for the cloud SPA | [docs/cors.md](docs/cors.md) |
 
 ### Kernel HTTP API (local mode)

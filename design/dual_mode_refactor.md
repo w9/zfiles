@@ -17,11 +17,11 @@ Plugins and filename search are **removed from the project**, not deferred. They
 
 ## Mission
 
-1. **One explorer, two backends.** Extract the React UI into a reusable library with a stable `ExplorerBackend` interface. Local mode uses `KernelBackend` (today's REST + WebSocket contract, slimmed). Cloud mode uses `S3Backend` (AWS SDK v3 in the browser against S3-compatible APIs).
+1. **One explorer, three backends.** Extract the React UI into a reusable library with a stable `ExplorerBackend` interface. Local mode uses `KernelBackend` (today's REST + WebSocket contract, slimmed). The cloud build lands on `BrowserBackend` (IndexedDB on the visitor's device) and switches to `S3Backend` (AWS SDK v3 in the browser against S3-compatible APIs) when a bucket connection is activated.
 
 2. **Local mode stays embedded.** The CLI continues to ship a single static binary with the frontend baked in via `rust-embed`. `zfiles ~/projects` opens `http://127.0.0.1:<port>/` — same origin, no cross-origin calls to `zfiles.com`, no dependency on the public website for local use.
 
-3. **Cloud mode is a static SPA tool.** Like other open-source browser utilities (JSON formatters, password generators), the hosted site runs entirely in the client. Users paste **temporary** credentials into a connect dialog, or supply them via URL params for one-click deep links. Credential URL params are stripped from the address bar immediately after read; they may still appear in static-host access logs on the initial request. Credentials live in `sessionStorage` for the tab lifetime.
+3. **Cloud mode is a static SPA tool.** Like other open-source browser utilities (JSON formatters, password generators), the hosted site runs entirely in the client — and it is useful before any bucket exists, because Browser storage is the landing volume. Buckets are saved connections; credentials are entered in the UI or supplied in a link's fragment, and persisting them is an explicit per-connection opt-in.
 
 4. **Shrink the kernel.** Remove the plugin supervisor, JSON-RPC subprocess protocol, plugin routes, search endpoint, thumbnail/preview plugin pipeline, and bundled-plugin build. The kernel becomes a focused local HTTP server: list, stat, read (Range), write (tus upload), delete, auth, filesystem watch, and static asset serving.
 
@@ -38,18 +38,21 @@ Plugins and filename search are **removed from the project**, not deferred. They
 | C1 | **Single shared UI library.** All explorer behavior (listing, breadcrumb, selection, upload, preview shell, actions, i18n, theming) lives in one package consumed by both deployment modes. |
 | C2 | **No UI divergence.** Local and cloud modes differ only by backend adapter and boot config — not by parallel component trees or `#ifdef`-style forks. |
 | C3 | **Local mode: embedded binary.** SPA assets ship inside the Rust binary; the CLI serves them on localhost. Do not require `zfiles.com` or network access for local browsing. |
-| C4 | **Cloud mode: no backend for secrets.** The hosted site is static files only. Bucket credentials are pasted in the browser and stored in `sessionStorage`. No analytics, error reporters, or third-party scripts may capture credential fields. |
-| C5 | **URL params pre-fill connect.** Allowed: provider (`aws` / `r2`), bucket, endpoint, region, prefix, read-only flag, access key ID, secret access key, optional session token (camelCase or snake_case aliases). Credential params are stripped from the URL after read; use short-lived scoped credentials only. |
+| C4 | **Cloud mode: no backend for secrets.** The hosted site is static files only. Bucket credentials are entered in the browser; they are kept in memory unless the user opts into remembering them on that device. No analytics, error reporters, or third-party scripts may capture credential fields. |
+| C5 | **URLs declare intent.** `connect=saved:<name> \| new \| ask` selects what to open, alongside provider (`aws` / `r2`), bucket, endpoint, region, prefix, and the read-only flag. Credentials belong in the fragment (legacy query params still accepted); both are stripped from the URL after read. Use short-lived scoped credentials only. |
+| C9 | **The cloud build works offline on first paint.** No credentials, bucket, or network round-trip may stand between opening the page and browsing Browser storage. |
 | C6 | **Remove plugins.** Delete the plugin supervisor, manifests, bundled plugins, plugin routes, viewer/thumbnail/search/action plugin integration, and plugin-related CLI subcommands. |
 | C7 | **Remove search.** Delete the search box, `/api/search`, searcher plugin support, and `zfiles search` CLI. |
 | C8 | **Do not break local-first SLAs where they still apply.** Local mode retains instant cold start, resumable tus upload, and Range download for the served directory. |
 
 ### Security and privacy (cloud mode)
 
-- Credentials are entered via a connect dialog, validated with a minimal harmless API call (`HeadBucket` or `ListObjectsV2` with `MaxKeys=1`), then held in memory / `sessionStorage`.
-- A prominent **Disconnect** control clears credentials and resets application state.
-- Optional `localStorage` persistence is limited to **non-secret** preferences (last provider, bucket name, endpoint, theme, locale) — never keys or tokens.
-- Privacy copy on the connect screen: credentials stay in the browser; the static host never receives them.
+- Credentials are entered in the connection form, validated with a minimal harmless API call (`HeadBucket`), then held in memory for the tab.
+- **Remember keys on this device** is off by default. Only when it is on are keys written to `localStorage`, and the form states the consequence.
+- **Forget saved keys** and **delete connection** clear stored keys; a rejected request drops the keys it used without silently retrying them.
+- Activating **Browser storage** replaces the old Disconnect control: it unmounts the bucket and needs no credentials of its own.
+- `localStorage` also holds non-secret connection settings (name, provider, bucket, endpoint, region, prefix, read-only) and preferences like theme and locale.
+- Privacy copy stays on the form: credentials go to the bucket, never to the static host.
 
 ### Security and privacy (local mode)
 
@@ -91,18 +94,20 @@ Plugins and filename search are **removed from the project**, not deferred. They
 │  action system (built-ins only) · i18n · theming                │
 └────────────────────────────┬────────────────────────────────────┘
                              │ ExplorerBackend
-              ┌──────────────┴──────────────┐
-              ▼                             ▼
-   ┌─────────────────────┐       ┌─────────────────────┐
-   │   KernelBackend     │       │     S3Backend       │
-   │ fetch /api/* + ws   │       │ @aws-sdk/client-s3  │
-   └──────────┬──────────┘       └──────────┬──────────┘
-              ▼                             ▼
-   ┌─────────────────────┐       ┌─────────────────────┐
-   │  zfiles kernel      │       │  S3 / R2 API        │
-   │  (embedded SPA)     │       │  (direct from browser)│
-   └─────────────────────┘       └─────────────────────┘
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+┌───────────────┐   ┌─────────────────┐   ┌───────────────────┐
+│ KernelBackend │   │ BrowserBackend  │   │    S3Backend      │
+│ /api/* + ws   │   │ IndexedDB       │   │ @aws-sdk/client-s3│
+└───────┬───────┘   └────────┬────────┘   └─────────┬─────────┘
+        ▼                    ▼                      ▼
+┌───────────────┐   ┌─────────────────┐   ┌───────────────────┐
+│ zfiles kernel │   │ Browser storage │   │   S3 / R2 API     │
+│ (embedded UI) │   │ (this device)   │   │ (from the browser)│
+└───────────────┘   └─────────────────┘   └───────────────────┘
 ```
+
+`ConnectionProvider` owns which of these is mounted; the connection registry decides what is available to mount.
 
 ### `ExplorerBackend` (contract sketch)
 
@@ -110,22 +115,20 @@ The shared library depends on this interface — not on `/api/*` paths or AWS SD
 
 ```ts
 interface ExplorerBackend {
-  /** Provider label for status UI */
-  readonly mode: "local" | "s3";
-
-  connect?(): Promise<void>;           // cloud: validate creds; local: no-op or health check
-  disconnect?(): Promise<void>;       // cloud: clear session creds
+  /** Which storage this adapter talks to; drives status UI and mode-specific extras. */
+  readonly mode: "local" | "s3" | "browser";
 
   list(path: string, cursor?: string): Promise<ListResult>;
   stat(path: string): Promise<FileStat>;
 
   downloadUrl(path: string): string | Promise<string>;
-  preview?(path: string): Promise<PreviewResult | null>;
 
   upload(file: File, destPath: string, onProgress?: UploadProgressFn): Promise<void>;
-  delete(paths: string[]): Promise<void>;
+  /** file.delete, file.mkdir, file.rename, file.copy, file.move */
+  runAction(params: RunActionParams): Promise<void>;
+  fetchHealth(): Promise<HealthInfo | null>;
 
-  subscribe?(handler: BackendEventHandler): () => void;
+  subscribe(handler: BackendEventHandler): () => void;
 }
 
 interface ListResult {
@@ -247,10 +250,18 @@ Work proceeds in ordered phases. Each phase should leave the tree in a buildable
 
 - [x] Add `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` to the web package.
 - [x] Implement `S3Backend` with paginated listing, multipart upload, delete, HeadObject stat, presigned or direct GetObject download.
-- [x] Build connect dialog: provider preset (AWS / R2), endpoint, region, bucket, credential fields, test connection, disconnect.
+- [x] Build the connection form: provider preset (AWS / R2), endpoint, region, bucket, credential fields, test connection.
 - [x] Parse boot params from URL (`provider`, `bucket`, `prefix`, `endpoint`, `region`, `readonly`, optional credentials).
-- [x] Store credentials in `sessionStorage` after successful connect.
 - [x] Add boot mode detection: local (default when served from kernel) vs cloud (static host build flag or empty `/api/health`).
+
+### Phase 9 — Browser storage and the connection registry
+
+- [x] Implement `BrowserBackend` over IndexedDB (metadata and blobs in separate stores, revoking object URLs, quota handling) and add `"browser"` to `BackendMode`.
+- [x] Add the `localStorage` connection registry: saved records, last active connection, opt-in key storage, and migration off the old `sessionStorage` session.
+- [x] Boot the cloud build into Browser storage, swap backends at runtime, and remount the explorer per connection.
+- [x] Replace the connect gate with the connection dialog behind the status-bar pill, plus `connection.switch` and `connection.create`; remove `cloud.disconnect`.
+- [x] Read the connection intent from the URL (`connect=saved:<name> | new | ask`), take credentials from the fragment, and emit that shape from Share URL.
+- [x] Handle failures: a dialog offering Retry or another connection, and a frozen explorer that keeps its last listing while storage and navigation actions are disabled.
 
 ### Phase 6 — Package layout and dual build targets
 
@@ -287,8 +298,11 @@ Tests prove the refactor succeeded. The bar is: **both modes work end-to-end; no
 |------|--------------|
 | `KernelBackend` | Maps list/stat/upload/delete to correct `/api/*` calls; parses kernel JSON shapes |
 | `S3Backend` | Prefix/delimiter listing logic, cursor pagination merge, path ↔ key conversion, error mapping |
-| Boot config | URL param parsing for connection + credential fields; credential params stripped from URL after read |
-| Credential storage | Connect writes to `sessionStorage`; disconnect clears it; nothing written to `localStorage` |
+| `BrowserBackend` | Directory tree over `fake-indexeddb`: mkdir/rename/copy/move/delete semantics, blob URL revocation, quota errors |
+| Boot config | Connection intent (`saved:` / `new` / `ask`), fragment credentials, and stripping both fragment and legacy query credentials |
+| Share links | Generated links round-trip back through the boot parser |
+| Connection registry | Unique names, opt-in key persistence, forget/drop semantics, remembered active connection, migration off `sessionStorage` |
+| Frozen connection | Storage and navigation actions blocked; connection, appearance, and settings actions still allowed |
 | Preview | Image path detection routes to client preview; unknown extension shows fallback |
 | Action system | Built-in actions invoke backend methods; no `searcher.ready` / `plugin.*` context keys remain |
 
@@ -318,11 +332,15 @@ Add a small **backend conformance suite** in TypeScript: a table of scenarios (`
 | Delete file, listing refreshes | Local |
 | Search box absent; `/api/search` not called | Local |
 | No plugin viewer/thumbnail network requests | Local |
-| Connect dialog → enter mock creds → list bucket | Cloud (mock S3 with `@aws-sdk/client-mock` or local MinIO in CI) |
+| Browser storage: create a folder, reload, it is still there | Cloud (built bundle, no bucket needed) |
+| Status-bar pill opens the picker; create form shows name and remember-keys | Cloud |
+| `connect=ask` opens the picker; `connect=new` without keys prefills the form | Cloud |
+| `connect=saved:` with an unknown name reports it and stays on Browser storage | Cloud |
+| Failed boot connection offers Retry without Cancel; fragment credentials are stripped | Cloud |
+| Connect with mock creds → list bucket | Cloud (mock S3 with `@aws-sdk/client-mock` or local MinIO in CI) |
 | Pagination: folder with >1000 keys shows load-more or pages | Cloud |
-| Disconnect clears session; reconnect required after reload | Cloud |
 
-Local E2E continues to drive a real `zfiles` process. Cloud E2E uses a static build against MinIO or mocked fetch — document which in CI config.
+Local E2E continues to drive a real `zfiles` process. Cloud E2E serves the built bundle with `vite preview`; scenarios that need bucket traffic use MinIO or mocked fetch — document which in CI config.
 
 ### Manual acceptance checklist
 
@@ -335,14 +353,16 @@ Before calling the refactor complete, a human (or scripted browser walkthrough) 
 - [ ] tus upload resumes after simulated disconnect.
 
 **Cloud mode**
-- [ ] Static build hosted locally (`pnpm preview`) connects to R2 or MinIO with pasted temp creds.
+- [ ] Static build hosted locally (`pnpm preview:cloud`) opens straight into Browser storage with no credentials.
+- [ ] Files created in Browser storage survive a reload and disappear when site data is cleared.
+- [ ] Connecting to R2 or MinIO with temporary keys works, and the keys are only remembered when the box is ticked.
 - [ ] CORS misconfiguration shows a clear, actionable error pointing at documentation.
-- [ ] URL with `?bucket=foo&prefix=bar/` pre-fills connect form; credential params auto-connect when bucket + keys are present.
-- [ ] Reload after connect requires re-paste (sessionStorage) or re-connect flow.
+- [ ] `?connect=new&bucket=foo` prefills the form; adding fragment credentials connects directly and clears them from the address bar.
+- [ ] Reload restores the last connection when its keys are remembered, and otherwise lands in Browser storage.
 
 **Both modes**
 - [ ] Same listing, breadcrumb, and keyboard navigation behavior.
-- [ ] English and zh-CN strings present on connect screen and explorer chrome.
+- [ ] English and zh-CN strings present on the connection dialogs and explorer chrome.
 - [ ] No remaining references to plugins or search in UI.
 
 ### Success metrics
@@ -377,7 +397,9 @@ Defaults leanings noted for implementation cycles:
 | Text file preview in local mode | Omit in v1 of refactor; metadata + download only |
 | Local listing pagination | Defer unless large-directory fixture regresses |
 | MinIO in CI for cloud E2E | Use `@smithy/node-http-handler` mock or MinIO service container |
-| `design/design.md` rewrite | Separate doc pass after code stabilizes; this document is authoritative until then |
+| `design/design.md` rewrite | Done: `design.md` now describes the three-backend architecture and the connection registry |
+| Copy between Browser storage and a bucket | Deferred; volumes are switched, not cross-copied |
+| Multiple simultaneous bucket connections | Deferred; exactly one connection is active at a time |
 
 ---
 

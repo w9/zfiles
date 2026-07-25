@@ -2,14 +2,14 @@
 
 ## 1. Overview
 
-zfiles is a **dual-mode file explorer**: one shared React UI that browses files either on the **local filesystem** (via a Rust CLI) or in **S3-compatible object storage** (S3, Cloudflare R2) directly from the browser.
+zfiles is a **dual-mode file explorer**: one shared React UI that browses files on the **local filesystem** (via a Rust CLI), in the **browser's own storage**, or in **S3-compatible object storage** (S3, Cloudflare R2) directly from the browser.
 
 | Mode | Delivery | Storage | Opens |
 |------|----------|---------|-------|
 | **Local** | Single static binary; SPA embedded via `rust-embed` | Directory on disk | `http://127.0.0.1:<port>/` |
-| **Cloud** | Static SPA hosted at `zfiles.com` (or self-hosted) | S3 / R2 bucket | Connect dialog → explorer |
+| **Cloud** | Static SPA hosted at `zfiles.com` (or self-hosted) | Browser storage (IndexedDB) by default; S3 / R2 once connected | Explorer immediately |
 
-Run `zfiles` in a directory and the UI opens with no indexing step, no startup delay, and no configuration. Local mode scales from small folders to directories with millions of entries. Cloud mode uses paginated object listing (S3 returns at most 1000 keys per call).
+Run `zfiles` in a directory and the UI opens with no indexing step, no startup delay, and no configuration. Local mode scales from small folders to directories with millions of entries. The cloud build opens a working explorer with no credentials at all, backed by **Browser storage**; attaching a bucket is a separate "Connect to…" step. Bucket listing is paginated (S3 returns at most 1000 keys per call).
 
 Files can be uploaded by dragging them into the browser. **Local mode:** uploads and downloads are resumable — tus on upload, HTTP Range on download. **Cloud mode:** S3 multipart upload and Range GET. Any HTTP client that supports range requests works against the local kernel, including `curl --continue-at`.
 
@@ -19,7 +19,7 @@ The UI is aimed at power users: keyboard shortcuts, multi-select, virtual-scroll
 
 **Local mode** ships as a single static binary. No daemon or config file is required to run (XDG paths are optional; see [config_and_cache.md](config_and_cache.md)).
 
-**Cloud mode** is a static site only — no zfiles server, no accounts. Users paste **temporary** bucket credentials into a connect dialog. Credentials stay in the browser (`sessionStorage`); the host never receives them. Setup: [docs/cloud-connect.md](../docs/cloud-connect.md), CORS: [docs/cors.md](../docs/cors.md).
+**Cloud mode** is a static site only — no zfiles server, no accounts. It lands in Browser storage, where files live in IndexedDB on the visitor's own device. Buckets are **connections** the user picks from the status-bar pill, the menu bar, or the command palette; their settings persist in `localStorage` while access keys are only saved when the user opts in per connection. The host never receives credentials either way. Setup: [docs/cloud-connect.md](../docs/cloud-connect.md), CORS: [docs/cors.md](../docs/cors.md).
 
 ### What we removed
 
@@ -33,11 +33,12 @@ Implementation phases and migration checklist: [dual_mode_refactor.md](dual_mode
 
 zfiles is engineered around these goals. Module boundaries and frontend/backend split follow from them.
 
-- **One explorer, two backends.** A shared frontend library talks to storage through an `ExplorerBackend` interface. Local mode uses `KernelBackend` (REST + WebSocket against the embedded kernel). Cloud mode uses `S3Backend` (AWS SDK v3 in the browser). The UI never forks by mode.
+- **One explorer, three backends.** A shared frontend library talks to storage through an `ExplorerBackend` interface. Local mode uses `KernelBackend` (REST + WebSocket against the embedded kernel). The cloud build starts on `BrowserBackend` (IndexedDB in the visitor's browser) and switches to `S3Backend` (AWS SDK v3 in the browser) when a bucket connection is activated. The UI never forks by mode.
+- **Nothing to configure before browsing (cloud).** The hosted SPA must render a usable explorer on first paint without credentials, network access to any bucket, or a setup screen.
 - **Always-instant cold start (local).** Under 100 ms from process spawn to first HTTP response, no matter how large the served directory is. Nothing in the startup path blocks on directory size or cache state.
 - **Saturate the wire (local).** Single-connection downloads and uploads hit gigabit Ethernet throughput where hardware allows. Both transfer paths resume from interruption (Range + tus).
 - **Small focused kernel (local).** The Rust binary serves filesystem primitives, auth, tus upload, static assets, and filesystem watch — not format interpretation, thumbnails, search, or extensibility hooks.
-- **Static cloud deployment.** The hosted SPA is static files only. Bucket credentials are user-supplied and ephemeral. URL params may pre-fill the connect form (including optional credential injection); credential params are stripped from the address bar immediately after read.
+- **Static cloud deployment.** The hosted SPA is static files only. Bucket credentials are user-supplied, and persisting them is an explicit per-connection opt-in. A link may declare its intent (`connect=saved:<name> | new | ask`) and carry credentials in the URL **fragment**, which is stripped from the address bar as soon as it is read.
 - **Single static binary (local).** One file, with the React frontend baked in. Drop it on a Linux machine and run it.
 - **Cross-platform forward compatibility (local kernel).** v1 ships Linux only, but filesystem operations go through an `Fs` trait so macOS and Windows ports don't rewrite the center.
 
@@ -95,14 +96,18 @@ Removing the plugin embed and supervisor reduces binary size; budget remains und
 
 ### Cloud static SPA
 
-The cloud build is the same frontend source with `VITE_BOOT_MODE=cloud` (or equivalent): no kernel API assumptions, `S3Backend` wired at boot, connect screen before explorer.
+The cloud build is the same frontend source with `VITE_BOOT_MODE=cloud` (or equivalent): no kernel API assumptions, `BrowserBackend` mounted at boot, and `S3Backend` swapped in when a connection is activated.
 
 Security model:
 
-- Credentials pasted in UI → validated with `HeadBucket` or minimal `ListObjectsV2` → stored in `sessionStorage`.
-- **Disconnect** clears credentials and state.
-- `localStorage` may persist non-secret preferences (provider, bucket name, endpoint, theme, locale) — never keys or tokens.
+- Credentials entered in the UI → validated with `HeadBucket` → held in memory for the tab.
+- **Remember keys on this device** is opt-in per connection and defaults to **off**. When it is off, keys never reach any storage and the user re-enters them once per session. When it is on, they are written to `localStorage` under a dedicated key, and the dialog says so.
+- Non-secret connection settings (name, provider, bucket, region, endpoint, prefix, read-only) always persist in `localStorage`, alongside preferences like theme and locale.
+- **Forget saved keys** (per connection) and **delete connection** both clear stored keys; a rejected request drops the keys it used without changing the remember preference.
+- Switching to Browser storage replaces the old Disconnect: no bucket stays mounted, and the browser volume needs no credentials.
 - No analytics or third-party scripts on pages that handle credentials.
+
+Because opt-in persistence writes keys to disk for that browser profile, the dialog frames it as a trade-off: convenient on a personal machine, wrong on a shared one. Short-lived scoped credentials remain the recommendation either way.
 
 The CLI **does not** open `zfiles.com` for local filesystem mode. A public HTTPS page cannot reliably call `http://127.0.0.1:<port>` (mixed content, Private Network Access). Local mode always opens localhost with the embedded SPA.
 
@@ -126,40 +131,49 @@ Unicode normalization differs by OS; the fixture corpus includes NFC, NFD, and m
 │  Listing · breadcrumb · upload UI · preview · actions · i18n  │
 └────────────────────────────┬────────────────────────────────────┘
                              │ ExplorerBackend
-              ┌──────────────┴──────────────┐
-              ▼                             ▼
-   ┌─────────────────────┐       ┌─────────────────────┐
-   │   KernelBackend     │       │     S3Backend       │
-   │ /api/* + WebSocket  │       │ AWS SDK in browser  │
-   └──────────┬──────────┘       └──────────┬──────────┘
-              ▼                             ▼
-   ┌─────────────────────┐       ┌─────────────────────┐
-   │  zfiles kernel      │       │  S3 / R2 API        │
-   │  (embedded SPA)     │       │                     │
-   └─────────────────────┘       └─────────────────────┘
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+┌───────────────┐   ┌─────────────────┐   ┌───────────────┐
+│ KernelBackend │   │ BrowserBackend  │   │   S3Backend   │
+│ /api/* + ws   │   │ IndexedDB       │   │ AWS SDK       │
+└───────┬───────┘   └────────┬────────┘   └───────┬───────┘
+        ▼                    ▼                    ▼
+┌───────────────┐   ┌─────────────────┐   ┌───────────────┐
+│ zfiles kernel │   │ Browser storage │   │  S3 / R2 API  │
+│ (embedded UI) │   │ (this device)   │   │               │
+└───────────────┘   └─────────────────┘   └───────────────┘
 ```
 
-UI components depend on `ExplorerBackend`, not on `/api/*` paths or AWS types directly. Boot configuration selects the adapter; there is no parallel component tree per mode.
+UI components depend on `ExplorerBackend`, not on `/api/*` paths, IndexedDB, or AWS types directly. The active connection selects the adapter at runtime; there is no parallel component tree per mode.
 
 ### `ExplorerBackend` contract
 
 ```ts
-interface ExplorerBackend {
-  readonly mode: "local" | "s3";
+type BackendMode = "local" | "s3" | "browser";
 
-  connect?(): Promise<void>;
-  disconnect?(): Promise<void>;
+interface ExplorerBackend {
+  readonly mode: BackendMode;
 
   list(path: string, cursor?: string): Promise<ListResult>;
   stat(path: string): Promise<FileStat>;
 
   downloadUrl(path: string): string | Promise<string>;
-  preview?(path: string): Promise<PreviewResult | null>;
 
-  upload(file: File, destPath: string, onProgress?: UploadProgressFn): Promise<void>;
-  delete(paths: string[]): Promise<void>;
+  upload(
+    file: File,
+    destPath: string,
+    onProgress?: (progress: UploadProgress) => void,
+    signal?: AbortSignal,
+    callbacks?: UploadCallbacks,
+    tusResume?: TusUploadResume,
+  ): Promise<void>;
 
-  subscribe?(handler: BackendEventHandler): () => void;
+  runAction(params: RunActionParams): Promise<void>;
+  fetchHealth(): Promise<HealthInfo | null>;
+  subscribe(
+    onEvent: (event: BackendEvent) => void,
+    onStatus?: (status: BackendStatus) => void,
+  ): () => void;
 }
 
 interface ListResult {
@@ -168,11 +182,19 @@ interface ListResult {
 }
 ```
 
-`FileEntry` shape is stable across modes: `name`, `path`, `is_dir`, `size`, `modified`. Cloud mode maps object keys to paths with `/` as the folder delimiter (`ListObjectsV2` + `Delimiter: "/"`). Listing is paginated in cloud mode; local `/api/list` may add pagination later for parity.
+Mutations go through `runAction` (`file.delete`, `file.mkdir`, `file.rename`, `file.copy`, `file.move`) so every backend implements the same action vocabulary the UI dispatches.
+
+`FileEntry` shape is stable across modes: `name`, `path`, `is_dir`, `size`, `modified`. Cloud mode maps object keys to paths with `/` as the folder delimiter (`ListObjectsV2` + `Delimiter: "/"`). Listing is paginated for buckets; local `/api/list` and browser storage return whole directories.
 
 **Local backend events:** `connected`, `filesystem_changed`, `upload_progress`.
 
-**Cloud backend events:** optional polling; no filesystem watch.
+**S3 backend events:** `connected` only; no filesystem watch.
+
+**Browser backend events:** `connected`, plus `filesystem_changed` after its own mutations and on window focus (IndexedDB is shared by every tab on the origin, and the last write wins).
+
+### Browser storage
+
+Browser storage is an IndexedDB filesystem in the visitor's browser: metadata records keyed by path in a `nodes` store indexed by parent, and file bytes as `Blob`s in a separate `blobs` store, so listings never read contents. `downloadUrl` hands out object URLs from an LRU cache that revokes them when the file changes, when an entry is evicted, or on teardown. Moves rewrite node paths and keep the stored blob; copies duplicate the bytes. The first write asks for `navigator.storage.persist()`, and `QuotaExceededError` surfaces as a translated "storage is full" message rather than a generic failure. Uploads write in one shot, so a paused browser upload restarts rather than resuming.
 
 ### Module structure (local kernel)
 
@@ -213,32 +235,39 @@ Removed: `/api/search`, `/api/plugins*`, `/api/thumbnail`, `/api/preview`, `/plu
 
 The React UI is compiled by Vite. **Local:** output embedded in the binary; dev mode may proxy to Vite HMR via the `dev-frontend` feature. **Cloud:** static build deployed to CDN or object storage.
 
-- **Backend injection.** `useExplorerBackend()` (or equivalent context) is the only path from components to storage.
+- **Backend injection.** `useExplorerBackend()` is the only path from components to storage. `ConnectionProvider` owns the active connection, builds its backend, and remounts the explorer subtree keyed by connection id, so switching volumes resets the path to that volume's root and drops the previous backend's resources.
 - **Preview.** Browser-native rendering in a fullscreen overlay: images (`<img>`: JPEG, PNG, WebP, GIF, AVIF, …), video (`<video>`: mp4, webm, mov, …), and audio (`<audio>`: mp3, flac, m4a, …), all fed by `downloadUrl` — no kernel transcoding. Double-click or Enter on a previewable file opens the overlay; non-previewable files fall back to download. With two or more files selected, prev/next (and arrow keys) step through the selection in listing order with wrap-around; zoom/pan apply to images only. Other types show a metadata panel + download link. Planned along the same path: PDF (`<iframe>`/`<embed>`), text/source (incl. HTML as source) in a size-capped `<pre>`, SVG, and sanitized Markdown. No dynamic plugin viewer imports.
 - **Actions.** Built-in actions only; see [action_system.md](action_system.md). No plugin action registration or `plugin.*` context keys.
 - **i18n.** All user-visible strings ship in 14 locales: English (`en`), Simplified Chinese (`zh-CN`), Traditional Chinese (`zh-TW`), Spanish (`es`), French (`fr`), Italian (`it`), Portuguese (`pt`), Russian (`ru`), German (`de`), Japanese (`ja`), Korean (`ko`), Turkish (`tr`), Indonesian (`id`), and Vietnamese (`vi`). `resolveLocale` normalizes BCP-47 tags (region/script subtags, casing) to a supported locale and falls back to English; each catalog implements the full `MessageKey` set, with English as the runtime fallback for any missing key.
 
+### Connections
+
+The cloud build keeps a **connection registry** in `localStorage`: `zfiles-connections` holds the saved records, `zfiles-active-connection` the last one activated, and `zfiles-connection-keys` only those keys the user chose to remember. **Browser storage** is a pinned pseudo-connection that is always present and cannot be renamed or deleted; the CLI build shows a single non-switchable `zfiles server` entry instead.
+
+Exactly one connection is active at a time. The status-bar pill shows its name and opens the connection dialog, which also carries create, edit, duplicate, forget-keys, and delete. Two actions — `connection.switch` ("Connect to…") and `connection.create` — appear in the command palette and menu bar. There is no Disconnect: activating Browser storage is how you leave a bucket.
+
+On load, the URL wins over the remembered connection, which wins over Browser storage. Restoring a remembered bucket only happens when its keys are still available; otherwise the user lands in Browser storage and activating the bucket prompts for keys.
+
 ### Cloud boot and URL params
 
-Query params pre-fill the connect dialog (and auto-connect when bucket plus access key and secret are present):
+`connect` states the intent; the remaining params describe the bucket.
 
-| Param | Aliases | Purpose |
-|-------|---------|---------|
-| `provider` | — | `aws` or `r2` |
-| `bucket` | — | Bucket name |
-| `endpoint` | — | Custom endpoint (R2) |
-| `region` | — | AWS region |
-| `prefix` | — | Root prefix inside the bucket |
-| `readonly` | `read_only` | Read-only mode |
-| `accessKeyId` | `access_key_id` | Access key ID |
-| `secretAccessKey` | `secret_access_key` | Secret access key |
-| `sessionToken` | `session_token` | Session token (optional) |
+| Param | Value | Purpose |
+|-------|-------|---------|
+| `connect` | `saved:<name>` | Activate the saved connection with that display name |
+| `connect` | `new` | Connect to the bucket in the other params without saving it |
+| `connect` | `ask` | Open the connection picker over Browser storage |
+| `provider` | `aws` \| `r2` | Provider preset |
+| `bucket`, `region`, `endpoint`, `prefix` | — | Bucket coordinates |
+| `readonly` | `read_only`, `readOnly` | Read-only mode |
 
-Credential params are **removed from the address bar** as soon as they are read (`history.replaceState`), so they do not linger in bookmarks or visible history. They may still appear briefly in static-host access logs on the initial page load, in Referer headers if the user navigates away before strip, and in shared links — use **short-lived** scoped credentials only. Prefer the connect dialog for manual entry when sharing a screen.
+Credentials belong in the URL **fragment** (`#accessKeyId=…&secretAccessKey=…&sessionToken=…`), which browsers never send to the server, keeping keys out of static-host access logs and `Referer` headers. The legacy credential *query* params are still accepted for older links. Both forms are removed from the address bar with `history.replaceState` as soon as they are read, so they do not linger in bookmarks or visible history — but they are still in whatever link was shared, so use **short-lived** scoped credentials.
 
-Connect flow, credential scoping, and disconnect: [docs/cloud-connect.md](../docs/cloud-connect.md).
+A `connect=new` connection is **ephemeral**: it is not added to the registry, it shows in the picker as a temporary row, and the UI offers "Save connection" if the user wants to keep it. When `connect=new` lacks credentials (or the endpoint R2 requires), the create form opens prefilled instead of connecting. An unknown `connect=saved:` name reports itself and leaves Browser storage active.
 
-After connect, explorer navigation may update the URL for bucket/prefix only (never credentials).
+Connection management, credential scoping, and failure handling: [docs/cloud-connect.md](../docs/cloud-connect.md).
+
+Explorer navigation updates the path in the URL, never the connection or its credentials.
 
 ### Config, state, and cache (local)
 
@@ -257,13 +286,15 @@ Layout and resolution: [config_and_cache.md](config_and_cache.md). Tus spools an
 **Cloud**
 
 - CORS misconfiguration: clear error pointing at [docs/cors.md](../docs/cors.md).
-- Expired or revoked credentials: connect dialog or inline re-auth; no silent retry with stale keys.
+- Connection fails **before anything has loaded** (boot restore, or a `connect=` link): a dialog offers Retry or a different connection. Cancel is withheld, because there is no listing to fall back to.
+- Connection fails or credentials expire **mid-session**: the explorer freezes — the last listing stays on screen, `connection.frozen` disables every storage and navigation action, and in-flight uploads pause. The same dialog appears with Cancel, which leaves the stale view in place. Rejected keys are dropped; nothing is retried silently with stale credentials.
 - S3 rate limiting / 503: backoff and user-visible retry.
 - List pagination incomplete: UI must expose "load more" or equivalent when `nextCursor` is present — never pretend a truncated list is complete.
+- Browser storage full: `QuotaExceededError` becomes a translated message naming the cause; nothing is silently dropped.
 
 **Both**
 
-- Per-serve-root or session state may be cleared by the user; explorer recovers by reconnect or reload.
+- Per-serve-root or session state may be cleared by the user; explorer recovers by reconnect or reload. Clearing site data also erases Browser storage, which is the only copy of those files.
 
 ---
 
@@ -330,13 +361,23 @@ zfiles daemon start --config ~/.config/zfiles/daemon.toml
 
 ### Cloud mode
 
-No CLI. User opens the hosted SPA (or self-hosted static build), connects with temporary bucket credentials, and browses. Example bookmark (connection settings; paste keys in the dialog):
+No CLI. Opening the hosted SPA (or a self-hosted static build) lands in Browser storage with nothing to configure. Links can ask for something else:
 
 ```
-https://zfiles.com/?provider=r2&bucket=my-data&prefix=photos/
+# Open the connection picker
+https://zfiles.com/?connect=ask
+
+# Activate a connection this browser already has saved
+https://zfiles.com/?connect=saved:Work%20bucket
+
+# Offer a bucket, letting the recipient paste keys into the prefilled form
+https://zfiles.com/?connect=new&provider=r2&bucket=my-data&prefix=photos/
+
+# Same bucket, connecting straight away with short-lived keys in the fragment
+https://zfiles.com/?connect=new&provider=r2&bucket=my-data#accessKeyId=…&secretAccessKey=…
 ```
 
-Optional credential params (`accessKeyId`, `secretAccessKey`, `sessionToken`) auto-connect when present; see [Cloud boot and URL params](#cloud-boot-and-url-params).
+See [Cloud boot and URL params](#cloud-boot-and-url-params).
 
 ---
 
@@ -348,7 +389,7 @@ zfiles is built test-first. Tests are written before behavior in kernel and fron
 
 **Unit tests (Rust)** — beside module source: Range parsing, tus state transitions, path normalization, token comparison, auth middleware helpers. Must stay fast (aggregate under ~5 s).
 
-**Unit tests (frontend)** — Vitest: `KernelBackend` and `S3Backend` mapping, boot URL param parsing, credential storage rules, action context keys without plugin/search gates, listing formatters.
+**Unit tests (frontend)** — `tsx --test` (Node's test runner) over the files listed in `web/package.json`: backend mapping for all three adapters (browser storage runs against `fake-indexeddb`), boot URL intent parsing, share-link round-trips, connection registry and credential-persistence rules, frozen-connection action gating, and listing formatters.
 
 **Module integration tests (Rust)** — `tempfile` for filesystem, tus sidecar state on disk, real router tests for list/upload/delete/auth.
 
@@ -356,7 +397,7 @@ zfiles is built test-first. Tests are written before behavior in kernel and fron
 
 **Backend contract tests (TypeScript)** — shared scenario table (list, stat, upload, delete) against mocks for both backends to prevent UI divergence.
 
-**System tests (Playwright)** — real browser against real `zfiles` process for local mode: navigation, upload, download, delete, absence of search UI and plugin network calls. Cloud mode: static build against MinIO or SDK mocks — connect, paginated list, disconnect clears session.
+**System tests (Playwright)** — real browser against a real `zfiles` process for local mode: navigation, upload, download, delete, absence of search UI and plugin network calls. Cloud mode: the built static bundle served locally — Browser storage create/list/persist-across-reload, the connection picker, and the `connect=` boot contract including credential stripping and the boot failure dialog. Bucket traffic itself is covered against MinIO or SDK mocks.
 
 **Performance tests** — separate CI job: cold-start latency, download/upload throughput baselines for local mode; regressions >5% fail the build.
 

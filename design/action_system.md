@@ -58,11 +58,22 @@ Context keys are a small reactive store of named values that components write to
 | Key | Type | Updates when |
 |---|---|---|
 | `focus.pane` | string | focused panel changes |
-| `selection.count` | number | selection size changes |
-| `selection.types` | string[] | selection MIME types change |
+| `selection.count`, `selection.file-count` | number | selection size changes |
+| `selection.paths` | string[] | selection changes |
 | `current-path` | string | navigation moves |
-| `connection.online` | boolean | WebSocket connects / disconnects |
-| `read-only` | boolean | mode toggles |
+| `connection.online` | boolean | backend reports connected / offline |
+| `connection.kind` | string | active volume changes (`local`, `browser`, `s3`) |
+| `connection.manageable` | boolean | build supports adding connections (cloud only) |
+| `connection.frozen` | boolean | a connection failure freezes the current listing |
+| `server.read-only` | boolean | backend reports a read-only root or bucket |
+| `clipboard.count` | number | copy / cut changes the clipboard |
+| `listing.*` | mixed | listing loads, view mode, dot-entry visibility |
+| `navigation.can-go-back`, `navigation.can-go-forward`, `navigation.loading` | boolean | history and load state change |
+| `preview.*`, `viewer.preview-count`, `slideshow.open` | mixed | preview and overlay state change |
+| `operation.pending` | boolean | a file operation is in flight |
+| `ui.touch` | boolean | touch layout activates |
+
+The full set lives in `web/src/actions/contextKeys.ts`.
 
 The `when` DSL is a minimal boolean expression language over these keys:
 
@@ -74,6 +85,21 @@ focus.pane == 'file-list' && !read-only
 When relevant context keys change, every dependent `when` evaluation re-runs and the corresponding UI updates: the palette filters, menus enable or disable, toolbar buttons grey out. Each surface decides what to do with a failed `when` — palette typically hides; menu bar typically greys; keybindings simply don't fire.
 
 A disabled action's UI should explain why on hover. The simplest implementation auto-generates the message from the failing clause ("Delete is unavailable: no files selected" derived from `selection.count > 0`). Actions can supply a custom `whenFailureMessage` for clarity in cases where the auto-generated text is unhelpful.
+
+### Guards outside `when`
+
+Two conditions disable actions wholesale rather than through per-action expressions, because they apply to whole classes of behavior:
+
+| Guard | Module | Effect |
+|---|---|---|
+| Operation pending | `operationPendingGuard.ts` | While a file operation is in flight, only an allow-list (palette, view toggles, selection movement, copy/cut, help, info) stays invocable |
+| Frozen connection | `connectionFrozenGuard.ts` | After a connection failure the last listing stays on screen, so everything touching storage or navigating elsewhere is blocked; connection, appearance, settings, help, and local selection actions remain |
+
+Both are applied in `isActionAvailable` and `invokeAction`, so the palette, menu bar, toolbar, context menu, and keybindings all honor them from one place.
+
+### Connection actions
+
+The cloud build registers `connection.switch` ("Connect to…"), `connection.create` (gated on `connection.manageable == true`), and `connection.share-url` (gated on `connection.kind == 's3'`). They appear in the palette and the Connection menu; the status-bar pill invokes the picker directly. There is no disconnect action — activating Browser storage takes its place.
 
 ## Argument types and resolution
 

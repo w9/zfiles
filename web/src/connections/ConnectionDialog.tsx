@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation, type MessageKey } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { formatSize } from "@/listing-format";
 import type { ConnectionRecord } from "./types";
 
 type ConnectionDialogProps = {
@@ -25,6 +26,8 @@ type ConnectionDialogProps = {
   activeId: string;
   manageable: boolean;
   busy: boolean;
+  /** Bytes this origin is using, shown against Browser storage. */
+  browserUsageBytes?: number | null;
   hasStoredCredentials: (id: string) => boolean;
   onActivate: (id: string) => void;
   onCreate: () => void;
@@ -82,6 +85,7 @@ export default function ConnectionDialog({
   activeId,
   manageable,
   busy,
+  browserUsageBytes = null,
   hasStoredCredentials,
   onActivate,
   onCreate,
@@ -107,7 +111,10 @@ export default function ConnectionDialog({
             const Icon = KIND_ICONS[record.kind];
             const active = record.id === activeId;
             const subtitleKey = KIND_SUBTITLE_KEYS[record.kind];
-            const subtitle = subtitleKey ? t(subtitleKey) : connectionSubtitle(record);
+            let subtitle = subtitleKey ? t(subtitleKey) : connectionSubtitle(record);
+            if (record.kind === "browser" && browserUsageBytes != null) {
+              subtitle = `${subtitle} · ${formatSize(browserUsageBytes, false)}`;
+            }
             return (
               <li key={record.id} className="flex items-center gap-1">
                 <button

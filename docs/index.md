@@ -98,11 +98,13 @@ GET    /api/keybindings        keyboard shortcuts list
 | Directory | Role |
 |---|---|
 | `entries/` | Build entry points: `main-local.tsx`, `main-cloud.tsx` |
-| `backend/` | `ExplorerBackend` trait; `KernelBackend` (local) and `S3Backend` (cloud) |
+| `backend/` | `ExplorerBackend` interface; `KernelBackend` (local), `BrowserBackend` (IndexedDB), `S3Backend` (cloud) |
 | `explorer/` | Core explorer: selection, navigation, marquee select, grid/list layout |
 | `actions/` | Command palette, built-in actions, appearance toggles |
 | `local/` | tus upload session management |
-| `cloud/` | Cloud mode: connect dialog, S3 multipart upload, `CloudApp` |
+| `cloud/` | Cloud mode: boot params, share links, S3 multipart upload, `CloudApp` |
+| `connections/` | Connection registry, provider, and the connect / picker / failure dialogs |
+| `browserfs/` | IndexedDB filesystem behind `BrowserBackend` |
 | `settings/` | Grid size, sort order, theme, locale providers |
 | `fileOperations/` | Conflict resolution dialogs for paste operations |
 | `components/` | Toolbar, breadcrumb, preview pane, dialogs |
@@ -148,13 +150,17 @@ The React SPA is compiled into the binary via rust-embed and served from `/`. Al
 
 ```
 Browser (static host)
-  └─ React (S3Backend)
-       │  AWS SDK v3 (in-browser)
-       ▼
-  S3 / Cloudflare R2
+  ├─ React (BrowserBackend)          ← default, no credentials
+  │       │  IndexedDB
+  │       ▼
+  │  Browser storage (this device)
+  └─ React (S3Backend)               ← after connecting a bucket
+          │  AWS SDK v3 (in-browser)
+          ▼
+     S3 / Cloudflare R2
 ```
 
-Credentials are entered in a connect dialog and stored only in `sessionStorage`. No server component needed — the SPA is deployed as static files.
+The SPA opens into browser storage (IndexedDB) with nothing to configure; buckets are saved connections. Credentials are kept in memory unless the user opts into remembering them on that device. No server component needed — the SPA is deployed as static files.
 
 ---
 

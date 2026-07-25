@@ -19,7 +19,7 @@ type Harness = {
   persistCalls: number;
 };
 
-function createHarness(): Harness {
+function createHarness(focusTarget: EventTarget | null = null): Harness {
   databaseCounter += 1;
   const store = new BrowserFsStore({
     factory: new IDBFactory(),
@@ -31,6 +31,7 @@ function createHarness(): Harness {
   const state = { persistCalls: 0 };
   const backend = createBrowserBackend({
     store,
+    focusTarget,
     createObjectURL: () => {
       const url = `blob:test/${createdUrls.length + 1}`;
       createdUrls.push(url);
@@ -268,6 +269,27 @@ test("storageUsage falls back to stored file sizes without an estimate API", asy
   const harness = createHarness();
   await harness.backend.upload(textFile("a.txt", "12345"), "a.txt");
   assert.deepEqual(await harness.backend.storageUsage(), { usage: 5, quota: 0 });
+  harness.store.close();
+});
+
+test("regaining focus re-announces the last listed directory", async () => {
+  const focusTarget = new EventTarget();
+  const harness = createHarness(focusTarget);
+  await harness.store.makeDirectory("photos");
+  await harness.backend.list("photos");
+
+  const events: BackendEvent[] = [];
+  const unsubscribe = harness.backend.subscribe((event) => events.push(event));
+  focusTarget.dispatchEvent(new Event("focus"));
+
+  assert.deepEqual(
+    events.filter((event) => event.type === "filesystem_changed"),
+    [{ type: "filesystem_changed", path: "photos" }],
+  );
+
+  unsubscribe();
+  focusTarget.dispatchEvent(new Event("focus"));
+  assert.equal(events.filter((event) => event.type === "filesystem_changed").length, 1);
   harness.store.close();
 });
 

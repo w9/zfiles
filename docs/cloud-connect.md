@@ -1,6 +1,6 @@
-# Cloud mode — connect flow and credentials
+# Cloud mode — connections and credentials
 
-Cloud mode is a **static SPA** (`web/dist-cloud/`) that browses S3-compatible buckets from the browser. There is no zfiles server in the request path for object storage — credentials never leave the user's browser except when sent directly to AWS or Cloudflare.
+Cloud mode is a **static SPA** (`web/dist-cloud/`) with no zfiles server behind it. It opens into **Browser storage** — a filesystem kept in your own browser via IndexedDB — so the explorer is usable before any bucket exists. S3-compatible buckets are **connections** you attach when you want them; credentials go straight from your browser to AWS or Cloudflare and never to the site's host.
 
 Architecture overview: [design/design.md](../design/design.md). CORS setup: [cors.md](cors.md).
 
@@ -27,53 +27,96 @@ Explorer and settings routes (`/f/...`, `/settings`) are prefixed with that base
 
 Before sharing the URL with users, configure [bucket CORS](cors.md) for your SPA origin.
 
-## Connect flow
+## Browser storage
 
-1. User opens the hosted SPA (optionally with [URL params](#url-parameters) that pre-fill the form).
-2. The **connect dialog** appears until a session is established.
-3. User selects provider (**Amazon S3** or **Cloudflare R2**), bucket, region, endpoint (required for R2), optional prefix, and temporary credentials.
-4. User clicks **Connect**. zfiles runs `HeadBucket` to verify credentials and bucket access.
-5. On success, credentials and connection settings are stored in **`sessionStorage`** (tab-scoped). The explorer loads.
-6. **Disconnect** (header button) clears `sessionStorage` and returns to the connect dialog.
+The landing volume needs no setup. Files you create or drop in are stored in this browser only — nothing is uploaded anywhere, and other people opening the same URL see their own empty storage.
 
-Credentials are **not** written to `localStorage`. After a successful connect they live in `sessionStorage` only. Credential URL params are stripped from the address bar immediately after read, but the **initial** page request may still log the full query string on the static host — use short-lived scoped credentials for deep links.
+- It is **pinned** in the connection list and cannot be renamed or deleted.
+- Contents survive reloads and browser restarts. Clearing site data (or using a private window) erases them, and Browser storage is the only copy.
+- Every tab on the origin shares one storage; the last write wins, and a tab re-reads the current directory when it regains focus.
+- Capacity is whatever the browser grants the origin. zfiles asks for persistent storage on first write and reports a clear "storage is full" error rather than failing silently.
+- Uploads write in one shot, so pausing a Browser storage upload restarts it instead of resuming.
 
-### Session lifetime
+## Connections
 
-- Credentials persist for the **browser tab** until Disconnect or the tab is closed.
-- Reloading the page reuses `sessionStorage` in the same tab — no re-paste until the tab ends.
-- Closing the tab clears the session; the user must connect again.
-- Expired or revoked credentials are detected on S3/R2 API errors. zfiles keeps the explorer visible, clears stored secrets from the tab, preserves non-secret bucket settings, and shows a reconnect banner so you can paste fresh credentials without re-entering the bucket details.
+Exactly one connection is active at a time. The **status-bar pill** shows its name and opens the connection dialog; the same dialog is available as **Connect to…** in the command palette (`Ctrl/Cmd+P`) and the Connection menu.
+
+| Action | Where | What it does |
+|--------|-------|--------------|
+| **Connect to…** | Pill, palette, menu bar | Opens the list of connections to activate |
+| **Create a new connection…** | Palette, menu bar, dialog footer | Opens the form for a new bucket |
+| **Edit** / **Duplicate** / **Delete** | Row menu in the dialog | Manage a saved connection |
+| **Forget saved keys** | Row menu (when keys are stored) | Removes stored keys, keeping the connection |
+| **Copy Share URL** | Header, palette | Builds a link to the active bucket (see [Sharing links](#sharing-links)) |
+
+There is no Disconnect: activate **Browser storage** to leave a bucket. Saved connections stay in the list, so switching back is one click.
+
+### Creating a connection
+
+1. Open **Create a new connection…**.
+2. Name it (defaults to the bucket, or `bucket/prefix`). Names are unique — a collision gets a numeric suffix.
+3. Choose the provider (**Amazon S3** or **Cloudflare R2**), then bucket, region, endpoint (required for R2), and an optional prefix to use as the root.
+4. Optionally tick **Read-only** to disable uploads and deletes.
+5. Paste temporary access keys, and decide whether to tick **Remember keys on this device**.
+6. **Connect**. zfiles runs `HeadBucket` to verify the credentials and bucket access, then saves the connection and activates it.
+
+### Where credentials live
+
+- By default keys stay **in memory** for the tab. Reloading or reopening the page asks for them again — the settings are remembered, so you only re-paste the secrets.
+- Ticking **Remember keys on this device** writes them to `localStorage` for this browser profile, so the connection reconnects automatically on reload. Convenient on a personal machine; wrong on a shared one, because anything with access to the profile (including a successful XSS) can read them.
+- Connection *settings* (name, provider, bucket, region, endpoint, prefix, read-only) always persist in `localStorage`. They contain no secrets.
+- A rejected request drops the keys it used, so nothing retries with credentials the bucket has already refused.
+- The static host never receives credentials in either case.
+
+### Reconnecting after a reload
+
+zfiles remembers the last connection you activated. On load it reconnects when it still has that connection's keys; otherwise you land in Browser storage, and activating the bucket asks for keys with everything else prefilled.
 
 ## URL parameters
 
-These query params pre-fill the connect form. When `bucket`, `accessKeyId` (or `access_key_id`), and `secretAccessKey` (or `secret_access_key`) are all present, zfiles **auto-connects** after validating credentials.
+A link states what it wants with `connect`:
 
-| Param | Aliases | Example | Purpose |
-|-------|---------|---------|---------|
-| `provider` | — | `aws`, `r2` | Provider preset |
-| `bucket` | — | `my-data` | Bucket name |
-| `region` | — | `us-east-1`, `auto` | AWS region (R2 often uses `auto`) |
-| `endpoint` | — | `https://…r2.cloudflarestorage.com` | Custom endpoint (R2) |
-| `prefix` | — | `projects/demo/` | Root prefix inside the bucket |
-| `readonly` | `read_only` | `1`, `true` | Read-only mode (no upload/delete) |
-| `accessKeyId` | `access_key_id` | `AKIA…` | Access key ID |
-| `secretAccessKey` | `secret_access_key` | (secret) | Secret access key |
-| `sessionToken` | `session_token` | (token) | Session token (optional) |
+| Param | Value | Purpose |
+|-------|-------|---------|
+| `connect` | `saved:<name>` | Activate the saved connection with that name (URL-encode spaces) |
+| `connect` | `new` | Connect to the bucket described by the other params, without saving it |
+| `connect` | `ask` | Open the connection picker |
+| `provider` | `aws`, `r2` | Provider preset |
+| `bucket` | `my-data` | Bucket name |
+| `region` | `us-east-1`, `auto` | AWS region (R2 often uses `auto`) |
+| `endpoint` | `https://…r2.cloudflarestorage.com` | Custom endpoint (required for R2) |
+| `prefix` | `projects/demo/` | Root prefix inside the bucket |
+| `readonly` | `1`, `true` | Read-only mode (no upload/delete) |
 
-Example bookmark (connection settings only — user still pastes keys in the dialog):
-
-```
-https://files.example.com/?provider=r2&bucket=photos&prefix=2024/&readonly=1
-```
-
-Example deep link (auto-connect; use short-lived credentials):
+Credentials go in the **fragment**, not the query string:
 
 ```
-https://files.example.com/?provider=aws&bucket=my-data&region=us-east-1&accessKeyId=AKIA…&secretAccessKey=…&sessionToken=…
+#accessKeyId=AKIA…&secretAccessKey=…&sessionToken=…
 ```
 
-Credential params are removed from the address bar as soon as they are read. Avoid sharing deep links in chat or email; prefer IAM roles or fresh tokens with tight expiry.
+Fragments are never sent to a server, so keys stay out of the static host's access logs and out of `Referer` headers. Older links that put credentials in the query string still work, and zfiles removes credentials from the address bar (query or fragment) as soon as it reads them.
+
+```
+# Open the picker
+https://files.example.com/?connect=ask
+
+# Activate a connection this browser has saved
+https://files.example.com/?connect=saved:Work%20bucket
+
+# Offer a bucket and let the recipient paste keys into the prefilled form
+https://files.example.com/?connect=new&provider=r2&bucket=photos&endpoint=https://acct.r2.cloudflarestorage.com&prefix=2024/
+
+# Connect straight away with short-lived keys, landing in a subfolder
+https://files.example.com/f/2024/album?connect=new&provider=aws&bucket=my-data&region=us-east-1#accessKeyId=AKIA…&secretAccessKey=…
+```
+
+A `connect=new` connection is **not saved**: it shows in the picker as a temporary entry, and a toast (or its row menu) offers **Save connection**. If the link is missing keys — or the endpoint R2 needs — the create form opens prefilled instead of connecting. A `connect=saved:` name that this browser does not have reports itself and leaves Browser storage active.
+
+Anyone holding the link holds the keys in it, so use **short-lived, scoped** credentials for deep links and prefer typing keys into the form when sharing a screen.
+
+### Sharing links
+
+**Copy Share URL** builds one of these links for the active bucket, at your current folder. The **Include credentials in share URL** checkbox controls whether keys are appended to the fragment; leave it off to share only the bucket coordinates.
 
 ## Credential recommendations
 
@@ -115,9 +158,9 @@ Replace `YOUR_BUCKET` and optional `prefix/path/*`:
 }
 ```
 
-Read-only: omit `PutObject`, `DeleteObject`, and multipart write actions; enable **Read-only** in the connect dialog or `readonly=1` in the URL.
+Read-only: omit `PutObject`, `DeleteObject`, and multipart write actions; enable **Read-only** on the connection or `readonly=1` in the URL.
 
-`HeadBucket` (connect test) requires `s3:ListBucket` on the bucket ARN or equivalent bucket-level read permission.
+`HeadBucket` (the connect test) requires `s3:ListBucket` on the bucket ARN or equivalent bucket-level read permission.
 
 ### Cloudflare R2 API token
 
@@ -127,34 +170,35 @@ Create an R2 token with:
 - **Object Write** — upload, multipart (if not read-only)
 - **Object Delete** — delete files (if not read-only)
 
-Scope the token to the bucket (and prefix if your workflow supports it). Use the S3 access key ID and secret from the token in the connect dialog, with the R2 S3 API endpoint.
+Scope the token to the bucket (and prefix if your workflow supports it). Use the S3 access key ID and secret from the token, with the R2 S3 API endpoint.
 
-## Disconnect behavior
+## When a connection fails
 
-**Disconnect** immediately:
+**Before anything has loaded** — a link or a remembered connection that cannot connect shows a dialog offering **Retry** or **Use a different connection**. There is no Cancel, because there is no listing to fall back to; picking a different connection (including Browser storage) is the way out.
 
-1. Removes the session entry from `sessionStorage`
-2. Drops the in-memory `S3Backend` instance
-3. Shows the connect dialog again
+**Mid-session** — if the bucket stops answering or credentials expire, the explorer freezes: the listing you were looking at stays on screen, and everything that would touch storage or navigate elsewhere is disabled, including in-flight uploads, which pause. The same dialog appears with **Cancel**, which leaves the frozen view in place so you can read it. Retry reconnects, asking for keys again if the expired ones were dropped.
 
-No objects are deleted on disconnect. Partial multipart uploads may remain in the bucket until aborted or lifecycle rules remove them — zfiles aborts uploads when possible on failed transfers, but disconnect mid-upload may leave incomplete parts.
+No objects are deleted when you switch or fail over. Partial multipart uploads may remain in the bucket until aborted or removed by lifecycle rules — zfiles aborts them when it can, but leaving mid-upload can leave incomplete parts.
 
 ## Local mode vs cloud mode
 
 | | Local (`zfiles` CLI) | Cloud (static SPA) |
 |--|----------------------|---------------------|
 | Opens | `http://127.0.0.1:<port>/` | Hosted `index.html` at `/` |
-| Storage API | Kernel `/api/*` | S3/R2 from browser |
-| Credentials | Optional LAN bearer token | User-pasted S3 keys in dialog |
+| Default storage | The served directory | Browser storage (IndexedDB) |
+| Other volumes | None | Saved S3/R2 connections |
+| Storage API | Kernel `/api/*` | IndexedDB, or S3/R2 from the browser |
+| Credentials | Optional LAN bearer token | User-supplied S3 keys, remembered only on request |
 | CORS | Same-origin (no bucket CORS) | Bucket CORS required |
 
-The CLI **never** opens `zfiles.com` for local browsing. Cloud and local share the same `ExplorerApp` UI but different build artifacts and backends.
+The CLI **never** opens `zfiles.com` for local browsing. Cloud and local share the same `ExplorerApp` UI with different build artifacts and backends.
 
 ## Self-hosting checklist
 
 1. `pnpm build:cloud`
 2. Upload `web/dist-cloud/` to your static host
-3. Configure [CORS](cors.md) on the target bucket for your SPA origin
-4. Create scoped credentials for users or your team
-5. Share the SPA URL (with optional query params)
-6. Confirm connect → list → upload → download → delete in a test prefix
+3. Confirm the page opens into Browser storage with no credentials
+4. Configure [CORS](cors.md) on the target bucket for your SPA origin
+5. Create scoped credentials for users or your team
+6. Share the SPA URL (with optional `connect=` params)
+7. Confirm connect → list → upload → download → delete in a test prefix

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Loader2 } from "lucide-react";
 
+import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { LISTING_ENTRY_TEXT_CLASS } from "@/listing-styles";
 
@@ -22,6 +23,7 @@ export default function InlineNameInput({
   onCommit,
   onCancel,
 }: InlineNameInputProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(initialName);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +48,7 @@ export default function InlineNameInput({
         )}
         value={value}
         disabled={busy}
+        aria-label={t("actions.file.rename.name")}
         onChange={(event) => setValue(event.target.value)}
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={(event) => event.stopPropagation()}
