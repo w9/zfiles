@@ -18,6 +18,7 @@ import {
 import { useTranslation, type MessageKey } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { formatSize } from "@/listing-format";
+import { connectionSubtitle } from "./connectionSubtitle";
 import type { ConnectionRecord } from "./types";
 
 type ConnectionDialogProps = {
@@ -65,20 +66,6 @@ export function connectionDisplayName(
   return key ? t(key) : record.name;
 }
 
-function connectionSubtitle(record: ConnectionRecord): string | null {
-  if (record.kind !== "s3") {
-    return null;
-  }
-  const settings = record.settings;
-  if (!settings) {
-    return null;
-  }
-  const scope = settings.prefix
-    ? `${settings.bucket}/${settings.prefix.replace(/^\/+|\/+$/g, "")}`
-    : settings.bucket;
-  return settings.endpoint ? `${scope} · ${new URL(settings.endpoint).host}` : scope;
-}
-
 export default function ConnectionDialog({
   open,
   connections,
@@ -100,13 +87,13 @@ export default function ConnectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg overflow-hidden">
         <DialogHeader>
           <DialogTitle>{t("connections.title")}</DialogTitle>
           <DialogDescription>{t("connections.description")}</DialogDescription>
         </DialogHeader>
 
-        <ul className="flex flex-col gap-1">
+        <ul className="flex min-w-0 flex-col gap-1">
           {connections.map((record) => {
             const Icon = KIND_ICONS[record.kind];
             const active = record.id === activeId;
@@ -116,11 +103,11 @@ export default function ConnectionDialog({
               subtitle = `${subtitle} · ${formatSize(browserUsageBytes, false)}`;
             }
             return (
-              <li key={record.id} className="flex items-center gap-1">
+              <li key={record.id} className="flex min-w-0 items-center gap-1">
                 <button
                   type="button"
                   className={cn(
-                    "flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
+                    "flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-md px-3 py-2 text-left transition-colors",
                     "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                     active && "bg-accent/60",
                   )}
@@ -129,16 +116,21 @@ export default function ConnectionDialog({
                   onClick={() => onActivate(record.id)}
                 >
                   <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="flex min-w-0 flex-col">
+                  <span className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <span className="truncate text-sm font-medium">
                       {connectionDisplayName(record, t)}
                     </span>
                     {subtitle ? (
-                      <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
+                      <span
+                        className="truncate text-xs text-muted-foreground"
+                        title={subtitle}
+                      >
+                        {subtitle}
+                      </span>
                     ) : null}
                   </span>
                   {active ? (
-                    <Check className="ml-auto size-4 shrink-0 text-success" aria-hidden />
+                    <Check className="size-4 shrink-0 text-success" aria-hidden />
                   ) : null}
                   <span className="sr-only">
                     {active ? t("connections.active") : t("connections.activate")}
