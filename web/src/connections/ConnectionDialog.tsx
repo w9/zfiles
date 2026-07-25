@@ -32,6 +32,7 @@ type ConnectionDialogProps = {
   onDuplicate: (id: string) => void;
   onForgetKeys: (id: string) => void;
   onRemove: (id: string) => void;
+  onSaveEphemeral: () => void;
   onClose: () => void;
 };
 
@@ -88,6 +89,7 @@ export default function ConnectionDialog({
   onDuplicate,
   onForgetKeys,
   onRemove,
+  onSaveEphemeral,
   onClose,
 }: ConnectionDialogProps) {
   const { t } = useTranslation();
@@ -149,23 +151,31 @@ export default function ConnectionDialog({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => onEdit(record.id)}>
-                        {t("connections.edit")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => onDuplicate(record.id)}>
-                        {t("connections.duplicate")}
-                      </DropdownMenuItem>
-                      {hasStoredCredentials(record.id) ? (
-                        <DropdownMenuItem onSelect={() => onForgetKeys(record.id)}>
-                          {t("connections.forgetKeys")}
+                      {record.ephemeral ? (
+                        <DropdownMenuItem onSelect={onSaveEphemeral}>
+                          {t("connections.saveConnection")}
                         </DropdownMenuItem>
-                      ) : null}
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => onRemove(record.id)}
-                      >
-                        {t("connections.delete")}
-                      </DropdownMenuItem>
+                      ) : (
+                        <>
+                          <DropdownMenuItem onSelect={() => onEdit(record.id)}>
+                            {t("connections.edit")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => onDuplicate(record.id)}>
+                            {t("connections.duplicate")}
+                          </DropdownMenuItem>
+                          {hasStoredCredentials(record.id) ? (
+                            <DropdownMenuItem onSelect={() => onForgetKeys(record.id)}>
+                              {t("connections.forgetKeys")}
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => onRemove(record.id)}
+                          >
+                            {t("connections.delete")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : null}

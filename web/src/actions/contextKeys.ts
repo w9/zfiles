@@ -22,6 +22,7 @@ export type ContextKeys = {
   "navigation.loading": boolean;
   "connection.kind": string;
   "connection.manageable": boolean;
+  "connection.frozen": boolean;
   "ui.touch": boolean;
 };
 
@@ -50,6 +51,7 @@ export function defaultContextKeys(): ContextKeys {
     "navigation.loading": false,
     "connection.kind": "local",
     "connection.manageable": false,
+    "connection.frozen": false,
     "ui.touch": false,
   };
 }

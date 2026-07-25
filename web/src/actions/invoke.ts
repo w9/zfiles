@@ -1,5 +1,6 @@
 import type { ActionRegistry } from "./registry";
 import { evaluateWhen } from "./when";
+import { isActionBlockedByFrozenConnection } from "../connectionFrozenGuard";
 import { isActionBlockedByOperationPending } from "../operationPendingGuard";
 import { resolveActionArgs } from "./args";
 import type { ContextKeys } from "./contextKeys";
@@ -44,6 +45,10 @@ export async function invokeAction(
   }
   if (!evaluateWhen(action.when, context)) {
     return { ok: false, reason: "when-failed" };
+  }
+
+  if (isActionBlockedByFrozenConnection(context["connection.frozen"], id)) {
+    return { ok: false, reason: "cancelled" };
   }
 
   if (isActionBlockedByOperationPending(context["operation.pending"], id)) {

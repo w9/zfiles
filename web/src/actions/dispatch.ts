@@ -1,5 +1,6 @@
 import { ActionRegistry } from "./registry";
 import { evaluateWhen } from "./when";
+import { isActionBlockedByFrozenConnection } from "../connectionFrozenGuard";
 import type { ContextKeys } from "./contextKeys";
 import type { ActionDefinition } from "./types";
 
@@ -16,7 +17,7 @@ export async function dispatchAction(
   if (!action) {
     return { ok: false, reason: "not-found" };
   }
-  if (!evaluateWhen(action.when, context)) {
+  if (!isActionAvailable(action, context)) {
     return { ok: false, reason: "when-failed" };
   }
   try {
@@ -37,6 +38,9 @@ export function isActionAvailable(
   action: ActionDefinition,
   context: ContextKeys,
 ): boolean {
+  if (isActionBlockedByFrozenConnection(context["connection.frozen"], action.id)) {
+    return false;
+  }
   return evaluateWhen(action.when, context);
 }
 

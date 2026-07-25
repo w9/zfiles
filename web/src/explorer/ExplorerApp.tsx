@@ -199,6 +199,7 @@ function isNativeTypingTarget(target: EventTarget | null): boolean {
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
   const connections = useConnections();
+  const connectionFrozen = connections?.frozen ?? false;
   const cloudAuth = useCloudAuth();
   const cloudSessionConfig =
     backend.mode === "s3" ? (backend as S3Backend).connectionConfig : null;
@@ -322,7 +323,8 @@ export default function ExplorerApp() {
   );
 
   const loadListing = useCallback(async (path: string, options?: { preserveSelection?: boolean; focusPath?: string }): Promise<boolean> => {
-    if (cloudAuth.expired) {
+    // A frozen connection keeps the last listing on screen instead of loading more.
+    if (cloudAuth.expired || connectionFrozen) {
       return false;
     }
     const generation = ++listingLoadGenerationRef.current;
@@ -600,6 +602,18 @@ export default function ExplorerApp() {
       .catch((err: unknown) => notifyStorageError(err))
       .finally(() => setRefreshing(false));
   }, [loadListing, notifyStorageError, refreshing]);
+
+  // A frozen connection cannot accept bytes, so stop anything still in flight.
+  useEffect(() => {
+    if (!connectionFrozen) {
+      return;
+    }
+    for (const item of uploadItems) {
+      if (item.status === "pending" || item.status === "hashing" || item.status === "active") {
+        pauseUpload(item.id);
+      }
+    }
+  }, [connectionFrozen, pauseUpload, uploadItems]);
 
   const loadListingForNavigation = useCallback(
     (path: string, options?: { preserveSelection?: boolean; focusPath?: string }) =>
@@ -929,6 +943,7 @@ export default function ExplorerApp() {
       "navigation.loading": refreshing || listingLoading,
       "connection.kind": backend.mode,
       "connection.manageable": connections?.manageable ?? false,
+      "connection.frozen": connectionFrozen,
       "ui.touch": touchUi,
     }),
     [
@@ -953,6 +968,7 @@ export default function ExplorerApp() {
       listingLoading,
       backend.mode,
       connections?.manageable,
+      connectionFrozen,
       touchUi,
     ],
   );

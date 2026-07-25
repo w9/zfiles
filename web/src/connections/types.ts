@@ -13,6 +13,8 @@ export type ConnectionRecord = {
   createdAt: number;
   lastUsedAt?: number;
   rememberKeys: boolean;
+  /** Described by the URL rather than the saved list, so it disappears on reload. */
+  ephemeral?: boolean;
   settings?: S3ConnectionSettings;
 };
 

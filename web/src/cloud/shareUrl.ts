@@ -79,6 +79,8 @@ export function buildShareUrl(
   } = options;
   const params = new URLSearchParams();
 
+  // The recipient may have nothing saved, so the link states its intent to connect.
+  params.set("connect", "new");
   if (input.provider) {
     params.set("provider", input.provider);
   }
@@ -90,13 +92,16 @@ export function buildShareUrl(
     params.set("readOnly", "true");
   }
 
+  // Secrets go in the fragment, which browsers never send to the server.
+  const fragment = new URLSearchParams();
   if (includeCredentials && input.credentials) {
-    appendParam(params, "accessKeyId", input.credentials.accessKeyId);
-    appendParam(params, "secretAccessKey", input.credentials.secretAccessKey);
-    appendParam(params, "sessionToken", input.credentials.sessionToken);
+    appendParam(fragment, "accessKeyId", input.credentials.accessKeyId);
+    appendParam(fragment, "secretAccessKey", input.credentials.secretAccessKey);
+    appendParam(fragment, "sessionToken", input.credentials.sessionToken);
   }
 
   const pathname = explorerHrefForPath(explorerPath, base);
   const search = params.toString();
-  return `${origin}${pathname}${search ? `?${search}` : ""}`;
+  const hash = fragment.toString();
+  return `${origin}${pathname}${search ? `?${search}` : ""}${hash ? `#${hash}` : ""}`;
 }

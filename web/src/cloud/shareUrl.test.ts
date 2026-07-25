@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { buildShareUrl, connectionConfigToShareInput } from "./shareUrl";
+import { readBootRequest } from "./bootParams";
 import type { S3ConnectionConfig } from "./types";
 
 const ORIGIN = "https://files.example.com";
 const REPO_BASE = "/zfiles";
 
-test("buildShareUrl emits camelCase params at root", () => {
+test("buildShareUrl asks the recipient to connect and keeps secrets in the fragment", () => {
   const url = buildShareUrl(
     {
       provider: "aws",
@@ -25,23 +26,30 @@ test("buildShareUrl emits camelCase params at root", () => {
   );
   assert.equal(
     url,
-    `${ORIGIN}/?provider=aws&bucket=my-data&region=us-east-1&prefix=uploads%2F&readOnly=true&accessKeyId=AKIA123&secretAccessKey=sekret&sessionToken=tok`,
+    `${ORIGIN}/?connect=new&provider=aws&bucket=my-data&region=us-east-1&prefix=uploads%2F&readOnly=true#accessKeyId=AKIA123&secretAccessKey=sekret&sessionToken=tok`,
   );
 });
 
-test("buildShareUrl includes explorer path in pathname", () => {
-  const url = buildShareUrl(
-    {
-      provider: "r2",
-      bucket: "photos",
-      endpoint: "https://acct.r2.cloudflarestorage.com",
-    },
-    { origin: ORIGIN, explorerPath: "2024/album" },
+test("a shared link round-trips through the boot request parser", () => {
+  const url = new URL(
+    buildShareUrl(
+      {
+        provider: "r2",
+        bucket: "photos",
+        endpoint: "https://acct.r2.cloudflarestorage.com",
+        credentials: { accessKeyId: "AKIA", secretAccessKey: "sekret" },
+      },
+      { origin: ORIGIN, explorerPath: "2024/album", includeCredentials: true },
+    ),
   );
-  assert.equal(
-    url,
-    `${ORIGIN}/f/2024/album?provider=r2&bucket=photos&endpoint=https%3A%2F%2Facct.r2.cloudflarestorage.com`,
-  );
+
+  const request = readBootRequest(url.search, url.hash);
+  assert.deepEqual(request.intent, { kind: "new" });
+  assert.equal(request.params.bucket, "photos");
+  assert.equal(request.params.endpoint, "https://acct.r2.cloudflarestorage.com");
+  assert.equal(request.params.accessKeyId, "AKIA");
+  assert.equal(request.params.secretAccessKey, "sekret");
+  assert.equal(url.pathname, "/f/2024/album");
 });
 
 test("buildShareUrl omits credentials when disabled", () => {
@@ -55,13 +63,13 @@ test("buildShareUrl omits credentials when disabled", () => {
     },
     { origin: ORIGIN, includeCredentials: false },
   );
-  assert.equal(url, `${ORIGIN}/?bucket=data`);
+  assert.equal(url, `${ORIGIN}/?connect=new&bucket=data`);
   assert.doesNotMatch(url, /accessKeyId|secretAccessKey/);
 });
 
 test("buildShareUrl omits empty optional fields", () => {
   const url = buildShareUrl({ provider: "aws" }, { origin: ORIGIN });
-  assert.equal(url, `${ORIGIN}/?provider=aws`);
+  assert.equal(url, `${ORIGIN}/?connect=new&provider=aws`);
 });
 
 test("buildShareUrl respects app base subpath", () => {
@@ -69,7 +77,7 @@ test("buildShareUrl respects app base subpath", () => {
     { bucket: "docs" },
     { origin: ORIGIN, base: REPO_BASE, explorerPath: "readme" },
   );
-  assert.equal(url, `${ORIGIN}${REPO_BASE}/f/readme?bucket=docs`);
+  assert.equal(url, `${ORIGIN}${REPO_BASE}/f/readme?connect=new&bucket=docs`);
 });
 
 test("connectionConfigToShareInput maps session config", () => {
