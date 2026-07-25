@@ -42,6 +42,19 @@ export const es: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Conectado a {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Conectado a {{backend}}",
   "backend.connectingTooltip": "Conectando al servidor zfiles…",
+  "backend.browserStorage": "Almacenamiento del navegador",
+  "backend.browserStorageTooltip":
+    "Los archivos se guardan solo en este navegador. No se envía nada a un servidor.",
+  "browserfs.error.notFound":
+    "Ese archivo o carpeta ya no está en el almacenamiento del navegador.",
+  "browserfs.error.alreadyExists": "Ya existe un archivo o una carpeta con ese nombre.",
+  "browserfs.error.invalidName":
+    "Ese nombre no se puede usar. Los nombres no pueden estar vacíos ni contener barras.",
+  "browserfs.error.intoDescendant": "Una carpeta no se puede mover dentro de sí misma.",
+  "browserfs.error.quotaExceeded":
+    "El almacenamiento del navegador está lleno. Elimina algunos archivos e inténtalo de nuevo.",
+  "browserfs.error.unavailable":
+    "El almacenamiento del navegador no está disponible en este navegador.",
   "upload.drop": "Suelta archivos en cualquier lugar para subirlos",
   "upload.uploading": "Subiendo…",
   "upload.uploadingProgress": "Subiendo… {{percent}}%",

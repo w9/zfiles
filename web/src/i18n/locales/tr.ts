@@ -42,6 +42,17 @@ export const tr: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}} bağlantısı kuruldu",
   "backend.connectedTooltipBackendOnly": "{{backend}} bağlantısı kuruldu",
   "backend.connectingTooltip": "zfiles sunucusuna bağlanılıyor…",
+  "backend.browserStorage": "Tarayıcı depolaması",
+  "backend.browserStorageTooltip":
+    "Dosyalar yalnızca bu tarayıcıda saklanır. Sunucuya hiçbir şey gönderilmez.",
+  "browserfs.error.notFound": "Bu dosya veya klasör artık tarayıcı depolamasında değil.",
+  "browserfs.error.alreadyExists": "Bu ada sahip bir dosya veya klasör zaten var.",
+  "browserfs.error.invalidName":
+    "Bu ad kullanılamaz. Adlar boş olamaz ve eğik çizgi içeremez.",
+  "browserfs.error.intoDescendant": "Bir klasör kendi içine taşınamaz.",
+  "browserfs.error.quotaExceeded":
+    "Tarayıcı depolaması dolu. Bazı dosyaları silip yeniden deneyin.",
+  "browserfs.error.unavailable": "Tarayıcı depolaması bu tarayıcıda kullanılamıyor.",
   "upload.drop": "Yüklemek için dosyaları herhangi bir yere bırakın",
   "upload.uploading": "Yükleniyor…",
   "upload.uploadingProgress": "Yükleniyor… %{{percent}}",

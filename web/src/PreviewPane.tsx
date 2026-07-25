@@ -156,7 +156,7 @@ export default function PreviewPane({
     isDir: stat.is_dir,
     path: stat.path,
     contentType:
-      backend.mode === "s3" ? cloudExtraString(stat.extra, "contentType") : null,
+      backend.mode === "local" ? null : cloudExtraString(stat.extra, "contentType"),
     labels: {
       folder: t("preview.kind.folder"),
       noExtension: t("preview.kind.noExtension"),

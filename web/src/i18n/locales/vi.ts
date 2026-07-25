@@ -42,6 +42,17 @@ export const vi: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Đã kết nối tới {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Đã kết nối tới {{backend}}",
   "backend.connectingTooltip": "Đang kết nối tới máy chủ zfiles…",
+  "backend.browserStorage": "Bộ nhớ trình duyệt",
+  "backend.browserStorageTooltip":
+    "Tệp chỉ được lưu trong trình duyệt này. Không có gì được gửi tới máy chủ.",
+  "browserfs.error.notFound": "Tệp hoặc thư mục đó không còn trong bộ nhớ trình duyệt.",
+  "browserfs.error.alreadyExists": "Đã có tệp hoặc thư mục trùng tên.",
+  "browserfs.error.invalidName":
+    "Không thể dùng tên đó. Tên không được để trống hoặc chứa dấu gạch chéo.",
+  "browserfs.error.intoDescendant": "Không thể di chuyển thư mục vào chính nó.",
+  "browserfs.error.quotaExceeded":
+    "Bộ nhớ trình duyệt đã đầy. Hãy xóa bớt tệp rồi thử lại.",
+  "browserfs.error.unavailable": "Bộ nhớ trình duyệt không khả dụng trong trình duyệt này.",
   "upload.drop": "Thả tệp vào bất kỳ đâu để tải lên",
   "upload.uploading": "Đang tải lên…",
   "upload.uploadingProgress": "Đang tải lên… {{percent}}%",

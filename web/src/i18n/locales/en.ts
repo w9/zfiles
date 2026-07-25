@@ -41,6 +41,17 @@ export const en = {
   "backend.connectedTooltip": "Connected to {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connected to {{backend}}",
   "backend.connectingTooltip": "Connecting to the zfiles server…",
+  "backend.browserStorage": "Browser storage",
+  "backend.browserStorageTooltip":
+    "Files are stored in this browser only. Nothing is sent to a server.",
+  "browserfs.error.notFound": "That file or folder is no longer in browser storage.",
+  "browserfs.error.alreadyExists": "A file or folder with that name already exists.",
+  "browserfs.error.invalidName":
+    "That name can't be used. Names can't be empty or contain slashes.",
+  "browserfs.error.intoDescendant": "A folder can't be moved into itself.",
+  "browserfs.error.quotaExceeded":
+    "Browser storage is full. Delete some files and try again.",
+  "browserfs.error.unavailable": "Browser storage isn't available in this browser.",
   "upload.drop": "Drop files anywhere to upload",
   "upload.uploading": "Uploading…",
   "upload.uploadingProgress": "Uploading… {{percent}}%",

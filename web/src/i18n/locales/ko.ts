@@ -42,6 +42,17 @@ export const ko: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}}에 연결됨",
   "backend.connectedTooltipBackendOnly": "{{backend}}에 연결됨",
   "backend.connectingTooltip": "zfiles 서버에 연결하는 중…",
+  "backend.browserStorage": "브라우저 저장소",
+  "backend.browserStorageTooltip":
+    "파일은 이 브라우저에만 저장되며 서버로 전송되지 않습니다.",
+  "browserfs.error.notFound": "해당 파일 또는 폴더가 브라우저 저장소에 없습니다.",
+  "browserfs.error.alreadyExists": "같은 이름의 파일 또는 폴더가 이미 있습니다.",
+  "browserfs.error.invalidName":
+    "사용할 수 없는 이름입니다. 이름은 비워 둘 수 없으며 슬래시를 포함할 수 없습니다.",
+  "browserfs.error.intoDescendant": "폴더를 자기 자신 안으로 옮길 수 없습니다.",
+  "browserfs.error.quotaExceeded":
+    "브라우저 저장소가 가득 찼습니다. 파일을 삭제한 후 다시 시도하세요.",
+  "browserfs.error.unavailable": "이 브라우저에서는 브라우저 저장소를 사용할 수 없습니다.",
   "upload.drop": "어디에나 파일을 끌어다 놓아 업로드",
   "upload.uploading": "업로드 중…",
   "upload.uploadingProgress": "업로드 중… {{percent}}%",

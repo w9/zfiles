@@ -42,6 +42,17 @@ export const ru: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Подключено к {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Подключено к {{backend}}",
   "backend.connectingTooltip": "Подключение к серверу zfiles…",
+  "backend.browserStorage": "Хранилище браузера",
+  "backend.browserStorageTooltip":
+    "Файлы хранятся только в этом браузере и не отправляются на сервер.",
+  "browserfs.error.notFound": "Этот файл или папка больше не находится в хранилище браузера.",
+  "browserfs.error.alreadyExists": "Файл или папка с таким именем уже существует.",
+  "browserfs.error.invalidName":
+    "Такое имя использовать нельзя. Имя не может быть пустым или содержать косые черты.",
+  "browserfs.error.intoDescendant": "Папку нельзя переместить внутрь самой себя.",
+  "browserfs.error.quotaExceeded":
+    "Хранилище браузера заполнено. Удалите часть файлов и повторите попытку.",
+  "browserfs.error.unavailable": "Хранилище браузера недоступно в этом браузере.",
   "upload.drop": "Перетащите файлы в любое место для загрузки",
   "upload.uploading": "Загрузка…",
   "upload.uploadingProgress": "Загрузка… {{percent}}%",

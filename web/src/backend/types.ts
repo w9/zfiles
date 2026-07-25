@@ -1,6 +1,6 @@
 import type { RunActionParams } from "./runActionParams";
 
-export type BackendMode = "local" | "s3";
+export type BackendMode = "local" | "s3" | "browser";
 
 export type FileEntry = {
   name: string;

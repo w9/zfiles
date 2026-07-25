@@ -42,6 +42,17 @@ export const ja: Record<MessageKey, string> = {
   "backend.connectedTooltip": "{{backend}} v{{version}} に接続済み",
   "backend.connectedTooltipBackendOnly": "{{backend}} に接続済み",
   "backend.connectingTooltip": "zfiles サーバーに接続しています…",
+  "backend.browserStorage": "ブラウザーストレージ",
+  "backend.browserStorageTooltip":
+    "ファイルはこのブラウザーにのみ保存され、サーバーには送信されません。",
+  "browserfs.error.notFound": "そのファイルまたはフォルダーはブラウザーストレージにありません。",
+  "browserfs.error.alreadyExists": "同じ名前のファイルまたはフォルダーが既に存在します。",
+  "browserfs.error.invalidName":
+    "その名前は使用できません。名前を空にしたりスラッシュを含めたりすることはできません。",
+  "browserfs.error.intoDescendant": "フォルダーを自身の中に移動することはできません。",
+  "browserfs.error.quotaExceeded":
+    "ブラウザーストレージの空き容量がありません。ファイルを削除してからやり直してください。",
+  "browserfs.error.unavailable": "このブラウザーではブラウザーストレージを利用できません。",
   "upload.drop": "どこにでもファイルをドロップしてアップロード",
   "upload.uploading": "アップロード中…",
   "upload.uploadingProgress": "アップロード中… {{percent}}%",

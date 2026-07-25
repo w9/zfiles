@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { STATUS_BAR_BADGE_CLASS } from "./statusBarLayout";
+import type { BackendMode } from "./backend";
 import type { S3Provider } from "./cloud/types";
 import { type BackendStatus } from "./useBackendStatus";
 
 type BackendStatusProps = {
   status: BackendStatus;
   kernelVersion?: string | null;
-  backendMode: "local" | "s3";
+  backendMode: BackendMode;
   cloudProvider?: S3Provider | null;
   iconOnly?: boolean;
 };
@@ -54,41 +55,43 @@ export default function BackendStatus({
   iconOnly = false,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
+
+  let connectedLabel: string;
+  let connectedTooltip: string;
+  switch (backendMode) {
+    case "local": {
+      const zfilesServer = t("backend.connectedBackend.zfilesServer");
+      connectedLabel = kernelVersion
+        ? t("backend.connectedTooltip", { backend: zfilesServer, version: kernelVersion })
+        : t("backend.connectedTooltipBackendOnly", { backend: zfilesServer });
+      connectedTooltip = kernelVersion ? connectedLabel : t("backend.connectedBrief");
+      break;
+    }
+    case "s3": {
+      const provider = cloudProvider ? t(`connect.provider.${cloudProvider}`) : null;
+      connectedLabel = provider
+        ? t("backend.connectedTooltip", { backend: provider, version: APP_VERSION })
+        : t("backend.connectedBrief");
+      connectedTooltip = provider
+        ? t("backend.connectedTooltipBackendOnly", { backend: provider })
+        : t("backend.connectedBrief");
+      break;
+    }
+    case "browser": {
+      connectedLabel = t("backend.browserStorage");
+      connectedTooltip = t("backend.browserStorageTooltip");
+      break;
+    }
+  }
+
   const label =
-    status === "connected"
-      ? backendMode === "local"
-        ? kernelVersion
-          ? t("backend.connectedTooltip", {
-              backend: t("backend.connectedBackend.zfilesServer"),
-              version: kernelVersion,
-            })
-          : t("backend.connectedTooltipBackendOnly", {
-              backend: t("backend.connectedBackend.zfilesServer"),
-            })
-        : backendMode === "s3" && cloudProvider
-          ? t("backend.connectedTooltip", {
-              backend: t(`connect.provider.${cloudProvider}`),
-              version: APP_VERSION,
-            })
-          : t("backend.connectedBrief")
-      : backendStatusMessage(locale, status);
+    status === "connected" ? connectedLabel : backendStatusMessage(locale, status);
   const tooltipText =
-    status === "connected" && backendMode === "local" && kernelVersion
-      ? t("backend.connectedTooltip", {
-          backend: t("backend.connectedBackend.zfilesServer"),
-          version: kernelVersion,
-        })
-      : status === "connected" && backendMode === "s3" && cloudProvider
-        ? t("backend.connectedTooltipBackendOnly", {
-            backend: t(`connect.provider.${cloudProvider}`),
-          })
-        : status === "connected"
-          ? t("backend.connectedBrief")
-          : status === "connecting"
-            ? t("backend.connectingTooltip")
-            : status === "offline"
-              ? t("backend.offlineHint")
-              : label;
+    status === "connected"
+      ? connectedTooltip
+      : status === "connecting"
+        ? t("backend.connectingTooltip")
+        : t("backend.offlineHint");
 
   return (
     <Tooltip delayDuration={0}>

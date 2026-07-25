@@ -42,6 +42,19 @@ export const fr: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Connecté à {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connecté à {{backend}}",
   "backend.connectingTooltip": "Connexion au serveur zfiles…",
+  "backend.browserStorage": "Stockage du navigateur",
+  "backend.browserStorageTooltip":
+    "Les fichiers sont stockés uniquement dans ce navigateur. Rien n'est envoyé à un serveur.",
+  "browserfs.error.notFound":
+    "Ce fichier ou dossier ne se trouve plus dans le stockage du navigateur.",
+  "browserfs.error.alreadyExists": "Un fichier ou un dossier portant ce nom existe déjà.",
+  "browserfs.error.invalidName":
+    "Ce nom est invalide. Les noms ne peuvent pas être vides ni contenir de barres obliques.",
+  "browserfs.error.intoDescendant": "Un dossier ne peut pas être déplacé dans lui-même.",
+  "browserfs.error.quotaExceeded":
+    "Le stockage du navigateur est plein. Supprimez des fichiers puis réessayez.",
+  "browserfs.error.unavailable":
+    "Le stockage du navigateur n'est pas disponible dans ce navigateur.",
   "upload.drop": "Déposez des fichiers n'importe où pour les téléverser",
   "upload.uploading": "Téléversement…",
   "upload.uploadingProgress": "Téléversement… {{percent}} %",

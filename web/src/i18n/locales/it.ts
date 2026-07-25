@@ -42,6 +42,19 @@ export const it: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Connesso a {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Connesso a {{backend}}",
   "backend.connectingTooltip": "Connessione al server zfiles…",
+  "backend.browserStorage": "Archiviazione del browser",
+  "backend.browserStorageTooltip":
+    "I file sono archiviati solo in questo browser. Non viene inviato nulla a un server.",
+  "browserfs.error.notFound":
+    "Questo file o cartella non è più nell'archiviazione del browser.",
+  "browserfs.error.alreadyExists": "Esiste già un file o una cartella con questo nome.",
+  "browserfs.error.invalidName":
+    "Questo nome non può essere usato. I nomi non possono essere vuoti né contenere barre.",
+  "browserfs.error.intoDescendant": "Una cartella non può essere spostata dentro se stessa.",
+  "browserfs.error.quotaExceeded":
+    "L'archiviazione del browser è piena. Elimina alcuni file e riprova.",
+  "browserfs.error.unavailable":
+    "L'archiviazione del browser non è disponibile in questo browser.",
   "upload.drop": "Trascina i file ovunque per caricarli",
   "upload.uploading": "Caricamento…",
   "upload.uploadingProgress": "Caricamento… {{percent}}%",

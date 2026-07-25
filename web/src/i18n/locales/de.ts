@@ -42,6 +42,20 @@ export const de: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Verbunden mit {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Verbunden mit {{backend}}",
   "backend.connectingTooltip": "Verbindung zum zfiles-Server wird hergestellt…",
+  "backend.browserStorage": "Browser-Speicher",
+  "backend.browserStorageTooltip":
+    "Dateien werden nur in diesem Browser gespeichert. Es wird nichts an einen Server gesendet.",
+  "browserfs.error.notFound":
+    "Diese Datei oder dieser Ordner ist nicht mehr im Browser-Speicher.",
+  "browserfs.error.alreadyExists":
+    "Eine Datei oder ein Ordner mit diesem Namen existiert bereits.",
+  "browserfs.error.invalidName":
+    "Dieser Name ist ungültig. Namen dürfen nicht leer sein und keine Schrägstriche enthalten.",
+  "browserfs.error.intoDescendant":
+    "Ein Ordner kann nicht in sich selbst verschoben werden.",
+  "browserfs.error.quotaExceeded":
+    "Der Browser-Speicher ist voll. Löschen Sie einige Dateien und versuchen Sie es erneut.",
+  "browserfs.error.unavailable": "Browser-Speicher ist in diesem Browser nicht verfügbar.",
   "upload.drop": "Dateien irgendwo ablegen, um sie hochzuladen",
   "upload.uploading": "Wird hochgeladen…",
   "upload.uploadingProgress": "Wird hochgeladen… {{percent}} %",

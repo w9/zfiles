@@ -42,6 +42,18 @@ export const id: Record<MessageKey, string> = {
   "backend.connectedTooltip": "Terhubung ke {{backend}} v{{version}}",
   "backend.connectedTooltipBackendOnly": "Terhubung ke {{backend}}",
   "backend.connectingTooltip": "Menghubungkan ke server zfiles…",
+  "backend.browserStorage": "Penyimpanan peramban",
+  "backend.browserStorageTooltip":
+    "Berkas hanya disimpan di peramban ini. Tidak ada yang dikirim ke server.",
+  "browserfs.error.notFound": "Berkas atau folder itu tidak ada lagi di penyimpanan peramban.",
+  "browserfs.error.alreadyExists": "Berkas atau folder dengan nama itu sudah ada.",
+  "browserfs.error.invalidName":
+    "Nama itu tidak dapat digunakan. Nama tidak boleh kosong atau mengandung garis miring.",
+  "browserfs.error.intoDescendant":
+    "Folder tidak dapat dipindahkan ke dalam dirinya sendiri.",
+  "browserfs.error.quotaExceeded":
+    "Penyimpanan peramban penuh. Hapus beberapa berkas lalu coba lagi.",
+  "browserfs.error.unavailable": "Penyimpanan peramban tidak tersedia di peramban ini.",
   "upload.drop": "Letakkan berkas di mana saja untuk mengunggah",
   "upload.uploading": "Mengunggah…",
   "upload.uploadingProgress": "Mengunggah… {{percent}}%",

@@ -17,11 +17,12 @@ import {
   shouldCollapseStatusBarBadges,
 } from "./statusBarLayout";
 import type { BackendStatus as BackendStatusValue } from "./useBackendStatus";
+import type { BackendMode } from "./backend";
 import type { S3Provider } from "./cloud/types";
 
 type StatusBarProps = {
   backendStatus: BackendStatusValue;
-  backendMode: "local" | "s3";
+  backendMode: BackendMode;
   cloudProvider?: S3Provider | null;
   kernelVersion?: string | null;
   readOnly?: boolean;
