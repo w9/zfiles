@@ -20,6 +20,9 @@ type BackendStatusProps = {
   backendMode: BackendMode;
   cloudProvider?: S3Provider | null;
   iconOnly?: boolean;
+  /** Active connection name; shown instead of the generic backend label when present. */
+  connectionName?: string | null;
+  onSelect?: () => void;
 };
 
 const statusIconClass: Record<BackendStatus, string> = {
@@ -53,6 +56,8 @@ export default function BackendStatus({
   backendMode,
   cloudProvider = null,
   iconOnly = false,
+  connectionName = null,
+  onSelect,
 }: BackendStatusProps) {
   const { locale, t } = useTranslation();
 
@@ -85,35 +90,70 @@ export default function BackendStatus({
   }
 
   const label =
-    status === "connected" ? connectedLabel : backendStatusMessage(locale, status);
+    status === "connected"
+      ? (connectionName ?? connectedLabel)
+      : backendStatusMessage(locale, status);
   const tooltipText =
     status === "connected"
-      ? connectedTooltip
+      ? connectionName && onSelect
+        ? t("connections.pillTooltip", { name: connectionName })
+        : connectedTooltip
       : status === "connecting"
         ? t("backend.connectingTooltip")
         : t("backend.offlineHint");
 
+  const statusAnnouncement = t("backend.status", {
+    status: backendStatusMessage(locale, status),
+  });
+  const badgeClass = cn(
+    STATUS_BAR_BADGE_CLASS,
+    "truncate",
+    statusBadgeClass[status],
+    iconOnly && status !== "offline" && "px-0",
+  );
+  const content = (
+    <>
+      <StatusIcon status={status} />
+      {iconOnly ? null : label}
+    </>
+  );
+
   return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <Badge
-          variant="ghost"
-          className={cn(
-            STATUS_BAR_BADGE_CLASS,
-            "truncate",
-            statusBadgeClass[status],
-            iconOnly && status !== "offline" && "px-0",
+    <>
+      {/* A button cannot also be a live region, so connection state is announced separately. */}
+      {onSelect ? (
+        <span className="sr-only" role="status" aria-label={statusAnnouncement}>
+          {statusAnnouncement}
+        </span>
+      ) : null}
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          {onSelect ? (
+            <Badge asChild variant="ghost" className={badgeClass}>
+              <button
+                type="button"
+                className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                aria-label={t("connections.pillLabel", { name: label })}
+                onClick={onSelect}
+              >
+                {content}
+              </button>
+            </Badge>
+          ) : (
+            <Badge
+              variant="ghost"
+              className={badgeClass}
+              role="status"
+              aria-label={t("backend.status", { status: label })}
+            >
+              {content}
+            </Badge>
           )}
-          role="status"
-          aria-label={t("backend.status", { status: label })}
-        >
-          <StatusIcon status={status} />
-          {iconOnly ? null : label}
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-xs text-wrap">
-        {tooltipText}
-      </TooltipContent>
-    </Tooltip>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-wrap">
+          {tooltipText}
+        </TooltipContent>
+      </Tooltip>
+    </>
   );
 }

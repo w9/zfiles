@@ -4,7 +4,10 @@ import { apiFetch } from "@/api";
 import type { BuiltinActionDeps } from "./builtins";
 import { createBuiltinActions } from "./builtins";
 import { createAppearanceActions, type AppearanceActionDeps } from "./appearanceActions";
-import { createCloudActions, type CloudActionDeps } from "./cloudActions";
+import {
+  createConnectionActions,
+  type ConnectionActionDeps,
+} from "./connectionActions";
 import { createHelpActions, type HelpActionDeps } from "./helpActions";
 import { createNavigationActions, type NavigationActionDeps } from "./navigationActions";
 import {
@@ -62,7 +65,7 @@ export function useActionSystem(
   appearanceActionDeps?: () => AppearanceActionDeps,
   navigationActionDeps?: () => NavigationActionDeps,
   uploadActionDeps?: () => UploadActionDeps,
-  cloudActionDeps?: () => CloudActionDeps,
+  connectionActionDeps?: () => ConnectionActionDeps,
 ) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [userKeybindings, setUserKeybindings] = useState<KeybindingDefinition[]>([]);
@@ -84,8 +87,8 @@ export function useActionSystem(
   navigationActionDepsRef.current = navigationActionDeps;
   const uploadActionDepsRef = useRef(uploadActionDeps);
   uploadActionDepsRef.current = uploadActionDeps;
-  const cloudActionDepsRef = useRef(cloudActionDeps);
-  cloudActionDepsRef.current = cloudActionDeps;
+  const connectionActionDepsRef = useRef(connectionActionDeps);
+  connectionActionDepsRef.current = connectionActionDeps;
 
   if (!registryRef.current) {
     const registry = new ActionRegistry();
@@ -133,8 +136,10 @@ export function useActionSystem(
         registry.register(action);
       }
     }
-    if (cloudActionDepsRef.current) {
-      for (const action of createCloudActions(() => cloudActionDepsRef.current!())) {
+    if (connectionActionDepsRef.current) {
+      for (const action of createConnectionActions(() =>
+        connectionActionDepsRef.current!(),
+      )) {
         registry.register(action);
       }
     }

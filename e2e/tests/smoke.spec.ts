@@ -70,9 +70,10 @@ test("explorer lists served files", async ({ page }) => {
 
 test("status bar shows connected backend status", async ({ page }) => {
   await page.goto("/");
-  const backendStatus = page.getByRole("status", { name: /backend connected/i });
-  await expect(backendStatus).toBeVisible();
-  await expect(backendStatus).toContainText(/connected to/i);
+  await expect(page.getByRole("status", { name: /backend connected/i })).toBeAttached();
+  await expect(
+    page.getByRole("button", { name: /connection: zfiles server/i }),
+  ).toBeVisible();
 });
 
 test("status bar opens keyboard shortcuts from Help menu", async ({ page }) => {

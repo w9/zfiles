@@ -117,10 +117,10 @@ import {
 import { sortFileEntries } from "../listingSort";
 import type { ListingColumnLabels } from "../listing-types";
 import { useListingDisplayOrder } from "../useListingDisplayOrder";
-import DisconnectButton from "../cloud/DisconnectButton";
-import { useCloudDisconnect } from "../cloud/CloudDisconnectContext";
 import { CloudAuthExpiredBanner, useCloudAuth } from "../cloud/CloudAuthContext";
-import { loadSessionConfig } from "../cloud/credentials";
+import { useConnections } from "../connections/ConnectionContext";
+import { connectionDisplayName } from "../connections/ConnectionDialog";
+import type { S3Backend } from "../backend/s3Backend";
 import ShareUrlButton from "../cloud/ShareUrlButton";
 import { connectionConfigToShareInput, buildShareUrl } from "../cloud/shareUrl";
 import { readShareUrlIncludeCredentials } from "../cloud/shareUrlSettings";
@@ -198,9 +198,10 @@ function isNativeTypingTarget(target: EventTarget | null): boolean {
 
 export default function ExplorerApp() {
   const backend = useExplorerBackend();
-  const onCloudDisconnect = useCloudDisconnect();
+  const connections = useConnections();
   const cloudAuth = useCloudAuth();
-  const cloudSessionConfig = onCloudDisconnect ? loadSessionConfig() : null;
+  const cloudSessionConfig =
+    backend.mode === "s3" ? (backend as S3Backend).connectionConfig : null;
   const { t, locale, setLocale } = useTranslation();
   const { navigate } = useAppRoute();
   const { format: modifiedTimeFormat } = useModifiedTimeFormat();
@@ -926,7 +927,8 @@ export default function ExplorerApp() {
       "navigation.can-go-back": canGoBack,
       "navigation.can-go-forward": canGoForward,
       "navigation.loading": refreshing || listingLoading,
-      "cloud.connected": onCloudDisconnect != null,
+      "connection.kind": backend.mode,
+      "connection.manageable": connections?.manageable ?? false,
       "ui.touch": touchUi,
     }),
     [
@@ -949,7 +951,8 @@ export default function ExplorerApp() {
       canGoForward,
       refreshing,
       listingLoading,
-      onCloudDisconnect,
+      backend.mode,
+      connections?.manageable,
       touchUi,
     ],
   );
@@ -1707,8 +1710,10 @@ export default function ExplorerApp() {
       openUploadPanel: () => uploadIndicatorRef.current?.togglePanel(),
       chooseUploadFiles: () => uploadIndicatorRef.current?.chooseFiles(),
     }),
-    onCloudDisconnect
+    connections
       ? () => ({
+          openConnections: connections.openConnections,
+          openNewConnection: connections.openNewConnection,
           shareUrl: async () => {
             if (!cloudSessionConfig) {
               return;
@@ -1726,7 +1731,6 @@ export default function ExplorerApp() {
               toast.error(t("connect.shareUrl.copyFailed"));
             }
           },
-          disconnect: onCloudDisconnect,
         })
       : undefined,
   );
@@ -1969,6 +1973,10 @@ export default function ExplorerApp() {
       selectionModeActive={touchUi && selectionMode}
       selectionStatusText={selectionStatusText}
       cutStatusText={cutStatusText}
+      connectionName={
+        connections ? connectionDisplayName(connections.active, t) : null
+      }
+      onSelectConnection={connections?.openConnections}
     />
   );
 
@@ -2221,20 +2229,13 @@ export default function ExplorerApp() {
               invoke={(id) => void actionSystem.invoke(id)}
               ariaLabel={t("actions.toolbar.label")}
             />
-            {onCloudDisconnect ? (
-              <>
-                {cloudSessionConfig ? (
-                  <ShareUrlButton
-                    input={connectionConfigToShareInput(cloudSessionConfig)}
-                    explorerPath={currentPath}
-                    variant="ghost"
-                    onShare={() => void actionSystem.invoke("cloud.share-url")}
-                  />
-                ) : null}
-                <DisconnectButton
-                  onClick={() => void actionSystem.invoke("cloud.disconnect")}
-                />
-              </>
+            {cloudSessionConfig ? (
+              <ShareUrlButton
+                input={connectionConfigToShareInput(cloudSessionConfig)}
+                explorerPath={currentPath}
+                variant="ghost"
+                onShare={() => void actionSystem.invoke("connection.share-url")}
+              />
             ) : null}
           </div>
         </div>

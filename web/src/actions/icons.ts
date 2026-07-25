@@ -77,8 +77,9 @@ const ICONS: Record<string, LucideIcon> = {
   "file.upload-choose-files": Upload,
   "preview.get-info": Info,
   "viewer.preview": Eye,
-  "cloud.share-url": Link2,
-  "cloud.disconnect": Unplug,
+  "connection.share-url": Link2,
+  "connection.switch": Unplug,
+  "connection.create": FolderPlus,
   "help.open-keyboard-shortcuts": Keyboard,
   "help.open-about": CircleHelp,
 };

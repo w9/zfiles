@@ -10,7 +10,7 @@ export const MENU_CATEGORIES = [
   "actions.file.category",
   "viewer.category",
   "preview.category",
-  "actions.cloud.category",
+  "actions.connection.category",
   "actions.help.category",
 ] as const;
 

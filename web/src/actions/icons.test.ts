@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { createBuiltinActions } from "./builtins";
 import { createAppearanceActions } from "./appearanceActions";
-import { createCloudActions } from "./cloudActions";
+import { createConnectionActions } from "./connectionActions";
 import { createHelpActions } from "./helpActions";
 import { createNavigationActions } from "./navigationActions";
 import { createPreviewViewerActions } from "./previewViewerActions";
@@ -69,9 +69,10 @@ function allRegisteredActionIds(): string[] {
       openUploadPanel: () => {},
       chooseUploadFiles: () => {},
     })),
-    ...createCloudActions(() => ({
+    ...createConnectionActions(() => ({
       shareUrl: () => {},
-      disconnect: () => {},
+      openConnections: () => {},
+      openNewConnection: () => {},
     })),
     ...createHelpActions(() => ({
       openAbout: () => {},

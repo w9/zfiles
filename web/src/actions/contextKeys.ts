@@ -20,7 +20,8 @@ export type ContextKeys = {
   "navigation.can-go-back": boolean;
   "navigation.can-go-forward": boolean;
   "navigation.loading": boolean;
-  "cloud.connected": boolean;
+  "connection.kind": string;
+  "connection.manageable": boolean;
   "ui.touch": boolean;
 };
 
@@ -47,7 +48,8 @@ export function defaultContextKeys(): ContextKeys {
     "navigation.can-go-back": false,
     "navigation.can-go-forward": false,
     "navigation.loading": false,
-    "cloud.connected": false,
+    "connection.kind": "local",
+    "connection.manageable": false,
     "ui.touch": false,
   };
 }

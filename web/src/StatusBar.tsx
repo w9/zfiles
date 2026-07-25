@@ -30,6 +30,8 @@ type StatusBarProps = {
   selectionModeActive?: boolean;
   selectionStatusText?: string | null;
   cutStatusText?: string | null;
+  connectionName?: string | null;
+  onSelectConnection?: () => void;
   className?: string;
 };
 
@@ -52,6 +54,8 @@ export default function StatusBar({
   selectionModeActive = false,
   selectionStatusText = null,
   cutStatusText = null,
+  connectionName = null,
+  onSelectConnection,
   className,
 }: StatusBarProps) {
   const { t } = useTranslation();
@@ -69,6 +73,8 @@ export default function StatusBar({
       cloudProvider={cloudProvider}
       kernelVersion={kernelVersion}
       iconOnly={iconOnlyBadges}
+      connectionName={connectionName}
+      onSelect={onSelectConnection}
     />,
   ];
 
