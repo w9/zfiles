@@ -34,6 +34,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm test
           pnpm build
+          pnpm build:cloud
 
       - uses: Swatinem/rust-cache@v2.9.0
 

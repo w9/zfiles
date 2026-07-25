@@ -23,7 +23,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".woff2": "font/woff2",
 };
 
-let server: Server;
+let server: Server | undefined;
 
 /** Serves the built cloud bundle with SPA fallback, standing in for a static host. */
 test.beforeAll(async () => {
@@ -54,8 +54,10 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  const active = server;
+  if (!active) return;
   await new Promise<void>((resolve) => {
-    server.close(() => resolve());
+    active.close(() => resolve());
   });
 });
 
