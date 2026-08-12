@@ -1,12 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Install the latest zfiles Linux release binary into ~/.local/bin (no sudo).
 # Usage: curl -fsSL https://raw.githubusercontent.com/w9/zfiles/main/scripts/install.sh | sh
-set -euo pipefail
+# Must stay POSIX sh: curl|sh ignores the shebang (e.g. dash on Debian/Ubuntu).
+set -eu
 
 REPO="${ZFILES_REPO:-w9/zfiles}"
 INSTALL_DIR="${ZFILES_INSTALL_DIR:-${HOME}/.local/bin}"
 
-if [[ "$(uname -s)" != "Linux" ]]; then
+if [ "$(uname -s)" != "Linux" ]; then
   echo "error: this installer currently supports Linux only" >&2
   exit 1
 fi
@@ -33,7 +34,7 @@ echo "Downloading ${url}"
 curl -fsSL "$url" -o "${tmpdir}/${asset}"
 
 tar -xzf "${tmpdir}/${asset}" -C "$tmpdir"
-if [[ ! -f "${tmpdir}/zfiles" ]]; then
+if [ ! -f "${tmpdir}/zfiles" ]; then
   echo "error: archive did not contain zfiles" >&2
   exit 1
 fi

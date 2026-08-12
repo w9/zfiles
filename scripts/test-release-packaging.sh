@@ -53,4 +53,10 @@ if [[ ! -x "${root}/scripts/install.sh" ]]; then
   exit 1
 fi
 
+# curl|sh ignores the shebang; the script must parse under plain POSIX sh (e.g. dash).
+if ! sh -n "${root}/scripts/install.sh"; then
+  echo "error: scripts/install.sh is not valid under sh (curl|sh would fail)" >&2
+  exit 1
+fi
+
 echo "ok: release packaging and install layout"
